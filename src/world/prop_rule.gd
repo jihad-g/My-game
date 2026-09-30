@@ -11,8 +11,9 @@ extends Resource
 ## Must divide the chunk size (16): 1, 2, 4, 8 or 16.
 @export var cell_size: int = 4
 @export_range(0.0, 1.0) var density: float = 0.2
-## How strongly the biome's clustering noise affects density (0 = uniform).
+## How strongly the clustering noise affects density (0 = uniform).
 @export_range(0.0, 1.0) var clustering: float = 0.5
+## Allowed column heights in blocks (underground floors are around -240).
 @export var min_height: int = 1
 @export var max_height: int = 999
 ## Maximum height difference (in blocks) to neighbouring columns.
@@ -21,5 +22,7 @@ extends Resource
 @export var max_scale: float = 1.15
 ## Also placed in LOD1 chunks (visual only, no collision/interaction).
 @export var show_in_lod1: bool = false
+## Floats on the water surface (lily pads): requires an underwater column.
+@export var on_water: bool = false
 ## Unique salt so rules sharing a cell size don't pick identical cells.
 @export var salt: int = 1

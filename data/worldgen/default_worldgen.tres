@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WorldGenSettings" load_steps=14 format=3]
+
+[ext_resource type="Script" path="res://src/world/gen/world_gen_settings.gd" id="1_settings"]
+[ext_resource type="Resource" path="res://data/biomes/deep_ocean.tres" id="b0"]
+[ext_resource type="Resource" path="res://data/biomes/sandy_beach.tres" id="b1"]
+[ext_resource type="Resource" path="res://data/biomes/stonecrown_mountains.tres" id="b2"]
+[ext_resource type="Resource" path="res://data/biomes/crystal_glade.tres" id="b3"]
+[ext_resource type="Resource" path="res://data/biomes/murk_swamp.tres" id="b4"]
+[ext_resource type="Resource" path="res://data/biomes/sunscorch_desert.tres" id="b5"]
+[ext_resource type="Resource" path="res://data/biomes/emerald_jungle.tres" id="b6"]
+[ext_resource type="Resource" path="res://data/biomes/snowy_tundra.tres" id="b7"]
+[ext_resource type="Resource" path="res://data/biomes/frostpine_taiga.tres" id="b8"]
+[ext_resource type="Resource" path="res://data/biomes/whispering_forest.tres" id="b9"]
+[ext_resource type="Resource" path="res://data/biomes/verdant_meadow.tres" id="b10"]
+[ext_resource type="Resource" path="res://data/biomes/the_deeps.tres" id="b11"]
+
+[resource]
+script = ExtResource("1_settings")
+biomes = [ExtResource("b0"), ExtResource("b1"), ExtResource("b2"), ExtResource("b3"), ExtResource("b4"), ExtResource("b5"), ExtResource("b6"), ExtResource("b7"), ExtResource("b8"), ExtResource("b9"), ExtResource("b10"), ExtResource("b11")]

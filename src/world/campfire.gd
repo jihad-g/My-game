@@ -81,6 +81,14 @@ func _process(delta: float) -> void:
 	_light.light_energy = (2.0 + sin(_t * 13.0) * 0.25 + sin(_t * 7.3) * 0.2) * fade
 
 
+func save_data() -> Dictionary:
+	return {"time_left": _time_left}
+
+
+func load_data(data: Dictionary) -> void:
+	_time_left = float(data.get("time_left", burn_time))
+
+
 ## Degrees C added to the ambient temperature at `pos`.
 func heat_at(pos: Vector3) -> float:
 	var d := pos.distance_to(global_position)

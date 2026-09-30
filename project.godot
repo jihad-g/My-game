@@ -8,8 +8,8 @@ config_version=5
 
 config/name="Shardlands"
 config/description="Stylized blocky open-world survival RPG (prototype)."
-config/version="0.1.0"
-run/main_scene="res://scenes/main.tscn"
+config/version="0.2.0"
+run/main_scene="res://scenes/menu/main_menu.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -19,6 +19,7 @@ InputSetup="*res://src/autoload/input_setup.gd"
 Events="*res://src/autoload/events.gd"
 GameState="*res://src/autoload/game_state.gd"
 ItemDB="*res://src/autoload/item_db.gd"
+SaveManager="*res://src/save/save_manager.gd"
 
 [display]
 

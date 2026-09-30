@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"mushroom"
+display_name = "Brown Mushroom"
+description = "A common edible mushroom."
+category = 1
+rarity = 0
+max_stack = 30
+base_value = 2
+icon_color = Color(0.62, 0.42, 0.28, 1)
+icon_glyph = "m"
+hunger_restore = 7.0

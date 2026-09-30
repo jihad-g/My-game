@@ -4,7 +4,7 @@ Legend: `[x]` completed (implemented + tested) · `[~]` in progress / partial (d
 
 Nothing below is marked `[x]` unless it runs in the game today.
 
-## Phase 1 — Playable prototype  ✅ (this milestone)
+## Phase 1 — Playable prototype  ✅
 
 - [x] Godot 4.4 project architecture (autoloads, components, data resources, scenes)
 - [x] Main scene (`scenes/main.tscn`) with loading screen until spawn area is ready
@@ -28,6 +28,19 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] HUD: health, stamina, hunger, temperature gauge + active debuffs, clock, target frame, hotbar, prompts, toasts, help, debug overlay, pause, death screen
 - [x] Automated tests (111 checks, unit + integration) and screenshot runner
 
+## Milestone 2 — World generation  ✅ (this milestone, part of Phase 3)
+
+- [x] Multiple biomes (11 surface + 1 underground), data-driven climate selection
+- [x] Oceans, islands, beaches
+- [x] Rivers (meandering, sea-level channels with sloped banks) and lakes; frozen lakes in the tundra
+- [x] Mountains (ridged, up to ~60 m, rock and snow caps) and altitude cooling
+- [x] Caves: streamed underground layer with tunnels and caverns, surface entrances and exits
+- [x] Procedural vegetation per biome (22 new props, glowing magical plants)
+- [x] Resource spawning: copper/iron/coal veins, crystals, clay, rare plants, regrowth
+- [x] World seeds: create worlds from any number/text seed, random seeds, quick play, `--seed=`
+- [x] Save/load generated worlds (menu, world list, autosave, crash-safe files, versioned format)
+- [x] Swimming, world map (M), biome discovery tracking
+
 ## Phase 2 — Core RPG
 
 - [ ] Four classes: Barbarian, Knight, Wizard, Assassin (distinct kits; 50 starting skill points each)
@@ -42,14 +55,14 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Crafting (never fails; skill reduces material cost; tiers Basic → Legendary; recipe sources)
 - [ ] Basic NPCs (dialogue, shops)
 
-## Phase 3 — World
+## Phase 3 — World (remaining)
 
-- [~] Chunk system & procedural terrain — done for heightmap terrain; no 3D voxels yet
-- [ ] Multiple biomes: mountains, plains, forests, jungles, deserts, snow, swamps, rare magical biomes, islands (`TerrainGenerator.get_biome()` is the hook)
-- [ ] Rivers (lakes exist)
-- [ ] Caves, underground areas, mines
-- [ ] Structures: ruins, towers, temples, ancient structures, landmarks, hidden locations
+- [~] Chunk system & procedural terrain — heightmap columns on two layers; no overhangs / multi-level caves
 - [ ] Villages (houses, farms, market, bakery, blacksmith, shops, NPCs, traders)
+- [ ] Structures: ruins, towers, temples, ancient structures, landmarks, hidden locations
+- [ ] Mines (abandoned mine structures in caves); caves currently have ore-rich areas but no built mines
+- [ ] Biome-specific enemies (only the Thornback Boar exists; it spawns in meadow, forest, jungle and taiga)
+- [ ] Underground water, lava and deeper cave levels
 
 ## Phase 4 — Content
 
@@ -71,25 +84,30 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 ## Phase 6 — Polish
 
-- [ ] Save/load system (GameState + Inventory serialization already exist and are tested; no files/UI yet)
+- [x] Save/load system (Milestone 2)
+- [ ] Cloud saves / save slots per character, save thumbnails
 - [ ] Skeletal/authored animations, VFX, sound & music
 - [ ] UI polish (real icons instead of coloured glyph tiles), settings & key rebinding menu
-- [ ] Main menu with seed entry / world selection
+- [x] Main menu with seed entry / world selection (Milestone 2)
+- [ ] Settings menu (graphics, audio, key rebinding)
 - [ ] Optimization pass (profiling on real hardware, occlusion, GPU instancing everywhere)
 
 ## Phase 7 — Large world
 
 - [~] Deterministic, borderless world addressing (verified generation at ±13 km)
-- [ ] Region files for modified chunks, compressed saves
+- [ ] Region files for modified chunks, compressed saves (today: one JSON file per world; fine for thousands of changes)
 - [ ] Far-distance impostors / horizon LOD, streaming tuning for fast travel
 - [ ] Floating origin (only needed beyond the ~±14 km target)
 - [ ] Efficient off-screen NPC/settlement simulation
 
-## Known issues / tech debt (Phase 1)
+## Known issues / tech debt
 
-- Dropped loot pickups and placed campfires are not persisted when far away / on reload (no save system yet).
+- Dropped loot pickups are not saved (they despawn after 5 minutes anyway). Enemies are not saved (killed spawn slots are).
+- Swimming never drowns you; with no stamina you just swim slowly.
+- The world map reveals everything (no fog-of-war yet).
+- Placed objects on the other layer stay in memory (harmless, but not culled).
 - Debug-spawned enemies (F8) are not tied to a chunk and never despawn unless killed.
 - Enemy perception is distance-only (no line-of-sight or stealth yet).
-- Terrain is a heightmap of block columns: no overhangs/caves until Phase 3.
+- Terrain is a heightmap of block columns per layer: no overhangs or multi-level caves.
 - The Compatibility (OpenGL) renderer shows brighter colours than Forward+.
 - Placeholder art: all meshes are code-built boxes, item icons are coloured tiles with a glyph.

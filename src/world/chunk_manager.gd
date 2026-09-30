@@ -23,6 +23,8 @@ signal chunk_removed(coord: Vector2i)
 var generator: TerrainGenerator
 var library: PropLibrary
 var focus: Node3D
+## World layer being streamed (TerrainGenerator.Layer). Change with set_layer().
+var layer: int = 0
 
 var _chunks: Dictionary = {}  # Vector2i -> Chunk
 var _desired: Dictionary = {}  # Vector2i -> lod
@@ -107,6 +109,20 @@ func force_refresh() -> void:
 	_center = Vector2i(0x7FFFFFFF, 0)
 
 
+## Switches the streamed layer: every loaded chunk is unloaded and the new
+## layer streams in around the focus. In-flight results for the old layer are
+## discarded when they arrive.
+func set_layer(new_layer: int) -> void:
+	if new_layer == layer:
+		return
+	layer = new_layer
+	for coord: Vector2i in _chunks.keys():
+		_unload(coord)
+	_desired.clear()
+	_queue.clear()
+	force_refresh()
+
+
 # --- Streaming -------------------------------------------------------------------
 
 func lod_for_distance(dist: float) -> int:
@@ -159,13 +175,13 @@ func _dispatch() -> void:
 		var chunk: Chunk = _chunks.get(coord)
 		if chunk != null and chunk.lod == lod:
 			continue
-		var task := WorkerThreadPool.add_task(_generate_task.bind(coord, lod), false, "chunk_gen")
+		var task := WorkerThreadPool.add_task(_generate_task.bind(coord, lod, layer), false, "chunk_gen")
 		_pending[coord] = {"task": task, "lod": lod}
 
 
 ## Runs on a worker thread.
-func _generate_task(coord: Vector2i, lod: int) -> void:
-	var data := generator.generate_chunk(coord, lod)
+func _generate_task(coord: Vector2i, lod: int, p_layer: int) -> void:
+	var data := generator.generate_chunk(coord, lod, p_layer)
 	_results_mutex.lock()
 	_results.append(data)
 	_results_mutex.unlock()
@@ -183,11 +199,12 @@ func _apply_results() -> void:
 			WorkerThreadPool.wait_for_task_completion(_pending[data.coord].task)
 			_pending.erase(data.coord)
 		_stats.generated += 1
-		var want: int = _desired.get(data.coord, -1)
+		var want: int = _desired.get(data.coord, -1) if data.layer == layer else -1
 		if want != data.lod:
 			_stats.discarded += 1
 			var existing: Chunk = _chunks.get(data.coord)
-			if want >= 0 and (existing == null or existing.lod != want) and not _queue.has(data.coord):
+			var cur_want: int = _desired.get(data.coord, -1)
+			if cur_want >= 0 and (existing == null or existing.lod != cur_want) and not _queue.has(data.coord):
 				_queue.push_front(data.coord)
 			continue
 		var chunk: Chunk = _chunks.get(data.coord)

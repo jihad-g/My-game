@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="BiomeData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/world/biome_data.gd" id="1_biome"]
+[ext_resource type="Script" path="res://src/world/prop_rule.gd" id="2_rule"]
+
+[sub_resource type="Resource" id="Rule_0"]
+script = ExtResource("2_rule")
+prop_id = &"tree_palm"
+cell_size = 8
+density = 0.12
+clustering = 0.6
+min_height = 1
+max_height = 3
+max_slope = 1
+min_scale = 0.9
+max_scale = 1.2
+show_in_lod1 = true
+on_water = false
+salt = 102
+
+[sub_resource type="Resource" id="Rule_1"]
+script = ExtResource("2_rule")
+prop_id = &"dead_bush"
+cell_size = 8
+density = 0.08
+clustering = 0.3
+min_height = 0
+max_height = 3
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 103
+
+[sub_resource type="Resource" id="Rule_2"]
+script = ExtResource("2_rule")
+prop_id = &"stone_pile"
+cell_size = 16
+density = 0.3
+clustering = 0.2
+min_height = 0
+max_height = 3
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 104
+
+[resource]
+script = ExtResource("1_biome")
+id = &"sandy_beach"
+display_name = "Sandy Beach"
+role = 2
+map_color = Color(0.93, 0.86, 0.6, 1)
+
+top_color = Color(0.93, 0.85, 0.58, 1)
+top_color_alt = Color(0.95, 0.88, 0.62, 1)
+side_color = Color(0.85, 0.75, 0.5, 1)
+shore_color = Color(0.93, 0.85, 0.58, 1)
+underwater_color = Color(0.8, 0.72, 0.5, 1)
+prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2")]
+enemy_spawns = []

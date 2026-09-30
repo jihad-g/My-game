@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="PropData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/world/prop_data.gd" id="1_prop"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"stone"
+min_count = 3
+max_count = 5
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"flint"
+min_count = 1
+max_count = 1
+chance = 0.3
+
+[resource]
+script = ExtResource("1_prop")
+id = &"rock_snowy"
+display_name = "Snowy Boulder"
+mesh_builder = &"rock_snowy"
+interact_mode = 1
+blocks_movement = true
+collision_radius = 0.65
+collision_height = 1.0
+hits_to_break = 5
+drops = [SubResource("Loot_0"), SubResource("Loot_1")]
+regrow_time = 0.0
+interact_text = "Mine"
+visibility_range = 0.0
+cast_shadow = true
+fade_near_camera = false
+glow = false

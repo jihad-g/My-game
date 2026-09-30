@@ -45,6 +45,13 @@ func _process(delta: float) -> void:
 			_waiting[coord] = remaining
 
 
+## Despawns everything (used when the player changes layer).
+func despawn_all() -> void:
+	for coord: Vector2i in _by_chunk.keys():
+		_despawn_chunk(coord)
+	_waiting.clear()
+
+
 func active_count() -> int:
 	var n := 0
 	for coord in _by_chunk:
@@ -52,8 +59,8 @@ func active_count() -> int:
 	return n
 
 
-func _on_chunk_ready(coord: Vector2i, lod: int, _chunk: Chunk) -> void:
-	if lod != 0:
+func _on_chunk_ready(coord: Vector2i, lod: int, chunk: Chunk) -> void:
+	if lod != 0 or chunk.layer != TerrainGenerator.Layer.SURFACE:
 		_despawn_chunk(coord)
 		return
 	if _by_chunk.has(coord) or _waiting.has(coord):
@@ -77,8 +84,7 @@ func _spawns_for(coord: Vector2i) -> Array:
 
 
 func _try_spawn(coord: Vector2i, s: Dictionary) -> bool:
-	var biome := generator.get_biome(coord.x * TerrainGenerator.CHUNK_SIZE, coord.y * TerrainGenerator.CHUNK_SIZE)
-	var rule: EnemySpawnRule = biome.enemy_spawns[s.rule_index]
+	var rule: EnemySpawnRule = s.rule
 	var respawn := rule.enemy_data.respawn_time if rule.enemy_data else 300.0
 	if not GameState.can_spawn_slot(s.key, respawn):
 		return true  # dead: nothing to do, don't retry until chunk reloads
@@ -87,7 +93,7 @@ func _try_spawn(coord: Vector2i, s: Dictionary) -> bool:
 	var player := get_tree().get_first_node_in_group(&"player") as Node3D
 	if player and player.global_position.distance_to(s.position) < min_spawn_distance:
 		return false
-	var enemy := spawn_enemy(rule.enemy_scene, s.position, s.key)
+	var enemy := spawn_enemy(rule.enemy_scene, s.position, s.key, rule.enemy_data)
 	if enemy == null:
 		return false
 	if not _by_chunk.has(coord):
@@ -98,7 +104,8 @@ func _try_spawn(coord: Vector2i, s: Dictionary) -> bool:
 
 
 ## Spawns an enemy from a pool. Also used by debug tools (empty key = untracked).
-func spawn_enemy(scene: PackedScene, pos: Vector3, key: String) -> Enemy:
+## `data_override` lets one scene serve several enemy variants (EnemySpawnRule.enemy_data).
+func spawn_enemy(scene: PackedScene, pos: Vector3, key: String, data_override: EnemyData = null) -> Enemy:
 	if scene == null:
 		return null
 	if not _pools.has(scene):
@@ -109,6 +116,8 @@ func spawn_enemy(scene: PackedScene, pos: Vector3, key: String) -> Enemy:
 		_pools[scene] = pool
 	var enemy := (_pools[scene] as NodePool).acquire() as Enemy
 	if enemy:
+		if data_override:
+			enemy.data = data_override
 		enemy.spawn_at(pos, key)
 	return enemy
 

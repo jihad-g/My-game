@@ -5,7 +5,8 @@ extends CanvasLayer
 ## Shows: health / stamina / hunger bars, temperature gauge with active debuffs,
 ## hotbar, inventory window, lock-on target frame, interaction prompt, toasts,
 ## clock, help, debug overlay, loading / death / pause screens.
-## NOT IMPLEMENTED yet (later phases): mana bar, XP/level, map, quests,
+## Also: biome/layer label, world map (M), save buttons in the pause menu.
+## NOT IMPLEMENTED yet (later phases): mana bar, XP/level, quests,
 ## skills, equipment, crafting, reputation, building UI.
 
 var player: Player
@@ -36,6 +37,9 @@ var _target: Enemy
 var _prompt := Label.new()
 var _toasts := VBoxContainer.new()
 var _clock := Label.new()
+var _biome_label := Label.new()
+var _map := WorldMap.new()
+var _save_button: Button
 var _debug := Label.new()
 var _help := PanelContainer.new()
 var _loading := ColorRect.new()
@@ -58,6 +62,7 @@ func _ready() -> void:
 	_build_prompt_and_toasts()
 	_build_corner_info()
 	_build_help()
+	_root.add_child(_map)
 	_build_overlays()
 	Events.toast.connect(show_toast)
 	Events.item_picked_up.connect(_on_item_picked_up)
@@ -78,7 +83,11 @@ func bind(p_player: Player, p_world: World) -> void:
 	_set_bar(_st_bar, _st_label, player.stamina.current, player.stamina.max_stamina)
 	_set_bar(_hu_bar, _hu_label, player.hunger.current, player.hunger.max_hunger)
 	_refresh_inventory()
-	_loading_label.text = "Generating world...\nSeed: %d" % GameState.world_seed
+	_map.world = world
+	world.biome_changed.connect(_on_biome_changed)
+	world.layer_changed.connect(func(_l: int) -> void: _map.visible = false)
+	_save_button.disabled = not SaveManager.is_persistent()
+	_save_button.text = "Save world  [F5]" if SaveManager.is_persistent() else "Save (temporary world)"
 
 
 # --- Construction ----------------------------------------------------------------
@@ -281,6 +290,10 @@ func _build_corner_info() -> void:
 	_clock.add_theme_font_size_override(&"font_size", 18)
 	_clock.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v.add_child(_clock)
+	_biome_label.add_theme_font_size_override(&"font_size", 15)
+	_biome_label.add_theme_color_override(&"font_color", UITheme.GOLD)
+	_biome_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	v.add_child(_biome_label)
 	_debug.add_theme_font_size_override(&"font_size", 12)
 	_debug.add_theme_color_override(&"font_color", Color(0.8, 0.9, 1.0))
 	_debug.visible = false
@@ -302,7 +315,8 @@ func _build_help() -> void:
 		"Tab lock-on target · F interact / gather · I inventory",
 		"1-8 use hotbar item (eat / place campfire)",
 		"Q/E or MMB-drag rotate · Wheel zoom · PgUp/PgDn tilt",
-		"Arrows pan camera · V recenter · F3 debug · F1 hide help",
+		"Arrows pan camera · V recenter · M map · F5 save",
+		"F3 debug · F1 hide help",
 		"Debug: F6/F7 temp -/+10°C · F8 spawn boar · F9 +2h",
 	])
 	_help.add_child(l)
@@ -350,13 +364,22 @@ func _build_overlays() -> void:
 	resume.text = "Resume"
 	resume.pressed.connect(func() -> void: set_paused(false))
 	pv.add_child(resume)
-	var save_na := Button.new()
-	save_na.text = "Save (Phase 6 - not implemented)"
-	save_na.disabled = true
-	pv.add_child(save_na)
+	_save_button = Button.new()
+	_save_button.text = "Save world"
+	_save_button.pressed.connect(func() -> void:
+		if world:
+			world.save_now(true))
+	pv.add_child(_save_button)
+	var menu := Button.new()
+	menu.text = "Save & quit to menu"
+	menu.pressed.connect(_quit_to_menu)
+	pv.add_child(menu)
 	var quit := Button.new()
-	quit.text = "Quit"
-	quit.pressed.connect(func() -> void: get_tree().quit())
+	quit.text = "Save & quit to desktop"
+	quit.pressed.connect(func() -> void:
+		if world and world.is_ready:
+			world.save_now(false)
+		get_tree().quit())
 	pv.add_child(quit)
 
 
@@ -372,8 +395,21 @@ func _centered_box(parent: Control) -> VBoxContainer:
 
 # --- Runtime -----------------------------------------------------------------------
 
-func set_loading(on: bool) -> void:
+func set_loading(on: bool, text: String = "") -> void:
 	_loading.visible = on
+	if text != "":
+		_loading_label.text = text
+
+
+func _quit_to_menu() -> void:
+	if world and world.is_ready:
+		world.save_now(false)
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn")
+
+
+func _on_biome_changed(b: BiomeData) -> void:
+	_biome_label.text = b.display_name
 
 
 func set_paused(on: bool) -> void:
@@ -383,7 +419,9 @@ func set_paused(on: bool) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"pause"):
-		if _inv_panel.visible:
+		if _map.visible:
+			_map.visible = false
+		elif _inv_panel.visible:
 			_toggle_inventory()
 		elif not _loading.visible:
 			set_paused(not get_tree().paused)
@@ -392,6 +430,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	elif event.is_action_pressed(&"inventory"):
 		_toggle_inventory()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"world_map"):
+		if not _loading.visible:
+			_map.toggle()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"toggle_help"):
 		_help.visible = not _help.visible
@@ -437,6 +479,8 @@ func _update_temperature() -> void:
 	var buff := t.get_buff_offset()
 	if absf(buff) > 0.1:
 		extra += "  (food %+d°)" % roundi(buff)
+	if player.is_swimming:
+		extra += "  · Swimming"
 	_temp_label.text = "%s · Body %d°C · Air %d°C%s" % [t.exposure_name(), roundi(t.felt), roundi(air), extra]
 	var color := Color(0.7, 1.0, 0.7)
 	if t.exposure < 0:
@@ -476,6 +520,11 @@ func _update_debug() -> void:
 		lines.append("Generated %d (discarded %d)" % [s.generated, s.discarded])
 		lines.append("Enemies %d · Pickups %d" % [world.spawner.active_count(), world.pickup_pool.active_count()])
 		lines.append("Air %.1f°C (debug offset %+d)" % [world.get_air_temperature(p), roundi(world.debug_temperature_offset)])
+		var climate := world.generator.get_climate(p)
+		lines.append("Layer %s · Biome %s" % ["underground" if world.layer == 1 else "surface",
+			world.current_biome.id if world.current_biome else "-"])
+		lines.append("Climate T %.2f M %.2f (base %.1f°C ±%.1f)" % [world.generator.temperature01(p.x, p.z),
+			world.generator.moisture01(p.x, p.z), climate.x, climate.y])
 	_debug.text = "\n".join(lines)
 
 

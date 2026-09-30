@@ -11,10 +11,12 @@ const DEFAULT_SEED := 20250101
 var world_seed: int = DEFAULT_SEED
 ## Total simulated game time in seconds since the world was created.
 var world_time: float = 0.0
-## Vector2i chunk coord -> { prop_index:int -> world_time when removed }
+## Vector3i(chunk.x, chunk.y, layer) -> { prop_index:int -> world_time when removed }
 var removed_props: Dictionary = {}
 ## Spawn slot key (String) -> world_time when the occupant was killed.
 var enemy_deaths: Dictionary = {}
+## Biome id (String) -> world_time of first discovery.
+var discovered_biomes: Dictionary = {}
 
 
 func _ready() -> void:
@@ -41,25 +43,45 @@ static func seed_from_string(text: String) -> int:
 	return text.hash()
 
 
+static func parse_seed(v: Variant) -> int:
+	if v is String:
+		return (v as String).to_int()
+	return int(v)
+
+
 # --- Props -----------------------------------------------------------------
 
-func mark_prop_removed(chunk: Vector2i, prop_index: int) -> void:
-	if not removed_props.has(chunk):
-		removed_props[chunk] = {}
-	removed_props[chunk][prop_index] = world_time
+static func _prop_key(chunk: Vector2i, layer: int) -> Vector3i:
+	return Vector3i(chunk.x, chunk.y, layer)
+
+
+func mark_prop_removed(chunk: Vector2i, prop_index: int, layer: int = 0) -> void:
+	var key := _prop_key(chunk, layer)
+	if not removed_props.has(key):
+		removed_props[key] = {}
+	removed_props[key][prop_index] = world_time
 
 
 ## True if the prop is currently removed. Props with a regrow time come back
 ## once enough world time has passed (their record is then deleted).
-func is_prop_removed(chunk: Vector2i, prop_index: int, regrow_time: float) -> bool:
-	var chunk_dict: Dictionary = removed_props.get(chunk, {})
+func is_prop_removed(chunk: Vector2i, prop_index: int, regrow_time: float, layer: int = 0) -> bool:
+	var key := _prop_key(chunk, layer)
+	var chunk_dict: Dictionary = removed_props.get(key, {})
 	if not chunk_dict.has(prop_index):
 		return false
 	if regrow_time > 0.0 and world_time - float(chunk_dict[prop_index]) >= regrow_time:
 		chunk_dict.erase(prop_index)
 		if chunk_dict.is_empty():
-			removed_props.erase(chunk)
+			removed_props.erase(key)
 		return false
+	return true
+
+
+## Records a biome discovery. Returns true the first time.
+func discover_biome(id: StringName) -> bool:
+	if discovered_biomes.has(String(id)):
+		return false
+	discovered_biomes[String(id)] = world_time
 	return true
 
 
@@ -83,30 +105,36 @@ func can_spawn_slot(slot_key: String, respawn_time: float) -> bool:
 
 func to_dict() -> Dictionary:
 	var props := {}
-	for chunk: Vector2i in removed_props:
-		props["%d,%d" % [chunk.x, chunk.y]] = removed_props[chunk].duplicate()
+	for key: Vector3i in removed_props:
+		props["%d,%d,%d" % [key.x, key.y, key.z]] = removed_props[key].duplicate()
 	return {
-		"world_seed": world_seed,
+		# Seeds are 64-bit; JSON numbers are doubles, so store as text.
+		"world_seed": str(world_seed),
 		"world_time": world_time,
 		"removed_props": props,
 		"enemy_deaths": enemy_deaths.duplicate(),
+		"discovered_biomes": discovered_biomes.duplicate(),
 	}
 
 
 func from_dict(data: Dictionary) -> void:
-	world_seed = int(data.get("world_seed", DEFAULT_SEED))
+	world_seed = parse_seed(data.get("world_seed", DEFAULT_SEED))
 	world_time = float(data.get("world_time", 0.0))
 	removed_props.clear()
 	var props: Dictionary = data.get("removed_props", {})
 	for key: String in props:
 		var parts := key.split(",")
-		var chunk := Vector2i(parts[0].to_int(), parts[1].to_int())
+		var layer := parts[2].to_int() if parts.size() > 2 else 0
 		var entries := {}
 		var raw: Dictionary = props[key]
 		for idx in raw:
 			entries[int(idx)] = float(raw[idx])
-		removed_props[chunk] = entries
-	enemy_deaths = (data.get("enemy_deaths", {}) as Dictionary).duplicate()
+		removed_props[Vector3i(parts[0].to_int(), parts[1].to_int(), layer)] = entries
+	enemy_deaths.clear()
+	var deaths: Dictionary = data.get("enemy_deaths", {})
+	for k in deaths:
+		enemy_deaths[String(k)] = float(deaths[k])
+	discovered_biomes = (data.get("discovered_biomes", {}) as Dictionary).duplicate()
 
 
 func reset(new_seed: int) -> void:
@@ -114,3 +142,4 @@ func reset(new_seed: int) -> void:
 	world_time = 0.0
 	removed_props.clear()
 	enemy_deaths.clear()
+	discovered_biomes.clear()

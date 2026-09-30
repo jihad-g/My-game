@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BiomeData" load_steps=15 format=3]
+[gd_resource type="Resource" script_class="BiomeData" load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://src/world/biome_data.gd" id="1_biome"]
 [ext_resource type="Script" path="res://src/world/prop_rule.gd" id="2_rule"]
@@ -10,21 +10,22 @@
 script = ExtResource("2_rule")
 prop_id = &"tree_oak"
 cell_size = 4
-density = 0.16
+density = 0.12
 clustering = 0.9
 min_height = 2
-max_height = 28
+max_height = 40
 max_slope = 1
 min_scale = 0.85
 max_scale = 1.25
 show_in_lod1 = true
-salt = 11
+on_water = false
+salt = 156
 
 [sub_resource type="Resource" id="Rule_1"]
 script = ExtResource("2_rule")
 prop_id = &"tree_pine"
 cell_size = 4
-density = 0.1
+density = 0.05
 clustering = 0.8
 min_height = 8
 max_height = 40
@@ -32,13 +33,14 @@ max_slope = 1
 min_scale = 0.9
 max_scale = 1.3
 show_in_lod1 = true
-salt = 12
+on_water = false
+salt = 157
 
 [sub_resource type="Resource" id="Rule_2"]
 script = ExtResource("2_rule")
 prop_id = &"rock"
 cell_size = 8
-density = 0.22
+density = 0.18
 clustering = 0.3
 min_height = 1
 max_height = 60
@@ -46,63 +48,68 @@ max_slope = 2
 min_scale = 0.7
 max_scale = 1.4
 show_in_lod1 = true
-salt = 13
+on_water = false
+salt = 158
 
 [sub_resource type="Resource" id="Rule_3"]
 script = ExtResource("2_rule")
 prop_id = &"berry_bush"
 cell_size = 8
-density = 0.22
+density = 0.2
 clustering = 0.6
 min_height = 2
-max_height = 24
+max_height = 30
 max_slope = 1
-min_scale = 0.9
-max_scale = 1.1
+min_scale = 0.85
+max_scale = 1.15
 show_in_lod1 = false
-salt = 14
+on_water = false
+salt = 159
 
 [sub_resource type="Resource" id="Rule_4"]
 script = ExtResource("2_rule")
 prop_id = &"stick_pile"
 cell_size = 8
-density = 0.25
+density = 0.22
 clustering = 0.5
 min_height = 2
 max_height = 30
 max_slope = 1
-min_scale = 0.9
-max_scale = 1.1
+min_scale = 0.85
+max_scale = 1.15
 show_in_lod1 = false
-salt = 15
+on_water = false
+salt = 160
 
 [sub_resource type="Resource" id="Rule_5"]
 script = ExtResource("2_rule")
 prop_id = &"stone_pile"
 cell_size = 8
-density = 0.2
+density = 0.18
 clustering = 0.3
 min_height = 1
 max_height = 40
 max_slope = 1
-min_scale = 0.9
-max_scale = 1.1
+min_scale = 0.85
+max_scale = 1.15
 show_in_lod1 = false
-salt = 16
+on_water = false
+salt = 161
 
 [sub_resource type="Resource" id="Rule_6"]
 script = ExtResource("2_rule")
 prop_id = &"flowers"
 cell_size = 4
-density = 0.12
+density = 0.14
 clustering = 0.7
 min_height = 2
-max_height = 26
+max_height = 30
 max_slope = 1
-min_scale = 0.8
-max_scale = 1.2
+min_scale = 0.85
+max_scale = 1.15
 show_in_lod1 = false
-salt = 17
+on_water = false
+salt = 162
 
 [sub_resource type="Resource" id="Rule_7"]
 script = ExtResource("2_rule")
@@ -113,23 +120,95 @@ clustering = 0.6
 min_height = 2
 max_height = 30
 max_slope = 1
-min_scale = 0.8
-max_scale = 1.3
+min_scale = 0.85
+max_scale = 1.15
 show_in_lod1 = false
-salt = 18
+on_water = false
+salt = 163
+
+[sub_resource type="Resource" id="Rule_8"]
+script = ExtResource("2_rule")
+prop_id = &"reeds"
+cell_size = 4
+density = 0.12
+clustering = 0.5
+min_height = 0
+max_height = 1
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 164
+
+[sub_resource type="Resource" id="Rule_9"]
+script = ExtResource("2_rule")
+prop_id = &"lily_pad"
+cell_size = 4
+density = 0.08
+clustering = 0.6
+min_height = -3
+max_height = -1
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = true
+salt = 165
+
+[sub_resource type="Resource" id="Rule_10"]
+script = ExtResource("2_rule")
+prop_id = &"clay_deposit"
+cell_size = 16
+density = 0.2
+clustering = 0.5
+min_height = 0
+max_height = 1
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 166
+
+[sub_resource type="Resource" id="Rule_11"]
+script = ExtResource("2_rule")
+prop_id = &"ore_copper"
+cell_size = 16
+density = 0.05
+clustering = 0.3
+min_height = 10
+max_height = 60
+max_slope = 2
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 167
 
 [sub_resource type="Resource" id="Spawn_0"]
 script = ExtResource("3_spawn")
 enemy_scene = ExtResource("4_boar_scene")
 enemy_data = ExtResource("5_boar_data")
-chance_per_chunk = 0.14
+chance_per_chunk = 0.12
 min_height = 2
-max_height = 30
+max_height = 40
 salt = 21
 
 [resource]
 script = ExtResource("1_biome")
 id = &"verdant_meadow"
 display_name = "Verdant Meadows"
-prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_7")]
+role = 0
+map_color = Color(0.45, 0.72, 0.32, 1)
+temperature_min = 0.0
+temperature_max = 1.0
+moisture_min = 0.0
+moisture_max = 1.0
+top_color = Color(0.36, 0.62, 0.27, 1)
+top_color_alt = Color(0.42, 0.67, 0.29, 1)
+side_color = Color(0.5, 0.35, 0.22, 1)
+shore_color = Color(0.93, 0.84, 0.55, 1)
+underwater_color = Color(0.72, 0.64, 0.45, 1)
+prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_7"), SubResource("Rule_8"), SubResource("Rule_9"), SubResource("Rule_10"), SubResource("Rule_11")]
 enemy_spawns = [SubResource("Spawn_0")]

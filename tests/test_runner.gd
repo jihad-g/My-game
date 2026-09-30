@@ -19,6 +19,9 @@ func _ready() -> void:
 	_run(&"test_world_to_chunk")
 	_run(&"test_terrain_determinism")
 	_run(&"test_terrain_statistics")
+	_run(&"test_biome_distribution")
+	_run(&"test_climate_continuity")
+	_run(&"test_caves")
 	_run(&"test_chunk_generation")
 	_run(&"test_prop_placement_deterministic")
 	_run(&"test_data_integrity")
@@ -29,6 +32,8 @@ func _ready() -> void:
 	await _run_async(&"test_temperature_never_damages")
 	# Integration tests (real main scene)
 	await _run_async(&"test_integration")
+	await _run_async(&"test_layers_and_swimming")
+	await _run_async(&"test_save_load")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -61,8 +66,8 @@ func _frames(n: int) -> void:
 		await get_tree().physics_frame
 
 
-func _biome() -> BiomeData:
-	return load("res://data/biomes/verdant_meadow.tres")
+func _settings() -> WorldGenSettings:
+	return load("res://data/worldgen/default_worldgen.tres")
 
 
 # --- Unit tests ---------------------------------------------------------------------------
@@ -85,9 +90,9 @@ func test_world_to_chunk() -> void:
 
 
 func test_terrain_determinism() -> void:
-	var a := TerrainGenerator.new(42, _biome())
-	var b := TerrainGenerator.new(42, _biome())
-	var c := TerrainGenerator.new(43, _biome())
+	var a := TerrainGenerator.new(42, _settings())
+	var b := TerrainGenerator.new(42, _settings())
+	var c := TerrainGenerator.new(43, _settings())
 	var same := true
 	var differs := 0
 	for i in 400:
@@ -105,28 +110,117 @@ func test_terrain_determinism() -> void:
 
 
 func test_terrain_statistics() -> void:
-	var g := TerrainGenerator.new(GameState.DEFAULT_SEED, _biome())
+	var g := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
 	var hmin := 99999
 	var hmax := -99999
 	var water := 0
+	var inland_water := 0
 	var n := 0
-	for z in range(-600, 600, 12):
-		for x in range(-600, 600, 12):
-			var h := g.get_height_blocks(x, z)
+	for z in range(-3000, 3000, 30):
+		for x in range(-3000, 3000, 30):
+			var smp := g.sample_column(x, z)
+			var h := TerrainGenerator.unpack_height(smp)
+			var b := g.biomes[TerrainGenerator.unpack_biome(smp)]
 			hmin = mini(hmin, h)
 			hmax = maxi(hmax, h)
 			if h < TerrainGenerator.SEA_LEVEL:
 				water += 1
+				if b.role == BiomeData.Role.LAND:
+					inland_water += 1
 			n += 1
 	var wf := float(water) / n
-	print("   heights: min %d max %d (blocks), water %.1f%%" % [hmin, hmax, wf * 100.0])
-	check(wf > 0.01 and wf < 0.45, "some lakes but mostly land")
-	check(hmax > 20, "there are hills (max %d blocks)" % hmax)
-	check(hmax < 120, "no absurd spikes")
+	print("   6x6 km: heights %d..%d blocks, water %.1f%%, inland water (rivers/lakes) %.1f%%" % [hmin, hmax, wf * 100.0, inland_water * 100.0 / n])
+	check(wf > 0.05 and wf < 0.6, "oceans and lakes exist but most of the world is land")
+	check(inland_water > n / 200, "rivers and lakes inside land biomes")
+	check(hmax > 70, "tall mountains exist (max %d blocks = %d m)" % [hmax, hmax / 2])
+	check(hmin < -10, "deep oceans exist (min %d blocks)" % hmin)
+	check(hmax < 200, "no absurd spikes")
+
+
+func test_biome_distribution() -> void:
+	var g := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var counts := {}
+	var n := 0
+	for z in range(-5000, 5000, 50):
+		for x in range(-5000, 5000, 50):
+			var b := g.biomes[g.get_biome_index(x, z)]
+			counts[b.id] = counts.get(b.id, 0) + 1
+			n += 1
+	var parts := PackedStringArray()
+	for id in counts:
+		parts.append("%s %.1f%%" % [id, counts[id] * 100.0 / n])
+	print("   10x10 km: " + ", ".join(parts))
+	var surface_biomes := 0
+	for b in g.biomes:
+		if b.role != BiomeData.Role.UNDERGROUND:
+			surface_biomes += 1
+	check(counts.size() >= surface_biomes - 1, "%d of %d surface biomes appear in 10x10 km" % [counts.size(), surface_biomes])
+	var rare := float(counts.get(&"crystal_glade", 0)) / n
+	check(rare > 0.0 and rare < 0.06, "magical Crystal Glade is rare (%.2f%%)" % (rare * 100.0))
+	var other := TerrainGenerator.new(GameState.DEFAULT_SEED + 1, _settings())
+	var differ := 0
+	for i in 200:
+		if g.get_biome_index(i * 97 - 9000, i * 61 - 6000) != other.get_biome_index(i * 97 - 9000, i * 61 - 6000):
+			differ += 1
+	check(differ > 40, "a different seed lays out biomes differently (%d/200)" % differ)
+
+
+func test_climate_continuity() -> void:
+	var g := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var max_step := 0.0
+	var tmin := 999.0
+	var tmax := -999.0
+	for i in 3000:
+		var p := Vector3(i * 3.0 - 4500.0, 0, i * 1.7 - 2500.0)
+		var a := g.get_climate(p).x
+		var b := g.get_climate(p + Vector3(1, 0, 0)).x
+		max_step = maxf(max_step, absf(a - b))
+		tmin = minf(tmin, a)
+		tmax = maxf(tmax, a)
+	print("   sea-level climate range %.1f..%.1f °C" % [tmin, tmax])
+	check(max_step < 0.5, "temperature is continuous across columns (max step %.3f °C)" % max_step)
+	check(tmin < 0.0 and tmax > 28.0, "world has both freezing and hot regions")
+
+
+func test_caves() -> void:
+	var g := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var entrances := g.get_cave_entrances_near(-800, -800, 800, 800)
+	check(entrances.size() >= 20, "cave entrances are common (%d in 1.6x1.6 km)" % entrances.size())
+	var ok := true
+	for e in entrances:
+		if g.get_height_blocks(e.x, e.y) < TerrainGenerator.SEA_LEVEL + 2:
+			ok = false
+		if not g.is_cave_open(e.x, e.y, entrances):
+			ok = false
+	check(ok, "every entrance is on dry land and opens into a cave room below")
+	var open := 0
+	var total := 0
+	for z in range(-400, 400, 4):
+		for x in range(-400, 400, 4):
+			total += 1
+			if g.is_cave_open(x, z, []):
+				open += 1
+	var frac := float(open) / total
+	print("   cave open fraction %.1f%%" % (frac * 100.0))
+	check(frac > 0.15 and frac < 0.7, "caves mix tunnels/caverns with solid rock")
+	if not entrances.is_empty():
+		var e := entrances[0]
+		var coord := TerrainGenerator.column_to_chunk(e.x, e.y)
+		var top := g.generate_chunk(coord, 0, TerrainGenerator.Layer.SURFACE)
+		var below := g.generate_chunk(coord, 0, TerrainGenerator.Layer.UNDERGROUND)
+		check(top.features.any(func(f: Dictionary) -> bool: return f.type == &"cave_entrance"), "surface chunk has the cave entrance")
+		check(below.features.any(func(f: Dictionary) -> bool: return f.type == &"cave_exit"), "cave chunk has the matching exit")
+		check(below.water_vertices.is_empty() and not below.collision_faces.is_empty(), "cave chunk: collision, no water")
+		check(below.max_height < TerrainGenerator.CAVE_FLOOR + 10, "cave floor is deep underground")
+	var cave_props := 0
+	for cz in range(-3, 3):
+		for cx in range(-3, 3):
+			cave_props += g.generate_chunk(Vector2i(cx, cz), 0, TerrainGenerator.Layer.UNDERGROUND).props.size()
+	check(cave_props > 10, "caves contain ores/fungi/stalagmites (%d in 36 chunks)" % cave_props)
 
 
 func test_chunk_generation() -> void:
-	var g := TerrainGenerator.new(7, _biome())
+	var g := TerrainGenerator.new(7, _settings())
 	var t0 := Time.get_ticks_usec()
 	var d0 := g.generate_chunk(Vector2i(0, 0), 0)
 	var gen_ms := (Time.get_ticks_usec() - t0) / 1000.0
@@ -153,8 +247,8 @@ func test_chunk_generation() -> void:
 
 
 func test_prop_placement_deterministic() -> void:
-	var g1 := TerrainGenerator.new(99, _biome())
-	var g2 := TerrainGenerator.new(99, _biome())
+	var g1 := TerrainGenerator.new(99, _settings())
+	var g2 := TerrainGenerator.new(99, _settings())
 	var total := 0
 	var all_same := true
 	for cz in range(-2, 3):
@@ -184,25 +278,32 @@ func test_prop_placement_deterministic() -> void:
 
 
 func test_data_integrity() -> void:
-	check(ItemDB.all_ids().size() >= 10, "ItemDB loaded %d items" % ItemDB.all_ids().size())
+	check(ItemDB.all_ids().size() >= 21, "ItemDB loaded %d items" % ItemDB.all_ids().size())
 	var lib := PropLibrary.new()
-	var biome := _biome()
 	var ok := true
-	for rule in biome.prop_rules:
-		var pd := lib.get_prop(rule.prop_id)
-		if pd == null:
-			ok = false
-			print("   missing prop %s" % rule.prop_id)
-			continue
-		if lib.get_mesh(rule.prop_id) == null:
-			ok = false
-		for loot in pd.drops:
-			if not ItemDB.has_item(loot.item_id):
+	var rule_count := 0
+	var ids := {}
+	for biome in _settings().biomes:
+		check(not ids.has(biome.id), "biome id %s is unique" % biome.id)
+		ids[biome.id] = true
+		check(biome.prop_rules.size() < 64, "%s has < 64 prop rules (index scheme)" % biome.id)
+		for rule in biome.prop_rules:
+			rule_count += 1
+			var pd := lib.get_prop(rule.prop_id)
+			if pd == null:
 				ok = false
-				print("   prop %s drops unknown item %s" % [pd.id, loot.item_id])
-		if TerrainGenerator.CHUNK_SIZE % rule.cell_size != 0:
-			ok = false
-	check(ok, "all biome props exist, have meshes and valid drops")
+				print("   %s: missing prop %s" % [biome.id, rule.prop_id])
+				continue
+			if lib.get_mesh(rule.prop_id) == null:
+				ok = false
+			for loot in pd.drops:
+				if not ItemDB.has_item(loot.item_id):
+					ok = false
+					print("   prop %s drops unknown item %s" % [pd.id, loot.item_id])
+			if TerrainGenerator.CHUNK_SIZE % rule.cell_size != 0:
+				ok = false
+				print("   %s: bad cell size for %s" % [biome.id, rule.prop_id])
+	check(ok, "all %d prop rules reference existing props with meshes and valid drops" % rule_count)
 	var boar: EnemyData = load("res://data/enemies/thornback_boar.tres")
 	check(boar.get_attack(ThornbackBoar.BITE_ID) != null and boar.get_attack(ThornbackBoar.CHARGE_ID) != null, "boar attacks defined")
 	var loot_ok := true
@@ -351,7 +452,7 @@ func test_temperature_never_damages() -> void:
 # --- Integration --------------------------------------------------------------------------
 
 func test_integration() -> void:
-	GameState.reset(GameState.DEFAULT_SEED)
+	SaveManager.start_transient(GameState.DEFAULT_SEED)
 	var scene: PackedScene = load("res://scenes/main.tscn")
 	var world := scene.instantiate() as World
 	add_child(world)
@@ -581,3 +682,174 @@ func test_integration() -> void:
 
 	world.queue_free()
 	await _frames(5)
+
+
+## Boots the main scene and waits until the area around the player is ready.
+func _boot_world() -> World:
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	var waited := 0
+	while not world.is_ready and waited < 1500:
+		await get_tree().process_frame
+		waited += 1
+	return world
+
+
+func _wait_ready(world: World) -> int:
+	var waited := 0
+	await get_tree().process_frame
+	while not world.is_ready and waited < 1500:
+		await get_tree().process_frame
+		waited += 1
+	return waited
+
+
+func test_layers_and_swimming() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED)
+	var world: World = await _boot_world()
+	var player := world.player
+	check(world.is_ready, "world ready")
+	var g := world.generator
+	var start := player.global_position
+
+	# --- Swimming: find deep water within 1.5 km and swim in it.
+	var deep := Vector3.INF
+	for r in range(20, 1500, 20):
+		for k in 24:
+			var a := TAU * k / 24.0
+			var p := start + Vector3(cos(a), 0, sin(a)) * r
+			if g.get_height_at(p) < TerrainGenerator.WATER_Y - 2.0 and not g.get_biome_at(p).frozen_water:
+				deep = p
+				break
+		if deep != Vector3.INF:
+			break
+	check(deep != Vector3.INF, "found deep water near spawn")
+	if deep != Vector3.INF:
+		player.global_position = Vector3(deep.x, TerrainGenerator.WATER_Y - 1.0, deep.z)
+		var w := await _wait_ready_after_teleport(world)
+		await _frames(90)
+		check(player.is_swimming, "player swims in deep water (streamed in %d frames)" % w)
+		check(absf(player.global_position.y - (TerrainGenerator.WATER_Y - player.swim_depth)) < 0.3,
+			"player floats at the surface (y=%.2f)" % player.global_position.y)
+		var st := player.stamina.current
+		Input.action_press(&"move_forward")
+		await _frames(30)
+		Input.action_release(&"move_forward")
+		check(player.stamina.current < st, "swimming costs stamina")
+
+	# --- Caves: walk into an entrance and back out.
+	var entrances := g.get_cave_entrances_near(floori(start.x) - 600, floori(start.z) - 600, floori(start.x) + 600, floori(start.z) + 600)
+	check(not entrances.is_empty(), "cave entrance within 600 m of spawn")
+	if entrances.is_empty():
+		world.queue_free()
+		return
+	var e := entrances[0]
+	var epos := Vector3(e.x + 0.5, g.get_height_blocks(e.x, e.y) * TerrainGenerator.BLOCK_HEIGHT, e.y + 0.5)
+	player.global_position = epos + Vector3(2, 0.5, 0)
+	await _wait_ready_after_teleport(world)
+	await _frames(10)
+	var passage: CavePassage = null
+	var chunk := world.chunk_manager.get_chunk(TerrainGenerator.world_to_chunk(epos))
+	if chunk:
+		for c in chunk.get_children():
+			if c is CavePassage:
+				passage = c
+	check(passage != null and passage.target_layer == TerrainGenerator.Layer.UNDERGROUND, "entrance structure spawned in the chunk")
+	if passage:
+		passage.interact(player)
+	else:
+		world.travel_to_layer(TerrainGenerator.Layer.UNDERGROUND, epos)
+	check(world.layer == TerrainGenerator.Layer.UNDERGROUND, "travelled to the underground layer")
+	var waited := await _wait_ready(world)
+	check(world.is_ready, "cave streamed in (%d frames)" % waited)
+	await _frames(60)
+	check(player.is_on_floor(), "player stands on the cave floor")
+	check(player.global_position.y < -100.0, "player is deep underground (y=%.1f)" % player.global_position.y)
+	check(world.current_biome != null and world.current_biome.id == &"the_deeps", "biome is The Deeps")
+	check(absf(world.get_air_temperature(player.global_position) - world.worldgen.cave_temperature) < 0.1, "caves have a steady temperature")
+	check(not world.day_night.sun.visible, "no sun underground")
+	var cave_chunk := world.chunk_manager.get_chunk(TerrainGenerator.world_to_chunk(player.global_position))
+	check(cave_chunk != null and cave_chunk.layer == 1, "underground chunks loaded")
+	var any_props := 0
+	for coord in world.chunk_manager._chunks:
+		any_props += world.chunk_manager._chunks[coord].prop_count()
+	check(any_props > 0, "cave props (ores, fungi) present (%d)" % any_props)
+	world.travel_to_layer(TerrainGenerator.Layer.SURFACE, epos)
+	await _wait_ready(world)
+	await _frames(30)
+	check(world.layer == 0 and player.global_position.y > -20.0, "climbed back to the surface")
+	check(world.day_night.sun.visible, "sun is back")
+	world.queue_free()
+	await _frames(5)
+
+
+func _wait_ready_after_teleport(world: World) -> int:
+	var waited := 0
+	await get_tree().process_frame
+	while not world.chunk_manager.is_near_area_ready() and waited < 1500:
+		await get_tree().process_frame
+		waited += 1
+	return waited
+
+
+func test_save_load() -> void:
+	var saved_dir := SaveManager.worlds_dir
+	SaveManager.worlds_dir = "user://test_worlds"
+	for w in SaveManager.list_worlds():
+		SaveManager.delete_world(w.id)
+	var id := SaveManager.create_world("Test World!", 424242)
+	check(id == "test_world_", "world id derived from name (%s)" % id)
+	check(SaveManager.is_persistent(), "created world is persistent")
+	var world: World = await _boot_world()
+	var player := world.player
+	check(world.is_ready, "new saved world boots")
+	check(FileAccess.file_exists("user://test_worlds/%s/save.json" % id), "initial save written")
+	# Change things.
+	player.global_position += Vector3(3, 0, 2)
+	player.inventory.add_item(&"iron_ore", 7)
+	player.hunger._set_current(42.0)
+	player.health.current = 55.0
+	player.temperature.add_buff(&"test_buff", 5.0, 100.0)
+	world.day_night.hour = 17.5
+	world.place_object(load("res://scenes/world/campfire.tscn"), player.global_position + Vector3(2, 0, 0))
+	GameState.mark_prop_removed(Vector2i(3, -2), 12345, 0)
+	GameState.mark_prop_removed(Vector2i(3, -2), 777, 1)
+	GameState.mark_enemy_killed("1,1:10:0")
+	GameState.discover_biome(&"sunscorch_desert")
+	await _frames(3)
+	var pos := player.global_position
+	check(world.save_now(false), "save_now succeeds")
+	world.queue_free()
+	await _frames(5)
+
+	# Wreck the in-memory state, then load from disk.
+	GameState.reset(1)
+	check(SaveManager.list_worlds().size() == 1, "world appears in the world list")
+	check(SaveManager.load_world(id), "load_world succeeds")
+	check(GameState.world_seed == 424242, "seed restored")
+	check(GameState.is_prop_removed(Vector2i(3, -2), 12345, 0.0, 0), "surface world change restored")
+	check(GameState.is_prop_removed(Vector2i(3, -2), 777, 0.0, 1), "underground world change restored")
+	check(not GameState.can_spawn_slot("1,1:10:0", 300.0), "killed spawn slot restored")
+	check(GameState.discovered_biomes.has("sunscorch_desert"), "discovered biomes restored")
+	world = await _boot_world()
+	player = world.player
+	check(world.is_ready, "loaded world boots")
+	check(player.global_position.distance_to(pos) < 0.6, "player position restored (%.2f m off)" % player.global_position.distance_to(pos))
+	check(player.inventory.count_of(&"iron_ore") == 7, "inventory restored")
+	check(absf(player.hunger.current - 42.0) < 1.0, "hunger restored")
+	check(absf(player.health.current - 55.0) < 2.0, "health restored")
+	check(player.temperature.get_buffs().has(&"test_buff"), "temperature buffs restored")
+	check(absf(world.day_night.hour - 17.5) < 0.2, "time of day restored")
+	check(get_tree().get_nodes_in_group(&"heat_sources").size() == 1, "placed campfire restored")
+	world.queue_free()
+	await _frames(5)
+	# A corrupt main save falls back to the backup.
+	var f := FileAccess.open("user://test_worlds/%s/save.json" % id, FileAccess.WRITE)
+	f.store_string("{ this is not json")
+	f.close()
+	check(SaveManager.load_world(id) and not SaveManager.pending.is_empty(), "corrupt save falls back to .bak")
+	SaveManager.pending = {}
+	check(SaveManager.delete_world(id), "world deleted")
+	check(SaveManager.list_worlds().is_empty(), "world list empty after delete")
+	SaveManager.worlds_dir = saved_dir
+	SaveManager.start_transient(GameState.DEFAULT_SEED)

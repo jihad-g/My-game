@@ -1,7 +1,7 @@
 [gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://src/world/world.gd" id="1_world"]
-[ext_resource type="Resource" path="res://data/biomes/verdant_meadow.tres" id="2_biome"]
+[ext_resource type="Resource" path="res://data/worldgen/default_worldgen.tres" id="2_worldgen"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/thornback_boar.tscn" id="3_boar"]
 [ext_resource type="Script" path="res://src/world/day_night_cycle.gd" id="4_daynight"]
 [ext_resource type="Script" path="res://src/world/chunk_manager.gd" id="5_chunks"]
@@ -35,7 +35,7 @@ adjustment_saturation = 1.05
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_world")
-default_biome = ExtResource("2_biome")
+worldgen = ExtResource("2_worldgen")
 debug_enemy_scene = ExtResource("3_boar")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]

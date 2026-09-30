@@ -32,32 +32,58 @@ World (world.gd)                 wires systems, world services (temperature, pic
 
 ## World generation & streaming
 
-- `TerrainGenerator` (RefCounted, thread-safe): layered `FastNoiseLite` (continent, hills,
-  ridges, detail) seeded via `HashUtils` → integer column heights (1 m × 0.5 m blocks).
-  `generate_chunk(coord, lod)` returns a pure-data `ChunkData`: surface mesh arrays
-  (only visible faces, edge skirts hide LOD seams), collision triangles (LOD0),
-  water quads, prop placements and enemy spawn slots.
-- Props use **world-aligned cells** (`PropRule.cell_size`) and hashed randomness, so the same
-  prop appears regardless of chunk load order or LOD.
-- `ChunkManager`: desired LOD rings (default radii 3/6/9 chunks → LOD0/1/2). Missing or
-  wrong-LOD chunks are queued nearest-first and generated on `WorkerThreadPool`
-  (max 4 in flight). Results are applied on the main thread (max 3 per frame). Chunks
-  beyond the outer radius + margin return to a node pool. Stale results are discarded.
-- `Chunk`: terrain `ArrayMesh`, `ConcavePolygonShape3D` collision (LOD0), water mesh,
-  one `MultiMeshInstance3D` per prop type, and lightweight `PropBody` physics proxies
-  (LOD0 only) for harvesting/gathering.
-- LOD: LOD1/LOD2 sample every 2nd/4th column, no collision, LOD2 has no props or shadows.
-  Props have visibility ranges; trees dither out near the camera.
-- Large world: there is no world border. At the 3,000,000-chunk target (~1,732 chunks per
-  side ≈ 27.7 km) coordinates stay within ±14 km of the origin — fine for 32-bit floats.
-  Beyond that a floating origin would be required (not needed for the target).
+- `TerrainGenerator` (RefCounted, thread-safe) + `WorldGenSettings` (all parameters).
+  `sample_column(wx, wz)` is the single source of truth for a surface column; it returns
+  height (blocks) and biome index packed in one int.
+  - **Shape** comes from continuous fields only: continentalness (oceans → coasts → land),
+    island noise, hills, a mountain mask × ridged noise, swamp flattening
+    (warm + wet), desert dunes (hot + dry), lake noise, and river channels
+    (|domain-warped noise| < width, sloped valleys, faded out in mountains). Because the
+    fields are continuous, biome borders never create cliffs or seams.
+  - **Biomes** classify columns: ocean (deep + low continentalness), beach (coastal,
+    not arctic), mountain (high or very mountainous), rare biomes (rarity noise above
+    `rare_threshold`), then LAND biomes by temperature/moisture ranges in list order;
+    the last LAND biome is the fallback. All defined in `data/biomes/*.tres`.
+  - **Climate**: `get_climate(pos)` gives sea-level °C and day/night swing from the same
+    temperature/moisture fields; `World` adds time of day, altitude lapse and water chill.
+- **Layers**: `SURFACE` and `UNDERGROUND`. The underground is a heightmap of floors and
+  5-block walls: open where tunnel noise (two |noise| bands) or cavern noise allows, plus
+  a guaranteed room under every cave entrance. Entrances sit on a 64-block grid (hash
+  chance), only on dry, flat, non-coastal land, and are shared by both layers, so the
+  entrance above and the exit below are always at the same XZ.
+- `generate_chunk(coord, lod, layer)` returns pure-data `ChunkData`: surface mesh arrays
+  (visible faces only, edge skirts hide LOD seams), collision triangles (LOD0), water or
+  **ice** quads (frozen biomes, part of collision), prop placements, features (cave
+  passages) and enemy spawn slots.
+- **Props**: each biome has `PropRule`s over world-aligned cells; a candidate is kept only
+  if its own column belongs to that biome, so vegetation follows biome borders exactly.
+  Prop index = `rule_uid(biome, rule) * 4096 + cell` → stable ids for persistence (append
+  new biomes/rules at the end of lists to keep old saves valid). Lily pads use `on_water`.
+- `ChunkManager`: LOD rings (default 3/6/9 chunks), worker-thread generation (max 4 in
+  flight), main-thread apply budget (3/frame), chunk pool, stale-result discarding
+  (including results for the previous layer after `set_layer()`).
+- `Chunk`: terrain mesh, concave collision (LOD0), water, one MultiMesh per prop type,
+  `PropBody` proxies for harvest/gather (LOD0), feature scenes (`CavePassage`).
+- Large world: there is no world border; ±14 km at the 3M-chunk target is fine for floats.
+
+## Save system (`SaveManager` autoload)
+
+- `user://worlds/<id>/world.json` (metadata) and `save.json` (state), written via a
+  `.tmp` file; the previous save is kept as `.bak` and used if the main file is corrupt.
+- `save.json` = `{save_version, game_state: GameState.to_dict(), player: Player.to_save(),
+  world: World.to_save()}`. `World.to_save()` stores layer, day/time and every node under
+  `Placed` (scene path, transform, and `save_data()` if the node implements it).
+- Seeds are stored as strings (64-bit ints don't survive JSON doubles).
+- `SaveManager._migrate()` is the hook for future format changes; `generator_version`
+  in `WorldGenSettings` documents when generation changes would alter existing worlds.
+- Flow: menu → `create_world()` / `load_world()` / `start_transient()` → main scene →
+  `World._ready()` consumes `SaveManager.pending`.
 
 ## Persistence model (`GameState`)
 
-`world_seed`, `world_time`, `removed_props[chunk][prop_index] = time` (with optional regrow
-time per prop type), `enemy_deaths[slot_key] = time` (respawn time per enemy type).
-`to_dict()/from_dict()` exist and are tested; the save system (files, player data, UI) is
-not implemented yet.
+`world_seed`, `world_time`, `removed_props[Vector3i(chunk.x, chunk.y, layer)][prop_index]
+= time` (with optional regrow time per prop type), `enemy_deaths[slot_key] = time`
+(respawn time per enemy type), `discovered_biomes[id] = time`.
 
 ## Combat
 
@@ -90,5 +116,6 @@ not implemented yet.
 | New item | Add `data/items/<id>.tres` (`ItemData`). Food fields make it edible. |
 | New prop | Add `data/props/<id>.tres` (`PropData`) + a `_build_<name>` mesh function in `PropLibrary`; reference it from a biome `PropRule`. |
 | New enemy | Create `EnemyData` + `AttackData`s, a scene with an `Enemy` subclass script, and add an `EnemySpawnRule` to a biome. |
-| New biome | Add a `BiomeData`; implement biome selection in `TerrainGenerator.get_biome()` (Phase 3). |
+| New biome | Add a `BiomeData` (role + climate ranges + colours + prop rules) and append it to `data/worldgen/default_worldgen.tres`. |
+| Save a new placeable | Put it under `World.placed_root` (via `place_object`) and implement `save_data()` / `load_data()`. |
 | New input | Add to `InputSetup.KEY_BINDINGS`. |

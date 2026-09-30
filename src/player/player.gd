@@ -23,6 +23,11 @@ enum State { NORMAL, DODGING, STAGGERED, DEAD }
 @export var max_step_height: float = 0.6
 ## Movement multiplier while wading through water.
 @export var water_speed_multiplier: float = 0.65
+## Movement multiplier while swimming in deep water.
+@export var swim_speed_multiplier: float = 0.55
+@export var swim_cost_per_second: float = 3.0
+## Swimming body height below the water surface (feet position).
+@export var swim_depth: float = 1.05
 
 @export_group("Stamina costs")
 @export var sprint_cost_per_second: float = 14.0
@@ -79,6 +84,9 @@ var _interact_target: Node = null
 var _want_light := false
 var _want_heavy := false
 var _in_water := false
+## True while in water too deep to stand in.
+var is_swimming := false
+var _lantern: OmniLight3D
 
 
 func _ready() -> void:
@@ -122,7 +130,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_dodge_cooldown_left -= delta
 	hunger.activity_multiplier = 1.0
-	_in_water = global_position.y < TerrainGenerator.WATER_Y - 0.25
+	_update_water()
 
 	if state == State.DEAD:
 		_apply_gravity(delta)
@@ -137,7 +145,12 @@ func _physics_process(delta: float) -> void:
 	match state:
 		State.NORMAL:
 			_update_blocking(delta)
-			if Input.is_action_just_pressed(&"dodge") and _dodge_cooldown_left <= 0.0 and combat.can_cancel():
+			if is_swimming:
+				_want_light = false
+				_want_heavy = false
+				combat.cancel()
+				_move_swimming(input, delta)
+			elif Input.is_action_just_pressed(&"dodge") and _dodge_cooldown_left <= 0.0 and combat.can_cancel():
 				_start_dodge(input)
 			else:
 				_consume_attack_requests()
@@ -155,10 +168,18 @@ func _physics_process(delta: float) -> void:
 
 	# Knockback decays quickly and stacks on top of controlled movement.
 	velocity += _knockback
-	_apply_gravity(delta)
+	if is_swimming:
+		# Buoyancy: float with the head above the surface.
+		var float_y := TerrainGenerator.WATER_Y - swim_depth
+		velocity.y = (float_y - global_position.y) * 4.0
+	else:
+		_apply_gravity(delta)
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z) * delta
 	if is_on_floor():
 		GroundMotion.try_step_up(self, horizontal, max_step_height)
+	elif is_swimming:
+		# Climb out onto the bank.
+		GroundMotion.try_step_up(self, horizontal, swim_depth + 0.9)
 	move_and_slide()
 	velocity -= _knockback
 	_knockback = _knockback.move_toward(Vector3.ZERO, 30.0 * delta)
@@ -168,9 +189,48 @@ func _physics_process(delta: float) -> void:
 	var planar_speed := Vector2(velocity.x, velocity.z).length()
 	model.set_locomotion(planar_speed / walk_speed * 0.8, delta)
 
-	# Safety net: fell out of the world (e.g. terrain not yet loaded).
-	if global_position.y < -60.0:
+	# Safety net: fell through the world (e.g. terrain not yet loaded).
+	if velocity.y < -30.0:
 		_rescue_to_surface()
+
+
+func _update_water() -> void:
+	var w := World.instance
+	_in_water = w != null and w.is_in_water(global_position)
+	var was_swimming := is_swimming
+	is_swimming = _in_water and global_position.y < TerrainGenerator.WATER_Y - 0.6 and w.is_deep_water(global_position)
+	if is_swimming and not was_swimming:
+		is_blocking = false
+		model.set_blocking(false)
+
+
+func _move_swimming(input: Vector3, delta: float) -> void:
+	var speed := walk_speed * swim_speed_multiplier * stats.get_mult(Stats.MOVE_SPEED)
+	if input != Vector3.ZERO:
+		if stamina.current > 1.0:
+			stamina.consume(swim_cost_per_second * delta)
+		else:
+			speed *= 0.5  # exhausted: barely keeping afloat
+		face_direction(input, false)
+	hunger.activity_multiplier = 1.5
+	var accel := acceleration * 0.5 * delta
+	velocity.x = move_toward(velocity.x, input.x * speed, accel)
+	velocity.z = move_toward(velocity.z, input.z * speed, accel)
+
+
+## Personal light, used underground.
+func set_lantern(on: bool) -> void:
+	if on and _lantern == null:
+		_lantern = OmniLight3D.new()
+		_lantern.light_color = Color(1.0, 0.8, 0.55)
+		_lantern.light_energy = 1.8
+		_lantern.omni_range = 14.0
+		_lantern.omni_attenuation = 0.8
+		_lantern.shadow_enabled = false
+		_lantern.position = Vector3(0.3, 2.2, 0.2)
+		add_child(_lantern)
+	if _lantern:
+		_lantern.visible = on
 
 
 func _get_move_input() -> Vector3:
@@ -405,10 +465,11 @@ func respawn() -> void:
 
 
 func _rescue_to_surface() -> void:
-	if World.instance:
-		var p := global_position
-		p.y = World.instance.get_ground_height(p) + 1.0
-		global_position = p
+	if World.instance == null:
+		return
+	var ground := World.instance.get_ground_height(global_position)
+	if global_position.y < ground - 8.0:
+		global_position.y = ground + 1.0
 		velocity = Vector3.ZERO
 
 
@@ -528,7 +589,7 @@ func _place(item: ItemData) -> bool:
 		var aim := camera_rig.get_mouse_world_point(global_position.y)
 		if aim.distance_to(global_position) <= 4.0:
 			target = aim
-	return World.instance.place_object(item.placeable_scene, target)
+	return World.instance.place_object(item.placeable_scene, target) != null
 
 
 func drop_slot(index: int, count: int) -> void:
@@ -539,3 +600,40 @@ func drop_slot(index: int, count: int) -> void:
 	var n := inventory.remove_from_slot(index, count)
 	if n > 0:
 		World.instance.spawn_pickup(id, n, global_position + _facing * 1.2 + Vector3(0, 1.0, 0), false)
+
+
+# --- Save / load -------------------------------------------------------------------------
+
+func to_save() -> Dictionary:
+	return {
+		"position": [global_position.x, global_position.y, global_position.z],
+		"spawn_point": [spawn_point.x, spawn_point.y, spawn_point.z],
+		"facing": [_facing.x, _facing.z],
+		"health": health.current,
+		"dead": is_dead,
+		"stamina": stamina.current,
+		"hunger": hunger.current,
+		"temperature": temperature.felt,
+		"temperature_buffs": temperature.get_buffs().duplicate(true),
+		"inventory": inventory.to_array(),
+	}
+
+
+func from_save(data: Dictionary) -> void:
+	if data.is_empty():
+		return
+	var p: Array = data.get("position", [0, 0, 0])
+	global_position = Vector3(float(p[0]), float(p[1]), float(p[2]))
+	var sp: Array = data.get("spawn_point", p)
+	spawn_point = Vector3(float(sp[0]), float(sp[1]), float(sp[2]))
+	var f: Array = data.get("facing", [0, 1])
+	face_direction(Vector3(float(f[0]), 0, float(f[1])), true)
+	health.current = clampf(float(data.get("health", health.max_health)), 1.0, health.max_health)
+	health.health_changed.emit(health.current, health.max_health)
+	stamina.current = float(data.get("stamina", stamina.max_stamina))
+	hunger._set_current(float(data.get("hunger", hunger.max_hunger)))
+	temperature.felt = float(data.get("temperature", temperature.felt))
+	var buffs: Dictionary = data.get("temperature_buffs", {})
+	for id in buffs:
+		temperature.add_buff(StringName(id), float(buffs[id].offset), float(buffs[id].time_left))
+	inventory.from_array(data.get("inventory", []))

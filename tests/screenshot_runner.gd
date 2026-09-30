@@ -76,7 +76,113 @@ func _ready() -> void:
 	world.day_night.advance_hours(14.0)
 	await _wait(20)
 	await _shot("06_night")
+	world.day_night.advance_hours(10.0)
+	p.health.invulnerable = true
+	await _biome_tour(world)
+	world.queue_free()
+	await _wait(5)
+	var menu := (load("res://scenes/menu/main_menu.tscn") as PackedScene).instantiate()
+	add_child(menu)
+	await _wait(10)
+	await _shot("20_main_menu")
 	get_tree().quit()
+
+
+func _biome_tour(world: World) -> void:
+	var g := world.generator
+	var p := world.player
+	var origin := p.global_position
+	world.camera_rig._target_distance = 26.0
+	world.camera_rig._target_pitch = 50.0
+	var n := 10
+	for id in [&"sunscorch_desert", &"snowy_tundra", &"emerald_jungle", &"murk_swamp", &"stonecrown_mountains",
+			&"crystal_glade", &"sandy_beach", &"frostpine_taiga", &"whispering_forest"]:
+		var spot := _find_biome(g, origin, id)
+		if spot == Vector3.INF:
+			print("biome not found near spawn: ", id)
+			continue
+		await _teleport(world, spot)
+		await _shot("%02d_biome_%s" % [n, id])
+		n += 1
+	# Swimming
+	for r in range(20, 2000, 20):
+		var found := false
+		for k in 24:
+			var q := origin + Vector3(cos(TAU * k / 24.0), 0, sin(TAU * k / 24.0)) * r
+			if g.get_height_at(q) < -2.0 and not g.get_biome_at(q).frozen_water:
+				await _teleport(world, Vector3(q.x, TerrainGenerator.WATER_Y - 1.0, q.z))
+				await _wait(60)
+				await _shot("%02d_swimming" % n)
+				n += 1
+				found = true
+				break
+		if found:
+			break
+	# Map
+	world.hud._map.toggle()
+	await _wait(90)
+	await _shot("%02d_world_map" % n)
+	n += 1
+	world.hud._map.toggle()
+	# Cave
+	var e := g.get_cave_entrances_near(floori(origin.x) - 600, floori(origin.z) - 600, floori(origin.x) + 600, floori(origin.z) + 600)
+	if not e.is_empty():
+		var epos := Vector3(e[0].x + 0.5, g.get_height_blocks(e[0].x, e[0].y) * 0.5, e[0].y + 0.5)
+		await _teleport(world, epos + Vector3(3, 0.5, 2))
+		world.camera_rig._target_distance = 14.0
+		await _wait(40)
+		await _shot("%02d_cave_entrance" % n)
+		n += 1
+		world.travel_to_layer(TerrainGenerator.Layer.UNDERGROUND, epos)
+		while not world.is_ready:
+			await get_tree().process_frame
+		await _wait(60)
+		await _shot("%02d_cave_inside" % n)
+		n += 1
+		world.camera_rig._target_distance = 30.0
+		await _wait(40)
+		await _shot("%02d_cave_overview" % n)
+		n += 1
+		world.hud._map.toggle()
+		await _wait(90)
+		await _shot("%02d_cave_map" % n)
+		world.hud._map.toggle()
+
+
+func _find_biome(g: TerrainGenerator, origin: Vector3, id: StringName) -> Vector3:
+	for r in range(40, 6000, 40):
+		var steps := maxi(8, r / 20)
+		for k in steps:
+			var a := TAU * k / steps
+			var q := origin + Vector3(cos(a), 0, sin(a)) * r
+			var b := g.get_biome_at(q)
+			if b.id != id:
+				continue
+			# Want the biome all around the camera view.
+			var ok := true
+			for d: Vector3 in [Vector3(12, 0, 0), Vector3(-12, 0, 0), Vector3(0, 0, 12), Vector3(0, 0, -12)]:
+				if g.get_biome_at(q + d).id != id:
+					ok = false
+			if ok and g.get_height_at(q) > 0.0:
+				return q
+	return Vector3.INF
+
+
+func _teleport(world: World, pos: Vector3) -> void:
+	var p := world.player
+	pos.y = maxf(pos.y, world.get_ground_height(pos) + 0.5)
+	p.global_position = pos
+	p.velocity = Vector3.ZERO
+	world.camera_rig.snap_to_target()
+	await _wait(2)
+	var frames := 0
+	while (not world.chunk_manager.is_near_area_ready() or world.chunk_manager.pending_count() > 0) and frames < 2500:
+		await get_tree().process_frame
+		frames += 1
+	var g := world.get_ground_height(p.global_position)
+	if p.global_position.y < g:
+		p.global_position.y = g + 0.3
+	await _wait(40)
 
 
 func _wait(n: int) -> void:

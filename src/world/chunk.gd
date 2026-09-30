@@ -9,6 +9,7 @@ extends Node3D
 
 var coord: Vector2i
 var lod: int = -1
+var layer: int = 0
 var library: PropLibrary
 
 var _terrain_mesh := ArrayMesh.new()
@@ -19,6 +20,14 @@ var _body := StaticBody3D.new()
 var _collision := CollisionShape3D.new()
 var _shape := ConcavePolygonShape3D.new()
 var _prop_mmis: Dictionary = {}  # StringName -> MultiMeshInstance3D
+var _features: Array[Node] = []
+
+## Scenes for special structures produced by the generator (data.features).
+const FEATURE_SCENES := {
+	&"cave_entrance": "res://scenes/world/cave_entrance.tscn",
+	&"cave_exit": "res://scenes/world/cave_exit.tscn",
+}
+static var _feature_cache: Dictionary = {}
 ## prop index -> {"prop_id", "mm_index", "transform", "position", "body"}
 var _instances: Dictionary = {}
 
@@ -41,6 +50,7 @@ func build(data: ChunkData) -> void:
 	clear_props()
 	coord = data.coord
 	lod = data.lod
+	layer = data.layer
 	name = "Chunk_%d_%d" % [coord.x, coord.y]
 	position = Vector3(coord.x * TerrainGenerator.CHUNK_SIZE, 0.0, coord.y * TerrainGenerator.CHUNK_SIZE)
 	visible = true
@@ -81,6 +91,22 @@ func build(data: ChunkData) -> void:
 		_body.process_mode = Node.PROCESS_MODE_DISABLED
 
 	_build_props(data)
+	_build_features(data)
+
+
+func _build_features(data: ChunkData) -> void:
+	for f: Dictionary in data.features:
+		var path: String = FEATURE_SCENES.get(f.type, "")
+		if path == "":
+			continue
+		if not _feature_cache.has(path):
+			_feature_cache[path] = load(path)
+		var node := (_feature_cache[path] as PackedScene).instantiate() as Node3D
+		node.position = f.position
+		if node.has_method("setup"):
+			node.setup(f)
+		add_child(node)
+		_features.append(node)
 
 
 func has_collision() -> bool:
@@ -95,7 +121,7 @@ func _build_props(data: ChunkData) -> void:
 		var pdata := library.get_prop(p.prop_id)
 		if pdata == null:
 			continue
-		if GameState.is_prop_removed(coord, p.index, pdata.regrow_time):
+		if GameState.is_prop_removed(coord, p.index, pdata.regrow_time, layer):
 			continue
 		if not groups.has(p.prop_id):
 			groups[p.prop_id] = []
@@ -166,7 +192,7 @@ func harvest_prop(index: int, gatherer: Node) -> void:
 	var world_pos: Vector3 = to_global(entry.position)
 	_hide_instance(entry)
 	_instances.erase(index)
-	GameState.mark_prop_removed(coord, index)
+	GameState.mark_prop_removed(coord, index, layer)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = HashUtils.hash3(index, int(GameState.world_time * 10.0), coord.x * 31 + coord.y)
 	for loot in pdata.drops:
@@ -214,6 +240,10 @@ func clear_props() -> void:
 		if is_instance_valid(body):
 			body.queue_free()
 	_instances.clear()
+	for f in _features:
+		if is_instance_valid(f):
+			f.queue_free()
+	_features.clear()
 	for id in _prop_mmis:
 		var mmi: MultiMeshInstance3D = _prop_mmis[id]
 		mmi.multimesh.instance_count = 0

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"glowcap"
+display_name = "Glowcap"
+description = "A softly glowing cave fungus. Alchemists will pay well for it one day."
+category = 0
+rarity = 3
+max_stack = 30
+base_value = 25
+icon_color = Color(0.3, 0.95, 1.0, 1)
+icon_glyph = "g"

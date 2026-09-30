@@ -1,0 +1,98 @@
+[gd_resource type="Resource" script_class="BiomeData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/world/biome_data.gd" id="1_biome"]
+[ext_resource type="Script" path="res://src/world/prop_rule.gd" id="2_rule"]
+
+[sub_resource type="Resource" id="Rule_0"]
+script = ExtResource("2_rule")
+prop_id = &"tree_snowy_pine"
+cell_size = 8
+density = 0.1
+clustering = 0.8
+min_height = 1
+max_height = 60
+max_slope = 1
+min_scale = 0.8
+max_scale = 1.1
+show_in_lod1 = true
+on_water = false
+salt = 136
+
+[sub_resource type="Resource" id="Rule_1"]
+script = ExtResource("2_rule")
+prop_id = &"rock_snowy"
+cell_size = 16
+density = 0.35
+clustering = 0.3
+min_height = 0
+max_height = 80
+max_slope = 2
+min_scale = 0.7
+max_scale = 1.3
+show_in_lod1 = true
+on_water = false
+salt = 137
+
+[sub_resource type="Resource" id="Rule_2"]
+script = ExtResource("2_rule")
+prop_id = &"frostberry_bush"
+cell_size = 16
+density = 0.25
+clustering = 0.5
+min_height = 1
+max_height = 60
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 138
+
+[sub_resource type="Resource" id="Rule_3"]
+script = ExtResource("2_rule")
+prop_id = &"dead_bush"
+cell_size = 8
+density = 0.08
+clustering = 0.3
+min_height = 1
+max_height = 60
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 139
+
+[sub_resource type="Resource" id="Rule_4"]
+script = ExtResource("2_rule")
+prop_id = &"ore_coal"
+cell_size = 16
+density = 0.08
+clustering = 0.3
+min_height = 1
+max_height = 80
+max_slope = 2
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 140
+
+[resource]
+script = ExtResource("1_biome")
+id = &"snowy_tundra"
+display_name = "Snowy Tundra"
+role = 0
+map_color = Color(0.92, 0.95, 1.0, 1)
+temperature_min = 0.0
+temperature_max = 0.22
+moisture_min = 0.0
+moisture_max = 1.0
+frozen_water = true
+top_color = Color(0.93, 0.95, 0.98, 1)
+top_color_alt = Color(0.88, 0.92, 0.97, 1)
+side_color = Color(0.55, 0.5, 0.48, 1)
+shore_color = Color(0.85, 0.88, 0.92, 1)
+underwater_color = Color(0.6, 0.62, 0.66, 1)
+prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4")]
+enemy_spawns = []

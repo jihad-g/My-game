@@ -10,6 +10,8 @@ signal hour_changed(hour: int)
 @export var sun: DirectionalLight3D
 @export var environment: WorldEnvironment
 
+## Underground there is no sun or sky: dark ambient, black fog.
+var underground: bool = false
 ## 0..24
 var hour: float = 8.0
 var day: int = 1
@@ -65,6 +67,11 @@ func time_string() -> String:
 
 
 func _apply() -> void:
+	if underground:
+		_apply_underground()
+		return
+	if sun:
+		sun.visible = true
 	var daylight := get_daylight()
 	var sun_height := sin((hour - 6.0) / 24.0 * TAU)
 	if sun:
@@ -85,3 +92,18 @@ func _apply() -> void:
 		env.fog_light_color = sky.lerp(Color.WHITE, 0.15)
 		env.ambient_light_color = Color(0.4, 0.45, 0.8).lerp(Color(0.85, 0.88, 1.0), daylight)
 		env.ambient_light_energy = lerpf(0.28, 0.55, daylight)
+		env.fog_depth_begin = 70.0
+		env.fog_depth_end = 160.0
+
+
+func _apply_underground() -> void:
+	if sun:
+		sun.visible = false
+	if environment and environment.environment:
+		var env := environment.environment
+		env.background_color = Color(0.01, 0.01, 0.02)
+		env.fog_light_color = Color(0.02, 0.02, 0.04)
+		env.fog_depth_begin = 16.0
+		env.fog_depth_end = 55.0
+		env.ambient_light_color = Color(0.5, 0.5, 0.7)
+		env.ambient_light_energy = 0.55

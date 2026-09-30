@@ -1,0 +1,124 @@
+[gd_resource type="Resource" script_class="BiomeData" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://src/world/biome_data.gd" id="1_biome"]
+[ext_resource type="Script" path="res://src/world/prop_rule.gd" id="2_rule"]
+[ext_resource type="Script" path="res://src/world/enemy_spawn_rule.gd" id="3_spawn"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/thornback_boar.tscn" id="4_boar_scene"]
+[ext_resource type="Resource" path="res://data/enemies/thornback_boar.tres" id="5_boar_data"]
+
+[sub_resource type="Resource" id="Rule_0"]
+script = ExtResource("2_rule")
+prop_id = &"tree_jungle"
+cell_size = 4
+density = 0.28
+clustering = 0.7
+min_height = 1
+max_height = 50
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.25
+show_in_lod1 = true
+on_water = false
+salt = 130
+
+[sub_resource type="Resource" id="Rule_1"]
+script = ExtResource("2_rule")
+prop_id = &"berry_bush"
+cell_size = 8
+density = 0.25
+clustering = 0.5
+min_height = 1
+max_height = 50
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 131
+
+[sub_resource type="Resource" id="Rule_2"]
+script = ExtResource("2_rule")
+prop_id = &"grass_tuft"
+cell_size = 2
+density = 0.18
+clustering = 0.6
+min_height = 1
+max_height = 50
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 132
+
+[sub_resource type="Resource" id="Rule_3"]
+script = ExtResource("2_rule")
+prop_id = &"mushroom_patch"
+cell_size = 8
+density = 0.12
+clustering = 0.5
+min_height = 1
+max_height = 50
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 133
+
+[sub_resource type="Resource" id="Rule_4"]
+script = ExtResource("2_rule")
+prop_id = &"tree_palm"
+cell_size = 16
+density = 0.15
+clustering = 0.5
+min_height = 1
+max_height = 20
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = true
+on_water = false
+salt = 134
+
+[sub_resource type="Resource" id="Rule_5"]
+script = ExtResource("2_rule")
+prop_id = &"flowers"
+cell_size = 4
+density = 0.1
+clustering = 0.7
+min_height = 1
+max_height = 50
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 135
+
+[sub_resource type="Resource" id="Spawn_0"]
+script = ExtResource("3_spawn")
+enemy_scene = ExtResource("4_boar_scene")
+enemy_data = ExtResource("5_boar_data")
+chance_per_chunk = 0.12
+min_height = 2
+max_height = 40
+salt = 21
+
+[resource]
+script = ExtResource("1_biome")
+id = &"emerald_jungle"
+display_name = "Emerald Jungle"
+role = 0
+map_color = Color(0.12, 0.5, 0.2, 1)
+temperature_min = 0.62
+temperature_max = 1.0
+moisture_min = 0.46
+moisture_max = 0.68
+top_color = Color(0.22, 0.55, 0.2, 1)
+top_color_alt = Color(0.27, 0.6, 0.22, 1)
+side_color = Color(0.4, 0.28, 0.18, 1)
+shore_color = Color(0.85, 0.78, 0.55, 1)
+underwater_color = Color(0.5, 0.45, 0.3, 1)
+prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5")]
+enemy_spawns = [SubResource("Spawn_0")]

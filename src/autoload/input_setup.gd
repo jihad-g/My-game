@@ -41,6 +41,8 @@ const KEY_BINDINGS := {
 	&"debug_temp_up": [KEY_F7],
 	&"debug_spawn_enemy": [KEY_F8],
 	&"debug_time_skip": [KEY_F9],
+	&"quick_save": [KEY_F5],
+	&"world_map": [KEY_M],
 }
 
 const MOUSE_BINDINGS := {

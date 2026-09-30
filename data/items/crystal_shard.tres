@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"crystal_shard"
+display_name = "Crystal Shard"
+description = "A humming shard of crystallised mana from the Crystal Glades and the deep caves."
+category = 0
+rarity = 5
+max_stack = 50
+base_value = 40
+icon_color = Color(0.7, 0.5, 1.0, 1)
+icon_glyph = "*"

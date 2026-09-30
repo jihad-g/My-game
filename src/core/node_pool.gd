@@ -50,6 +50,13 @@ func release(node: Node) -> void:
 	_free.append(node)
 
 
+## Returns every active instance to the pool.
+func release_all() -> void:
+	for n in _all:
+		if is_instance_valid(n) and not _free.has(n):
+			release(n)
+
+
 func active_count() -> int:
 	return _all.size() - _free.size()
 

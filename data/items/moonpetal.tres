@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"moonpetal"
+display_name = "Moonpetal"
+description = "A rare silver flower that only blooms in the Crystal Glades. A legendary ingredient in the making."
+category = 0
+rarity = 5
+max_stack = 20
+base_value = 120
+icon_color = Color(0.9, 0.93, 1.0, 1)
+icon_glyph = "Mp"

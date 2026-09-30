@@ -28,3 +28,5 @@ enum InteractMode {
 @export var cast_shadow: bool = true
 ## Dither out when between the camera and the player (tall props like trees).
 @export var fade_near_camera: bool = false
+## Rendered unshaded/glowing (crystals, glowing fungi, magical plants).
+@export var glow: bool = false
