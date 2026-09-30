@@ -13,8 +13,10 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 | Sunscorch Desert | Stonecrown Mountains | Crystal Glade |
 |---|---|---|
 | ![Desert](docs/screenshots/biome_desert.png) | ![Mountains](docs/screenshots/biome_mountains.png) | ![Crystal](docs/screenshots/biome_crystal_glade.png) |
-| **The Deeps (caves)** | **World map** | **Boar charge telegraph** |
-| ![Cave](docs/screenshots/cave_inside.png) | ![Map](docs/screenshots/world_map.png) | ![Charge](docs/screenshots/04a_boar_charge_telegraph.png) |
+| **Murk Swamp** | **The Deeps (caves)** | **World map (M)** |
+| ![Swamp](docs/screenshots/biome_swamp.png) | ![Cave](docs/screenshots/cave_inside.png) | ![Map](docs/screenshots/world_map.png) |
+| **Main menu** | **Boar charge telegraph** | |
+| ![Menu](docs/screenshots/main_menu.png) | ![Charge](docs/screenshots/04a_boar_charge_telegraph.png) | |
 
 ## Requirements
 

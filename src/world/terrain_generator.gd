@@ -227,7 +227,10 @@ func sample_column(wx: int, wz: int) -> int:
 
 	h += detail * s.detail_amplitude
 	var hb := floori(h)
-	var biome := _pick_biome(hb, land, mm, t, m, x, z)
+	# Small-scale jitter so biome borders wiggle instead of following the
+	# (locally almost straight) climate contours.
+	var jitter := _regional.get_noise_2d(z * 1.7, x * 1.7) * 0.035
+	var biome := _pick_biome(hb, land, mm, t + jitter, m - jitter, x, z)
 	return (hb + _HEIGHT_BIAS) | (biome << 16)
 
 
