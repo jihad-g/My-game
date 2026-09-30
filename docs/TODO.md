@@ -54,10 +54,34 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Status effects (burn, poison, freeze, stun), taunt, stealth, spell combinations
 - [x] Character screen, ability bar, class selection
 
+## Milestone 4 — Building & crafting  ✅ (this milestone, Phases 2 + 5)
+
+- [x] Resource gathering for crafting: plant fiber (reeds, dead bushes, bushes, cacti), tool-gated ores
+- [x] Tools: stone / copper / iron hatchets & pickaxes (tiers 1–3), used automatically from the inventory
+- [x] Recipes (43, data-driven `data/recipes`): materials, tools, weapons, armor, accessories, food
+- [x] Recipe learning: starting, discovery (first time you obtain an item), recipe books
+- [x] Crafting stations: Workbench, Forge, Tailoring Table, Arcane Altar, Campfire (cooking)
+- [x] Crafting never fails; Crafting skill lowers material cost and gates recipe tiers
+- [x] Crafting screen (G): station tabs, nearby stations, have/need, craft ×1/×5
+- [x] Grid building (1 m cells, floor/object/roof slots, shared edges), ghost preview, rotate, deconstruct
+- [x] Floors, walls, doors, windows, fences, roofs (roofs hide when you are inside)
+- [x] Furniture: table, chair, bed (respawn point + sleep), storage chest (16 slots), standing torch
+- [x] Spike defenses (barricade + floor trap; charging boars take ×3 and are staggered)
+- [x] Land claims (flag 8 m / totem 16 m): no monster spawns, full refunds, max 5, no overlap
+- [x] Shelter affects temperature; torches give a little warmth
+- [x] Buildings, chest contents, door states and known recipes are saved
+- [ ] NOT IMPLEMENTED: item quality (Fine/Masterwork) — `Skill.quality_chance` exists, crafted items are always normal
+- [ ] NOT IMPLEMENTED: building durability, monsters attacking/breaking buildings, raids
+- [ ] NOT IMPLEMENTED: multi-storey buildings (one wall height; roofs sit on top of it), stairs, foundations on steep slopes
+- [ ] NOT IMPLEMENTED: blueprints / auto-build, the companion web designer
+- [ ] NOT IMPLEMENTED: crafting queues / crafting time (crafting is instant), station upgrades, fuel for forges
+- [ ] NOT IMPLEMENTED: using materials straight from nearby chests while crafting or building
+- [ ] Known limitation: the bed mesh is 1.9 m long in a 1 m cell and can overlap a neighbour cell's furniture
+
 ## Phase 2 — Core RPG (remaining)
 
-- [ ] Crafting system (recipes, stations, material tiers; skill formulas already exist and are tested)
-- [ ] Recipe sources (villages, kingdoms, books, scrolls, dungeons, bosses)
+- [x] Crafting system (Milestone 4)
+- [~] Recipe sources — books (cave caches, boars) and discovery done; villages, kingdoms, dungeons, bosses later
 - [ ] More abilities per class / ability upgrades at higher levels (current unlocks: 1, 5, 15)
 - [ ] Item quality (Fine/Masterwork) and gear drops from more sources (only boars drop gear today)
 - [ ] Basic NPCs (dialogue, shops)
@@ -85,9 +109,9 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 ## Phase 5 — Building
 
-- [ ] Land claims (Claim Totem / Claim Flag)
-- [ ] Grid building: floors, walls, doors, windows, fences, spike walls, roofs, furniture, storage, workstations, defenses
-- [ ] Shelter affecting temperature
+- [x] Land claims (Claim Totem / Claim Flag) (Milestone 4)
+- [x] Grid building: floors, walls, doors, windows, fences, spike walls, roofs, furniture, storage, workstations, defenses (Milestone 4)
+- [x] Shelter affecting temperature (Milestone 4)
 - [ ] Blueprint system (requirements, missing resources, auto-build) + companion web designer
 
 ## Phase 6 — Polish

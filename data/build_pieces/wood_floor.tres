@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"wood_floor"
+display_name = "Wood Floor"
+description = "A plank floor. Furniture on it sits level."
+category = 0
+placement = 0
+behavior = 0
+cost = {
+&"wood": 2
+}
+mesh = &"wood_floor"
+collision_size = Vector3(1, 0.13, 1)
+collision_center = Vector3(0, 0.065, 0)
+blocks_movement = true
+required_level = 1
+fade_near_camera = false

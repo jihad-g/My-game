@@ -28,6 +28,10 @@ enum InteractMode {
 @export var cast_shadow: bool = true
 ## Dither out when between the camera and the player (tall props like trees).
 @export var fade_near_camera: bool = false
+## Tool needed to harvest (HARVEST props). &"" = any hit works.
+@export var tool_kind: StringName
+## Minimum tool tier (0 = bare hands allowed, tools just speed it up).
+@export var tool_tier: int = 0
 ## XP for harvesting/gathering (0 = default: 3 for HARVEST, 1 for GATHER).
 @export var xp: int = 0
 ## Rendered unshaded/glowing (crystals, glowing fungi, magical plants).

@@ -56,9 +56,26 @@ const STAT_NAMES := {
 ## Stat -> value (see STAT_NAMES). Percent stats are in percent points.
 @export var stat_bonuses: Dictionary = {}
 
+@export_group("Tool")
+## Harvesting tool type (&"axe", &"pickaxe") - used automatically from the inventory.
+@export var tool_kind: StringName
+@export var tool_tier: int = 0
+
+@export_group("Recipe book")
+## Recipe ids learned when this item is used (books, scrolls).
+@export var teaches_recipes: Array = []
+
 @export_group("Placeable")
 ## Scene spawned in the world when the item is used/placed.
 @export var placeable_scene: PackedScene
+
+
+func is_tool() -> bool:
+	return tool_kind != &""
+
+
+func is_recipe_book() -> bool:
+	return not teaches_recipes.is_empty()
 
 
 func is_equippable() -> bool:
@@ -95,6 +112,10 @@ func effect_lines() -> PackedStringArray:
 	if temperature_offset != 0.0 and temperature_duration > 0.0:
 		lines.append("%s %+d°C for %ds" % ["Warms" if temperature_offset > 0 else "Cools",
 			roundi(temperature_offset), roundi(temperature_duration)])
+	if is_tool():
+		lines.append("%s tier %d (used automatically when harvesting)" % [String(tool_kind).capitalize(), tool_tier])
+	if is_recipe_book():
+		lines.append("Use to learn %d recipe%s" % [teaches_recipes.size(), "" if teaches_recipes.size() == 1 else "s"])
 	if is_equippable():
 		var slot_line: String = SLOT_NAMES[equip_slot]
 		if weapon_type != &"":

@@ -23,6 +23,10 @@ func _ready() -> void:
 		await _shot("20_main_menu")
 		get_tree().quit()
 		return
+	if "--only=build" in OS.get_cmdline_user_args():
+		await _build_showcase()
+		get_tree().quit()
+		return
 	if "--only=rpg" in OS.get_cmdline_user_args():
 		await _rpg_showcase()
 		get_tree().quit()
@@ -269,3 +273,141 @@ func _rpg_showcase() -> void:
 			Input.parse_input_event(ev)
 		world.queue_free()
 		await _wait(5)
+
+
+## Milestone 4 showcase: a small base, build mode, crafting and chest screens.
+func _build_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var frames := 0
+	while world.chunk_manager.pending_count() > 0 and frames < 1500:
+		await get_tree().process_frame
+		frames += 1
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	world.spawner.despawn_all()
+	world.hud._help.visible = false
+	world.day_night.hour = 10.0
+	var o := _flat_area(world, Vector2i(floori(p.global_position.x), floori(p.global_position.z)), Vector2i(9, 10))
+	var b := world.building
+	await _teleport(world, Vector3(o.x + 4.5, 0, o.y + 7.0))
+	# Clear the land first (like a player chopping the trees on their plot).
+	var stack: Array = [world]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		stack.append_array(n.get_children())
+		if n is PropBody and n.data.blocks_movement:
+			var q: Vector3 = n.global_position
+			if q.x > o.x - 2 and q.x < o.x + 11 and q.z > o.y - 2 and q.z < o.y + 12:
+				n.chunk.harvest_prop(n.prop_index, null)
+	await _wait(5)
+	var put := func(id: StringName, cell: Vector2i, slot: String, rot: int = 0) -> BuildPiece:
+		return b.place(BuildingManager.get_piece_data(id), o + cell, slot, rot, null, false)
+	# 4x4 hut: floor, walls, door, window, half roof, furniture
+	for x in 4:
+		for z in 4:
+			put.call(&"wood_floor", Vector2i(x, z), "floor")
+	for x in 4:
+		put.call(&"wood_wall", Vector2i(x, 0), "edge_n")
+		put.call(&"wood_door" if x == 1 else (&"wood_window" if x == 3 else &"wood_wall"), Vector2i(x, 4), "edge_n")
+	for z in 4:
+		put.call(&"wood_wall", Vector2i(0, z), "edge_w")
+		put.call(&"wood_window" if z == 2 else &"stone_wall", Vector2i(4, z), "edge_w")
+	for x in 4:
+		for z in 2:
+			put.call(&"thatch_roof", Vector2i(x, z), "roof")
+	put.call(&"bed", Vector2i(0, 1), "object", 0)
+	put.call(&"storage_chest", Vector2i(3, 0), "object", 2)
+	put.call(&"table", Vector2i(2, 2), "object")
+	put.call(&"chair", Vector2i(2, 3), "object", 2)
+	put.call(&"torch", Vector2i(0, 3), "object")
+	# Crafting yard
+	put.call(&"workbench", Vector2i(6, 0), "object", 1)
+	put.call(&"forge", Vector2i(6, 2), "object", 1)
+	put.call(&"tailoring", Vector2i(6, 4), "object", 1)
+	put.call(&"arcane_altar", Vector2i(8, 2), "object")
+	put.call(&"torch", Vector2i(5, 6), "object")
+	put.call(&"claim_totem", Vector2i(8, 6), "object")
+	# Fence and defenses
+	for x in range(-1, 9):
+		put.call(&"wood_fence" if x % 4 != 0 else &"spike_wall", Vector2i(x, 8), "edge_n")
+	put.call(&"spike_trap", Vector2i(2, 9), "floor")
+	put.call(&"spike_trap", Vector2i(3, 9), "floor")
+	var stand := Vector3(o.x + 4.5, 0, o.y + 7.0)
+	await _teleport(world, stand)
+	p.global_position = Vector3(stand.x, world.get_ground_height(stand) + 0.1, stand.z)
+	world.camera_rig._target_distance = 17.0
+	world.camera_rig._target_pitch = 52.0
+	world.camera_rig.snap_to_target()
+	await _wait(60)
+	await _shot("40_base_overview")
+	world.day_night.hour = 21.5
+	await _wait(40)
+	await _shot("41_base_night")
+	world.day_night.hour = 10.0
+	# Build mode with a ghost wall
+	for id in [&"wood", &"stone", &"plank", &"rope", &"plant_fiber", &"stick", &"clay"]:
+		p.inventory.add_item(id, 40)
+	world.camera_rig._target_distance = 12.0
+	world.build_mode.set_active(true)
+	world.build_mode.select(BuildingManager.get_piece_data(&"wood_wall"))
+	var ghost_at := p.global_position + Vector3(2.5, 0, 1.5)
+	await _wait(30)
+	get_viewport().warp_mouse(get_viewport().get_camera_3d().unproject_position(ghost_at))
+	await _wait(10)
+	await _shot("42_build_mode")
+	world.build_mode.set_active(false)
+	# Crafting screen next to the stations
+	var yard := Vector3(o.x + 5.0, 0, o.y + 2.5)
+	p.global_position = Vector3(yard.x, world.get_ground_height(yard) + 0.3, yard.z)
+	p.give_item(&"copper_ore", 6)
+	p.inventory.add_item(&"coal", 4)
+	p.character.skills[Skill.CRAFTING] = 14
+	p.character.recalculate()
+	await _wait(20)
+	world.hud._crafting.toggle()
+	world.hud._crafting.select(RecipeBook.get_recipe(&"copper_pickaxe"))
+	await _wait(10)
+	await _shot("43_crafting_screen")
+	world.hud._crafting.toggle()
+	# Chest
+	var chest: BuildPiece = b.pieces[BuildingManager.key(o + Vector2i(3, 0), "object", 0)]
+	chest.storage.add_item(&"iron_ore", 12)
+	chest.storage.add_item(&"leather", 5)
+	chest.storage.add_item(&"smithing_manual", 1)
+	chest.storage.add_item(&"hearty_stew", 3)
+	p.global_position = chest.global_position + Vector3(0, 0.3, 1.2)
+	await _wait(10)
+	chest.interact(p)
+	await _wait(10)
+	await _shot("44_chest")
+	world.queue_free()
+	await _wait(5)
+
+
+## Top-left cell of a dry, fairly flat `size` area near `around`.
+func _flat_area(world: World, around: Vector2i, size: Vector2i) -> Vector2i:
+	var best := around + Vector2i(3, 0)
+	var best_score := 1e9
+	for dx in range(-24, 25, 3):
+		for dz in range(-24, 25, 3):
+			var o := around + Vector2i(dx, dz)
+			var lo := 1e9
+			var hi := -1e9
+			var wet := false
+			for x in range(0, size.x + 1, 2):
+				for z in range(0, size.y + 1, 2):
+					var q := Vector3(o.x + x + 0.5, 0, o.y + z + 0.5)
+					var h := world.get_ground_height(q)
+					lo = minf(lo, h)
+					hi = maxf(hi, h)
+					wet = wet or h < TerrainGenerator.WATER_Y + 0.5
+			var score := (hi - lo) * 10.0 + Vector2(dx, dz).length() * 0.1
+			if not wet and score < best_score:
+				best_score = score
+				best = o
+	return best

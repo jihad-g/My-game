@@ -17,10 +17,19 @@ func setup(p_chunk: Chunk, p_index: int, p_data: PropData) -> void:
 
 
 ## Attacks hit HARVEST props (trees, rocks).
-func receive_hit(_info: DamageInfo) -> void:
+func receive_hit(info: DamageInfo) -> void:
 	if data.interact_mode != PropData.InteractMode.HARVEST or not is_instance_valid(chunk):
 		return
-	hits_left -= 1
+	# Tools in the player's inventory are used automatically.
+	var power := 1
+	if data.tool_kind != &"" and info and info.source and info.source.has_method("best_tool_tier"):
+		var tier: int = info.source.best_tool_tier(data.tool_kind)
+		if tier < data.tool_tier:
+			Events.toast.emit("%s needs a tier %d %s" % [data.display_name, data.tool_tier, data.tool_kind], Color(1, 0.7, 0.5))
+			Events.damage_dealt.emit(global_position + Vector3(0, 1.5, 0), 0.0, false, false, "Too hard")
+			return
+		power += tier
+	hits_left -= power
 	chunk.pulse_prop(prop_index)
 	if hits_left <= 0:
 		chunk.harvest_prop(prop_index, null)

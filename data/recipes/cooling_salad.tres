@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"cooling_salad"
+result_item = &"cooling_salad"
+result_count = 1
+ingredients = {
+&"berries": 2,
+&"cactus_fruit": 1
+}
+station = 5
+tier = 0
+source = 2
+source_hint = "Cook's Journal (boars, cave caches)"
+xp = 4

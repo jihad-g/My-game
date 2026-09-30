@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"shadow_cloak"
+result_item = &"shadow_cloak"
+result_count = 1
+ingredients = {
+&"leather": 4,
+&"glowcap": 3,
+&"rope": 2
+}
+station = 3
+tier = 2
+source = 2
+source_hint = "Leatherworker's Notes (cave caches)"
+xp = 20

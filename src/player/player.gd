@@ -56,6 +56,7 @@ enum State { NORMAL, DODGING, STAGGERED, DEAD, DASHING }
 
 var inventory := Inventory.new(24)
 var equipment := Equipment.new()
+var recipes := RecipeBook.new()
 var state: State = State.NORMAL
 var is_dead: bool = false
 var is_blocking: bool = false
@@ -119,6 +120,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if is_dead and event.is_action_pressed(&"respawn"):
 			respawn()
 		return
+	if World.instance and World.instance.build_mode and World.instance.build_mode.active:
+		if event.is_action_pressed(&"attack_light") or event.is_action_pressed(&"attack_heavy"):
+			return  # clicks belong to build mode
 	if event.is_action_pressed(&"attack_light"):
 		_want_light = true
 	elif event.is_action_pressed(&"attack_heavy"):
@@ -619,7 +623,22 @@ func give_item(id: StringName, count: int) -> int:
 	var added := count - left
 	if added > 0:
 		Events.item_picked_up.emit(id, added)
+		discover_from(id)
 	return left
+
+
+## Learns discovery recipes unlocked by owning `id` (any way it reached you).
+func discover_from(id: StringName) -> void:
+	for r in recipes.on_item_obtained(id):
+		_announce_recipe(r.id)
+
+
+## Like give_item, but whatever doesn't fit is dropped at your feet (crafting, refunds).
+func give_or_drop(id: StringName, count: int) -> void:
+	var left := give_item(id, count)
+	if left > 0 and World.instance:
+		World.instance.spawn_pickup(id, left, global_position + _facing * 1.2 + Vector3(0, 1.0, 0), false)
+		Events.toast.emit("Inventory full: dropped %d on the ground" % left, Color(1, 0.8, 0.5))
 
 
 func use_slot(index: int) -> void:
@@ -629,7 +648,9 @@ func use_slot(index: int) -> void:
 	var item: ItemData = ItemDB.get_item(s.id)
 	if item == null:
 		return
-	if item.is_equippable():
+	if item.is_recipe_book():
+		read_recipe_book(index)
+	elif item.is_equippable():
 		equip_from_slot(index)
 	elif item.is_consumable():
 		_consume(item)
@@ -648,6 +669,7 @@ func setup_class(class_data: ClassData, fresh: bool) -> void:
 	character.setup(class_data, fresh)
 	model.set_appearance(class_data)
 	if fresh:
+		recipes.learn_starting()
 		equipment.clear()
 		for id in class_data.starting_equipment:
 			var item: ItemData = ItemDB.get_item(StringName(id))
@@ -700,6 +722,40 @@ func _on_equipment_changed() -> void:
 	combat.set_moveset(moveset)
 	model.set_weapon(equipment.weapon_type(), equipment.offhand() != null)
 	character.recalculate()
+
+
+## Highest tier of a tool kind (&"axe", &"pickaxe") in the inventory (0 = none).
+func best_tool_tier(kind: StringName) -> int:
+	var best := 0
+	for s in inventory.slots:
+		if s != null:
+			var item: ItemData = ItemDB.get_item(s.id)
+			if item and item.tool_kind == kind:
+				best = maxi(best, item.tool_tier)
+	return best
+
+
+func read_recipe_book(index: int) -> void:
+	var s = inventory.get_slot(index)
+	var item: ItemData = ItemDB.get_item(s.id) if s != null else null
+	if item == null:
+		return
+	var learned := 0
+	for id in item.teaches_recipes:
+		if recipes.learn(StringName(id)):
+			learned += 1
+			_announce_recipe(StringName(id))
+	if learned == 0:
+		Events.toast.emit("You already know everything in %s" % item.display_name, Color(0.85, 0.85, 0.85))
+		return
+	inventory.remove_from_slot(index, 1)
+
+
+func _announce_recipe(id: StringName) -> void:
+	var r := RecipeBook.get_recipe(id)
+	var d: ItemData = ItemDB.get_item(r.result_item) if r else null
+	Events.toast.emit("Learned recipe: %s" % (d.display_name if d else String(id)), Color(0.6, 1.0, 0.9))
+	Events.recipe_learned.emit(id)
 
 
 func is_stealthed() -> bool:
@@ -755,6 +811,7 @@ func to_save() -> Dictionary:
 		"equipment": equipment.to_save(),
 		"mana": mana.current,
 		"abilities": abilities.to_save(),
+		"recipes": recipes.to_save(),
 	}
 
 
@@ -784,3 +841,7 @@ func from_save(data: Dictionary) -> void:
 	mana.current = minf(float(data.get("mana", mana.max_mana)), mana.max_mana)
 	mana.mana_changed.emit(mana.current, mana.max_mana)
 	abilities.from_save(data.get("abilities", {}))
+	if data.has("recipes"):
+		recipes.from_save(data.recipes)
+	else:
+		recipes.learn_starting()

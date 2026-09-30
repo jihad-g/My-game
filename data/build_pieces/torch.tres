@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"torch"
+display_name = "Standing Torch"
+description = "Light and a little warmth (+6°C up close)."
+category = 10
+placement = 1
+behavior = 6
+cost = {
+&"stick": 2,
+&"plant_fiber": 2
+}
+mesh = &"torch"
+collision_size = Vector3(0.2, 1.4, 0.2)
+collision_center = Vector3(0, 0.7, 0)
+blocks_movement = false
+required_level = 1
+fade_near_camera = false

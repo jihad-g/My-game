@@ -33,3 +33,5 @@ interact_text = "Chop"
 visibility_range = 0.0
 cast_shadow = true
 fade_near_camera = true
+tool_kind = &"axe"
+tool_tier = 0

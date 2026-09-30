@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"spike_wall"
+display_name = "Spike Barricade"
+description = "Sharpened stakes on a cell edge. Hurts monsters that touch it; charging boars take triple damage and are staggered."
+category = 9
+placement = 2
+behavior = 4
+cost = {
+&"wood": 4,
+&"stick": 4
+}
+mesh = &"spike_wall"
+collision_size = Vector3(1, 1.2, 0.4)
+collision_center = Vector3(0, 0.6, 0)
+blocks_movement = true
+spike_damage = 20.0
+required_level = 1
+fade_near_camera = false

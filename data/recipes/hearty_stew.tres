@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"hearty_stew"
+result_item = &"hearty_stew"
+result_count = 1
+ingredients = {
+&"cooked_meat": 1,
+&"mushroom": 2,
+&"berries": 1
+}
+station = 5
+tier = 0
+source = 2
+source_hint = "Cook's Journal (boars, cave caches)"
+xp = 4

@@ -90,6 +90,8 @@ func _try_spawn(coord: Vector2i, s: Dictionary) -> bool:
 		return true  # dead: nothing to do, don't retry until chunk reloads
 	if active_count() >= max_active:
 		return false
+	if World.instance and World.instance.building and World.instance.building.is_claimed(s.position):
+		return true  # claimed land is safe: this slot never spawns while claimed
 	var player := get_tree().get_first_node_in_group(&"player") as Node3D
 	if player and player.global_position.distance_to(s.position) < min_spawn_distance:
 		return false

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"wood_roof"
+display_name = "Shingle Roof"
+description = "A sturdier wooden roof."
+category = 5
+placement = 3
+behavior = 0
+cost = {
+&"plank": 3
+}
+mesh = &"wood_roof"
+collision_size = Vector3(1, 0.2, 1)
+collision_center = Vector3(0, 0.1, 0)
+blocks_movement = false
+required_level = 5
+fade_near_camera = true

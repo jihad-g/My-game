@@ -119,6 +119,32 @@ World (world.gd)                 wires systems, world services (temperature, pic
 - XP flows through `Events` (`enemy_killed`, `biome_discovered`, `place_discovered`,
   `resource_harvested`, `item_crafted`) into `CharacterStats.grant_xp()`.
 
+## Building & crafting (Milestone 4)
+
+- **Crafting** (`src/crafting`): `RecipeData` resources in `data/recipes` (result, ingredients,
+  station, tier, source). `RecipeBook` (RefCounted on the player) caches all recipes and
+  tracks known ids; `Player.give_item()` → `discover_from()` learns DISCOVERY recipes,
+  `Player.read_recipe_book()` learns BOOK recipes from `ItemData.teaches_recipes`.
+  `Crafting.stations_near()` reads nodes in group `crafting_stations` (meta `station_id`)
+  within 4 m; `Crafting.check()/craft()` apply `Skill.material_cost_mult` (never fails) and
+  emit `Events.item_crafted` (XP). UI: `CraftingPanel` (G).
+- **Tools**: `ItemData.tool_kind/tool_tier`; `PropData.tool_kind/tool_tier`;
+  `PropBody.receive_hit()` asks `Player.best_tool_tier()` — too low = no damage, otherwise
+  power = 1 + tier hits.
+- **Building** (`src/building`): `BuildPieceData` in `data/build_pieces`; meshes are code-built
+  in `BuildMeshes.build_<mesh>()`. `BuildingManager` (child of World) owns all pieces in a
+  dictionary keyed `"x,z,slot,layer"`. Slots: `floor`, `object`, `roof`, and `edge_n`/`edge_w`
+  (a cell's south/east edges are the neighbours' north/west edges, so each edge has one
+  address). `check_place()` returns "" or the reason; `place()/remove()` pay/refund;
+  `is_claimed()`, `is_sheltered()`; `to_save()/from_save()`. Pieces are global world objects
+  (not chunk-bound), shown only on their layer. `BuildPiece` implements behaviours
+  (door, chest `Inventory`, bed → `World.use_bed`, spikes Area3D vs ENEMY, station group,
+  torch heat source, claim group). `BuildMode` drives the ghost and input; `BuildPalette`
+  and `ContainerPanel` are the UI.
+- Integration points: `EnemySpawner._try_spawn` skips claimed land;
+  `World.get_temperature_at` applies shelter; physics layer `BUILDING` (64) is in the
+  player, enemy and projectile masks.
+
 ## Survival
 
 - `StatBlock` aggregates multiplicative modifiers per source (`&"hunger"`,
@@ -136,7 +162,10 @@ World (world.gd)                 wires systems, world services (temperature, pic
 | Want | Do |
 |---|---|
 | New item | Add `data/items/<id>.tres` (`ItemData`). Food fields make it edible. |
-| New prop | Add `data/props/<id>.tres` (`PropData`) + a `_build_<name>` mesh function in `PropLibrary`; reference it from a biome `PropRule`. |
+| New recipe | Add `data/recipes/<id>.tres` (`RecipeData`); for books add the id to an item's `teaches_recipes`. |
+| New build piece | Add `data/build_pieces/<id>.tres` (`BuildPieceData`) + `build_<mesh>()` in `BuildMeshes`. |
+| New crafting station | A build piece with behaviour STATION and a `station_id`, plus the id in `RecipeData.STATION_IDS`. |
+| New prop `data/props/<id>.tres` (`PropData`) + a `_build_<name>` mesh function in `PropLibrary`; reference it from a biome `PropRule`. |
 | New enemy | Create `EnemyData` + `AttackData`s, a scene with an `Enemy` subclass script, and add an `EnemySpawnRule` to a biome. |
 | New biome | Add a `BiomeData` (role + climate ranges + colours + prop rules) and append it to `data/worldgen/default_worldgen.tres`. |
 | New class | Add `data/classes/<id>.tres` (50 starting points), add its id to `ClassRegistry.ORDER`, give it 3 `AbilityData`. |

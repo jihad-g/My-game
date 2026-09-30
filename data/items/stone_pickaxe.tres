@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"stone_pickaxe"
+display_name = "Stone Pickaxe"
+description = "Tier 1 pickaxe. Mines rock faster and can break copper and coal veins."
+category = 2
+rarity = 0
+max_stack = 1
+base_value = 6
+icon_color = Color(0.6, 0.6, 0.62, 1)
+icon_glyph = "Pi"
+tool_kind = &"pickaxe"
+tool_tier = 1

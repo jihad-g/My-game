@@ -32,3 +32,5 @@ regrow_time = 0.0
 interact_text = "Mine"
 visibility_range = 0.0
 cast_shadow = true
+tool_kind = &"pickaxe"
+tool_tier = 0

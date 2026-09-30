@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"forge"
+display_name = "Forge"
+description = "Crafting station: smelting ingots, metal tools, weapons and armor."
+category = 8
+placement = 1
+behavior = 5
+cost = {
+&"stone": 15,
+&"clay": 4,
+&"wood": 4
+}
+mesh = &"forge"
+collision_size = Vector3(1, 1.4, 1)
+collision_center = Vector3(0, 0.7, 0)
+blocks_movement = true
+station_id = &"forge"
+required_level = 3
+fade_near_camera = false

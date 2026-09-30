@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"storage_chest"
+display_name = "Storage Chest"
+description = "Holds 16 stacks. Press F to open."
+category = 7
+placement = 1
+behavior = 2
+cost = {
+&"plank": 6,
+&"rope": 1
+}
+mesh = &"chest"
+collision_size = Vector3(0.8, 0.7, 0.55)
+collision_center = Vector3(0, 0.35, 0)
+blocks_movement = true
+storage_slots = 16
+required_level = 1
+fade_near_camera = false

@@ -47,6 +47,13 @@ min_count = 1
 max_count = 1
 chance = 0.05
 
+[sub_resource type="Resource" id="Loot_6"]
+script = ExtResource("9_loot")
+item_id = &"cooks_journal"
+min_count = 1
+max_count = 1
+chance = 0.06
+
 [resource]
 script = ExtResource("1_enemy")
 id = &"thornback_boar"
@@ -66,6 +73,6 @@ damage_multipliers = {
 }
 exposed_damage_multiplier = 1.5
 attacks = [ExtResource("2_bite"), ExtResource("3_charge")]
-loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2"), SubResource("Loot_3"), SubResource("Loot_4"), SubResource("Loot_5")]
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2"), SubResource("Loot_3"), SubResource("Loot_4"), SubResource("Loot_5"), SubResource("Loot_6")]
 xp_reward = 15
 respawn_time = 300.0

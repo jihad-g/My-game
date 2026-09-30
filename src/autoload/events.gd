@@ -30,3 +30,9 @@ signal resource_harvested(prop_id: StringName, xp: int)
 signal item_crafted(item_id: StringName, count: int)
 ## An ability was used (for HUD feedback).
 signal ability_used(ability_id: StringName)
+
+# --- Crafting & building --------------------------------------------------------------
+## A storage container (chest) was opened by the player.
+signal open_container(container: Node)
+signal recipe_learned(recipe_id: StringName)
+signal building_changed

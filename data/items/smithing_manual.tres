@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"smithing_manual"
+display_name = "Smithing Manual"
+description = "A soot-stained manual. Use to learn iron smelting, iron tools and iron gear."
+category = 6
+rarity = 2
+max_stack = 1
+base_value = 60
+icon_color = Color(0.45, 0.45, 0.52, 1)
+icon_glyph = "Bk"
+teaches_recipes = [&"iron_ingot", &"iron_hatchet", &"iron_pickaxe", &"iron_sword", &"iron_waraxe", &"iron_kite_shield", &"chainmail"]

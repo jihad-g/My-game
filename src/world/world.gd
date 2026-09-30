@@ -10,6 +10,8 @@ extends Node3D
 static var instance: World
 
 const FIRE_MAX_TEMPERATURE := 28.0
+## Degrees of protection from standing under a roof.
+const SHELTER_EFFECT := 10.0
 const AUTOSAVE_INTERVAL := 120.0
 const BIOME_CHECK_INTERVAL := 0.5
 ## Debug (F10): a sample of every gear tier for testing equipment.
@@ -42,6 +44,8 @@ var debug_temperature_offset: float = 0.0
 var is_ready: bool = false
 var current_biome: BiomeData
 
+var building: BuildingManager
+var build_mode: BuildMode
 var _autosave_left := AUTOSAVE_INTERVAL
 var _biome_check_left := 0.0
 var _first_ready := true
@@ -59,6 +63,14 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	generator = TerrainGenerator.new(GameState.world_seed, worldgen)
+	building = BuildingManager.new()
+	building.name = "Buildings"
+	building.world = self
+	add_child(building)
+	build_mode = BuildMode.new()
+	build_mode.name = "BuildMode"
+	build_mode.world = self
+	add_child(build_mode)
 	props = PropLibrary.new()
 	chunk_manager.setup(generator, props)
 	spawner.generator = generator
@@ -82,6 +94,7 @@ func _ready() -> void:
 		_new_world = false
 		from_save(save.get("world", {}))
 		player.from_save(save.get("player", {}))
+		building.from_save(save.get("world", {}).get("buildings", []))
 
 	chunk_manager.layer = layer
 	player.frozen = true
@@ -190,6 +203,8 @@ func travel_to_layer(target_layer: int, at: Vector3) -> void:
 	hud.set_loading(true, "Descending into the Deeps..." if target_layer == TerrainGenerator.Layer.UNDERGROUND
 		else "Climbing to the surface...")
 	_apply_layer_environment()
+	building.refresh_layer()
+	build_mode.set_active(false)
 	layer_changed.emit(layer)
 
 
@@ -248,10 +263,35 @@ func get_heat_at(pos: Vector3) -> float:
 ## it counters cold, but standing in it on a hot day doesn't cook you.
 func get_temperature_at(pos: Vector3) -> float:
 	var air := get_air_temperature(pos)
+	# Shelter: under a roof you are protected by SHELTER_EFFECT degrees.
+	if building and building.is_sheltered(pos):
+		if air < TemperatureComponent.COMFORT_MIN:
+			air = minf(air + SHELTER_EFFECT, TemperatureComponent.COMFORT_MIN)
+		elif air > TemperatureComponent.COMFORT_MAX:
+			air = maxf(air - SHELTER_EFFECT, TemperatureComponent.COMFORT_MAX)
 	var heat := get_heat_at(pos)
 	if heat <= 0.0 or air >= FIRE_MAX_TEMPERATURE:
 		return air
 	return minf(air + heat, FIRE_MAX_TEMPERATURE)
+
+
+## Beds: set the respawn point; at night (and with no enemies close) sleep until morning.
+func use_bed(bed: Node3D, _who: Node) -> void:
+	player.spawn_point = bed.global_position + Vector3(0, 0.7, 1.2)
+	if not day_night.is_night():
+		Events.toast.emit("Respawn point set. You can only sleep at night.", Color(0.8, 0.9, 1.0))
+		return
+	for e in get_tree().get_nodes_in_group(&"enemies"):
+		if e is Enemy and e.visible and not e.is_dead and e.global_position.distance_to(player.global_position) < 20.0:
+			Events.toast.emit("You can't sleep with enemies nearby!", Color(1, 0.6, 0.5))
+			return
+	var hours := fposmod(7.0 - day_night.hour, 24.0)
+	day_night.advance_hours(hours)
+	GameState.world_time += hours / 24.0 * day_night.day_length
+	player.stamina.refill()
+	player.health.heal(player.health.max_health * 0.5)
+	player.hunger.eat(-10.0)
+	Events.toast.emit("You slept until morning. Respawn point set.", Color(0.8, 0.9, 1.0))
 
 
 func is_in_water(pos: Vector3) -> bool:
@@ -333,6 +373,7 @@ func to_save() -> Dictionary:
 				entry["data"] = node.save_data()
 			placed.append(entry)
 	return {
+		"buildings": building.to_save(),
 		"layer": layer,
 		"day": day_night.day,
 		"hour": day_night.hour,

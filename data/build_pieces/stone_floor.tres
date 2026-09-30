@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"stone_floor"
+display_name = "Stone Floor"
+description = "Flagstone floor."
+category = 0
+placement = 0
+behavior = 0
+cost = {
+&"stone": 3
+}
+mesh = &"stone_floor"
+collision_size = Vector3(1, 0.13, 1)
+collision_center = Vector3(0, 0.065, 0)
+blocks_movement = true
+required_level = 3
+fade_near_camera = false

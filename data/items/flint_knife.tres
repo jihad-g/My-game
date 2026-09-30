@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/dagger.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"flint_knife"
+display_name = "Flint Knife"
+description = "A sharp flint blade lashed to a stick."
+category = 3
+rarity = 0
+max_stack = 1
+base_value = 4
+icon_color = Color(0.45, 0.45, 0.5, 1)
+icon_glyph = "Kn"
+equip_slot = 1
+required_level = 1
+stat_bonuses = {
+&"damage_bonus": 1,
+&"crit_chance": 2
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"dagger"

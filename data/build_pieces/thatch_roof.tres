@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"thatch_roof"
+display_name = "Thatch Roof"
+description = "Keeps the rain and sun off. Being under a roof pulls the air temperature toward comfortable."
+category = 5
+placement = 3
+behavior = 0
+cost = {
+&"wood": 1,
+&"plant_fiber": 4
+}
+mesh = &"thatch_roof"
+collision_size = Vector3(1, 0.2, 1)
+collision_center = Vector3(0, 0.1, 0)
+blocks_movement = false
+required_level = 1
+fade_near_camera = true

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"cooling_salad"
+display_name = "Cooling Salad"
+description = "Crisp berries and cactus. Cools you down in the heat."
+category = 1
+rarity = 1
+max_stack = 10
+base_value = 10
+icon_color = Color(0.5, 0.8, 0.45, 1)
+icon_glyph = "Sa"
+hunger_restore = 20.0
+health_restore = 5.0
+temperature_offset = -10.0
+temperature_duration = 240.0

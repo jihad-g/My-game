@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"hearty_stew"
+display_name = "Hearty Stew"
+description = "Meat and mushrooms simmered for hours. Very filling and warms you for a long time."
+category = 1
+rarity = 2
+max_stack = 10
+base_value = 20
+icon_color = Color(0.62, 0.4, 0.22, 1)
+icon_glyph = "St"
+hunger_restore = 55.0
+health_restore = 25.0
+temperature_offset = 12.0
+temperature_duration = 300.0

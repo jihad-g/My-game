@@ -210,6 +210,10 @@ func _on_hit_reaction(info: DamageInfo) -> void:
 			_alert(info.source)
 
 
+func is_charging() -> bool:
+	return ai == AI.CHARGE
+
+
 func _on_taunted(source: Node3D) -> void:
 	if ai in [AI.IDLE, AI.WANDER, AI.RETURN, AI.ALERT]:
 		target = source

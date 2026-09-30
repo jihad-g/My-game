@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"cooks_journal"
+display_name = "Cook's Journal"
+description = "Grease-stained recipes from a hunter's camp. Use to learn them."
+category = 6
+rarity = 1
+max_stack = 1
+base_value = 25
+icon_color = Color(0.8, 0.6, 0.35, 1)
+icon_glyph = "Bk"
+teaches_recipes = [&"hearty_stew", &"cooling_salad"]

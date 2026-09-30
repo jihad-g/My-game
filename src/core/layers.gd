@@ -7,3 +7,5 @@ const ENEMY := 4
 const PROP := 8
 const PICKUP := 16
 const INTERACTABLE := 32
+## Player-built structures (walls, fences, furniture...).
+const BUILDING := 64

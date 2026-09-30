@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"table"
+display_name = "Table"
+description = "A simple wooden table."
+category = 6
+placement = 1
+behavior = 0
+cost = {
+&"plank": 4
+}
+mesh = &"table"
+collision_size = Vector3(0.95, 0.8, 0.7)
+collision_center = Vector3(0, 0.4, 0)
+blocks_movement = true
+required_level = 1
+fade_near_camera = false

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"iron_pickaxe"
+display_name = "Iron Pickaxe"
+description = "Tier 3 pickaxe. Can break crystal clusters."
+category = 2
+rarity = 2
+max_stack = 1
+base_value = 70
+icon_color = Color(0.7, 0.72, 0.8, 1)
+icon_glyph = "Pi"
+tool_kind = &"pickaxe"
+tool_tier = 3

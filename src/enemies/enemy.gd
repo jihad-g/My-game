@@ -38,7 +38,7 @@ var _taunt_left := 0.0
 func _ready() -> void:
 	add_to_group(&"enemies")
 	collision_layer = Layers.ENEMY
-	collision_mask = Layers.TERRAIN | Layers.PROP | Layers.PLAYER | Layers.ENEMY
+	collision_mask = Layers.TERRAIN | Layers.PROP | Layers.PLAYER | Layers.ENEMY | Layers.BUILDING
 	floor_snap_length = 0.6
 	health.died.connect(_on_died)
 	health.damaged.connect(_on_damaged)
@@ -85,6 +85,11 @@ func on_pool_release() -> void:
 	if is_instance_valid(target) and target.get("lock_target") == self:
 		target.set_lock_target(null)
 	target = null
+
+
+## True while performing a charge/rush (spikes punish it harder).
+func is_charging() -> bool:
+	return false
 
 
 func get_facing() -> Vector3:

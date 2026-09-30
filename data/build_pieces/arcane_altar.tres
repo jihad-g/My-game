@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"arcane_altar"
+display_name = "Arcane Altar"
+description = "Crafting station: arcane dust, staves and enchanted jewellery."
+category = 8
+placement = 1
+behavior = 5
+cost = {
+&"stone": 12,
+&"plank": 4,
+&"glowcap": 2
+}
+mesh = &"arcane_altar"
+collision_size = Vector3(1, 1.4, 1)
+collision_center = Vector3(0, 0.7, 0)
+blocks_movement = true
+station_id = &"arcane"
+required_level = 5
+fade_near_camera = false

@@ -49,6 +49,9 @@ const KEY_BINDINGS := {
 	&"ability_3": [KEY_C],
 	&"ability_shield": [KEY_T],
 	&"character_screen": [KEY_K],
+	&"crafting": [KEY_G],
+	&"build_mode": [KEY_B],
+	&"build_rotate": [KEY_R],
 	&"world_map": [KEY_M],
 }
 

@@ -7,7 +7,9 @@ extends CanvasLayer
 ## clock, help, debug overlay, loading / death / pause screens.
 ## Also: biome/layer label, world map (M), save buttons in the pause menu.
 ## Also (Milestone 3): mana/XP/rage bars, ability bar, buffs, character screen (K).
-## NOT IMPLEMENTED yet (later phases): quests, crafting, reputation, building UI.
+## Also (Milestone 4): crafting screen (G), build palette (B), storage chests,
+## "Your land" / shelter indicator.
+## NOT IMPLEMENTED yet (later phases): quests, reputation, trading.
 
 var player: Player
 var world: World
@@ -40,6 +42,10 @@ var _clock := Label.new()
 var _biome_label := Label.new()
 var _map := WorldMap.new()
 var _character := CharacterPanel.new()
+var _crafting := CraftingPanel.new()
+var _palette := BuildPalette.new()
+var _chest := ContainerPanel.new()
+var _land_label := Label.new()
 var _mana_bar: ProgressBar
 var _mana_label: Label
 var _xp_bar: ProgressBar
@@ -78,6 +84,9 @@ func _ready() -> void:
 	_build_ability_bar()
 	_root.add_child(_map)
 	_root.add_child(_character)
+	_root.add_child(_crafting)
+	_root.add_child(_palette)
+	_root.add_child(_chest)
 	_banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_banner.offset_top = 120
@@ -109,6 +118,17 @@ func bind(p_player: Player, p_world: World) -> void:
 	_refresh_inventory()
 	_map.world = world
 	_bind_rpg()
+	_crafting.bind(player)
+	_chest.bind(player)
+	if world.build_mode:
+		_palette.bind(player, world.build_mode)
+		var help_was := [true]
+		world.build_mode.toggled.connect(func(on: bool) -> void:
+			if on:
+				help_was[0] = _help.visible
+				_help.visible = false
+			else:
+				_help.visible = help_was[0])
 	world.biome_changed.connect(_on_biome_changed)
 	world.layer_changed.connect(func(_l: int) -> void: _map.visible = false)
 	_save_button.disabled = not SaveManager.is_persistent()
@@ -280,7 +300,7 @@ func _build_inventory() -> void:
 			player.drop_slot(_selected_slot, 1))
 	buttons.add_child(_drop_button)
 	var not_impl := Label.new()
-	not_impl.text = "Equipment / Crafting: Phase 2"
+	not_impl.text = "K: character & equipment · G: crafting · B: build mode"
 	not_impl.add_theme_font_size_override(&"font_size", 11)
 	not_impl.add_theme_color_override(&"font_color", Color(0.6, 0.6, 0.65))
 	v.add_child(not_impl)
@@ -438,6 +458,10 @@ func _build_corner_info() -> void:
 	_biome_label.add_theme_color_override(&"font_color", UITheme.GOLD)
 	_biome_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v.add_child(_biome_label)
+	_land_label.add_theme_font_size_override(&"font_size", 14)
+	_land_label.add_theme_color_override(&"font_color", Color(0.6, 0.85, 1.0))
+	_land_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	v.add_child(_land_label)
 	_debug.add_theme_font_size_override(&"font_size", 12)
 	_debug.add_theme_color_override(&"font_color", Color(0.8, 0.9, 1.0))
 	_debug.visible = false
@@ -460,6 +484,7 @@ func _build_help() -> void:
 		"1-8 use hotbar item (eat / place campfire)",
 		"Q/E or MMB-drag rotate · Wheel zoom · PgUp/PgDn tilt",
 		"Z/X/C class abilities · T temperature shield · K character",
+		"G crafting · B build mode (LMB place, RMB remove, R rotate)",
 		"Arrows pan camera · V recenter · M map · F5 save",
 		"F3 debug · F1 hide help",
 		"Debug: F6/F7 temp -/+10°C · F8 spawn boar · F9 +2h",
@@ -564,7 +589,13 @@ func set_paused(on: bool) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"pause"):
-		if _character.visible:
+		if world and world.build_mode and world.build_mode.active:
+			world.build_mode.set_active(false)
+		elif _chest.visible:
+			_chest.close()
+		elif _crafting.visible:
+			_crafting.visible = false
+		elif _character.visible:
 			_character.visible = false
 		elif _map.visible:
 			_map.visible = false
@@ -577,6 +608,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	elif event.is_action_pressed(&"inventory"):
 		_toggle_inventory()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"crafting"):
+		if not _loading.visible:
+			_crafting.toggle()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"character_screen"):
 		if not _loading.visible:
@@ -611,6 +646,19 @@ func _process(_delta: float) -> void:
 		_update_debug()
 	_refresh_abilities()
 	_update_buffs()
+	_update_land()
+
+
+func _update_land() -> void:
+	if world == null or world.building == null:
+		return
+	var p := player.global_position
+	var parts := PackedStringArray()
+	if world.building.is_claimed(p):
+		parts.append("Your land")
+	if world.building.is_sheltered(p):
+		parts.append("Sheltered")
+	_land_label.text = " · ".join(parts)
 
 
 func _set_bar(bar: ProgressBar, label: Label, current: float, maximum: float) -> void:

@@ -10,6 +10,13 @@ min_count = 1
 max_count = 2
 chance = 1.0
 
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"plant_fiber"
+min_count = 1
+max_count = 2
+chance = 1.0
+
 [resource]
 script = ExtResource("1_prop")
 id = &"dead_bush"
@@ -20,7 +27,7 @@ blocks_movement = false
 collision_radius = 0.3
 collision_height = 0.4
 hits_to_break = 1
-drops = [SubResource("Loot_0")]
+drops = [SubResource("Loot_0"), SubResource("Loot_1")]
 regrow_time = 900.0
 interact_text = "Pick up"
 visibility_range = 50.0

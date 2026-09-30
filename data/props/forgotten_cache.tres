@@ -1,0 +1,77 @@
+[gd_resource type="Resource" script_class="PropData" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://src/world/prop_data.gd" id="1_prop"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"smithing_manual"
+min_count = 1
+max_count = 1
+chance = 0.3
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"leatherworker_notes"
+min_count = 1
+max_count = 1
+chance = 0.25
+
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"arcane_codex"
+min_count = 1
+max_count = 1
+chance = 0.15
+
+[sub_resource type="Resource" id="Loot_3"]
+script = ExtResource("9_loot")
+item_id = &"cooks_journal"
+min_count = 1
+max_count = 1
+chance = 0.2
+
+[sub_resource type="Resource" id="Loot_4"]
+script = ExtResource("9_loot")
+item_id = &"iron_ore"
+min_count = 1
+max_count = 3
+chance = 0.6
+
+[sub_resource type="Resource" id="Loot_5"]
+script = ExtResource("9_loot")
+item_id = &"copper_ore"
+min_count = 2
+max_count = 4
+chance = 0.6
+
+[sub_resource type="Resource" id="Loot_6"]
+script = ExtResource("9_loot")
+item_id = &"coal"
+min_count = 1
+max_count = 3
+chance = 0.6
+
+[sub_resource type="Resource" id="Loot_7"]
+script = ExtResource("9_loot")
+item_id = &"rope"
+min_count = 1
+max_count = 2
+chance = 0.5
+
+[resource]
+script = ExtResource("1_prop")
+id = &"forgotten_cache"
+display_name = "Forgotten Cache"
+mesh_builder = &"forgotten_cache"
+interact_mode = 2
+blocks_movement = true
+collision_radius = 0.45
+collision_height = 0.7
+hits_to_break = 1
+drops = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2"), SubResource("Loot_3"), SubResource("Loot_4"), SubResource("Loot_5"), SubResource("Loot_6"), SubResource("Loot_7")]
+regrow_time = 0.0
+interact_text = "Search"
+visibility_range = 0.0
+cast_shadow = true
+xp = 25

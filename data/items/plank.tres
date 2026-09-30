@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"plank"
+display_name = "Wooden Plank"
+description = "Sawn wood. Cleaner and stronger than raw logs."
+category = 0
+rarity = 0
+max_stack = 99
+base_value = 2
+icon_color = Color(0.78, 0.58, 0.36, 1)
+icon_glyph = "Pl"

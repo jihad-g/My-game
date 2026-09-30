@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"moonpetal_pendant"
+result_item = &"moonpetal_pendant"
+result_count = 1
+ingredients = {
+&"moonpetal": 3,
+&"arcane_dust": 4,
+&"copper_ingot": 1
+}
+station = 4
+tier = 5
+source = 2
+source_hint = "Arcane Codex (cave caches)"
+xp = 44

@@ -27,3 +27,5 @@ visibility_range = 0.0
 cast_shadow = false
 fade_near_camera = false
 glow = true
+tool_kind = &"pickaxe"
+tool_tier = 3

@@ -4,7 +4,8 @@ extends StaticBody3D
 ##
 ## Heat: registered in group "heat_sources"; World sums heat_at() into the
 ## ambient temperature, so standing near a fire counters cold exposure.
-## Cooking: interact to cook one raw ingredient (data: COOK_RECIPES).
+## Cooking: interact to cook one raw ingredient (data: COOK_RECIPES); it is
+## also the "campfire" crafting station for campfire recipes (G).
 
 const COOK_RECIPES := {&"raw_meat": &"cooked_meat"}
 
@@ -20,6 +21,8 @@ var _t := 0.0
 
 func _ready() -> void:
 	add_to_group(&"heat_sources")
+	add_to_group(&"crafting_stations")
+	set_meta(&"station_id", &"campfire")
 	collision_layer = Layers.INTERACTABLE
 	collision_mask = 0
 	_time_left = burn_time

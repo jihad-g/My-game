@@ -2,6 +2,54 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.4.0] — Milestone 4: Building & crafting
+
+### Added
+- **Crafting** (`src/crafting`): `RecipeData` (data/recipes, 43 recipes), `RecipeBook`
+  (per character, saved), `Crafting` (checks + craft). Crafting **never fails**: the
+  Crafting skill only changes the material cost (×1.59 at 1 → ×0.80 at 100, min 1 each)
+  and gates recipe tiers (Common 10, Uncommon 25, Rare 45, Magical 70). Crafting XP.
+- **Recipe learning**: starting recipes; discovery (first copper ore → copper recipes,
+  boar hide → leather, boar tusk → tusk charm); recipe books (Smithing Manual,
+  Leatherworker's Notes, Arcane Codex, Cook's Journal) used from the inventory.
+- **Stations**: Workbench, Forge, Tailoring Table, Arcane Altar (buildable) and the
+  Campfire (cooking). A station counts when you stand within 4 m.
+- **Crafting screen (G)**: station tabs, nearby-station indicator, recipe list with locked
+  recipes and how to unlock them, item stats, have/need at your skill, Craft / Craft ×5.
+- **Tools**: stone, copper and iron hatchets & pickaxes (tiers 1–3). The best tool in your
+  inventory is used automatically: each tier adds a hit of power; copper/coal veins need
+  tier 1, iron tier 2, crystal tier 3 ("Too hard" otherwise). Trees/rocks work bare-handed.
+- **New items** (22): plant fiber, rope, plank, leather, copper/iron ingots, arcane dust,
+  6 tools, flint knife, copper sword, hearty stew, cooling salad, fiber bandage, 4 books.
+  Every existing gear item is now craftable.
+- **Gathering**: reeds and dead bushes give plant fiber; berry bushes and cacti sometimes do.
+  **Forgotten Caches** in The Deeps hold recipe books and ores; boars may carry a Cook's Journal.
+- **Grid building** (`src/building`): `BuildPieceData` (data/build_pieces, 22 pieces),
+  `BuildingManager` (1 m grid, floor/object/roof slots + shared cell edges, placement
+  rules, refunds, claims, shelter, save), `BuildPiece` (behaviours), `BuildMode` (B: ghost
+  preview green/red with the reason, LMB place, RMB deconstruct, R rotate), build palette UI.
+  Pieces: wood/stone floors and walls, door, window wall, fence, thatch/shingle roofs,
+  table, chair, bed, storage chest, standing torch, 4 stations, spike barricade, spike trap,
+  claim flag, claim totem. Collision layer `BUILDING` (7) blocks players, enemies and projectiles.
+- **Placement rules**: one piece per slot, within 9 m, level requirements, not on yourself,
+  not in water, not through trees/rocks/ores, roofs need a wall or roof next to them,
+  materials. Deconstructing refunds 100 % on your land, 50 % elsewhere; full chests
+  can't be removed. Items that don't fit in the inventory drop at your feet.
+- **Doors** open/close (F); **chests** (16 slots) with a transfer window; **beds** set the
+  respawn point and let you sleep until 07:00 at night when no monsters are within 20 m;
+  **torches** light and warm (+6 °C up close); **spikes** hurt monsters (charging ×3 + stagger).
+- **Land claims**: flag 8 m / totem 16 m, at most 5, no overlap; monsters never spawn on
+  claimed land; HUD shows "Your land".
+- **Shelter**: under a roof the air is pulled up to 10 °C toward the comfort band (never
+  past it); HUD shows "Sheltered"; roofs near you hide while you are inside.
+- Tests: 401 checks (+91), including a data-reachability check that every ingredient and
+  build cost can be obtained in the world. Screenshot runner `--only=build`.
+
+### Changed
+- Version 0.4.0. Campfires are also the cooking crafting station.
+- Chopping/mining speed depends on tools; copper/coal/iron/crystal veins require tools.
+- Save data: `world.buildings` and `player.recipes` (older saves load with starting recipes).
+
 ## [0.3.0] — Milestone 3: RPG foundation
 
 ### Added

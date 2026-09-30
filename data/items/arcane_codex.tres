@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"arcane_codex"
+display_name = "Arcane Codex"
+description = "Glowing runes describe how to bind crystal and mana. Use to learn arcane recipes."
+category = 6
+rarity = 3
+max_stack = 1
+base_value = 90
+icon_color = Color(0.6, 0.45, 1, 1)
+icon_glyph = "Bk"
+teaches_recipes = [&"arcane_dust", &"crystal_staff", &"crystal_ring", &"moonpetal_pendant"]

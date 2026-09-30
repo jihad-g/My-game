@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"stone_wall"
+display_name = "Stone Wall"
+description = "A sturdy mortared stone wall."
+category = 1
+placement = 2
+behavior = 0
+cost = {
+&"stone": 5,
+&"clay": 1
+}
+mesh = &"stone_wall"
+collision_size = Vector3(1, 2.6, 0.2)
+collision_center = Vector3(0, 1.3, 0)
+blocks_movement = true
+required_level = 5
+fade_near_camera = true

@@ -10,6 +10,13 @@ min_count = 2
 max_count = 4
 chance = 1.0
 
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"plant_fiber"
+min_count = 1
+max_count = 1
+chance = 0.6
+
 [resource]
 script = ExtResource("1_prop")
 id = &"frostberry_bush"
@@ -20,7 +27,7 @@ blocks_movement = false
 collision_radius = 0.5
 collision_height = 0.9
 hits_to_break = 1
-drops = [SubResource("Loot_0")]
+drops = [SubResource("Loot_0"), SubResource("Loot_1")]
 regrow_time = 600.0
 interact_text = "Gather"
 visibility_range = 0.0

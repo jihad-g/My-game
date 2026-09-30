@@ -5,11 +5,12 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 3 — RPG foundation** (classes, levels, skills, abilities, equipment) on top of
-> the Phase 1 prototype and Milestone 2 world generation. See [`docs/TODO.md`](docs/TODO.md) for the
+> Status: **Milestone 4 — Building & crafting** (recipes, stations, tools, grid building, furniture,
+> storage, spike defenses, land claims, shelter) on top of the Phase 1 prototype, Milestone 2 world
+> generation and Milestone 3 RPG foundation. See [`docs/TODO.md`](docs/TODO.md) for the
 > honest status of every system and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
-![Overview](docs/screenshots/03_zoomed_out_rotated.png)
+![Base](docs/screenshots/base_overview.png)
 
 | Sunscorch Desert | Stonecrown Mountains | Crystal Glade |
 |---|---|---|
@@ -20,6 +21,10 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 | ![Wizard](docs/screenshots/class_wizard.png) | ![Barbarian](docs/screenshots/class_barbarian.png) | ![Assassin](docs/screenshots/class_assassin.png) |
 | **Character screen (K)** | **Main menu** | **Boar charge telegraph** |
 | ![Character](docs/screenshots/character_screen.png) | ![Menu](docs/screenshots/main_menu.png) | ![Charge](docs/screenshots/04a_boar_charge_telegraph.png) |
+| **Build mode (B)** | **Crafting (G)** | **Storage chest** |
+| ![Build](docs/screenshots/build_mode.png) | ![Crafting](docs/screenshots/crafting_screen.png) | ![Chest](docs/screenshots/chest.png) |
+| **Base at night** | **Overview** | |
+| ![Night](docs/screenshots/base_night.png) | ![Overview](docs/screenshots/03_zoomed_out_rotated.png) | |
 
 ## Requirements
 
@@ -73,6 +78,10 @@ and when you quit through the pause menu or close the window.
 | Class abilities | Z / X / C |
 | Magic Temperature Shield | T |
 | Character screen (skills, stats, equipment) | K |
+| Crafting screen | G |
+| Build mode on / off | B |
+| Build mode: place / deconstruct / rotate | Left mouse / Right mouse / R |
+| Open doors & chests, sleep in beds | F |
 | World map | M |
 | Quick save | F5 |
 | Pause | Esc |
@@ -127,6 +136,33 @@ and when you quit through the pause menu or close the window.
     protection. Wizards pay the least mana.
 17. **Save/load** – create a named world, harvest some trees, place a campfire, quit to
     menu (Esc → "Save & quit to menu"), load it again: everything is where you left it.
+18. **Gathering for crafting** – cut reeds and dead bushes (F) for **plant fiber**; bushes
+    and cacti sometimes give fiber too. Press **G**: the crafting screen lists every recipe,
+    where it is crafted and how to unlock it. Craft Rope, then a **Stone Pickaxe** and
+    **Stone Hatchet**. Tools work from your inventory automatically: trees and rocks break
+    faster, and copper/coal veins now *need* a tier 1 pickaxe (iron tier 2, crystal tier 3).
+19. **Crafting never fails** – at low Crafting skill recipes cost more (the screen shows
+    "have / need (base N)"); raise Crafting (K) and the same recipe gets cheaper.
+20. **Build a hut** – press **B**, pick Wood Floor / Wood Wall / Wooden Door / Thatch Roof
+    in the palette, move the mouse (green ghost = OK, red = see the reason), left-click
+    to place, R to rotate, right-click to deconstruct. Walls sit on cell edges, roofs need
+    a wall or roof next to them. Stand under the roof: roofs above you hide so you can see
+    inside, the HUD says "Sheltered", and the air feels up to 10 °C closer to comfortable.
+21. **Stations** – build a Workbench (planks, shields, staves), Forge (ingots, metal
+    tools/weapons/armor, needs level 3), Tailoring Table (leather, cloth and hide armor)
+    and Arcane Altar (dust, crystal gear). Stand within 4 m and press G. Campfires are the
+    cooking station. Mining copper ore teaches the copper recipes (discovery); boar hide
+    teaches leather.
+22. **Recipe books** – search **Forgotten Caches** in The Deeps (caves) for the Smithing
+    Manual, Leatherworker's Notes, Arcane Codex and Cook's Journal (boars sometimes carry
+    the journal). Use a book from the inventory to learn its recipes.
+23. **Home** – place a **Bed** (sets your respawn point; at night with no monsters within
+    20 m you sleep until 07:00), a **Storage Chest** (F to open, click stacks to move them),
+    **Standing Torches** (light and a little warmth), furniture and fences.
+24. **Defense & land** – place a **Claim Flag** (8 m) or **Claim Totem** (16 m): the HUD
+    shows "Your land", monsters never spawn there, and deconstructing refunds 100 %
+    (50 % elsewhere). **Spike Barricades** and **Spike Traps** hurt monsters that touch
+    them; a charging boar takes triple damage and is staggered.
 
 ## Run the automated tests
 
@@ -136,7 +172,7 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
 
-The suite (308 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (401 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -147,7 +183,12 @@ World-generation tests check determinism, terrain/biome statistics over 10×10 k
 climate continuity, cave layout and data integrity. RPG tests check class data (50
 starting points, affordable shields), the XP curve, skill balance (e.g. a max-Strength
 Wizard hits softer than a starting Knight), equipment and requirements, every class
-ability in the running game, and RPG save/load.
+ability in the running game, and RPG save/load. Building & crafting tests check that every
+recipe and build cost is obtainable in the world, cost scaling, never-fail crafting,
+station/skill/level gating, discovery and book learning, tool tiers, grid placement rules
+(edges, stacking, distance, roofs, obstacles), walls blocking movement, doors, chests,
+refunds, land claims blocking spawns, shelter temperature, torches, beds, spike traps,
+build mode, the crafting screen, and a save → load round trip of a base.
 
 Balance tables are generated from the code: `godot --headless --path . -s tools/gen_rpg_tables.gd`
 → [`docs/XP_TABLE.md`](docs/XP_TABLE.md), [`docs/CLASSES_AND_SKILLS.md`](docs/CLASSES_AND_SKILLS.md).
@@ -156,6 +197,7 @@ Visual check (renders screenshots, needs a display or `xvfb-run`):
 
 ```bash
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots
+godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=build   # base / build / crafting
 ```
 
 ## Project layout

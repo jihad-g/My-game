@@ -319,3 +319,16 @@ func _build_clay_deposit(b: BlockMesh) -> void:
 	var c := Color(0.72, 0.45, 0.35)
 	b.box(Vector3(0, 0.08, 0), Vector3(0.9, 0.16, 0.7), c)
 	b.box(Vector3(0.2, 0.18, 0.1), Vector3(0.45, 0.12, 0.35), c * 1.08)
+
+
+# --- Milestone 4 ----------------------------------------------------------------
+
+## Old supply crate left by lost miners (cave loot: recipe books, ores).
+func _build_forgotten_cache(b: BlockMesh) -> void:
+	var wood := Color(0.42, 0.3, 0.2)
+	b.box(Vector3(0, 0.28, 0), Vector3(0.8, 0.56, 0.6), wood)
+	b.box(Vector3(0, 0.6, 0), Vector3(0.84, 0.1, 0.64), wood * 0.8)
+	b.box(Vector3(-0.3, 0.28, 0.31), Vector3(0.06, 0.56, 0.02), Color(0.45, 0.45, 0.5))
+	b.box(Vector3(0.3, 0.28, 0.31), Vector3(0.06, 0.56, 0.02), Color(0.45, 0.45, 0.5))
+	b.box(Vector3(0.55, 0.1, 0.2), Vector3(0.3, 0.2, 0.3), Color(0.55, 0.55, 0.6))
+	b.box(Vector3(-0.2, 0.7, 0.05), Vector3(0.3, 0.08, 0.22), Color(0.55, 0.2, 0.2))  # a book on top

@@ -40,6 +40,10 @@ func _ready() -> void:
 	await _run_async(&"test_character_and_equipment")
 	await _run_async(&"test_class_abilities")
 	await _run_async(&"test_rpg_save_load")
+	_run(&"test_m4_data")
+	await _run_async(&"test_crafting_system")
+	await _run_async(&"test_building_system")
+	await _run_async(&"test_building_save_load")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -1211,6 +1215,448 @@ func test_rpg_save_load() -> void:
 	check(p.model != null and p.combat.light_combo.size() == 4, "dagger moveset active after load")
 	var meta_list := SaveManager.list_worlds()
 	check(meta_list.size() == 1 and meta_list[0].get("class") == "assassin" and int(meta_list[0].get("level", 0)) == level, "world list shows class and level")
+	world.queue_free()
+	await _frames(5)
+	SaveManager.delete_world(id)
+	SaveManager.worlds_dir = saved_dir
+	SaveManager.start_transient(GameState.DEFAULT_SEED)
+
+
+# --- Milestone 4: building & crafting -------------------------------------------------------
+
+func test_m4_data() -> void:
+	var recipes := RecipeBook.all()
+	check(recipes.size() >= 40, "%d recipes loaded" % recipes.size())
+	var ok := true
+	var taught := {}
+	for id in ItemDB.all_ids():
+		var it: ItemData = ItemDB.get_item(id)
+		for r in it.teaches_recipes:
+			taught[StringName(r)] = true
+			if not recipes.has(StringName(r)):
+				ok = false
+				print("   %s teaches unknown recipe %s" % [id, r])
+	for r: RecipeData in recipes.values():
+		if not ItemDB.has_item(r.result_item):
+			ok = false
+			print("   recipe %s makes unknown item %s" % [r.id, r.result_item])
+		for ing in r.ingredients:
+			if not ItemDB.has_item(ing):
+				ok = false
+				print("   recipe %s needs unknown item %s" % [r.id, ing])
+		if r.source == RecipeData.Source.DISCOVERY and not ItemDB.has_item(r.discovered_by):
+			ok = false
+			print("   recipe %s discovered by unknown item" % r.id)
+		if r.source == RecipeData.Source.BOOK and not taught.has(r.id):
+			ok = false
+			print("   book recipe %s is taught by no book" % r.id)
+	check(ok, "recipes reference existing items; every book recipe is taught by a book")
+	# Cost scaling: more skill never costs more, never below 1, never above +60%.
+	var scale_ok := true
+	for r: RecipeData in recipes.values():
+		var lo := r.cost_at(1)
+		var mid := r.cost_at(50)
+		var hi := r.cost_at(100)
+		for ing in r.ingredients:
+			var base := int(r.ingredients[ing])
+			if not (lo[ing] >= mid[ing] and mid[ing] >= hi[ing] and hi[ing] >= 1 and lo[ing] <= ceili(base * 1.6)):
+				scale_ok = false
+	check(scale_ok, "material costs shrink with Crafting skill and stay >= 1")
+	var rope := RecipeBook.get_recipe(&"rope")
+	check(rope.cost_at(1)[&"plant_fiber"] == 5 and rope.cost_at(100)[&"plant_fiber"] == 3,
+		"rope: 5 fiber at Crafting 1, 3 at Crafting 100 (base 3)")
+	# Build pieces
+	var pieces := BuildingManager.all_pieces()
+	check(pieces.size() >= 20, "%d build pieces loaded" % pieces.size())
+	var piece_ok := true
+	var categories := {}
+	for d: BuildPieceData in pieces.values():
+		categories[d.category] = true
+		for item in d.cost:
+			if not ItemDB.has_item(item):
+				piece_ok = false
+				print("   piece %s costs unknown item %s" % [d.id, item])
+		if d.behavior == BuildPieceData.Behavior.STATION and not RecipeData.STATION_IDS.has(d.station_id):
+			piece_ok = false
+			print("   station %s has unknown station id" % d.id)
+		var m := BuildMeshes.get_mesh(d.mesh)
+		if m == null or m.get_aabb().size == Vector3.ONE:
+			piece_ok = false
+			print("   piece %s has no mesh builder (%s)" % [d.id, d.mesh])
+	check(piece_ok, "build pieces: valid costs, stations and meshes")
+	check(categories.size() == BuildPieceData.CATEGORY_NAMES.size(), "every build category has pieces")
+	var stations := {}
+	for d: BuildPieceData in pieces.values():
+		if d.station_id != &"":
+			stations[d.station_id] = true
+	var reach_ok := true
+	for r: RecipeData in recipes.values():
+		if r.station_id() != &"hand" and r.station_id() != &"campfire" and not stations.has(r.station_id()):
+			reach_ok = false
+			print("   recipe %s needs unbuildable station %s" % [r.id, r.station_id()])
+	check(reach_ok, "every recipe station can be built (or is hand/campfire)")
+	# Everything used in recipes and building is obtainable (gathered, looted or crafted).
+	var obtainable := {}
+	var lib := PropLibrary.new()
+	for biome in _settings().biomes:
+		for rule in biome.prop_rules:
+			for loot in lib.get_prop(rule.prop_id).drops:
+				obtainable[loot.item_id] = true
+	var boar: EnemyData = load("res://data/enemies/thornback_boar.tres")
+	for loot in boar.loot:
+		obtainable[loot.item_id] = true
+	var changed := true
+	while changed:
+		changed = false
+		for r: RecipeData in recipes.values():
+			if obtainable.has(r.result_item):
+				continue
+			var all_in := true
+			for ing in r.ingredients:
+				all_in = all_in and obtainable.has(ing)
+			if all_in:
+				obtainable[r.result_item] = true
+				changed = true
+	var missing := PackedStringArray()
+	for r: RecipeData in recipes.values():
+		for ing in r.ingredients:
+			if not obtainable.has(ing):
+				missing.append(String(ing))
+	for d: BuildPieceData in pieces.values():
+		for item in d.cost:
+			if not obtainable.has(item):
+				missing.append(String(item))
+	check(missing.is_empty(), "every recipe ingredient and build cost is obtainable in the world %s" % [missing])
+	for book in [&"smithing_manual", &"leatherworker_notes", &"arcane_codex", &"cooks_journal"]:
+		check(obtainable.has(book), "%s can be found in the world" % book)
+	# Tool tiers
+	check(ItemDB.get_item(&"stone_pickaxe").tool_tier == 1 and ItemDB.get_item(&"iron_pickaxe").tool_tier == 3, "tool tiers 1-3")
+	check(lib.get_prop(&"ore_iron").tool_tier == 2 and lib.get_prop(&"crystal_cluster").tool_tier == 3
+		and lib.get_prop(&"tree_oak").tool_tier == 0, "iron needs tier 2, crystal tier 3, trees need no tool")
+
+
+## Places a piece near the player on the first valid cell (pay = false unless asked).
+func _place_near(world: World, id: StringName, min_d: int = 2, pay: bool = false, max_d: int = 6) -> BuildPiece:
+	var data := BuildingManager.get_piece_data(id)
+	var pc := Vector2i(floori(world.player.global_position.x), floori(world.player.global_position.z))
+	for d in range(min_d, max_d + 1):
+		for dx in range(-d, d + 1):
+			for dz in range(-d, d + 1):
+				if maxi(absi(dx), absi(dz)) != d:
+					continue
+				var cell := pc + Vector2i(dx, dz)
+				var slot := BuildingManager.slot_kind(data)
+				if slot == "edge":
+					slot = "edge_n"
+				if world.building.check_place(data, cell, slot, world.player, pay) == "":
+					return world.building.place(data, cell, slot, 0, world.player, pay)
+	return null
+
+
+func _clear_enemies(world: World) -> void:
+	world.spawner.max_active = 0
+	world.spawner.despawn_all()
+
+
+func test_crafting_system() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	var ch := p.character
+	_clear_enemies(world)
+	# Recipe learning
+	check(p.recipes.knows(&"rope") and p.recipes.knows(&"stone_pickaxe") and p.recipes.knows(&"cooked_meat"), "starting recipes known")
+	check(not p.recipes.knows(&"copper_ingot") and not p.recipes.knows(&"iron_ingot") and not p.recipes.knows(&"hearty_stew"),
+		"discovery and book recipes unknown at start")
+	p.give_item(&"copper_ore", 6)
+	check(p.recipes.knows(&"copper_ingot") and p.recipes.knows(&"copper_pickaxe"), "obtaining copper ore discovers copper recipes")
+	p.inventory.add_item(&"smithing_manual", 1)
+	for i in p.inventory.capacity:
+		var s = p.inventory.get_slot(i)
+		if s != null and s.id == &"smithing_manual":
+			p.use_slot(i)
+			break
+	check(p.recipes.knows(&"iron_ingot") and p.recipes.knows(&"iron_pickaxe") and p.inventory.count_of(&"smithing_manual") == 0,
+		"reading the Smithing Manual teaches iron recipes and uses up the book")
+	# Crafting by hand never fails; low skill only costs more
+	var stations := Crafting.stations_near(get_tree(), p.global_position)
+	check(stations.has(&"hand") and not stations.has(&"workbench"), "no stations nearby: hand crafting only")
+	var rope := RecipeBook.get_recipe(&"rope")
+	p.inventory.add_item(&"plant_fiber", 60)
+	var crafting := ch.skill_level(Skill.CRAFTING)
+	var per := int(rope.cost_at(crafting)[&"plant_fiber"])
+	check(per > 3, "Crafting %d: a rope costs %d fiber instead of 3" % [crafting, per])
+	var fiber0 := p.inventory.count_of(&"plant_fiber")
+	var rope0 := p.inventory.count_of(&"rope")
+	var xp0 := ch.total_xp
+	check(Crafting.craft(p, rope, stations, 3) == 3, "crafting never fails: 3 of 3 ropes made")
+	check(p.inventory.count_of(&"rope") == rope0 + 3 and p.inventory.count_of(&"plant_fiber") == fiber0 - per * 3,
+		"ropes added and exactly the scaled materials consumed")
+	check(ch.total_xp > xp0, "crafting grants Crafting XP (+%d)" % (ch.total_xp - xp0))
+	p.inventory.remove_item(&"plant_fiber", p.inventory.count_of(&"plant_fiber"))
+	check(Crafting.check(p, rope, stations) == "Missing Plant Fiber" and Crafting.craft(p, rope, stations) == 0,
+		"without materials nothing is crafted and nothing is lost")
+	# Station gating
+	p.inventory.add_item(&"wood", 60)
+	p.inventory.add_item(&"stone", 40)
+	var plank := RecipeBook.get_recipe(&"plank")
+	check(Crafting.check(p, plank, stations) == "Requires a Workbench nearby", "planks need a workbench")
+	var wb := _place_near(world, &"workbench", 2, true, 3)
+	check(wb != null, "workbench placed next to the player")
+	stations = Crafting.stations_near(get_tree(), p.global_position)
+	check(stations.has(&"workbench"), "workbench detected as a nearby station")
+	var planks0 := p.inventory.count_of(&"plank")
+	check(Crafting.craft(p, plank, stations, 2) == 2 and p.inventory.count_of(&"plank") == planks0 + 4, "crafted 4 planks at the workbench")
+	# Tier gating (Crafting skill) + forge level requirement
+	var ingot := RecipeBook.get_recipe(&"copper_ingot")
+	p.inventory.add_item(&"coal", 10)
+	check(Crafting.check(p, ingot, stations).begins_with("Requires Crafting 10"), "Common-tier recipe needs Crafting 10")
+	var forge_data := BuildingManager.get_piece_data(&"forge")
+	var cell := Vector2i(floori(p.global_position.x), floori(p.global_position.z)) + Vector2i(0, 3)
+	check(world.building.check_place(forge_data, cell, "object", p) == "Requires level 3", "the forge needs level 3")
+	ch.grant_xp(Progression.total_xp_for(3), Progression.Source.OTHER)
+	p.inventory.add_item(&"clay", 10)
+	var forge := _place_near(world, &"forge", 2, true, 3)
+	check(forge != null, "forge placed after reaching level 3")
+	ch.skills[Skill.CRAFTING] = 12
+	ch.recalculate()
+	stations = Crafting.stations_near(get_tree(), p.global_position)
+	check(Crafting.craft(p, ingot, stations) == 1 and p.inventory.count_of(&"copper_ingot") == 1, "copper ingot smelted at the forge")
+	# Campfire cooking station
+	var kit: ItemData = ItemDB.get_item(&"campfire_kit")
+	var fire := kit.placeable_scene.instantiate() as Node3D
+	world.placed_root.add_child(fire)
+	fire.global_position = p.global_position + Vector3(1.5, 0, 0)
+	stations = Crafting.stations_near(get_tree(), p.global_position)
+	check(stations.has(&"campfire"), "campfires are cooking stations")
+	p.inventory.add_item(&"raw_meat", 2)
+	check(Crafting.craft(p, RecipeBook.get_recipe(&"cooked_meat"), stations) == 1 and p.inventory.count_of(&"cooked_meat") >= 1,
+		"cooked meat at the campfire")
+	fire.queue_free()
+	# Tools
+	check(p.best_tool_tier(&"pickaxe") == 0, "no pickaxe yet")
+	p.inventory.add_item(&"stick", 10)
+	p.inventory.add_item(&"rope", 6)
+	check(Crafting.craft(p, RecipeBook.get_recipe(&"stone_pickaxe"), stations) == 1
+		and Crafting.craft(p, RecipeBook.get_recipe(&"stone_hatchet"), stations) == 1, "stone pickaxe and hatchet crafted")
+	check(p.best_tool_tier(&"pickaxe") == 1 and p.best_tool_tier(&"axe") == 1, "tools work from the inventory (tier 1)")
+	var body: PropBody = null
+	var stack: Array = [world]
+	while not stack.is_empty() and body == null:
+		var n: Node = stack.pop_back()
+		if n is PropBody and (n as PropBody).data.interact_mode == PropData.InteractMode.HARVEST and (n as PropBody).data.tool_kind != &"":
+			body = n
+		stack.append_array(n.get_children())
+	if check(body != null, "found a harvestable prop near spawn (%s)" % (body.data.id if body else "-")):
+		var original := body.data
+		body.data = original.duplicate()
+		body.data.tool_tier = 2
+		body.hits_left = 50
+		var info := DamageInfo.create(10.0, p, &"physical")
+		body.receive_hit(info)
+		check(body.hits_left == 50, "tier 1 tool can't break a tier 2 resource")
+		body.data.tool_tier = 1
+		body.receive_hit(info)
+		check(body.hits_left == 48, "tier 1 tool hits twice as hard (50 -> %d)" % body.hits_left)
+		body.data = original
+		var tcell := Vector2i(floori(body.global_position.x), floori(body.global_position.z))
+		var why := world.building.check_place(BuildingManager.get_piece_data(&"table"), tcell, "object", null)
+		check(why.begins_with("Blocked by"), "can't build through a %s (%s)" % [body.data.display_name, why])
+	world.queue_free()
+	await _frames(5)
+
+
+func test_building_system() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	var b := world.building
+	_clear_enemies(world)
+	var wall := BuildingManager.get_piece_data(&"wood_wall")
+	var pc := Vector2i(floori(p.global_position.x), floori(p.global_position.z))
+	# Edge addressing: every edge has exactly one address.
+	var c := Vector3(pc.x + 3.5, 0, pc.y + 0.5)
+	check(b.address_for(wall, c + Vector3(0, 0, -0.45)).slot == "edge_n", "north edge -> edge_n")
+	var south: Dictionary = b.address_for(wall, c + Vector3(0, 0, 0.45))
+	check(south.slot == "edge_n" and south.cell == pc + Vector2i(3, 1), "south edge -> neighbour's edge_n")
+	var east: Dictionary = b.address_for(wall, c + Vector3(0.45, 0, 0))
+	check(east.slot == "edge_w" and east.cell == pc + Vector2i(4, 0), "east edge -> neighbour's edge_w")
+	check(b.address_for(BuildingManager.get_piece_data(&"wood_floor"), c).slot == "floor", "floors use the floor slot")
+	# Costs and rules
+	p.inventory.clear()
+	check(b.check_place(wall, pc + Vector2i(2, 0), "edge_n", p) == "Missing Wood", "walls cost wood")
+	p.inventory.add_item(&"wood", 90)
+	p.inventory.add_item(&"stone", 60)
+	p.inventory.add_item(&"plank", 60)
+	p.inventory.add_item(&"rope", 20)
+	p.inventory.add_item(&"plant_fiber", 60)
+	p.inventory.add_item(&"stick", 30)
+	p.inventory.add_item(&"clay", 10)
+	var wood0 := p.inventory.count_of(&"wood")
+	var w := _place_near(world, &"wood_wall", 2, true)
+	check(w != null and p.inventory.count_of(&"wood") == wood0 - 4, "wood wall placed for 4 wood")
+	check(b.check_place(wall, w.cell, w.slot, p) == "Something is already built here", "can't stack pieces in one slot")
+	check(b.check_place(wall, pc + Vector2i(15, 0), "edge_n", p) == "Too far away", "can't build far away")
+	check(b.check_place(BuildingManager.get_piece_data(&"stone_wall"), pc + Vector2i(2, 2), "edge_w", p) == "Requires level 5",
+		"stone walls need level 5")
+	check(b.check_place(BuildingManager.get_piece_data(&"table"), pc, "object", p) == "You're standing there",
+		"can't build a solid piece on yourself")
+	var roof := BuildingManager.get_piece_data(&"thatch_roof")
+	check(b.check_place(roof, pc + Vector2i(-5, -5), "roof", p).begins_with("Roofs need"), "roofs need support")
+	check(b.check_place(roof, w.cell, "roof", p) == "", "a wall supports a roof")
+	# Walls block movement (physics)
+	await _frames(3)
+	var top := w.global_position + Vector3(0, 1.2, 0)
+	var q := PhysicsRayQueryParameters3D.create(top + Vector3(0, 0, -1.0), top + Vector3(0, 0, 1.0), p.collision_mask)
+	var hit := p.get_world_3d().direct_space_state.intersect_ray(q)
+	check(not hit.is_empty() and hit.collider == w, "a wall is solid to the player")
+	check(w.get_parent() == b and b.pieces.size() >= 1, "pieces are owned by the building manager")
+	# Door
+	var door := _place_near(world, &"wood_door", 2, false)
+	door.interact(p)
+	await _frames(3)
+	check(door.is_open, "door opens")
+	var dq := PhysicsRayQueryParameters3D.create(door.global_position + Vector3(0, 1.2, -1), door.global_position + Vector3(0, 1.2, 1), p.collision_mask)
+	var dhit := p.get_world_3d().direct_space_state.intersect_ray(dq)
+	check(dhit.is_empty() or dhit.collider != door, "an open door lets you through")
+	door.interact(p)
+	check(not door.is_open and door.get_interact_text() == "Open door", "door closes again")
+	# Chest
+	var chest := _place_near(world, &"storage_chest", 2, false)
+	check(chest.storage != null and chest.storage.capacity == 16, "storage chest has 16 slots")
+	var stick_slot := -1
+	for i in p.inventory.capacity:
+		var s = p.inventory.get_slot(i)
+		if s != null and s.id == &"stick":
+			stick_slot = i
+	var moved := ContainerPanel.transfer(p.inventory, stick_slot, chest.storage)
+	check(moved == 30 and chest.storage.count_of(&"stick") == 30 and p.inventory.count_of(&"stick") == 0, "moved a stack into the chest")
+	check(not b.remove(chest, p) and is_instance_valid(chest), "a chest with items can't be deconstructed")
+	var opened: Array = []
+	var cb := func(n: Node) -> void: opened.append(n)
+	Events.open_container.connect(cb)
+	chest.interact(p)
+	Events.open_container.disconnect(cb)
+	check(opened.size() == 1 and opened[0] == chest, "interacting with a chest opens it")
+	check(world.hud._chest.visible and world.hud._chest.container == chest, "the chest window is shown")
+	world.hud._chest.close()
+	ContainerPanel.transfer(chest.storage, 0, p.inventory)
+	# Refunds: 50% outside your land
+	wood0 = p.inventory.count_of(&"wood")
+	check(b.remove(w, p) and p.inventory.count_of(&"wood") == wood0 + 2, "deconstructing outside your land refunds 50%")
+	# Land claims
+	var flag := _place_near(world, &"claim_flag", 2, true)
+	check(flag != null and b.is_claimed(p.global_position), "claim flag claims the land around you")
+	check(not b.is_claimed(flag.global_position + Vector3(30, 0, 0)), "land 30 m away is not claimed")
+	var second := BuildingManager.get_piece_data(&"claim_flag")
+	check(b.check_place(second, pc + Vector2i(3, 3), "object", p) == "Overlaps land you already claimed", "claims can't overlap")
+	var w2 := _place_near(world, &"wood_wall", 2, true)
+	wood0 = p.inventory.count_of(&"wood")
+	check(b.remove(w2, p) and p.inventory.count_of(&"wood") == wood0 + 4, "deconstructing on your land refunds 100%")
+	world.spawner.max_active = 50
+	var rule := EnemySpawnRule.new()
+	rule.enemy_scene = world.debug_enemy_scene
+	rule.enemy_data = load("res://data/enemies/thornback_boar.tres")
+	var before := world.spawner.active_count()
+	var slot := {"rule": rule, "key": "test_claim_slot", "position": flag.global_position + Vector3(4, 0, 0)}
+	check(world.spawner._try_spawn(Vector2i.ZERO, slot) and world.spawner.active_count() == before, "monsters don't spawn on claimed land")
+	world.spawner.max_active = 0
+	# Shelter
+	var hut := _place_near(world, &"wood_wall", 3, false)
+	var roof_piece := b.place(roof, hut.cell, "roof", 0, p, false)
+	check(roof_piece != null, "roof placed on a wall")
+	var inside := Vector3(hut.cell.x + 0.5, hut.global_position.y + 0.5, hut.cell.y + 0.5)
+	var outside := inside + Vector3(40, 0, 40)
+	check(b.is_sheltered(inside) and not b.is_sheltered(outside), "shelter detected under the roof only")
+	world.debug_temperature_offset = -40.0
+	var air := world.get_air_temperature(inside)
+	check(is_equal_approx(world.get_temperature_at(inside), minf(air + World.SHELTER_EFFECT, TemperatureComponent.COMFORT_MIN)),
+		"a roof keeps you %d°C warmer in the cold" % roundi(World.SHELTER_EFFECT))
+	world.debug_temperature_offset = 40.0
+	air = world.get_air_temperature(inside)
+	check(is_equal_approx(world.get_temperature_at(inside), maxf(air - World.SHELTER_EFFECT, TemperatureComponent.COMFORT_MAX)),
+		"a roof keeps you cooler in the heat")
+	world.debug_temperature_offset = 0.0
+	# Torch warmth
+	var torch := _place_near(world, &"torch", 2, false)
+	check(torch.is_in_group(&"heat_sources") and torch.heat_at(torch.global_position) > 5.0, "torches give a little warmth")
+	# Bed
+	var bed := _place_near(world, &"bed", 2, false)
+	world.day_night.hour = 12.0
+	bed.interact(p)
+	check(p.spawn_point.distance_to(bed.global_position) < 2.0 and is_equal_approx(world.day_night.hour, 12.0),
+		"bed sets the respawn point; no sleeping at noon")
+	world.day_night.hour = 23.0
+	var hp_max := p.health.max_health
+	p.health.current = hp_max * 0.3
+	bed.interact(p)
+	check(absf(world.day_night.hour - 7.0) < 0.01 and p.health.current > hp_max * 0.6, "sleeping at night skips to 07:00 and heals")
+	# Spikes
+	var boar := _spawn_boar(world, _clear_offset(world, 5.0))
+	var bc := Vector2i(floori(boar.global_position.x), floori(boar.global_position.z))
+	var trap := b.place(BuildingManager.get_piece_data(&"spike_trap"), bc, "floor", 0, null, false)
+	var hp0 := boar.health.current
+	await _frames(80)
+	check(trap != null and boar.health.current < hp0, "spike trap hurts monsters (%d -> %d)" % [roundi(hp0), roundi(boar.health.current)])
+	check(not p.health.is_dead, "spikes don't hurt the player")
+	# Build mode
+	var bm := world.build_mode
+	bm.set_active(true)
+	check(world.hud._palette.visible, "build palette shown in build mode")
+	bm.select(BuildingManager.get_piece_data(&"wood_floor"))
+	var xp0 := p.character.total_xp
+	var target := p.global_position + Vector3(0, 0, 0)
+	var placed: BuildPiece = null
+	for k in 16:
+		var dir := Vector3(cos(TAU * k / 16.0), 0, sin(TAU * k / 16.0))
+		bm._update_target(p.global_position + dir * 3.0)
+		placed = bm.place_current()
+		if placed:
+			break
+	check(placed != null and placed.data.id == &"wood_floor", "build mode places the selected piece at the cursor")
+	check(p.character.total_xp > xp0, "building grants a little XP")
+	bm.set_active(false)
+	check(not world.hud._palette.visible, "palette hidden when leaving build mode")
+	# Crafting UI
+	world.hud._crafting.toggle()
+	world.hud._crafting.select(RecipeBook.get_recipe(&"rope"))
+	var r0 := p.inventory.count_of(&"rope")
+	check(world.hud._crafting.craft_selected(1) == 1 and p.inventory.count_of(&"rope") == r0 + 1, "crafting screen crafts the selected recipe")
+	world.hud._crafting.toggle()
+	world.queue_free()
+	await _frames(5)
+
+
+func test_building_save_load() -> void:
+	var saved_dir := SaveManager.worlds_dir
+	SaveManager.worlds_dir = "user://test_worlds"
+	for wl in SaveManager.list_worlds():
+		SaveManager.delete_world(wl.id)
+	var id := SaveManager.create_world("Build Test", 4242, &"barbarian")
+	var world: World = await _boot_world()
+	_clear_enemies(world)
+	var p := world.player
+	var wall := _place_near(world, &"wood_wall", 2, false)
+	var door := _place_near(world, &"wood_door", 2, false)
+	door.set_open(true)
+	var chest := _place_near(world, &"storage_chest", 2, false)
+	chest.storage.add_item(&"iron_ore", 7)
+	var flag_pos := _place_near(world, &"claim_flag", 2, false).global_position
+	p.recipes.learn(&"hearty_stew")
+	var count := world.building.pieces.size()
+	var wall_key := BuildingManager.key(wall.cell, wall.slot, wall.layer)
+	var chest_key := BuildingManager.key(chest.cell, chest.slot, chest.layer)
+	var door_key := BuildingManager.key(door.cell, door.slot, door.layer)
+	world.save_now(false)
+	world.queue_free()
+	await _frames(5)
+	check(SaveManager.load_world(id), "load building world")
+	world = await _boot_world()
+	var b := world.building
+	check(b.pieces.size() == count, "all %d pieces restored" % count)
+	check(b.pieces.has(wall_key) and b.pieces[wall_key].data.id == &"wood_wall", "wall restored in the same slot")
+	check(b.pieces.has(chest_key) and b.pieces[chest_key].storage.count_of(&"iron_ore") == 7, "chest contents restored")
+	check(b.pieces.has(door_key) and b.pieces[door_key].is_open, "door state restored")
+	check(b.is_claimed(flag_pos), "land claim restored")
+	check(world.player.recipes.knows(&"hearty_stew") and world.player.recipes.knows(&"rope"), "known recipes restored")
 	world.queue_free()
 	await _frames(5)
 	SaveManager.delete_world(id)

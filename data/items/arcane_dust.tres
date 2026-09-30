@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"arcane_dust"
+display_name = "Arcane Dust"
+description = "Ground crystal humming with mana."
+category = 0
+rarity = 3
+max_stack = 99
+base_value = 20
+icon_color = Color(0.7, 0.55, 1, 1)
+icon_glyph = "Ad"

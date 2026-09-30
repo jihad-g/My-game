@@ -123,6 +123,21 @@ show_in_lod1 = false
 on_water = false
 salt = 175
 
+[sub_resource type="Resource" id="Rule_8"]
+script = ExtResource("2_rule")
+prop_id = &"forgotten_cache"
+cell_size = 16
+density = 0.35
+clustering = 0.0
+min_height = -250
+max_height = -238
+max_slope = 1
+min_scale = 1.0
+max_scale = 1.0
+show_in_lod1 = false
+on_water = false
+salt = 190
+
 [resource]
 script = ExtResource("1_biome")
 id = &"the_deeps"
@@ -137,5 +152,5 @@ top_color_alt = Color(0.4, 0.37, 0.4, 1)
 side_color = Color(0.3, 0.28, 0.32, 1)
 shore_color = Color(0.4, 0.4, 0.4, 1)
 underwater_color = Color(0.3, 0.3, 0.3, 1)
-prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_7")]
+prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_7"), SubResource("Rule_8")]
 enemy_spawns = []

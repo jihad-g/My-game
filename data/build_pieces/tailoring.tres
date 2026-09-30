@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"tailoring"
+display_name = "Tailoring Table"
+description = "Crafting station: leather, cloth and hide armor."
+category = 8
+placement = 1
+behavior = 5
+cost = {
+&"plank": 6,
+&"rope": 3
+}
+mesh = &"tailoring"
+collision_size = Vector3(1, 0.95, 0.8)
+collision_center = Vector3(0, 0.47, 0)
+blocks_movement = true
+station_id = &"tailoring"
+required_level = 1
+fade_near_camera = false

@@ -44,7 +44,7 @@ func _physics_process(delta: float) -> void:
 	params.shape = _shape
 	params.transform = Transform3D(Basis.IDENTITY, from)
 	params.motion = motion
-	params.collision_mask = Layers.TERRAIN | Layers.ENEMY | Layers.PROP
+	params.collision_mask = Layers.TERRAIN | Layers.ENEMY | Layers.PROP | Layers.BUILDING
 	params.exclude = exclude
 	var fractions := space.cast_motion(params)
 	if fractions.size() == 2 and fractions[1] < 1.0:
