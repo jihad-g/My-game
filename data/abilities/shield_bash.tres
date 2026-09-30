@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"shield_bash"
+display_name = "Shield Bash"
+description = "Bash enemies in front: damage, 1.5 s stun and taunt. Half effect without a shield."
+effect = &"shield_bash"
+unlock_level = 1
+cost_type = 2
+cost = 20
+cooldown = 6
+damage = 12
+damage_type = &"physical"
+radius = 2.4
+range = 0
+duration = 1.5
+power = 60
+icon_color = Color(0.7, 0.75, 0.85, 1)
+icon_glyph = "SB"

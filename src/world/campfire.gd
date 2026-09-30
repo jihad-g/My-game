@@ -110,6 +110,12 @@ func interact(player: Node) -> void:
 		if inv.count_of(raw) > 0:
 			inv.remove_item(raw, 1)
 			var cooked: StringName = COOK_RECIPES[raw]
-			player.give_item(cooked, 1)
+			var n := 1
+			var ch = player.get("character")
+			if ch and randf() < ch.cooking_bonus_chance():
+				n = 2
+				Events.toast.emit("Skilled cooking: +1 portion", Color(0.8, 1.0, 0.6))
+			player.give_item(cooked, n)
+			Events.item_crafted.emit(cooked, 1)
 			return
 	Events.toast.emit("Nothing to cook (needs Raw Meat)", Color(1, 0.8, 0.5))

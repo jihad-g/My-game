@@ -1,0 +1,71 @@
+class_name Projectile
+extends Node3D
+## A simple straight-flying spell projectile (Firebolt). Hits the first enemy,
+## prop or wall along its path using ray casts (no tunnelling at high speed).
+
+var info_builder: Callable  ## func(target: Node) -> DamageInfo
+var velocity := Vector3.ZERO
+var lifetime := 1.5
+var exclude: Array[RID] = []
+var color := Color(1.0, 0.5, 0.15)
+var on_hit: Callable  ## optional func(target: Node, dealt: float)
+
+var _age := 0.0
+var _shape := SphereShape3D.new()
+
+
+func _ready() -> void:
+	_shape.radius = 0.3
+	var b := BlockMesh.new()
+	b.box(Vector3.ZERO, Vector3(0.35, 0.35, 0.35), color)
+	b.box(Vector3.ZERO, Vector3(0.22, 0.22, 0.6), color.lightened(0.4))
+	var mesh := b.commit()
+	mesh.surface_set_material(0, Materials.vertex_color_emissive())
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mi)
+	var light := OmniLight3D.new()
+	light.light_color = color
+	light.light_energy = 1.5
+	light.omni_range = 4.0
+	add_child(light)
+	if velocity.length_squared() > 0.0:
+		look_at(global_position + velocity, Vector3.UP)
+
+
+func _physics_process(delta: float) -> void:
+	_age += delta
+	var from := global_position
+	var motion := velocity * delta
+	var space := get_world_3d().direct_space_state
+	# Swept sphere: the bolt has volume, so glancing hits count.
+	var params := PhysicsShapeQueryParameters3D.new()
+	params.shape = _shape
+	params.transform = Transform3D(Basis.IDENTITY, from)
+	params.motion = motion
+	params.collision_mask = Layers.TERRAIN | Layers.ENEMY | Layers.PROP
+	params.exclude = exclude
+	var fractions := space.cast_motion(params)
+	if fractions.size() == 2 and fractions[1] < 1.0:
+		params.transform.origin = from + motion * fractions[1]
+		params.motion = Vector3.ZERO
+		var rest := space.get_rest_info(params)
+		if not rest.is_empty():
+			_impact(instance_from_id(rest.collider_id), rest.point)
+			return
+	global_position = from + motion
+	rotation.z += delta * 12.0
+	if _age >= lifetime:
+		_impact(null, global_position)
+
+
+func _impact(target: Object, pos: Vector3) -> void:
+	if target and target.has_method("receive_hit") and info_builder.is_valid():
+		var info: DamageInfo = info_builder.call(target)
+		info.hit_position = pos
+		var dealt = target.receive_hit(info)
+		if on_hit.is_valid():
+			on_hit.call(target, float(dealt) if dealt != null else 0.0)
+	VFX.burst(get_parent(), pos, 1.2, Color(color.r, color.g, color.b, 0.8))
+	queue_free()

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"leather_jerkin"
+display_name = "Boar-hide Jerkin"
+description = "Tough boar-hide armor."
+category = 4
+rarity = 1
+max_stack = 1
+base_value = 45
+icon_color = Color(0.5, 0.34, 0.22, 1)
+icon_glyph = "Ch"
+equip_slot = 4
+required_level = 6
+stat_bonuses = {
+&"armor": 10,
+&"insulation": 3
+}
+

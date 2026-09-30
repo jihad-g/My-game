@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"temperature_shield"
+display_name = "Magic Temperature Shield"
+description = "Ward yourself against cold and heat for 10 minutes (±22°C toward comfort). Needs Mana Control 2 above your class's starting value."
+effect = &"temperature_shield"
+unlock_level = 1
+cost_type = 1
+cost = 0
+cooldown = 5
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 600
+power = 22
+icon_color = Color(0.5, 0.8, 1, 1)
+icon_glyph = "TS"

@@ -17,6 +17,8 @@ var removed_props: Dictionary = {}
 var enemy_deaths: Dictionary = {}
 ## Biome id (String) -> world_time of first discovery.
 var discovered_biomes: Dictionary = {}
+## Place key (String, e.g. "cave:x,z") -> world_time of first discovery.
+var discovered_places: Dictionary = {}
 
 
 func _ready() -> void:
@@ -77,6 +79,14 @@ func is_prop_removed(chunk: Vector2i, prop_index: int, regrow_time: float, layer
 	return true
 
 
+## Records a place discovery (caves, later landmarks). Returns true the first time.
+func discover_place(key: String) -> bool:
+	if discovered_places.has(key):
+		return false
+	discovered_places[key] = world_time
+	return true
+
+
 ## Records a biome discovery. Returns true the first time.
 func discover_biome(id: StringName) -> bool:
 	if discovered_biomes.has(String(id)):
@@ -114,6 +124,7 @@ func to_dict() -> Dictionary:
 		"removed_props": props,
 		"enemy_deaths": enemy_deaths.duplicate(),
 		"discovered_biomes": discovered_biomes.duplicate(),
+		"discovered_places": discovered_places.duplicate(),
 	}
 
 
@@ -135,6 +146,7 @@ func from_dict(data: Dictionary) -> void:
 	for k in deaths:
 		enemy_deaths[String(k)] = float(deaths[k])
 	discovered_biomes = (data.get("discovered_biomes", {}) as Dictionary).duplicate()
+	discovered_places = (data.get("discovered_places", {}) as Dictionary).duplicate()
 
 
 func reset(new_seed: int) -> void:
@@ -143,3 +155,4 @@ func reset(new_seed: int) -> void:
 	removed_props.clear()
 	enemy_deaths.clear()
 	discovered_biomes.clear()
+	discovered_places.clear()

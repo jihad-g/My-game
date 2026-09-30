@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"berserk"
+display_name = "Berserk"
+description = "Spend all Rage (min 50): +40% attack speed and 10% lifesteal for Rage/10 seconds, but take 15% more damage."
+effect = &"berserk"
+unlock_level = 15
+cost_type = 3
+cost = 50
+cooldown = 30
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 5
+power = 0
+icon_color = Color(0.8, 0.1, 0.1, 1)
+icon_glyph = "Bk"

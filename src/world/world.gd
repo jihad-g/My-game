@@ -12,6 +12,9 @@ static var instance: World
 const FIRE_MAX_TEMPERATURE := 28.0
 const AUTOSAVE_INTERVAL := 120.0
 const BIOME_CHECK_INTERVAL := 0.5
+## Debug (F10): a sample of every gear tier for testing equipment.
+const DEBUG_GEAR: Array[StringName] = [&"iron_sword", &"iron_waraxe", &"copper_dagger", &"crystal_staff",
+	&"iron_kite_shield", &"chainmail", &"fur_cap", &"fur_boots", &"copper_ring", &"tusk_charm", &"sun_hat"]
 
 signal layer_changed(layer: int)
 signal biome_changed(biome: BiomeData)
@@ -65,6 +68,9 @@ func _ready() -> void:
 
 	var save := SaveManager.pending
 	SaveManager.pending = {}
+	var player_save: Dictionary = save.get("player", {})
+	var class_id := StringName((player_save.get("character", {}) as Dictionary).get("class", SaveManager.new_character_class))
+	player.setup_class(ClassRegistry.get_class_data(class_id), save.is_empty())
 	if save.is_empty():
 		var col := generator.find_spawn_column(Vector2i.ZERO)
 		var ground := generator.get_height_blocks(col.x, col.y) * TerrainGenerator.BLOCK_HEIGHT
@@ -148,6 +154,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		Events.toast.emit("Debug: +2 hours (%s)" % day_night.time_string(), Color(0.9, 0.9, 1))
 	elif event.is_action_pressed(&"quick_save"):
 		save_now(true)
+	elif event.is_action_pressed(&"debug_give_gear"):
+		for id in DEBUG_GEAR:
+			player.give_item(id, 1)
+	elif event.is_action_pressed(&"debug_give_xp"):
+		player.character.grant_xp(player.character.xp_needed(), Progression.Source.OTHER)
 
 
 # --- Layers (surface / underground) ---------------------------------------------------
@@ -166,6 +177,11 @@ func travel_to_layer(target_layer: int, at: Vector3) -> void:
 	pickup_pool.release_all()
 	layer = target_layer
 	chunk_manager.set_layer(target_layer)
+	if target_layer == TerrainGenerator.Layer.UNDERGROUND:
+		var key := "cave:%d,%d" % [floori(at.x), floori(at.z)]
+		if GameState.discover_place(key):
+			Events.toast.emit("Discovered a new cave", Color(1.0, 0.85, 0.4))
+			Events.place_discovered.emit(key)
 	# Step off the passage so we don't land inside it.
 	var dest := Vector3(at.x + 1.8, 0.0, at.z + 0.6)
 	dest.y = get_ground_height(dest) + 0.3
@@ -197,6 +213,7 @@ func _update_biome() -> void:
 	biome_changed.emit(b)
 	if GameState.discover_biome(b.id):
 		Events.toast.emit("Discovered: %s" % b.display_name, Color(1.0, 0.85, 0.4))
+		Events.biome_discovered.emit(b.id)
 
 
 # --- World services -------------------------------------------------------------------

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"chainmail"
+display_name = "Chainmail Hauberk"
+description = "Interlocking iron rings. Heavy but protective."
+category = 4
+rarity = 1
+max_stack = 1
+base_value = 110
+icon_color = Color(0.7, 0.72, 0.78, 1)
+icon_glyph = "Ch"
+equip_slot = 4
+required_level = 12
+stat_bonuses = {
+&"armor": 22,
+&"move_speed": -5
+}
+

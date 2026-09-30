@@ -5,7 +5,8 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 2 — world generation** (on top of the Phase 1 prototype). See [`docs/TODO.md`](docs/TODO.md) for the
+> Status: **Milestone 3 — RPG foundation** (classes, levels, skills, abilities, equipment) on top of
+> the Phase 1 prototype and Milestone 2 world generation. See [`docs/TODO.md`](docs/TODO.md) for the
 > honest status of every system and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
 ![Overview](docs/screenshots/03_zoomed_out_rotated.png)
@@ -15,8 +16,10 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 | ![Desert](docs/screenshots/biome_desert.png) | ![Mountains](docs/screenshots/biome_mountains.png) | ![Crystal](docs/screenshots/biome_crystal_glade.png) |
 | **Murk Swamp** | **The Deeps (caves)** | **World map (M)** |
 | ![Swamp](docs/screenshots/biome_swamp.png) | ![Cave](docs/screenshots/cave_inside.png) | ![Map](docs/screenshots/world_map.png) |
-| **Main menu** | **Boar charge telegraph** | |
-| ![Menu](docs/screenshots/main_menu.png) | ![Charge](docs/screenshots/04a_boar_charge_telegraph.png) | |
+| **Wizard: Frost Nova → Firebolt "Shatter"** | **Barbarian: Whirlwind + Rage** | **Assassin: Vanish** |
+| ![Wizard](docs/screenshots/class_wizard.png) | ![Barbarian](docs/screenshots/class_barbarian.png) | ![Assassin](docs/screenshots/class_assassin.png) |
+| **Character screen (K)** | **Main menu** | **Boar charge telegraph** |
+| ![Character](docs/screenshots/character_screen.png) | ![Menu](docs/screenshots/main_menu.png) | ![Charge](docs/screenshots/04a_boar_charge_telegraph.png) |
 
 ## Requirements
 
@@ -67,6 +70,9 @@ and when you quit through the pause menu or close the window.
 | Tilt camera | Page Up / Page Down, or middle-mouse drag vertically |
 | Zoom | Mouse wheel |
 | Pan camera freely / recenter | Arrow keys / V |
+| Class abilities | Z / X / C |
+| Magic Temperature Shield | T |
+| Character screen (skills, stats, equipment) | K |
 | World map | M |
 | Quick save | F5 |
 | Pause | Esc |
@@ -75,6 +81,7 @@ and when you quit through the pause menu or close the window.
 | **Debug:** air temperature −10 / +10 °C | F6 / F7 |
 | **Debug:** spawn a Thornback Boar in front of you | F8 |
 | **Debug:** skip 2 hours | F9 |
+| **Debug:** get a sample of every gear tier / gain a level | F10 / F11 |
 
 ## Things to try (manual test script)
 
@@ -107,7 +114,18 @@ and when you quit through the pause menu or close the window.
     crystals, glowcaps and stalagmites; always 12 °C. Climb the rope ladder to return.
 12. **Resources** – mine copper/iron/coal veins in mountains and caves, dig clay at
     riverbanks, pick moonpetals and glowcaps. Mined veins regrow after a while.
-13. **Save/load** – create a named world, harvest some trees, place a campfire, quit to
+13. **Classes** – create four worlds with different classes (main menu → class buttons).
+    Barbarian: Whirlwind (Z) groups of boars, build Rage, Berserk (C, level 15).
+    Knight: Shield Bash (Z) stuns and taunts, Guardian Stance halves damage.
+    Wizard: Firebolt (Z) burns; Frost Nova (X) then Firebolt = **Shatter** (double damage).
+    Assassin: Shadow Step (Z) behind a boar → guaranteed crit backstab; Vanish (C) → Ambush.
+14. **Progression** – kill boars, discover biomes and caves, harvest: watch the XP bar.
+    Press K to spend skill points and see every stat change live. F11 levels you up quickly.
+15. **Equipment** – right-click gear in the inventory to equip (F10 for test gear); level
+    requirements apply; swapping weapons changes your combo; K shows the slots.
+16. **Temperature Shield** – raise Mana Control by 2 (K), press T: 10 minutes of cold/heat
+    protection. Wizards pay the least mana.
+17. **Save/load** – create a named world, harvest some trees, place a campfire, quit to
     menu (Esc → "Save & quit to menu"), load it again: everything is where you left it.
 
 ## Run the automated tests
@@ -118,7 +136,7 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
 
-The suite (191 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (308 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -126,7 +144,13 @@ gathering, campfire warmth & cooking, cold debuffs, streaming after teleport,
 death and respawn, swimming, travelling into a cave and back, and a full save → load
 round trip (including falling back to the backup when a save file is corrupt).
 World-generation tests check determinism, terrain/biome statistics over 10×10 km,
-climate continuity, cave layout and data integrity.
+climate continuity, cave layout and data integrity. RPG tests check class data (50
+starting points, affordable shields), the XP curve, skill balance (e.g. a max-Strength
+Wizard hits softer than a starting Knight), equipment and requirements, every class
+ability in the running game, and RPG save/load.
+
+Balance tables are generated from the code: `godot --headless --path . -s tools/gen_rpg_tables.gd`
+→ [`docs/XP_TABLE.md`](docs/XP_TABLE.md), [`docs/CLASSES_AND_SKILLS.md`](docs/CLASSES_AND_SKILLS.md).
 
 Visual check (renders screenshots, needs a display or `xvfb-run`):
 
@@ -150,9 +174,10 @@ src/
   world/                 Terrain generator, chunks & streaming, biomes, props, caves, spawner, day/night
   world/gen/             WorldGenSettings (all generation parameters + biome list)
   save/                  SaveManager (world list, save/load, backups)
+  rpg/                   Classes, skills, progression, character stats, equipment, abilities
   inventory/             ItemData resource, Inventory
   ui/                    HUD, theme, slots, temperature gauge
-data/                    Data-driven content (.tres): items, attacks, enemies, props, biomes, worldgen
+data/                    Data-driven content (.tres): items, attacks, movesets, abilities, classes, enemies, props, biomes, worldgen
 tests/                   Automated test suite + screenshot runner
 docs/                    TODO, CHANGELOG, architecture notes
 tools/                   Helper scripts

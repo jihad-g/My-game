@@ -25,6 +25,8 @@ var current_world_id := ""
 var current_meta: Dictionary = {}
 ## Save data waiting to be applied by World._ready() (empty for new worlds).
 var pending: Dictionary = {}
+## Class for a brand-new character (set when creating/quick-playing a world).
+var new_character_class: StringName = ClassRegistry.DEFAULT_CLASS
 var _session_start_msec := 0
 
 
@@ -55,7 +57,7 @@ func world_exists(id: String) -> bool:
 
 
 ## Creates a new world folder and makes it the current world. Returns its id.
-func create_world(world_name: String, seed_value: int) -> String:
+func create_world(world_name: String, seed_value: int, class_id: StringName = ClassRegistry.DEFAULT_CLASS) -> String:
 	world_name = world_name.strip_edges()
 	if world_name == "":
 		world_name = "New World"
@@ -66,6 +68,7 @@ func create_world(world_name: String, seed_value: int) -> String:
 		"id": id,
 		"name": world_name,
 		"seed": str(seed_value),
+		"class": String(class_id),
 		"save_version": SAVE_VERSION,
 		"generator_version": 2,
 		"game_version": ProjectSettings.get_setting("application/config/version", "0"),
@@ -76,6 +79,7 @@ func create_world(world_name: String, seed_value: int) -> String:
 	_write_json(_meta_path(id), current_meta)
 	current_world_id = id
 	pending = {}
+	new_character_class = class_id
 	GameState.reset(seed_value)
 	_session_start_msec = Time.get_ticks_msec()
 	return id
@@ -90,6 +94,7 @@ func load_world(id: String) -> bool:
 	current_meta = meta
 	current_meta["id"] = id
 	current_world_id = id
+	new_character_class = StringName(meta.get("class", ClassRegistry.DEFAULT_CLASS))
 	GameState.reset(GameState.parse_seed(meta.get("seed", GameState.DEFAULT_SEED)))
 	pending = {}
 	var save = _read_json_with_backup(_save_path(id))
@@ -103,10 +108,11 @@ func load_world(id: String) -> bool:
 
 
 ## Plays a world that is never written to disk (quick play, tests, --seed=).
-func start_transient(seed_value: int) -> void:
+func start_transient(seed_value: int, class_id: StringName = ClassRegistry.DEFAULT_CLASS) -> void:
 	current_world_id = ""
 	current_meta = {}
 	pending = {}
+	new_character_class = class_id
 	GameState.reset(seed_value)
 
 
@@ -127,6 +133,7 @@ func save_world(world: World) -> bool:
 	current_meta["play_time"] = float(current_meta.get("play_time", 0.0)) + (now_msec - _session_start_msec) / 1000.0
 	_session_start_msec = now_msec
 	current_meta["last_played"] = Time.get_unix_time_from_system()
+	current_meta["level"] = world.player.character.level
 	_write_json(_meta_path(current_world_id), current_meta)
 	world_saved.emit(current_world_id)
 	return true

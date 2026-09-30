@@ -8,6 +8,8 @@ enum Category { WILDLIFE, MONSTER, BANDIT, UNDEAD, MAGICAL, DUNGEON, ELITE, BOSS
 @export var id: StringName
 @export var display_name: String = ""
 @export var category: Category = Category.WILDLIFE
+## Character level (drives XP scaling; later also stat scaling).
+@export var level: int = 1
 @export var max_health: float = 60.0
 @export var walk_speed: float = 2.0
 @export var run_speed: float = 5.5

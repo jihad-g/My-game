@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://src/enemies/thornback_boar.gd" id="1_boar"]
 [ext_resource type="Resource" path="res://data/enemies/thornback_boar.tres" id="2_data"]
 [ext_resource type="Script" path="res://src/components/health_component.gd" id="3_health"]
 [ext_resource type="Script" path="res://src/enemies/boar_model.gd" id="4_model"]
 [ext_resource type="Script" path="res://src/enemies/enemy_health_bar.gd" id="5_bar"]
+[ext_resource type="Script" path="res://src/combat/status_effects.gd" id="6_status"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule_body"]
 radius = 0.55
@@ -29,3 +30,6 @@ script = ExtResource("4_model")
 [node name="HealthBar" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, 0)
 script = ExtResource("5_bar")
+
+[node name="Status" type="Node" parent="."]
+script = ExtResource("6_status")

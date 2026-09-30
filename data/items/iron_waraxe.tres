@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/axe.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"iron_waraxe"
+display_name = "Iron War Axe"
+description = "Heavy iron axe that bites deep."
+category = 3
+rarity = 1
+max_stack = 1
+base_value = 70
+icon_color = Color(0.65, 0.6, 0.55, 1)
+icon_glyph = "Ax"
+equip_slot = 1
+required_level = 10
+stat_bonuses = {
+&"damage_bonus": 7
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"axe"

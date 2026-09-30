@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"dagger_stab_4"
+display_name = "Twist"
+damage = 10
+stamina_cost = 5
+windup = 0.08
+active = 0.07
+recovery = 0.24
+cancel_ratio = 0.4
+reach = 1.8
+arc_degrees = 70
+knockback = 2.5
+poise_damage = 10
+lunge_speed = 4.0
+move_multiplier = 0.35
+crit_chance_bonus = 0.1
+animation = &"thrust"
+camera_shake = 0.12

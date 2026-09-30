@@ -195,12 +195,20 @@ func harvest_prop(index: int, gatherer: Node) -> void:
 	GameState.mark_prop_removed(coord, index, layer)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = HashUtils.hash3(index, int(GameState.world_time * 10.0), coord.x * 31 + coord.y)
+	# Crafting skill: chance of one extra item per drop.
+	var bonus_chance := 0.0
+	if World.instance and World.instance.player:
+		bonus_chance = World.instance.player.character.harvest_bonus_chance()
+	var xp := pdata.xp if pdata.xp > 0 else (3 if pdata.interact_mode == PropData.InteractMode.HARVEST else 1)
+	Events.resource_harvested.emit(pdata.id, xp)
 	for loot in pdata.drops:
 		if not loot is LootEntry:
 			continue
 		var n: int = loot.roll(rng)
 		if n <= 0:
 			continue
+		if rng.randf() < bonus_chance:
+			n += 1
 		if gatherer and gatherer.has_method("give_item"):
 			gatherer.give_item(loot.item_id, n)
 		elif World.instance:

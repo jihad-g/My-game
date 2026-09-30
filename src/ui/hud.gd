@@ -6,8 +6,8 @@ extends CanvasLayer
 ## hotbar, inventory window, lock-on target frame, interaction prompt, toasts,
 ## clock, help, debug overlay, loading / death / pause screens.
 ## Also: biome/layer label, world map (M), save buttons in the pause menu.
-## NOT IMPLEMENTED yet (later phases): mana bar, XP/level, quests,
-## skills, equipment, crafting, reputation, building UI.
+## Also (Milestone 3): mana/XP/rage bars, ability bar, buffs, character screen (K).
+## NOT IMPLEMENTED yet (later phases): quests, crafting, reputation, building UI.
 
 var player: Player
 var world: World
@@ -39,6 +39,19 @@ var _toasts := VBoxContainer.new()
 var _clock := Label.new()
 var _biome_label := Label.new()
 var _map := WorldMap.new()
+var _character := CharacterPanel.new()
+var _mana_bar: ProgressBar
+var _mana_label: Label
+var _xp_bar: ProgressBar
+var _xp_label: Label
+var _level_label := Label.new()
+var _rage_row: HBoxContainer
+var _rage_bar: ProgressBar
+var _rage_label: Label
+var _buff_label := Label.new()
+var _ability_buttons: Array[Button] = []
+var _ability_cd: Array[Label] = []
+var _banner := Label.new()
 var _save_button: Button
 var _debug := Label.new()
 var _help := PanelContainer.new()
@@ -62,7 +75,18 @@ func _ready() -> void:
 	_build_prompt_and_toasts()
 	_build_corner_info()
 	_build_help()
+	_build_ability_bar()
 	_root.add_child(_map)
+	_root.add_child(_character)
+	_banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_banner.offset_top = 120
+	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner.add_theme_font_size_override(&"font_size", 40)
+	_banner.add_theme_color_override(&"font_color", UITheme.GOLD)
+	_banner.add_theme_constant_override(&"outline_size", 10)
+	_banner.modulate.a = 0.0
+	_root.add_child(_banner)
 	_build_overlays()
 	Events.toast.connect(show_toast)
 	Events.item_picked_up.connect(_on_item_picked_up)
@@ -84,6 +108,7 @@ func bind(p_player: Player, p_world: World) -> void:
 	_set_bar(_hu_bar, _hu_label, player.hunger.current, player.hunger.max_hunger)
 	_refresh_inventory()
 	_map.world = world
+	_bind_rpg()
 	world.biome_changed.connect(_on_biome_changed)
 	world.layer_changed.connect(func(_l: int) -> void: _map.visible = false)
 	_save_button.disabled = not SaveManager.is_persistent()
@@ -137,6 +162,25 @@ func _build_status() -> void:
 	_hu_bar = hu[0]
 	_hu_label = hu[1]
 	box.add_child(_row("Hunger", hu))
+	var mp := _make_bar(Color(0.3, 0.5, 1.0), 220)
+	_mana_bar = mp[0]
+	_mana_label = mp[1]
+	box.add_child(_row("Mana", mp))
+	var rg := _make_bar(Color(0.85, 0.15, 0.1), 220)
+	_rage_bar = rg[0]
+	_rage_label = rg[1]
+	_rage_row = _row("Rage", rg)
+	_rage_row.visible = false
+	box.add_child(_rage_row)
+	var xpb := _make_bar(Color(0.95, 0.8, 0.3), 220)
+	_xp_bar = xpb[0]
+	_xp_label = xpb[1]
+	_xp_bar.custom_minimum_size.y = 14
+	var xrow := _row("XP", xpb)
+	_level_label.add_theme_font_size_override(&"font_size", 14)
+	_level_label.add_theme_color_override(&"font_color", UITheme.GOLD)
+	xrow.add_child(_level_label)
+	box.add_child(xrow)
 	# Temperature
 	var trow := HBoxContainer.new()
 	var tl := Label.new()
@@ -156,11 +200,9 @@ func _build_status() -> void:
 	_temp_effects.autowrap_mode = TextServer.AUTOWRAP_WORD
 	_temp_effects.custom_minimum_size.x = 290
 	box.add_child(_temp_effects)
-	var na := Label.new()
-	na.text = "Mana · XP · Level: Phase 2 (not implemented)"
-	na.add_theme_font_size_override(&"font_size", 11)
-	na.add_theme_color_override(&"font_color", Color(0.6, 0.6, 0.65))
-	box.add_child(na)
+	_buff_label.add_theme_font_size_override(&"font_size", 12)
+	_buff_label.add_theme_color_override(&"font_color", Color(0.7, 0.9, 1.0))
+	box.add_child(_buff_label)
 
 
 func _build_hotbar() -> void:
@@ -260,6 +302,108 @@ func _build_target_frame() -> void:
 	v.add_child(_target_bar)
 
 
+func _build_ability_bar() -> void:
+	var holder := HBoxContainer.new()
+	holder.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	holder.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	holder.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	holder.offset_bottom = -104
+	holder.add_theme_constant_override(&"separation", 8)
+	_root.add_child(holder)
+	for i in 4:
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(54, 54)
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_font_size_override(&"font_size", 18)
+		var idx := i
+		b.pressed.connect(func() -> void:
+			if player:
+				player.abilities.try_use(idx))
+		var key := Label.new()
+		key.text = ["Z", "X", "C", "T"][i]
+		key.position = Vector2(4, 1)
+		key.add_theme_font_size_override(&"font_size", 11)
+		key.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(key)
+		var cd := Label.new()
+		cd.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		cd.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cd.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		cd.add_theme_font_size_override(&"font_size", 12)
+		cd.add_theme_color_override(&"font_color", Color(1, 0.9, 0.6))
+		cd.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(cd)
+		holder.add_child(b)
+		_ability_buttons.append(b)
+		_ability_cd.append(cd)
+
+
+func _bind_rpg() -> void:
+	var ch := player.character
+	_character.bind(player)
+	player.mana.mana_changed.connect(func(c: float, m: float) -> void: _set_bar(_mana_bar, _mana_label, c, m))
+	_set_bar(_mana_bar, _mana_label, player.mana.current, player.mana.max_mana)
+	ch.xp_changed.connect(_on_xp_changed)
+	_on_xp_changed(ch.xp, ch.xp_needed(), ch.level)
+	player.abilities.rage_changed.connect(func(v: float) -> void: _set_bar(_rage_bar, _rage_label, v, PlayerAbilities.MAX_RAGE))
+	_rage_row.visible = ch.class_data != null and ch.class_data.uses_rage
+	_set_bar(_rage_bar, _rage_label, player.abilities.rage, PlayerAbilities.MAX_RAGE)
+	Events.level_up.connect(_on_level_up)
+	Events.xp_gained.connect(func(amount: int, source: int) -> void:
+		show_toast("+%d XP (%s)" % [amount, Progression.SOURCE_NAMES[source]], Color(1, 0.9, 0.5)))
+	_refresh_abilities()
+
+
+func _on_xp_changed(xp: int, needed: int, level: int) -> void:
+	_level_label.text = "  Lv %d" % level
+	_xp_bar.max_value = maxi(needed, 1)
+	_xp_bar.value = xp
+	_xp_label.text = "%d / %d" % [xp, needed] if needed > 0 else "MAX"
+
+
+func _on_level_up(level: int) -> void:
+	var pts := player.character.unspent_points
+	_banner.text = "Level %d!\n%d skill point%s to spend (K)" % [level, pts, "" if pts == 1 else "s"]
+	var tw := _banner.create_tween()
+	_banner.modulate.a = 1.0
+	tw.tween_interval(2.5)
+	tw.tween_property(_banner, "modulate:a", 0.0, 1.0)
+	var unlocked := PackedStringArray()
+	for i in 3:
+		var a := player.abilities.get_slot(i)
+		if a and a.unlock_level == level:
+			unlocked.append(a.display_name)
+	if not unlocked.is_empty():
+		show_toast("New ability: %s" % ", ".join(unlocked), UITheme.GOLD)
+	_refresh_abilities()
+
+
+func _refresh_abilities() -> void:
+	if player == null:
+		return
+	for i in 4:
+		var a := player.abilities.get_slot(i)
+		var b := _ability_buttons[i]
+		if a == null:
+			b.visible = false
+			continue
+		b.visible = true
+		b.text = a.icon_glyph
+		var unlocked := player.abilities.is_unlocked(a)
+		b.modulate = a.icon_color.lerp(Color.WHITE, 0.35) if unlocked else Color(0.4, 0.4, 0.45)
+		var cost := player.abilities.effective_cost(a)
+		b.tooltip_text = "%s\n%s\nCost: %d %s · Cooldown %ss%s" % [a.display_name, a.description, roundi(cost),
+			"mana" if i == 3 else a.cost_name(), a.cooldown,
+			"" if unlocked else "\n" + player.abilities.lock_reason(a)]
+		var cd := player.abilities.cooldown_left(a)
+		if cd >= 0.05:
+			_ability_cd[i].text = "%.1f" % cd
+		elif unlocked:
+			_ability_cd[i].text = ""
+		else:
+			_ability_cd[i].text = "Lv%d" % a.unlock_level if i < 3 else "MC"
+
+
 func _build_prompt_and_toasts() -> void:
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -315,6 +459,7 @@ func _build_help() -> void:
 		"Tab lock-on target · F interact / gather · I inventory",
 		"1-8 use hotbar item (eat / place campfire)",
 		"Q/E or MMB-drag rotate · Wheel zoom · PgUp/PgDn tilt",
+		"Z/X/C class abilities · T temperature shield · K character",
 		"Arrows pan camera · V recenter · M map · F5 save",
 		"F3 debug · F1 hide help",
 		"Debug: F6/F7 temp -/+10°C · F8 spawn boar · F9 +2h",
@@ -419,7 +564,9 @@ func set_paused(on: bool) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"pause"):
-		if _map.visible:
+		if _character.visible:
+			_character.visible = false
+		elif _map.visible:
 			_map.visible = false
 		elif _inv_panel.visible:
 			_toggle_inventory()
@@ -430,6 +577,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	elif event.is_action_pressed(&"inventory"):
 		_toggle_inventory()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"character_screen"):
+		if not _loading.visible:
+			_character.toggle()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"world_map"):
 		if not _loading.visible:
@@ -458,6 +609,8 @@ func _process(_delta: float) -> void:
 		_target_panel.visible = not _target.is_dead and _target.is_visible_in_tree()
 	if _debug.visible:
 		_update_debug()
+	_refresh_abilities()
+	_update_buffs()
 
 
 func _set_bar(bar: ProgressBar, label: Label, current: float, maximum: float) -> void:
@@ -502,6 +655,15 @@ func _update_temperature() -> void:
 	if not hparts.is_empty():
 		lines.append("%s: %s" % [player.hunger.state_name(), ", ".join(hparts)])
 	_temp_effects.text = "\n".join(lines)
+
+
+func _update_buffs() -> void:
+	var parts := PackedStringArray()
+	for id in player.abilities.buffs:
+		var t := float(player.abilities.buffs[id])
+		var nice := String(id).capitalize()
+		parts.append("%s %s" % [nice, "%d:%02d" % [int(t) / 60, int(t) % 60] if t >= 60.0 else "%ds" % ceili(t)])
+	_buff_label.text = " · ".join(parts)
 
 
 func _update_debug() -> void:

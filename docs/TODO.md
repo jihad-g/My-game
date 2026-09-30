@@ -41,19 +41,27 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Save/load generated worlds (menu, world list, autosave, crash-safe files, versioned format)
 - [x] Swimming, world map (M), biome discovery tracking
 
-## Phase 2 — Core RPG
+## Milestone 3 — RPG foundation  ✅ (this milestone, Phase 2)
 
-- [ ] Four classes: Barbarian, Knight, Wizard, Assassin (distinct kits; 50 starting skill points each)
-- [ ] Skills 1–100: Strength, Mana Control, Defense, Crafting, Dexterity (meaningful effects)
-- [ ] XP sources (combat, bosses, dungeons, exploration, landmarks, trading, farming, crafting, quests)
-- [ ] XP curve 1–100 with unlock table (Level | XP required | Total XP | Unlocks)
-- [ ] Mana & mana regen (`Stats.MANA_REGEN` already exists and is modified by temperature)
-- [ ] Class abilities, special attacks, status effects (poison, burn, bleed, slow, freeze…)
-- [ ] Magic Temperature Shield (10 min, mana cost per class, Wizard cheapest, requires +2 Mana Control)
-- [ ] Equipment slots (weapons, shields, helmets, chest, gloves, boots, rings, amulets, special) — `TemperatureComponent.insulation/cooling` hooks ready
-- [ ] Weapon categories per class (swords, shields, axes, staffs, wands, daggers…)
-- [ ] Crafting (never fails; skill reduces material cost; tiers Basic → Legendary; recipe sources)
+- [x] Four classes with distinct identities, 50 starting skill points each, class looks
+- [x] Levels 1–100, XP curve and XP table (`docs/XP_TABLE.md`)
+- [x] XP from combat (level-scaled), discovery, caves, harvesting, gathering, cooking
+- [x] Strength, Mana Control, Defense, Crafting, Dexterity 1–100 with effects + milestone perks
+- [x] Mana
+- [x] Class-specific abilities (3 per class) + Barbarian Rage
+- [x] Magic Temperature Shield (10 min, per-class cost, Wizard cheapest, MC +2 requirement)
+- [x] Equipment slots, stat system, level requirements, weapon movesets & proficiencies
+- [x] Status effects (burn, poison, freeze, stun), taunt, stealth, spell combinations
+- [x] Character screen, ability bar, class selection
+
+## Phase 2 — Core RPG (remaining)
+
+- [ ] Crafting system (recipes, stations, material tiers; skill formulas already exist and are tested)
+- [ ] Recipe sources (villages, kingdoms, books, scrolls, dungeons, bosses)
+- [ ] More abilities per class / ability upgrades at higher levels (current unlocks: 1, 5, 15)
+- [ ] Item quality (Fine/Masterwork) and gear drops from more sources (only boars drop gear today)
 - [ ] Basic NPCs (dialogue, shops)
+- [ ] Respec (reset skill points)
 
 ## Phase 3 — World (remaining)
 
@@ -104,6 +112,9 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 - Dropped loot pickups are not saved (they despawn after 5 minutes anyway). Enemies are not saved (killed spawn slots are).
 - Swimming never drowns you; with no stamina you just swim slowly.
+- Most higher-tier gear can only be obtained with the F10 debug key until crafting exists.
+- Abilities have no dedicated animations/sounds yet (procedural model poses + simple VFX).
+- Enemies have a level but no level-based stat scaling yet (only one enemy type exists).
 - The world map reveals everything (no fog-of-war yet).
 - Placed objects on the other layer stay in memory (harmless, but not culled).
 - Debug-spawned enemies (F8) are not tied to a chunk and never despawn unless killed.

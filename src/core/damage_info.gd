@@ -14,6 +14,8 @@ var poise_damage: float = 0.0
 var hit_position: Vector3 = Vector3.ZERO
 ## Direction the attack travelled (attacker -> target), flattened.
 var direction: Vector3 = Vector3.ZERO
+## Status effects to apply on hit: Array of [id: StringName, duration: float, params: Dictionary]
+var status_effects: Array = []
 
 
 static func create(p_amount: float, p_source: Node, p_type: StringName = &"physical") -> DamageInfo:

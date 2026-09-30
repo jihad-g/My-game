@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"tusk_charm"
+display_name = "Tusk Charm"
+description = "A boar tusk on a leather cord. Wearer feels stronger."
+category = 4
+rarity = 2
+max_stack = 1
+base_value = 50
+icon_color = Color(0.95, 0.92, 0.8, 1)
+icon_glyph = "Am"
+equip_slot = 8
+required_level = 1
+stat_bonuses = {
+&"strength": 3,
+&"max_health": 10
+}
+

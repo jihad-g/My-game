@@ -14,6 +14,19 @@ func _ready() -> void:
 		if arg.begins_with("--out="):
 			_out_dir = arg.substr(6)
 	DirAccess.make_dir_recursive_absolute(_out_dir)
+	if "--only=menu" in OS.get_cmdline_user_args():
+		var m := (load("res://scenes/menu/main_menu.tscn") as PackedScene).instantiate()
+		add_child(m)
+		await _wait(10)
+		m._select_class(&"wizard")
+		await _wait(5)
+		await _shot("20_main_menu")
+		get_tree().quit()
+		return
+	if "--only=rpg" in OS.get_cmdline_user_args():
+		await _rpg_showcase()
+		get_tree().quit()
+		return
 	GameState.reset(GameState.DEFAULT_SEED)
 	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
 	add_child(world)
@@ -196,3 +209,63 @@ func _shot(name: String) -> void:
 	var path := "%s/%s.png" % [_out_dir, name]
 	img.save_png(path)
 	print("saved ", path)
+
+
+## Milestone 3 showcase: every class, its abilities, and the character screen.
+func _rpg_showcase() -> void:
+	for cid in [&"barbarian", &"knight", &"wizard", &"assassin"]:
+		SaveManager.start_transient(GameState.DEFAULT_SEED, cid)
+		var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+		add_child(world)
+		while not world.is_ready:
+			await get_tree().process_frame
+		var frames := 0
+		while world.chunk_manager.pending_count() > 0 and frames < 1500:
+			await get_tree().process_frame
+			frames += 1
+		var p := world.player
+		p.health.invulnerable = true
+		world.hud._help.visible = false
+		world.camera_rig._target_distance = 11.0
+		world.camera_rig._target_pitch = 48.0
+		p.character.grant_xp(Progression.total_xp_for(16), Progression.Source.OTHER)
+		await _wait(30)
+		var dir := p.get_facing()
+		var boars: Array[Enemy] = []
+		for k in 3:
+			var off := dir.rotated(Vector3.UP, (k - 1) * 0.6) * (2.2 if cid == &"barbarian" else 4.5)
+			var pos := p.global_position + off
+			pos.y = world.get_ground_height(pos) + 0.3
+			var b := world.spawner.spawn_enemy(world.debug_enemy_scene, pos, "")
+			b.stagger(6.0)
+			boars.append(b)
+		p.set_lock_target(boars[1])
+		await _wait(25)
+		match cid:
+			&"barbarian":
+				p.abilities.set_rage(70.0)
+				p.abilities.try_use(0)
+				await _wait(12)
+			&"knight":
+				p.abilities.try_use(0)
+				await _wait(6)
+			&"wizard":
+				p.abilities.try_use(1)
+				await _wait(4)
+				p.abilities.try_use(0)
+				await _wait(5)
+			&"assassin":
+				p.abilities.try_use(1)
+				p.abilities.try_use(2)
+				await _wait(10)
+		await _shot("30_class_%s" % cid)
+		if cid == &"knight":
+			var ev := InputEventAction.new()
+			ev.action = &"character_screen"
+			ev.pressed = true
+			Input.parse_input_event(ev)
+			await _wait(10)
+			await _shot("31_character_screen")
+			Input.parse_input_event(ev)
+		world.queue_free()
+		await _wait(5)

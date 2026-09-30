@@ -35,7 +35,45 @@ var _attack_arm := Vector2.ZERO
 var _attack_torso := 0.0
 
 
+var _class_id: StringName = &""
+var _accent := Color(0.75, 0.6, 0.25)
+var _weapon_type: StringName = &"sword"
+var _has_shield := false
+var _shield: Node3D
+var _ghost := false
+
+
 func _ready() -> void:
+	_build()
+
+
+## Class look: colours + class-specific headgear/clothing.
+func set_appearance(c: ClassData) -> void:
+	if c == null:
+		return
+	_class_id = c.id
+	shirt_color = c.shirt_color
+	pants_color = c.pants_color
+	hair_color = c.hair_color
+	_accent = c.accent_color
+	_build()
+
+
+func set_weapon(weapon_type: StringName, has_shield: bool) -> void:
+	_weapon_type = weapon_type
+	_has_shield = has_shield
+	if _root:
+		_build_weapon()
+
+
+func _build() -> void:
+	if _attack_tween:
+		_attack_tween.kill()
+	if _dodge_tween:
+		_dodge_tween.kill()
+	if _root:
+		_root.free()
+	_parts.clear()
 	_root = Node3D.new()
 	add_child(_root)
 	# Legs (pivot at hip)
@@ -63,11 +101,90 @@ func _ready() -> void:
 	_arm_r = _pivot(_torso, Vector3(0.36, 0.54, 0))
 	_part(_arm_r, Vector3(0, -0.22, 0), Vector3(0.18, 0.46, 0.2), shirt_color * 0.92)
 	_part(_arm_r, Vector3(0, -0.5, 0), Vector3(0.16, 0.14, 0.16), skin_color)
-	# Weapon in right hand (placeholder "traveller's sword")
+	_build_class_gear()
 	_weapon = _pivot(_arm_r, Vector3(0, -0.52, 0.05))
-	_part(_weapon, Vector3(0, 0, 0.12), Vector3(0.08, 0.08, 0.2), Color(0.35, 0.22, 0.12))
-	_part(_weapon, Vector3(0, 0, 0.24), Vector3(0.3, 0.06, 0.06), Color(0.75, 0.6, 0.25))
-	_part(_weapon, Vector3(0, 0, 0.62), Vector3(0.1, 0.04, 0.7), weapon_color)
+	_shield = _pivot(_arm_l, Vector3(-0.1, -0.35, 0.08))
+	_build_weapon()
+	if _ghost:
+		set_ghost(true)
+
+
+func _build_class_gear() -> void:
+	var a := _accent
+	match _class_id:
+		&"barbarian":
+			_part(_head, Vector3(0.27, 0.52, 0), Vector3(0.1, 0.22, 0.1), Color(0.95, 0.92, 0.82))  # horns
+			_part(_head, Vector3(-0.27, 0.52, 0), Vector3(0.1, 0.22, 0.1), Color(0.95, 0.92, 0.82))
+			_part(_torso, Vector3(0, 0.62, -0.02), Vector3(0.7, 0.14, 0.4), a)  # fur mantle
+			_part(_head, Vector3(0, 0.08, 0.2), Vector3(0.36, 0.14, 0.08), hair_color)  # beard
+		&"knight":
+			_part(_head, Vector3(0, 0.36, 0), Vector3(0.52, 0.34, 0.5), Color(0.72, 0.74, 0.8))  # helm
+			_part(_head, Vector3(0, 0.26, 0.24), Vector3(0.36, 0.06, 0.04), Color(0.2, 0.2, 0.25))  # visor slit
+			_part(_head, Vector3(0, 0.6, -0.05), Vector3(0.08, 0.14, 0.34), a)  # plume
+			_part(_torso, Vector3(0, 0.32, 0.17), Vector3(0.44, 0.44, 0.04), Color(0.78, 0.8, 0.86))  # breastplate
+			_part(_torso, Vector3(-0.4, 0.6, 0), Vector3(0.24, 0.12, 0.26), Color(0.72, 0.74, 0.8))  # pauldrons
+			_part(_torso, Vector3(0.4, 0.6, 0), Vector3(0.24, 0.12, 0.26), Color(0.72, 0.74, 0.8))
+		&"wizard":
+			_part(_head, Vector3(0, 0.52, 0), Vector3(0.62, 0.06, 0.6), shirt_color * 0.8)  # hat brim
+			_part(_head, Vector3(0, 0.68, 0), Vector3(0.36, 0.28, 0.36), shirt_color * 0.85)
+			_part(_head, Vector3(0.03, 0.88, -0.03), Vector3(0.2, 0.2, 0.2), shirt_color * 0.9)
+			_part(_head, Vector3(0.06, 1.02, -0.06), Vector3(0.1, 0.12, 0.1), a)
+			_part(_head, Vector3(0, 0.02, 0.2), Vector3(0.3, 0.26, 0.08), Color(0.9, 0.9, 0.92))  # beard
+			_part(_torso, Vector3(0, -0.12, 0), Vector3(0.6, 0.36, 0.36), shirt_color * 0.9)  # robe skirt
+		&"assassin":
+			_part(_head, Vector3(0, 0.36, -0.03), Vector3(0.54, 0.4, 0.5), shirt_color * 0.8)  # hood
+			_part(_head, Vector3(0, 0.1, 0.23), Vector3(0.44, 0.16, 0.04), Color(0.12, 0.12, 0.15))  # mask
+			_part(_torso, Vector3(0, 0.3, -0.19), Vector3(0.5, 0.56, 0.06), a)  # cape
+
+
+func _build_weapon() -> void:
+	for holder in [_weapon, _shield]:
+		for c in holder.get_children():
+			_parts.erase(c as MeshInstance3D)
+			c.free()
+	var wood := Color(0.42, 0.28, 0.16)
+	var steel := weapon_color
+	match _weapon_type:
+		&"sword":
+			_part(_weapon, Vector3(0, 0, 0.12), Vector3(0.08, 0.08, 0.2), Color(0.35, 0.22, 0.12))
+			_part(_weapon, Vector3(0, 0, 0.24), Vector3(0.3, 0.06, 0.06), Color(0.75, 0.6, 0.25))
+			_part(_weapon, Vector3(0, 0, 0.62), Vector3(0.1, 0.04, 0.7), steel)
+		&"axe":
+			_part(_weapon, Vector3(0, 0, 0.35), Vector3(0.08, 0.08, 0.85), wood)
+			_part(_weapon, Vector3(0.14, 0, 0.66), Vector3(0.28, 0.05, 0.3), steel)
+			_part(_weapon, Vector3(0.3, 0, 0.66), Vector3(0.06, 0.05, 0.38), steel * 1.1)
+		&"dagger":
+			_part(_weapon, Vector3(0, 0, 0.08), Vector3(0.07, 0.07, 0.14), Color(0.2, 0.15, 0.12))
+			_part(_weapon, Vector3(0, 0, 0.17), Vector3(0.18, 0.05, 0.04), Color(0.5, 0.5, 0.55))
+			_part(_weapon, Vector3(0, 0, 0.36), Vector3(0.07, 0.03, 0.34), steel)
+			# Off-hand dagger for dual wield look.
+			_part(_shield, Vector3(0.1, -0.1, 0.2), Vector3(0.06, 0.03, 0.3), steel)
+		&"staff":
+			_part(_weapon, Vector3(0, 0, 0.35), Vector3(0.07, 0.07, 1.5), wood)
+			_part(_weapon, Vector3(0, 0, 1.12), Vector3(0.18, 0.18, 0.18), _accent)
+		&"unarmed":
+			pass
+		_:
+			_part(_weapon, Vector3(0, 0, 0.5), Vector3(0.1, 0.1, 0.8), steel)
+	if _has_shield:
+		_part(_shield, Vector3(-0.05, 0, 0.1), Vector3(0.08, 0.55, 0.45), Color(0.5, 0.32, 0.18))
+		_part(_shield, Vector3(-0.1, 0, 0.1), Vector3(0.04, 0.2, 0.2), _accent)
+
+
+## Stealth look: parts become translucent.
+func set_ghost(on: bool) -> void:
+	_ghost = on
+	for p in _parts:
+		if is_instance_valid(p):
+			p.transparency = 0.7 if on else 0.0
+
+
+func play_spin(duration: float) -> void:
+	if _dodge_tween:
+		_dodge_tween.kill()
+	_dodge_tween = create_tween()
+	_dodge_tween.tween_property(_root, "rotation:y", TAU * 2.0, duration).from(0.0)
+	_dodge_tween.tween_callback(func() -> void: _root.rotation.y = 0.0)
 
 
 func _pivot(parent: Node3D, pos: Vector3) -> Node3D:

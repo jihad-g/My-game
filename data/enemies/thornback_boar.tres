@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="EnemyData" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://src/enemies/enemy_data.gd" id="1_enemy"]
 [ext_resource type="Resource" path="res://data/attacks/boar_bite.tres" id="2_bite"]
@@ -26,11 +26,33 @@ min_count = 1
 max_count = 1
 chance = 0.2
 
+[sub_resource type="Resource" id="Loot_3"]
+script = ExtResource("9_loot")
+item_id = &"tusk_charm"
+min_count = 1
+max_count = 1
+chance = 0.04
+
+[sub_resource type="Resource" id="Loot_4"]
+script = ExtResource("9_loot")
+item_id = &"leather_gloves"
+min_count = 1
+max_count = 1
+chance = 0.05
+
+[sub_resource type="Resource" id="Loot_5"]
+script = ExtResource("9_loot")
+item_id = &"fur_cap"
+min_count = 1
+max_count = 1
+chance = 0.05
+
 [resource]
 script = ExtResource("1_enemy")
 id = &"thornback_boar"
 display_name = "Thornback Boar"
 category = 0
+level = 3
 max_health = 70.0
 walk_speed = 2.0
 run_speed = 5.2
@@ -44,6 +66,6 @@ damage_multipliers = {
 }
 exposed_damage_multiplier = 1.5
 attacks = [ExtResource("2_bite"), ExtResource("3_charge")]
-loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2")]
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2"), SubResource("Loot_3"), SubResource("Loot_4"), SubResource("Loot_5")]
 xp_reward = 15
 respawn_time = 300.0

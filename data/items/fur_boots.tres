@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"fur_boots"
+display_name = "Fur-lined Boots"
+description = "Boots lined with thick fur."
+category = 4
+rarity = 1
+max_stack = 1
+base_value = 25
+icon_color = Color(0.55, 0.42, 0.3, 1)
+icon_glyph = "Bt"
+equip_slot = 6
+required_level = 4
+stat_bonuses = {
+&"armor": 3,
+&"insulation": 6
+}
+

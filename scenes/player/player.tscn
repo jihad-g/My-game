@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://src/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://src/components/stat_block.gd" id="2_stats"]
@@ -13,6 +13,9 @@
 [ext_resource type="Resource" path="res://data/attacks/player_slash_2.tres" id="11_slash2"]
 [ext_resource type="Resource" path="res://data/attacks/player_thrust_3.tres" id="12_thrust"]
 [ext_resource type="Resource" path="res://data/attacks/player_heavy.tres" id="13_heavy"]
+[ext_resource type="Script" path="res://src/rpg/character_stats.gd" id="14_character"]
+[ext_resource type="Script" path="res://src/components/mana_component.gd" id="15_mana"]
+[ext_resource type="Script" path="res://src/rpg/player_abilities.gd" id="16_abilities"]
 
 [sub_resource type="CapsuleShape3D" id="Capsule_body"]
 radius = 0.35
@@ -52,6 +55,21 @@ health = NodePath("../Health")
 [node name="Temperature" type="Node" parent="." node_paths=PackedStringArray("stats")]
 script = ExtResource("6_temp")
 stats = NodePath("../Stats")
+
+[node name="Mana" type="Node" parent="." node_paths=PackedStringArray("stats")]
+script = ExtResource("15_mana")
+stats = NodePath("../Stats")
+
+[node name="Character" type="Node" parent="." node_paths=PackedStringArray("stats", "health", "stamina", "mana", "temperature")]
+script = ExtResource("14_character")
+stats = NodePath("../Stats")
+health = NodePath("../Health")
+stamina = NodePath("../Stamina")
+mana = NodePath("../Mana")
+temperature = NodePath("../Temperature")
+
+[node name="Abilities" type="Node" parent="."]
+script = ExtResource("16_abilities")
 
 [node name="Combat" type="Node" parent="."]
 script = ExtResource("7_combat")

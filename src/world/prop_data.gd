@@ -28,5 +28,7 @@ enum InteractMode {
 @export var cast_shadow: bool = true
 ## Dither out when between the camera and the player (tall props like trees).
 @export var fade_near_camera: bool = false
+## XP for harvesting/gathering (0 = default: 3 for HARVEST, 1 for GATHER).
+@export var xp: int = 0
 ## Rendered unshaded/glowing (crystals, glowing fungi, magical plants).
 @export var glow: bool = false

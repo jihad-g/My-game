@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"whirlwind"
+display_name = "Whirlwind"
+description = "Spin with your weapon, hitting every enemy around you twice."
+effect = &"whirlwind"
+unlock_level = 1
+cost_type = 2
+cost = 30
+cooldown = 6
+damage = 14
+damage_type = &"physical"
+radius = 3.2
+range = 0
+duration = 0
+power = 2
+icon_color = Color(1, 0.6, 0.3, 1)
+icon_glyph = "Ww"

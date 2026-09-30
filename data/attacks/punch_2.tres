@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"punch_2"
+display_name = "Hook"
+damage = 5
+stamina_cost = 3
+windup = 0.1
+active = 0.06
+recovery = 0.2
+cancel_ratio = 0.3
+reach = 1.5
+arc_degrees = 90
+knockback = 2.0
+poise_damage = 6
+lunge_speed = 2.0
+move_multiplier = 0.4
+crit_chance_bonus = 0.0
+animation = &"slash_l"
+camera_shake = 0.05

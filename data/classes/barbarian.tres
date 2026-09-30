@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/class_data.gd" id="1_class"]
+[ext_resource type="Resource" path="res://data/movesets/unarmed.tres" id="2_unarmed"]
+[ext_resource type="Resource" path="res://data/abilities/whirlwind.tres" id="a0"]
+[ext_resource type="Resource" path="res://data/abilities/battle_cry.tres" id="a1"]
+[ext_resource type="Resource" path="res://data/abilities/berserk.tres" id="a2"]
+
+[resource]
+script = ExtResource("1_class")
+id = &"barbarian"
+display_name = "Barbarian"
+description = "A towering warrior who shrugs off wounds and cleaves through crowds. Builds Rage by fighting; weak with magic."
+role_summary = "Brute force · rage · crowds"
+starting_skills = {
+&"strength": 18,
+&"mana_control": 3,
+&"defense": 12,
+&"crafting": 5,
+&"dexterity": 12
+}
+skill_efficiency = {
+&"strength": 1.15,
+&"mana_control": 0.5,
+&"defense": 1.0,
+&"crafting": 0.9,
+&"dexterity": 0.9
+}
+base_health = 110
+health_per_defense = 2.4
+base_stamina = 110
+base_mana = 40
+mana_per_point = 2.0
+physical_power = 1.1
+spell_power = 0.5
+base_armor = 5
+weapon_proficiency = {
+&"axe": 1.15,
+&"sword": 0.9,
+&"dagger": 0.7,
+&"staff": 0.5,
+&"shield": 1.0
+}
+unarmed_moveset = ExtResource("2_unarmed")
+block_reduction = 0.6
+parry_window = 0.18
+backstab_multiplier = 1.5
+crit_bonus = 0.0
+uses_rage = true
+abilities = [ExtResource("a0"), ExtResource("a1"), ExtResource("a2")]
+temperature_shield_cost = 44
+starting_equipment = [&"rough_handaxe", &"padded_vest"]
+shirt_color = Color(0.62, 0.22, 0.18, 1)
+pants_color = Color(0.35, 0.25, 0.18, 1)
+hair_color = Color(0.72, 0.35, 0.12, 1)
+accent_color = Color(0.55, 0.42, 0.3, 1)

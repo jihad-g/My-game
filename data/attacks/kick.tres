@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"kick"
+display_name = "Kick"
+damage = 8
+stamina_cost = 12
+windup = 0.2
+active = 0.08
+recovery = 0.3
+cancel_ratio = 0.4
+reach = 1.7
+arc_degrees = 80
+knockback = 6.0
+poise_damage = 20
+lunge_speed = 2.0
+move_multiplier = 0.3
+crit_chance_bonus = 0.0
+animation = &"thrust"
+camera_shake = 0.12

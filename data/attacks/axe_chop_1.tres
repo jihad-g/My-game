@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"axe_chop_1"
+display_name = "Chop"
+damage = 16
+stamina_cost = 7
+windup = 0.18
+active = 0.1
+recovery = 0.34
+cancel_ratio = 0.4
+reach = 2.2
+arc_degrees = 130
+knockback = 4.0
+poise_damage = 16
+lunge_speed = 2.5
+move_multiplier = 0.25
+crit_chance_bonus = 0.0
+animation = &"slash_r"
+camera_shake = 0.18

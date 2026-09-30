@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/sword.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"squire_sword"
+display_name = "Squire's Sword"
+description = "A plain but honest blade."
+category = 3
+rarity = 0
+max_stack = 1
+base_value = 10
+icon_color = Color(0.78, 0.8, 0.86, 1)
+icon_glyph = "Sw"
+equip_slot = 1
+required_level = 1
+stat_bonuses = {}
+moveset = ExtResource("2_ms")
+weapon_type = &"sword"

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"vanish"
+display_name = "Vanish"
+description = "Become nearly invisible for 6 s: enemies lose track of you. Your next hit is an Ambush (x2)."
+effect = &"vanish"
+unlock_level = 15
+cost_type = 2
+cost = 25
+cooldown = 25
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 6
+power = 0
+icon_color = Color(0.2, 0.2, 0.3, 1)
+icon_glyph = "Vn"

@@ -24,6 +24,7 @@ var exposed: bool = false
 @onready var health: HealthComponent = $Health
 @onready var model: Node3D = $Model
 @onready var health_bar: EnemyHealthBar = $HealthBar
+@onready var status: StatusEffects = $Status
 
 var _facing := Vector3(0, 0, 1)
 var _knockback := Vector3.ZERO
@@ -31,6 +32,7 @@ var _stagger_left := 0.0
 var _death_time := 0.0
 var _desired_velocity := Vector3.ZERO
 var _rng := RandomNumberGenerator.new()
+var _taunt_left := 0.0
 
 
 func _ready() -> void:
@@ -40,6 +42,8 @@ func _ready() -> void:
 	floor_snap_length = 0.6
 	health.died.connect(_on_died)
 	health.damaged.connect(_on_damaged)
+	status.health = health
+	status.effect_applied.connect(_on_status_applied)
 	Events.target_changed.connect(_on_target_changed)
 	_apply_data()
 
@@ -65,6 +69,8 @@ func spawn_at(pos: Vector3, key: String) -> void:
 	_stagger_left = 0.0
 	_death_time = 0.0
 	target = null
+	_taunt_left = 0.0
+	status.clear()
 	_rng.seed = hash(key) ^ Time.get_ticks_usec()
 	var a := _rng.randf() * TAU
 	_facing = Vector3(sin(a), 0, cos(a))
@@ -121,11 +127,13 @@ func _physics_process(delta: float) -> void:
 			NodePool.release_or_free(self)
 		return
 
-	if _stagger_left > 0.0:
+	_taunt_left -= delta
+	if _stagger_left > 0.0 or status.is_stunned():
 		_stagger_left -= delta
 		_desired_velocity = Vector3.ZERO
 	else:
 		_think(delta)
+		_desired_velocity *= status.speed_mult()
 
 	var accel := 30.0 * delta
 	velocity.x = move_toward(velocity.x, _desired_velocity.x, accel)
@@ -163,17 +171,26 @@ func face_toward(dir: Vector3) -> void:
 
 # --- Receiving hits ---------------------------------------------------------------------
 
-func receive_hit(info: DamageInfo) -> void:
+## Resolves a hit. Returns the damage actually dealt.
+func receive_hit(info: DamageInfo) -> float:
 	if is_dead:
-		return
+		return 0.0
 	if exposed and data:
 		info.amount *= data.exposed_damage_multiplier
 		if info.tag == "":
 			info.tag = "Exposed"
+	# Spell combination: fire shatters frozen enemies.
+	if info.damage_type == &"fire" and status.has(&"frozen"):
+		info.amount *= 2.0
+		info.tag = "Shatter!"
+		status.remove(&"frozen")
 	var dealt := health.apply_damage(info)
 	if dealt <= 0.0 and not is_dead:
 		Events.damage_dealt.emit(info.hit_position, 0.0, false, false, "Immune")
-		return
+		return 0.0
+	if not is_dead:
+		for e in info.status_effects:
+			apply_status(e[0], float(e[1]), e[2] if e.size() > 2 else {})
 	_knockback += Vector3(info.knockback.x, 0, info.knockback.z)
 	poise -= info.poise_damage
 	if poise <= 0.0 and not is_dead:
@@ -181,6 +198,51 @@ func receive_hit(info: DamageInfo) -> void:
 	if info.source is Node3D and not is_dead:
 		target = info.source
 	_on_hit_reaction(info)
+	return dealt
+
+
+func apply_status(id: StringName, duration: float, params: Dictionary) -> void:
+	if is_dead:
+		return
+	status.apply(id, duration, params)
+
+
+## Forces this enemy to fight `source` for `duration` seconds (Knight taunts).
+func taunt(source: Node3D, duration: float) -> void:
+	if is_dead:
+		return
+	target = source
+	_taunt_left = duration
+	_on_taunted(source)
+
+
+func is_taunted() -> bool:
+	return _taunt_left > 0.0
+
+
+## Stealth: forget about `source` if it is the current target.
+func lose_target(source: Node3D) -> void:
+	if target == source and not is_taunted():
+		target = null
+		_on_lost_target()
+
+
+func _on_status_applied(id: StringName) -> void:
+	var color := {&"burn": Color(1, 0.5, 0.2), &"poison": Color(0.5, 0.9, 0.3), &"frozen": Color(0.6, 0.9, 1.0),
+		&"stunned": Color(1, 1, 0.5), &"chilled": Color(0.7, 0.9, 1.0)}
+	if id in color:
+		Events.damage_dealt.emit(global_position + Vector3(0, 2.2, 0), 0.0, false, false,
+			{&"burn": "Burning", &"poison": "Poisoned", &"frozen": "Frozen", &"stunned": "Stunned", &"chilled": "Chilled"}[id])
+	if id == &"stunned":
+		stagger(status.time_left(id))
+
+
+func _on_taunted(_source: Node3D) -> void:
+	pass
+
+
+func _on_lost_target() -> void:
+	pass
 
 
 func stagger(duration: float) -> void:

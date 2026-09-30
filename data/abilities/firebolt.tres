@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"firebolt"
+display_name = "Firebolt"
+description = "Hurl a bolt of fire that burns. Shatters frozen enemies for double damage."
+effect = &"firebolt"
+unlock_level = 1
+cost_type = 1
+cost = 12
+cooldown = 0.8
+damage = 16
+damage_type = &"fire"
+radius = 0
+range = 20
+duration = 3
+power = 4
+icon_color = Color(1, 0.45, 0.15, 1)
+icon_glyph = "Fb"

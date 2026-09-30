@@ -18,3 +18,15 @@ signal player_respawned
 signal target_changed(target: Node)
 ## Small camera shake request (strength 0..1).
 signal camera_shake(strength: float)
+
+# --- RPG ---------------------------------------------------------------------------
+signal xp_gained(amount: int, source: int)
+signal level_up(level: int)
+signal biome_discovered(id: StringName)
+## A named place discovered for the first time (cave entrances, later landmarks).
+signal place_discovered(key: String)
+## A prop was harvested/gathered; `xp` is the XP it is worth.
+signal resource_harvested(prop_id: StringName, xp: int)
+signal item_crafted(item_id: StringName, count: int)
+## An ability was used (for HUD feedback).
+signal ability_used(ability_id: StringName)

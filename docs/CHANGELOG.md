@@ -2,6 +2,58 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.3.0] — Milestone 3: RPG foundation
+
+### Added
+- **Four classes** (`data/classes/*.tres`, `ClassData`): Barbarian, Knight, Wizard, Assassin —
+  exactly 50 starting skill points each, class base health/stamina/mana, per-skill
+  efficiency (a max-Strength Wizard still hits softer than a starting Knight), weapon
+  proficiencies, block/parry/backstab/crit passives, Barbarian Rage, starter gear,
+  class look (horns & fur, helmet & plume, wizard hat & robe, hood & mask).
+  Class is chosen when creating a world (menu) or with `-- --class=<id>`.
+- **Levels 1–100 & XP** (`Progression`): curve 100 → ~368k XP per level (≈9.8M total),
+  2 skill points per level (+1 every 5th), full heal on level-up, level-difference XP
+  scaling. XP sources: kills, biome discovery, new caves, harvesting/gathering, cooking;
+  boss/dungeon/quest/trading/farming hooks.
+- **Five skills 1–100** (`Skill`): Strength, Mana Control, Defense, Crafting, Dexterity with
+  continuous effects and 4–5 milestone perks each (all implemented in the formulas).
+  Crafting already boosts harvest yield and cooking; material-cost, recipe-tier and
+  quality formulas are ready for the crafting milestone.
+- **Equipment** (`Equipment`, `ItemData` equip fields): 8 slots (main/off hand, head,
+  chest, hands, feet, ring, amulet), stat bonuses (armor, damage, spell power, crit,
+  speeds, max health/mana/stamina, regen, temperature protection, skill bonuses), level
+  requirements, weapon movesets (sword, axe, dagger, staff, unarmed), shields.
+  25 gear items; boars can drop gear.
+- **Armor & damage pipeline**: armor → damage reduction (capped 75%), class/weapon/skill
+  multipliers, crit chance/damage, backstab multiplier, poise and knockback scaling.
+- **Mana** (`ManaComponent`) with Mana Control–based max/regen.
+- **Class abilities** (`PlayerAbilities`, `AbilityData`), keys Z/X/C, unlocked at levels 1/5/15:
+  Barbarian Whirlwind, Battle Cry, Berserk · Knight Shield Bash, Guardian Stance,
+  Rallying Charge · Wizard Firebolt, Frost Nova, Chain Lightning · Assassin Shadow Step,
+  Poison Blade, Vanish.
+- **Magic Temperature Shield** (T) for every class: 10 minutes, mana cost per class
+  (Wizard cheapest), requires Mana Control 2 above the class's starting value.
+- **Status effects** (`StatusEffects`): burn, stacking poison, chilled, frozen, stunned;
+  taunt; spell combos (Firebolt shatters frozen enemies ×2, lightning ×1.5 in water);
+  stealth-aware enemy perception.
+- Swept-sphere projectiles, code-built VFX (rings, bursts, lightning).
+- UI: mana, XP (level) and Rage bars, ability bar with cooldowns/lock states, buff list,
+  level-up banner, XP toasts, **character screen (K)** with skill allocation, effects,
+  next perks, attributes and equipment slots. Class picker in the main menu; world list
+  shows class and level.
+- Saves: class, level, XP, skills, unspent points, equipment, mana, rage, active
+  Temperature Shield.
+- Debug: F10 gives a sample of all gear tiers, F11 grants one level of XP.
+- Docs generated from code: `docs/XP_TABLE.md`, `docs/CLASSES_AND_SKILLS.md`
+  (`tools/gen_rpg_tables.gd`).
+- Tests: 308 checks (class data, XP curve, skill balance, equipment, every ability in the
+  live game, RPG save/load).
+
+### Changed
+- `PlayerCombat` damage now flows through `CharacterStats` (class, skills, weapon,
+  proficiency, buffs); attacks come from the equipped weapon's moveset.
+- `Enemy.receive_hit()` returns damage dealt; enemies have `StatusEffects` and a level.
+
 ## [0.2.0] — Milestone 2: World generation
 
 ### Added

@@ -42,6 +42,13 @@ const KEY_BINDINGS := {
 	&"debug_spawn_enemy": [KEY_F8],
 	&"debug_time_skip": [KEY_F9],
 	&"quick_save": [KEY_F5],
+	&"debug_give_gear": [KEY_F10],
+	&"debug_give_xp": [KEY_F11],
+	&"ability_1": [KEY_Z],
+	&"ability_2": [KEY_X],
+	&"ability_3": [KEY_C],
+	&"ability_shield": [KEY_T],
+	&"character_screen": [KEY_K],
 	&"world_map": [KEY_M],
 }
 

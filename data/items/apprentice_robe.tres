@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"apprentice_robe"
+display_name = "Apprentice Robe"
+description = "Robe stitched with faint runes."
+category = 4
+rarity = 0
+max_stack = 1
+base_value = 12
+icon_color = Color(0.45, 0.35, 0.7, 1)
+icon_glyph = "Rb"
+equip_slot = 4
+required_level = 1
+stat_bonuses = {
+&"armor": 2,
+&"max_mana": 15,
+&"mana_regen": 10
+}
+

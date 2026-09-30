@@ -44,13 +44,16 @@ static func build() -> Theme:
 	btn_hover.bg_color = Color(0.34, 0.27, 0.38, 0.95)
 	btn_hover.border_color = GOLD
 	var btn_pressed := btn.duplicate() as StyleBoxFlat
-	btn_pressed.bg_color = Color(0.18, 0.14, 0.22, 0.95)
+	btn_pressed.bg_color = Color(0.45, 0.32, 0.16, 0.95)  # also the "selected" look of toggle buttons
+	btn_pressed.border_color = GOLD
+	btn_pressed.set_border_width_all(3)
 	var btn_disabled := btn.duplicate() as StyleBoxFlat
 	btn_disabled.bg_color = Color(0.2, 0.2, 0.2, 0.7)
 	btn_disabled.border_color = Color(0.4, 0.4, 0.4)
 	t.set_stylebox(&"normal", &"Button", btn)
 	t.set_stylebox(&"hover", &"Button", btn_hover)
 	t.set_stylebox(&"pressed", &"Button", btn_pressed)
+	t.set_stylebox(&"hover_pressed", &"Button", btn_pressed)
 	t.set_stylebox(&"disabled", &"Button", btn_disabled)
 	t.set_stylebox(&"focus", &"Button", StyleBoxEmpty.new())
 	t.set_color(&"font_color", &"Button", TEXT)

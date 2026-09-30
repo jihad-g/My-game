@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"padded_vest"
+display_name = "Padded Vest"
+description = "Layers of quilted cloth."
+category = 4
+rarity = 0
+max_stack = 1
+base_value = 12
+icon_color = Color(0.55, 0.5, 0.4, 1)
+icon_glyph = "Ch"
+equip_slot = 4
+required_level = 1
+stat_bonuses = {
+&"armor": 6,
+&"insulation": 4
+}
+

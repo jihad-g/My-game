@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"frost_nova"
+display_name = "Frost Nova"
+description = "Blast of frost around you that freezes enemies for 3 s (65% slower)."
+effect = &"frost_nova"
+unlock_level = 5
+cost_type = 1
+cost = 25
+cooldown = 10
+damage = 14
+damage_type = &"frost"
+radius = 5.5
+range = 0
+duration = 3
+power = 0
+icon_color = Color(0.55, 0.85, 1, 1)
+icon_glyph = "FN"

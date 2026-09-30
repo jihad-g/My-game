@@ -97,6 +97,28 @@ World (world.gd)                 wires systems, world services (temperature, pic
   knockback, poise → stagger. `ThornbackBoar` is a state machine (idle, wander, alert,
   chase, bite, charge windup/charge, recover/exposed, return+leash).
 
+## RPG (Milestone 3)
+
+- `ClassData` (data/classes) → `CharacterStats` (player node `Character`): class, level, XP,
+  base skills, unspent points. `recalculate()` derives max health/stamina/mana, armor and
+  damage reduction, physical/spell multipliers, crit, attack/move speed, backstab, block,
+  parry and temperature protection from class + skills + equipment, and pushes them into
+  the components and the `StatBlock` (`&"character"` source). All skill formulas live in
+  `Skill` (static, tested, exported to docs); the XP curve in `Progression`.
+- `Equipment` (RefCounted on the player): slot → item id; `ItemData` carries `equip_slot`,
+  `weapon_type`, `moveset` (`WeaponMoveset` = light combo + heavy `AttackData`),
+  `required_level`, `stat_bonuses`. Equipping swaps the combat moveset and model weapon.
+- Damage: `PlayerCombat.build_physical()` = (attack + weapon bonus) × physical_mult ×
+  proficiency × ability buffs × survival modifiers × variance → backstab → crit. Incoming:
+  i-frames → parry → block (class/Defense/shield) → armor DR × ability modifiers.
+- `PlayerAbilities`: 3 class `AbilityData` + Temperature Shield; costs (mana/stamina/rage),
+  cooldowns (Mana Control perk), buffs, Rage; each ability is `_ability_<effect>()` with
+  tuning from its .tres. Hooks: `on_hit_dealt`, `on_damage_taken`, `consume_attack_bonus`.
+- `StatusEffects` (enemies): DoTs, slows, stun (→ stagger), with `Enemy.apply_status()`,
+  `taunt()`, `lose_target()`. Fire vs frozen = Shatter.
+- XP flows through `Events` (`enemy_killed`, `biome_discovered`, `place_discovered`,
+  `resource_harvested`, `item_crafted`) into `CharacterStats.grant_xp()`.
+
 ## Survival
 
 - `StatBlock` aggregates multiplicative modifiers per source (`&"hunger"`,
@@ -117,5 +139,8 @@ World (world.gd)                 wires systems, world services (temperature, pic
 | New prop | Add `data/props/<id>.tres` (`PropData`) + a `_build_<name>` mesh function in `PropLibrary`; reference it from a biome `PropRule`. |
 | New enemy | Create `EnemyData` + `AttackData`s, a scene with an `Enemy` subclass script, and add an `EnemySpawnRule` to a biome. |
 | New biome | Add a `BiomeData` (role + climate ranges + colours + prop rules) and append it to `data/worldgen/default_worldgen.tres`. |
+| New class | Add `data/classes/<id>.tres` (50 starting points), add its id to `ClassRegistry.ORDER`, give it 3 `AbilityData`. |
+| New ability | Add an `AbilityData` .tres and a `_ability_<effect>()` method in `PlayerAbilities`. |
+| New weapon/armor | Add an `ItemData` with `equip_slot`, `stat_bonuses`, (weapons) `weapon_type` + `moveset`. |
 | Save a new placeable | Put it under `World.placed_root` (via `place_object`) and implement `save_data()` / `load_data()`. |
 | New input | Add to `InputSetup.KEY_BINDINGS`. |

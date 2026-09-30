@@ -13,6 +13,19 @@ const RARITY_COLORS := [
 ]
 const CATEGORY_NAMES := ["Material", "Food", "Tool", "Weapon", "Armor", "Placeable", "Misc"]
 
+enum EquipSlot { NONE, MAIN_HAND, OFF_HAND, HEAD, CHEST, HANDS, FEET, RING, AMULET }
+const SLOT_NAMES := ["", "Main hand", "Off hand", "Head", "Chest", "Hands", "Feet", "Ring", "Amulet"]
+
+## Human-readable names for stat_bonuses keys.
+const STAT_NAMES := {
+	&"armor": "Armor", &"damage_bonus": "Weapon damage", &"spell_power": "Spell power %",
+	&"crit_chance": "Crit chance %", &"attack_speed": "Attack speed %", &"move_speed": "Move speed %",
+	&"max_health": "Max health", &"max_mana": "Max mana", &"max_stamina": "Max stamina",
+	&"mana_regen": "Mana regen %", &"insulation": "Cold protection °C", &"cooling": "Heat protection °C",
+	&"block": "Block %", &"strength": "Strength", &"mana_control": "Mana Control",
+	&"defense": "Defense", &"crafting": "Crafting", &"dexterity": "Dexterity",
+}
+
 @export var id: StringName
 @export var display_name: String = ""
 @export_multiline var description: String = ""
@@ -34,9 +47,22 @@ const CATEGORY_NAMES := ["Material", "Food", "Tool", "Weapon", "Armor", "Placeab
 @export var temperature_offset: float = 0.0
 @export var temperature_duration: float = 0.0
 
+@export_group("Equipment")
+@export var equip_slot: EquipSlot = EquipSlot.NONE
+## Weapon/offhand type: &"sword", &"axe", &"dagger", &"staff", &"shield"...
+@export var weapon_type: StringName
+@export var moveset: WeaponMoveset
+@export var required_level: int = 1
+## Stat -> value (see STAT_NAMES). Percent stats are in percent points.
+@export var stat_bonuses: Dictionary = {}
+
 @export_group("Placeable")
 ## Scene spawned in the world when the item is used/placed.
 @export var placeable_scene: PackedScene
+
+
+func is_equippable() -> bool:
+	return equip_slot != EquipSlot.NONE
 
 
 func is_consumable() -> bool:
@@ -69,4 +95,13 @@ func effect_lines() -> PackedStringArray:
 	if temperature_offset != 0.0 and temperature_duration > 0.0:
 		lines.append("%s %+d°C for %ds" % ["Warms" if temperature_offset > 0 else "Cools",
 			roundi(temperature_offset), roundi(temperature_duration)])
+	if is_equippable():
+		var slot_line: String = SLOT_NAMES[equip_slot]
+		if weapon_type != &"":
+			slot_line += " · %s" % String(weapon_type).capitalize()
+		lines.append(slot_line)
+		if required_level > 1:
+			lines.append("Requires level %d" % required_level)
+		for stat in stat_bonuses:
+			lines.append("%+d %s" % [roundi(float(stat_bonuses[stat])), STAT_NAMES.get(stat, String(stat))])
 	return lines

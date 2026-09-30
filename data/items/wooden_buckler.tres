@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"wooden_buckler"
+display_name = "Wooden Buckler"
+description = "A small round shield."
+category = 4
+rarity = 0
+max_stack = 1
+base_value = 10
+icon_color = Color(0.55, 0.36, 0.2, 1)
+icon_glyph = "Sh"
+equip_slot = 2
+required_level = 1
+stat_bonuses = {
+&"armor": 6,
+&"block": 5
+}
+weapon_type = &"shield"

@@ -17,6 +17,9 @@ var _list := VBoxContainer.new()
 var _status := Label.new()
 var _confirm := ConfirmationDialog.new()
 var _pending_delete := ""
+var _selected_class: StringName = ClassRegistry.DEFAULT_CLASS
+var _class_buttons: Dictionary = {}
+var _class_info := Label.new()
 
 
 func _ready() -> void:
@@ -30,9 +33,13 @@ func _ready() -> void:
 
 
 func _handle_command_line() -> void:
+	var cls := ClassRegistry.DEFAULT_CLASS
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--class="):
+			cls = StringName(arg.substr(8).to_lower())
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--seed="):
-			SaveManager.start_transient(GameState.seed_from_string(arg.substr(7)))
+			SaveManager.start_transient(GameState.seed_from_string(arg.substr(7)), cls)
 			_start_game()
 			return
 		if arg.begins_with("--world="):
@@ -72,7 +79,7 @@ func _build() -> void:
 
 	# New world
 	var new_panel := PanelContainer.new()
-	new_panel.custom_minimum_size = Vector2(380, 0)
+	new_panel.custom_minimum_size = Vector2(420, 0)
 	cols.add_child(new_panel)
 	var nv := VBoxContainer.new()
 	nv.add_theme_constant_override(&"separation", 10)
@@ -91,6 +98,24 @@ func _build() -> void:
 	dice.pressed.connect(func() -> void: _seed_edit.text = str(randi()))
 	seed_row.add_child(dice)
 	nv.add_child(seed_row)
+	nv.add_child(_small("Class"))
+	var class_row := HBoxContainer.new()
+	class_row.add_theme_constant_override(&"separation", 6)
+	nv.add_child(class_row)
+	for c in ClassRegistry.all():
+		var b := Button.new()
+		b.text = c.display_name
+		b.toggle_mode = true
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var cid := c.id
+		b.pressed.connect(func() -> void: _select_class(cid))
+		class_row.add_child(b)
+		_class_buttons[cid] = b
+	_class_info.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_class_info.custom_minimum_size = Vector2(360, 96)
+	_class_info.add_theme_font_size_override(&"font_size", 13)
+	nv.add_child(_class_info)
+	_select_class(_selected_class)
 	var create := Button.new()
 	create.text = "Create & play"
 	create.pressed.connect(_on_create)
@@ -98,7 +123,7 @@ func _build() -> void:
 	var quick := Button.new()
 	quick.text = "Quick play (temporary, not saved)"
 	quick.pressed.connect(func() -> void:
-		SaveManager.start_transient(_read_seed())
+		SaveManager.start_transient(_read_seed(), _selected_class)
 		_start_game())
 	nv.add_child(quick)
 	nv.add_child(_small("Same seed = same world, on any machine."))
@@ -144,6 +169,17 @@ func _build() -> void:
 	add_child(_confirm)
 
 
+func _select_class(id: StringName) -> void:
+	_selected_class = id
+	for cid in _class_buttons:
+		_class_buttons[cid].button_pressed = cid == id
+	var c := ClassRegistry.get_class_data(id)
+	var sk := PackedStringArray()
+	for s in Skill.ALL:
+		sk.append("%s %d" % [Skill.NAMES[s].substr(0, 3), c.starting_skill(s)])
+	_class_info.text = "%s — %s\n%s\nStart: %s" % [c.display_name, c.role_summary, c.description, " · ".join(sk)]
+
+
 func _header(text: String) -> Label:
 	var l := Label.new()
 	l.text = text
@@ -171,7 +207,7 @@ func _on_create() -> void:
 	var world_name := _name_edit.text.strip_edges()
 	if world_name == "":
 		world_name = "World %d" % (SaveManager.list_worlds().size() + 1)
-	SaveManager.create_world(world_name, _read_seed())
+	SaveManager.create_world(world_name, _read_seed(), _selected_class)
 	_start_game()
 
 
@@ -197,7 +233,9 @@ func _refresh_list() -> void:
 		info.add_child(n)
 		var played := int(float(meta.get("play_time", 0)) / 60.0)
 		var last := Time.get_datetime_string_from_unix_time(int(float(meta.get("last_played", 0))), true)
-		info.add_child(_small("Seed %s · %d min played · %s" % [meta.get("seed", "?"), played, last]))
+		info.add_child(_small("%s Lv %d · Seed %s · %d min played · %s" % [
+			String(meta.get("class", "knight")).capitalize(), int(meta.get("level", 1)),
+			meta.get("seed", "?"), played, last]))
 		var play := Button.new()
 		play.text = "Play"
 		var id: String = meta.id

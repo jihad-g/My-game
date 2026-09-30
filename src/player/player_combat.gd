@@ -13,10 +13,6 @@ enum Phase { NONE, WINDUP, ACTIVE, RECOVERY }
 
 @export var light_combo: Array[AttackData] = []
 @export var heavy_attack: AttackData
-## Base chance for any hit to be critical.
-@export var base_crit_chance: float = 0.05
-## Damage bonus when hitting an enemy from behind.
-@export var backstab_multiplier: float = 1.5
 ## Time after an attack ends in which the next light attack continues the combo.
 @export var combo_window: float = 0.5
 @export var buffer_time: float = 0.35
@@ -36,6 +32,16 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.randomize()
+
+
+## Switches to a weapon's (or the class's unarmed) moveset.
+func set_moveset(moveset: WeaponMoveset) -> void:
+	if moveset == null:
+		return
+	cancel()
+	light_combo = moveset.light_combo.duplicate()
+	heavy_attack = moveset.heavy_attack
+	combo_index = 0
 
 
 func is_attacking() -> bool:
@@ -145,33 +151,60 @@ func _perform_hit() -> void:
 	var targets := HitQuery.query_arc(space, origin, attack_direction, current.reach,
 		current.arc_degrees, Layers.ENEMY | Layers.PROP, [player.get_rid()])
 	var hit_enemy := false
+	var bonus := {}
 	for t in targets:
 		if not t.has_method("receive_hit"):
 			continue
-		var info := build_damage(current, t)
-		t.receive_hit(info)
-		if t.is_in_group(&"enemies"):
+		var is_enemy := t.is_in_group(&"enemies")
+		if is_enemy and bonus.is_empty():
+			bonus = player.abilities.consume_attack_bonus()
+		var info := build_damage(current, t, bonus if is_enemy else {})
+		var dealt = t.receive_hit(info)
+		if is_enemy:
 			hit_enemy = true
+			player.abilities.on_hit_dealt(t, float(dealt) if dealt != null else 0.0)
 	if hit_enemy:
 		Events.camera_shake.emit(current.camera_shake)
 
 
-func build_damage(attack: AttackData, target: Node) -> DamageInfo:
-	var amount := attack.damage * player.stats.get_mult(Stats.ATTACK_DAMAGE) * _rng.randf_range(0.9, 1.1)
-	var info := DamageInfo.create(amount, player, attack.damage_type)
-	info.poise_damage = attack.poise_damage
+## Damage for a moveset attack (weapon, skills, class, buffs, crits, backstab).
+func build_damage(attack: AttackData, target: Node, bonus: Dictionary = {}) -> DamageInfo:
+	var poise := attack.poise_damage
+	if attack == heavy_attack and player.character.skill_level(Skill.STRENGTH) >= 25:
+		poise *= 1.5
+	var info := build_physical(attack.damage, target, poise, attack.knockback,
+		attack.crit_chance_bonus, attack.damage_type, bonus)
+	if attack == heavy_attack and player.character.skill_level(Skill.STRENGTH) >= 75:
+		info.poise_damage = maxf(info.poise_damage, 999.0)
+	return info
+
+
+## Shared physical damage pipeline (also used by abilities).
+func build_physical(base: float, target: Node, poise: float, knockback: float,
+		crit_bonus: float = 0.0, damage_type: StringName = &"physical", bonus: Dictionary = {}) -> DamageInfo:
+	var ch := player.character
+	var weapon := player.equipment.weapon()
+	var weapon_type := player.equipment.weapon_type()
+	var amount := (base + (float(weapon.stat_bonuses.get(&"damage_bonus", 0.0)) if weapon else 0.0))
+	amount *= ch.physical_mult * ch.weapon_mult(weapon_type) * player.abilities.outgoing_mult()
+	amount *= player.stats.get_mult(Stats.ATTACK_DAMAGE) * _rng.randf_range(0.92, 1.08)
+	amount *= float(bonus.get("mult", 1.0))
+	var info := DamageInfo.create(amount, player, damage_type)
+	var strength := ch.skill_level(Skill.STRENGTH)
+	info.poise_damage = poise * Skill.poise_mult(strength, ch.eff(Skill.STRENGTH))
 	var to_target := (target as Node3D).global_position - player.global_position
 	to_target.y = 0.0
 	info.direction = to_target.normalized() if to_target.length() > 0.01 else attack_direction
-	info.knockback = info.direction * attack.knockback
+	info.knockback = info.direction * knockback * Skill.poise_mult(strength, ch.eff(Skill.STRENGTH))
 	info.hit_position = (target as Node3D).global_position + Vector3(0, 1.0, 0)
+	info.tag = String(bonus.get("tag", ""))
 	# Positioning matters: hitting an enemy from behind deals bonus damage.
 	if target.has_method("get_facing"):
 		var target_facing: Vector3 = target.get_facing()
 		if target_facing.dot(info.direction) > 0.5:
-			info.amount *= backstab_multiplier
-			info.tag = "Backstab"
-	if _rng.randf() < base_crit_chance + attack.crit_chance_bonus:
+			info.amount *= ch.backstab_mult
+			info.tag = "Backstab" if info.tag == "" else info.tag + " Backstab"
+	if bonus.get("crit", false) or _rng.randf() < ch.crit_chance + crit_bonus:
 		info.is_crit = true
-		info.amount *= attack.crit_multiplier
+		info.amount *= ch.crit_mult
 	return info

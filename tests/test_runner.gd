@@ -34,6 +34,12 @@ func _ready() -> void:
 	await _run_async(&"test_integration")
 	await _run_async(&"test_layers_and_swimming")
 	await _run_async(&"test_save_load")
+	_run(&"test_rpg_data")
+	_run(&"test_progression")
+	_run(&"test_skill_formulas")
+	await _run_async(&"test_character_and_equipment")
+	await _run_async(&"test_class_abilities")
+	await _run_async(&"test_rpg_save_load")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -851,5 +857,362 @@ func test_save_load() -> void:
 	SaveManager.pending = {}
 	check(SaveManager.delete_world(id), "world deleted")
 	check(SaveManager.list_worlds().is_empty(), "world list empty after delete")
+	SaveManager.worlds_dir = saved_dir
+	SaveManager.start_transient(GameState.DEFAULT_SEED)
+
+
+# --- Milestone 3: RPG ------------------------------------------------------------------
+
+func test_rpg_data() -> void:
+	var classes := ClassRegistry.all()
+	check(classes.size() == 4, "four classes")
+	for c in classes:
+		check(c.starting_skill_total() == 50, "%s starts with exactly 50 skill points" % c.id)
+		check(c.abilities.size() == 3, "%s has 3 abilities" % c.id)
+		var mc_req := c.temperature_shield_requirement()
+		var max_mana_at_req := Skill.max_mana(mc_req, c.base_mana, c.mana_per_point)
+		var shield_cost := c.temperature_shield_cost * Skill.mana_cost_mult(mc_req)
+		check(max_mana_at_req >= shield_cost, "%s can afford the Temperature Shield once unlocked (%d/%d mana)" % [c.id, roundi(shield_cost), roundi(max_mana_at_req)])
+		for id in c.starting_equipment:
+			var item: ItemData = ItemDB.get_item(StringName(id))
+			check(item != null and item.is_equippable() and item.required_level <= 1, "%s starting gear %s is valid" % [c.id, id])
+	var costs := {}
+	for c in classes:
+		costs[c.id] = c.temperature_shield_cost
+	check(costs[&"wizard"] < costs[&"knight"] and costs[&"wizard"] < costs[&"barbarian"] and costs[&"wizard"] < costs[&"assassin"],
+		"Wizard has the cheapest Temperature Shield")
+	var weapons := 0
+	for id in ItemDB.all_ids():
+		var item: ItemData = ItemDB.get_item(id)
+		if item.equip_slot == ItemData.EquipSlot.MAIN_HAND:
+			weapons += 1
+			check(item.moveset != null and not item.moveset.light_combo.is_empty() and item.moveset.heavy_attack != null,
+				"weapon %s has a complete moveset" % id)
+
+
+func test_progression() -> void:
+	var prev := 0
+	var increasing := true
+	for l in range(1, 100):
+		var x := Progression.xp_to_next(l)
+		if x <= prev:
+			increasing = false
+		prev = x
+	check(increasing, "XP per level strictly increases 1->100")
+	check(Progression.xp_to_next(1) == 100, "level 2 needs 100 XP")
+	check(Progression.xp_to_next(100) == 0, "no XP beyond level 100")
+	var total := Progression.total_xp_for(100)
+	print("   total XP to level 100: %d; level 10: %d; level 50: %d" % [total, Progression.total_xp_for(10), Progression.total_xp_for(50)])
+	check(total > 5000000, "reaching level 100 takes millions of XP (endgame not trivial)")
+	check(Progression.total_xp_for(5) < 1500, "early levels are quick (level 5 at %d XP)" % Progression.total_xp_for(5))
+	check(Progression.total_skill_points_at(100) == 99 * 2 + 20, "skill points at 100: %d" % Progression.total_skill_points_at(100))
+	check(50 + Progression.total_skill_points_at(100) < 5 * 100, "you cannot max every skill (build choices matter)")
+	check(Progression.combat_xp(20, 3, 1) > 20, "stronger enemies give bonus XP")
+	check(Progression.combat_xp(20, 3, 30) <= 2, "trivial enemies give almost no XP")
+
+
+func test_skill_formulas() -> void:
+	var knight := ClassRegistry.get_class_data(&"knight")
+	var wizard := ClassRegistry.get_class_data(&"wizard")
+	var barb := ClassRegistry.get_class_data(&"barbarian")
+	var wiz100 := Skill.physical_damage_mult(100, wizard.efficiency(Skill.STRENGTH), wizard.physical_power)
+	var kn100 := Skill.physical_damage_mult(100, knight.efficiency(Skill.STRENGTH), knight.physical_power)
+	var kn_start := Skill.physical_damage_mult(knight.starting_skill(Skill.STRENGTH), knight.efficiency(Skill.STRENGTH), knight.physical_power)
+	var barb100 := Skill.physical_damage_mult(100, barb.efficiency(Skill.STRENGTH), barb.physical_power)
+	print("   physical x at STR100: wizard %.2f, knight %.2f, barbarian %.2f (knight start %.2f)" % [wiz100, kn100, barb100, kn_start])
+	check(wiz100 < kn_start, "a max-Strength Wizard hits softer than a starting Knight")
+	check(barb100 > kn100, "Barbarian has the highest physical ceiling")
+	check(Skill.material_cost_mult(1) > 1.4 and Skill.material_cost_mult(100) < 0.85, "crafting skill reduces material cost (never fails)")
+	check(Skill.recipe_tier(100) == ItemData.Rarity.LEGENDARY and Skill.recipe_tier(1) == ItemData.Rarity.BASIC, "crafting unlocks recipe tiers")
+	check(Skill.damage_reduction(1000000.0) <= 0.75, "armor damage reduction capped at 75%")
+	check(Skill.attack_speed_mult(100, 1.0) > Skill.attack_speed_mult(10, 1.0), "dexterity raises attack speed")
+	check(Skill.mana_cost_mult(100) < Skill.mana_cost_mult(0), "mana control lowers ability costs")
+	for s in Skill.ALL:
+		check(Skill.PERKS[s].size() >= 4, "%s has milestone perks" % s)
+
+
+func _boot_class(class_id: StringName) -> World:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, class_id)
+	var world: World = await _boot_world()
+	world.player.health.invulnerable = false
+	return world
+
+
+func _spawn_boar(world: World, offset: Vector3) -> ThornbackBoar:
+	var p := world.player.global_position + offset
+	p.y = world.get_ground_height(p) + 0.3
+	var boar := world.spawner.spawn_enemy(world.debug_enemy_scene, p, "") as ThornbackBoar
+	boar.stagger(4.0)  # hold still so tests are deterministic
+	return boar
+
+
+## Offset (distance `d`) toward flat ground with a clear line of sight.
+func _clear_offset(world: World, d: float) -> Vector3:
+	var p := world.player.global_position
+	var g0 := world.get_ground_height(p)
+	for k in 16:
+		var dir := Vector3(cos(TAU * k / 16.0), 0, sin(TAU * k / 16.0))
+		var ok := true
+		for s in range(1, int(d * 2) + 1):
+			var q := p + dir * (s * 0.5)
+			if absf(world.get_ground_height(q) - g0) > 0.01 or world.is_in_water(q):
+				ok = false
+				break
+		if ok:
+			return dir * d
+	return world.player.get_facing() * d
+
+
+func test_character_and_equipment() -> void:
+	var world: World = await _boot_class(&"knight")
+	var player := world.player
+	var ch := player.character
+	check(ch.class_data.id == &"knight" and ch.level == 1, "new Knight at level 1")
+	check(player.equipment.weapon_type() == &"sword" and player.equipment.offhand() != null, "Knight starts with sword and shield")
+	check(player.combat.light_combo.size() == 3, "sword moveset loaded (3-hit combo)")
+	check(player.health.max_health > 100.0 and player.health.current == player.health.max_health, "Defense raises max health (%d)" % roundi(player.health.max_health))
+	var armor_before := ch.armor
+	# XP & levels
+	var gained := ch.grant_xp(Progression.total_xp_for(6), Progression.Source.OTHER)
+	check(gained == 5 and ch.level == 6, "XP levels up (now %d)" % ch.level)
+	check(ch.unspent_points == Progression.total_skill_points_at(6), "level-ups grant skill points (%d)" % ch.unspent_points)
+	var str_before := ch.physical_mult
+	check(ch.spend_point(Skill.STRENGTH), "spend a point on Strength")
+	check(ch.physical_mult > str_before, "Strength raises physical damage")
+	var hp_before := player.health.max_health
+	ch.spend_point(Skill.DEFENSE)
+	check(player.health.max_health > hp_before and ch.armor > armor_before, "Defense raises health and armor")
+	var mana_before := player.mana.max_mana
+	ch.spend_point(Skill.MANA_CONTROL)
+	check(player.mana.max_mana > mana_before, "Mana Control raises max mana")
+	var spd := ch.attack_speed
+	ch.spend_point(Skill.DEXTERITY)
+	check(ch.attack_speed > spd and player.stats.get_mult(Stats.ATTACK_SPEED) >= ch.attack_speed * 0.99, "Dexterity raises attack speed")
+	# Equipment
+	player.inventory.add_item(&"chainmail", 1)
+	player.inventory.add_item(&"crystal_staff", 1)
+	var slot := -1
+	for i in player.inventory.capacity:
+		var s = player.inventory.get_slot(i)
+		if s != null and s.id == &"chainmail":
+			slot = i
+	check(not player.equip_from_slot(slot), "level requirement blocks chainmail at level 6")
+	ch.grant_xp(Progression.total_xp_for(12) - ch.total_xp, Progression.Source.OTHER)
+	var armor_now := ch.armor
+	check(player.equip_from_slot(slot), "chainmail equips at level %d" % ch.level)
+	check(ch.armor > armor_now + 10.0 and player.inventory.count_of(&"padded_vest") == 1, "armor rises and old chest piece returns to the inventory")
+	var dmg_sword := ch.weapon_mult(&"sword")
+	check(dmg_sword > ch.weapon_mult(&"staff"), "Knights are proficient with swords, not staves")
+	for i in player.inventory.capacity:
+		var s = player.inventory.get_slot(i)
+		if s != null and s.id == &"crystal_staff":
+			player.equip_from_slot(i)
+	check(player.equipment.weapon_type() == &"staff" and player.combat.light_combo.size() == 2, "weapon swap changes the moveset")
+	check(player.unequip_slot(ItemData.EquipSlot.MAIN_HAND) and player.combat.light_combo[0].id == &"punch_1", "unarmed moveset without a weapon")
+	# Real damage: a proficient sword out-damages an unarmed/off-class hit.
+	var boar := _spawn_boar(world, Vector3(0, 0, 3))
+	await _frames(5)
+	ch.crit_chance = 0.0  # compare without random crits (restored by recalculate)
+	var unarmed := 0.0
+	for i in 20:
+		unarmed += player.combat.build_physical(10.0, boar, 0.0, 0.0).amount / 20.0
+	for i in player.inventory.capacity:
+		var s = player.inventory.get_slot(i)
+		if s != null and s.id == &"squire_sword":
+			player.equip_from_slot(i)
+	ch.crit_chance = 0.0
+	var armed := 0.0
+	for i in 20:
+		armed += player.combat.build_physical(10.0, boar, 0.0, 0.0).amount / 20.0
+	ch.recalculate()
+	check(player.equipment.weapon_type() == &"sword", "sword re-equipped")
+	print("   same attack: unarmed %.1f vs sword %.1f" % [unarmed, armed])
+	check(armed > unarmed * 0.95, "proficient weapon is not weaker than bare fists")
+	# Armor reduces damage taken.
+	player.health.reset_full()
+	var info := DamageInfo.create(40.0, boar)
+	info.direction = player.get_facing()  # from behind: no block
+	player.receive_hit(info)
+	var taken := player.health.max_health - player.health.current
+	check(taken < 40.0 * (1.0 - ch.damage_reduction) + 0.5 and taken > 5.0, "armor reduces damage (took %.1f of 40)" % taken)
+	# XP from kills
+	var xp_before := ch.total_xp
+	boar.health.apply_raw_damage(9999.0)
+	await _frames(2)
+	check(ch.total_xp > xp_before, "killing an enemy grants XP")
+	# Temperature Shield requirement
+	check(not ch.can_use_temperature_shield() or ch.base_skill(Skill.MANA_CONTROL) >= ch.class_data.temperature_shield_requirement(), "shield gated by Mana Control")
+	world.queue_free()
+	await _frames(5)
+
+
+func test_class_abilities() -> void:
+	# --- Wizard
+	var world: World = await _boot_class(&"wizard")
+	var p := world.player
+	var ab := p.abilities
+	var boar := _spawn_boar(world, _clear_offset(world, 6.0))
+	await _frames(3)
+	p.set_lock_target(boar)
+	var hp := boar.health.current
+	check(ab.try_use(0), "Wizard casts Firebolt")
+	await _frames(30)
+	check(boar.health.current < hp and boar.status.has(&"burn"), "Firebolt damages and burns (%.0f -> %.0f)" % [hp, boar.health.current])
+	check(not ab.try_use(1), "Frost Nova locked below level 5")
+	p.character.grant_xp(Progression.total_xp_for(15), Progression.Source.OTHER)
+	await _frames(40)
+	boar = _spawn_boar(world, p.get_facing() * 3.0)  # the first one burned to death
+	p.set_lock_target(boar)
+	await _frames(3)
+	check(ab.try_use(1), "Frost Nova at level %d" % p.character.level)
+	check(boar.status.has(&"frozen"), "Frost Nova freezes")
+	hp = boar.health.current
+	ab.cooldowns.clear()
+	p.set_lock_target(boar)
+	ab.try_use(0)
+	await _frames(20)
+	check(not boar.status.has(&"frozen") and boar.health.current < hp, "Firebolt shatters the frozen enemy")
+	boar = _spawn_boar(world, p.get_facing() * 5.0)
+	var boar2 := _spawn_boar(world, p.get_facing() * 5.0 + Vector3(2, 0, 0))
+	await _frames(3)
+	var hp1 := boar.health.current
+	var hp2 := boar2.health.current
+	p.set_lock_target(boar)
+	check(ab.try_use(2), "Chain Lightning cast")
+	check(boar.health.current < hp1 and boar2.health.current < hp2, "Chain Lightning jumps to a second enemy")
+	# Temperature shield (Wizard can afford it from the start: MC 22 -> needs 24)
+	check(not ab.try_use(3), "Temperature Shield needs MC +2")
+	p.character.spend_point(Skill.MANA_CONTROL)
+	p.character.spend_point(Skill.MANA_CONTROL)
+	p.mana.refill()
+	check(ab.try_use(3), "Temperature Shield cast after raising Mana Control")
+	check(ab.has_buff(&"temperature_shield") and absf(ab.buff_time(&"temperature_shield") - 600.0) < 1.0, "shield lasts 10 minutes")
+	world.debug_temperature_offset = -45.0
+	p.temperature.snap_to_ambient()
+	await _frames(10)
+	var shielded := p.temperature.get_effective_ambient()
+	ab.remove_buff(&"temperature_shield")
+	await _frames(2)
+	check(shielded > p.temperature.get_effective_ambient() + 15.0, "shield protects from cold (%.0f vs %.0f°C)" % [shielded, p.temperature.get_effective_ambient()])
+	world.debug_temperature_offset = 0.0
+	world.queue_free()
+	await _frames(5)
+
+	# --- Barbarian
+	world = await _boot_class(&"barbarian")
+	p = world.player
+	ab = p.abilities
+	var b1 := _spawn_boar(world, Vector3(1.8, 0, 0))
+	var b2 := _spawn_boar(world, Vector3(-1.8, 0, 0))
+	await _frames(3)
+	var h1 := b1.health.current
+	var h2 := b2.health.current
+	check(ab.try_use(0), "Barbarian Whirlwind")
+	await _frames(40)
+	check(b1.health.current < h1 and b2.health.current < h2, "Whirlwind hits enemies on both sides")
+	check(ab.rage > 0.0, "dealing damage builds Rage (%.0f)" % ab.rage)
+	p.character.grant_xp(Progression.total_xp_for(15), Progression.Source.OTHER)
+	ab.cooldowns.clear()
+	check(ab.try_use(1) and ab.has_buff(&"battle_cry"), "Battle Cry buff")
+	check(ab.outgoing_mult() > 1.25, "Battle Cry + Rage raise damage (x%.2f)" % ab.outgoing_mult())
+	ab.set_rage(80.0)
+	check(ab.try_use(2) and ab.has_buff(&"berserk") and ab.rage == 0.0, "Berserk consumes Rage")
+	check(p.stats.get_mult(Stats.ATTACK_SPEED) > p.character.attack_speed * 1.3, "Berserk raises attack speed")
+	world.queue_free()
+	await _frames(5)
+
+	# --- Knight
+	world = await _boot_class(&"knight")
+	p = world.player
+	ab = p.abilities
+	var kb := _spawn_boar(world, p.get_facing() * 1.8)
+	p.set_lock_target(kb)  # face it (headless mouse aim would turn us away)
+	await _frames(3)
+	kb._stagger_left = 0.0
+	check(ab.try_use(0), "Knight Shield Bash")
+	check(kb.status.has(&"stunned") and kb.is_taunted(), "Shield Bash stuns and taunts")
+	p.character.grant_xp(Progression.total_xp_for(15), Progression.Source.OTHER)
+	ab.cooldowns.clear()
+	check(ab.try_use(1) and ab.incoming_mult() < 0.6, "Guardian Stance halves damage taken")
+	ab.remove_buff(&"guardian")
+	var far := _spawn_boar(world, _clear_offset(world, 9.0))
+	p.set_lock_target(far)  # charge toward a clear direction
+	await _frames(3)
+	var start := p.global_position
+	p.health.current = p.health.max_health * 0.5
+	var h_before := p.health.current
+	check(ab.try_use(2), "Rallying Charge")
+	await _frames(40)
+	check(p.global_position.distance_to(start) > 4.0 and p.health.current > h_before, "charge moves you forward and heals")
+	world.queue_free()
+	await _frames(5)
+
+	# --- Assassin
+	world = await _boot_class(&"assassin")
+	p = world.player
+	ab = p.abilities
+	var ab_boar := _spawn_boar(world, p.get_facing() * 6.0)
+	await _frames(3)
+	p.set_lock_target(ab_boar)
+	check(ab.try_use(0), "Assassin Shadow Step")
+	var behind: Vector3 = ab_boar.get_facing().dot((ab_boar.global_position - p.global_position).normalized()) as float * Vector3.ONE
+	check(p.global_position.distance_to(ab_boar.global_position) < 2.5 and behind.x > 0.5, "Shadow Step lands behind the target")
+	check(ab.has_buff(&"ambush"), "next hit is a guaranteed critical")
+	var info := p.combat.build_damage(p.combat.light_combo[0], ab_boar, ab.consume_attack_bonus())
+	check(info.is_crit and info.tag.contains("Backstab"), "guaranteed crit + backstab from behind (%.0f dmg)" % info.amount)
+	p.character.grant_xp(Progression.total_xp_for(15), Progression.Source.OTHER)
+	ab.cooldowns.clear()
+	check(ab.try_use(1), "Poison Blade")
+	ab.on_hit_dealt(ab_boar, 1.0)
+	ab.on_hit_dealt(ab_boar, 1.0)
+	check(ab_boar.status.stacks(&"poison") == 2, "poison stacks on hits")
+	ab_boar.target = p
+	check(ab.try_use(2) and p.is_stealthed(), "Vanish makes you stealthed")
+	check(ab_boar.target == null or ab_boar.is_taunted(), "enemy loses track of you")
+	var amb := ab.consume_attack_bonus()
+	check(amb.mult == 2.0 and not p.is_stealthed(), "attacking from stealth is an Ambush (x2) and breaks stealth")
+	world.queue_free()
+	await _frames(5)
+
+
+func test_rpg_save_load() -> void:
+	var saved_dir := SaveManager.worlds_dir
+	SaveManager.worlds_dir = "user://test_worlds"
+	for w in SaveManager.list_worlds():
+		SaveManager.delete_world(w.id)
+	var id := SaveManager.create_world("RPG Test", 777, &"assassin")
+	var world: World = await _boot_world()
+	var p := world.player
+	check(p.character.class_data.id == &"assassin", "world created with the chosen class")
+	p.character.grant_xp(Progression.total_xp_for(8), Progression.Source.OTHER)
+	p.character.spend_point(Skill.DEXTERITY)
+	p.character.spend_point(Skill.DEXTERITY)
+	p.inventory.add_item(&"copper_dagger", 1)
+	for i in p.inventory.capacity:
+		var s = p.inventory.get_slot(i)
+		if s != null and s.id == &"copper_dagger":
+			p.equip_from_slot(i)
+	var level := p.character.level
+	var dex := p.character.base_skill(Skill.DEXTERITY)
+	var pts := p.character.unspent_points
+	var total := p.character.total_xp
+	var max_hp := p.health.max_health
+	world.save_now(false)
+	world.queue_free()
+	await _frames(5)
+	check(SaveManager.load_world(id), "load RPG world")
+	world = await _boot_world()
+	p = world.player
+	check(p.character.class_data.id == &"assassin", "class restored")
+	check(p.character.level == level and p.character.total_xp == total, "level and XP restored (Lv %d)" % p.character.level)
+	check(p.character.base_skill(Skill.DEXTERITY) == dex and p.character.unspent_points == pts, "skills and unspent points restored")
+	check(p.equipment.weapon() != null and p.equipment.weapon().id == &"copper_dagger", "equipment restored")
+	check(absf(p.health.max_health - max_hp) < 0.01, "derived max health identical after load")
+	check(p.model != null and p.combat.light_combo.size() == 4, "dagger moveset active after load")
+	var meta_list := SaveManager.list_worlds()
+	check(meta_list.size() == 1 and meta_list[0].get("class") == "assassin" and int(meta_list[0].get("level", 0)) == level, "world list shows class and level")
+	world.queue_free()
+	await _frames(5)
+	SaveManager.delete_world(id)
 	SaveManager.worlds_dir = saved_dir
 	SaveManager.start_transient(GameState.DEFAULT_SEED)

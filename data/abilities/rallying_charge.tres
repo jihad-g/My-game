@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"rallying_charge"
+display_name = "Rallying Charge"
+description = "Charge 8 m through enemies, hitting each, and recover 15% of your health."
+effect = &"rallying_charge"
+unlock_level = 15
+cost_type = 2
+cost = 35
+cooldown = 14
+damage = 20
+damage_type = &"physical"
+radius = 0
+range = 8
+duration = 0
+power = 15
+icon_color = Color(1, 0.9, 0.5, 1)
+icon_glyph = "RC"

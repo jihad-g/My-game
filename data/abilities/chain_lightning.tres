@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"chain_lightning"
+display_name = "Chain Lightning"
+description = "Lightning that jumps between up to 4 enemies. +50% against enemies standing in water."
+effect = &"chain_lightning"
+unlock_level = 15
+cost_type = 1
+cost = 30
+cooldown = 6
+damage = 26
+damage_type = &"lightning"
+radius = 7
+range = 16
+duration = 0
+power = 3
+icon_color = Color(0.7, 0.8, 1, 1)
+icon_glyph = "CL"

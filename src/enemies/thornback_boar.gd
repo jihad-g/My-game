@@ -66,6 +66,10 @@ func _player() -> Node3D:
 	var p := get_tree().get_first_node_in_group(&"player") as Node3D
 	if p == null or p.get("is_dead") or p.get("frozen"):
 		return null
+	# Stealthed players are only noticed up close (unless we're taunted).
+	if p.has_method("is_stealthed") and p.is_stealthed() and not is_taunted() \
+			and p.global_position.distance_to(global_position) > 2.2:
+		return null
 	return p
 
 
@@ -204,6 +208,17 @@ func _on_hit_reaction(info: DamageInfo) -> void:
 	if ai in [AI.IDLE, AI.WANDER, AI.RETURN]:
 		if info.source is Node3D:
 			_alert(info.source)
+
+
+func _on_taunted(source: Node3D) -> void:
+	if ai in [AI.IDLE, AI.WANDER, AI.RETURN, AI.ALERT]:
+		target = source
+		_set_ai(AI.CHASE)
+
+
+func _on_lost_target() -> void:
+	if ai in [AI.CHASE, AI.ALERT, AI.CHARGE_WINDUP]:
+		_set_ai(AI.RETURN, 12.0)
 
 
 func _on_staggered() -> void:

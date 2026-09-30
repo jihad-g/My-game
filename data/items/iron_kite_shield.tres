@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"iron_kite_shield"
+display_name = "Iron Kite Shield"
+description = "A tall iron shield."
+category = 4
+rarity = 1
+max_stack = 1
+base_value = 80
+icon_color = Color(0.7, 0.72, 0.78, 1)
+icon_glyph = "Sh"
+equip_slot = 2
+required_level = 10
+stat_bonuses = {
+&"armor": 14,
+&"block": 10,
+&"move_speed": -3
+}
+weapon_type = &"shield"

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"shadow_cloak"
+display_name = "Shadow Cloak"
+description = "A dark cloak that muffles footsteps."
+category = 4
+rarity = 2
+max_stack = 1
+base_value = 90
+icon_color = Color(0.2, 0.2, 0.28, 1)
+icon_glyph = "Ck"
+equip_slot = 4
+required_level = 8
+stat_bonuses = {
+&"armor": 5,
+&"dexterity": 3,
+&"move_speed": 3
+}
+

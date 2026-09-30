@@ -12,7 +12,7 @@ signal interact_target_changed(target: Node)
 signal died
 signal respawned
 
-enum State { NORMAL, DODGING, STAGGERED, DEAD }
+enum State { NORMAL, DODGING, STAGGERED, DEAD, DASHING }
 
 @export_group("Movement")
 @export var walk_speed: float = 5.0
@@ -55,6 +55,7 @@ enum State { NORMAL, DODGING, STAGGERED, DEAD }
 @export var interact_range: float = 2.4
 
 var inventory := Inventory.new(24)
+var equipment := Equipment.new()
 var state: State = State.NORMAL
 var is_dead: bool = false
 var is_blocking: bool = false
@@ -70,6 +71,9 @@ var spawn_point := Vector3.ZERO
 @onready var hunger: HungerComponent = $Hunger
 @onready var temperature: TemperatureComponent = $Temperature
 @onready var combat: PlayerCombat = $Combat
+@onready var character: CharacterStats = $Character
+@onready var mana: ManaComponent = $Mana
+@onready var abilities: PlayerAbilities = $Abilities
 @onready var model: HumanoidModel = $Model
 @onready var interact_area: Area3D = $InteractArea
 
@@ -87,11 +91,19 @@ var _in_water := false
 ## True while in water too deep to stand in.
 var is_swimming := false
 var _lantern: OmniLight3D
+var _dash_dir := Vector3.ZERO
+var _dash_speed := 0.0
+var _dash_left := 0.0
+var _dash_on_hit: Callable
+var _dash_hit: Array[Node] = []
 
 
 func _ready() -> void:
 	add_to_group(&"player")
 	combat.player = self
+	abilities.player = self
+	character.equipment = equipment
+	equipment.changed.connect(_on_equipment_changed)
 	health.died.connect(_on_died)
 	health.damaged.connect(_on_damaged)
 	stamina.exhausted.connect(_on_exhausted)
@@ -115,6 +127,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		_try_interact()
 	elif event.is_action_pressed(&"target_lock"):
 		cycle_lock_target()
+	elif event.is_action_pressed(&"ability_1"):
+		abilities.try_use(0)
+	elif event.is_action_pressed(&"ability_2"):
+		abilities.try_use(1)
+	elif event.is_action_pressed(&"ability_3"):
+		abilities.try_use(2)
+	elif event.is_action_pressed(&"ability_shield"):
+		abilities.try_use(3)
 	else:
 		for i in InputSetup.HOTBAR_ACTIONS.size():
 			if event.is_action_pressed(InputSetup.HOTBAR_ACTIONS[i]):
@@ -157,6 +177,8 @@ func _physics_process(delta: float) -> void:
 				_move_normal(input, delta)
 		State.DODGING:
 			_move_dodge(delta)
+		State.DASHING:
+			_move_dash(delta)
 		State.STAGGERED:
 			_stagger_left -= delta
 			velocity.x = move_toward(velocity.x, 0.0, acceleration * 0.5 * delta)
@@ -324,7 +346,7 @@ func _update_facing(delta: float) -> void:
 # --- Dodge ------------------------------------------------------------------------
 
 func _start_dodge(input: Vector3) -> void:
-	if not stamina.try_consume(dodge_cost):
+	if not stamina.try_consume(dodge_cost * Skill.dodge_cost_mult(character.skill_level(Skill.DEXTERITY))):
 		Events.toast.emit("Not enough stamina to dodge", Color(1, 0.85, 0.4))
 		return
 	combat.cancel()
@@ -341,13 +363,49 @@ func _start_dodge(input: Vector3) -> void:
 
 func _move_dodge(delta: float) -> void:
 	_dodge_time += delta
-	health.invulnerable = _dodge_time >= dodge_iframe_start and _dodge_time <= dodge_iframe_end
+	var iframe_end := dodge_iframe_start + (dodge_iframe_end - dodge_iframe_start) \
+		* Skill.dodge_iframe_mult(character.skill_level(Skill.DEXTERITY))
+	health.invulnerable = _dodge_time >= dodge_iframe_start and _dodge_time <= minf(iframe_end, dodge_duration)
 	var t := _dodge_time / dodge_duration
 	var speed := dodge_speed * (1.0 - t * t * 0.7) * stats.get_mult(Stats.MOVE_SPEED)
 	velocity.x = _dodge_dir.x * speed
 	velocity.z = _dodge_dir.z * speed
 	if _dodge_time >= dodge_duration:
 		_end_dodge()
+
+
+## Ability dash (Rallying Charge): moves `distance` in `time`, invulnerable,
+## calling `on_hit` once for every enemy passed through.
+func start_ability_dash(dir: Vector3, distance: float, time: float, on_hit: Callable) -> void:
+	combat.cancel()
+	is_blocking = false
+	model.set_blocking(false)
+	state = State.DASHING
+	_dash_dir = Vector3(dir.x, 0, dir.z).normalized()
+	_dash_speed = distance / time
+	_dash_left = time
+	_dash_on_hit = on_hit
+	_dash_hit.clear()
+	face_direction(_dash_dir, true)
+	health.invulnerable = true
+	collision_mask &= ~Layers.ENEMY
+
+
+func _move_dash(delta: float) -> void:
+	_dash_left -= delta
+	velocity.x = _dash_dir.x * _dash_speed
+	velocity.z = _dash_dir.z * _dash_speed
+	var space := get_world_3d().direct_space_state
+	for t in HitQuery.query_arc(space, global_position + Vector3(0, 0.9, 0), _dash_dir, 1.6, 360.0, Layers.ENEMY, [get_rid()]):
+		if not _dash_hit.has(t) and t.has_method("receive_hit") and _dash_on_hit.is_valid():
+			_dash_hit.append(t)
+			_dash_on_hit.call(t)
+	if _dash_left <= 0.0:
+		state = State.NORMAL
+		health.invulnerable = false
+		collision_mask |= Layers.ENEMY
+		velocity.x *= 0.2
+		velocity.z *= 0.2
 
 
 func _end_dodge() -> void:
@@ -379,14 +437,14 @@ func receive_hit(info: DamageInfo) -> void:
 		Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, true, "Dodged")
 		return
 	if is_blocking and _is_in_front(info):
-		if _block_time <= parry_window:
+		if _block_time <= character.parry_window:
 			Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, false, "Parry!")
 			Events.camera_shake.emit(0.3)
 			if info.source and info.source.has_method("on_parried"):
 				info.source.on_parried()
 			return
-		var blocked := info.amount * block_reduction
-		var cost := blocked * block_stamina_per_damage
+		var blocked := info.amount * character.block_reduction
+		var cost := blocked * block_stamina_per_damage * Skill.block_stamina_mult(character.skill_level(Skill.DEFENSE))
 		if stamina.current >= cost:
 			stamina.consume(cost, false)
 			info.amount -= blocked
@@ -397,9 +455,18 @@ func receive_hit(info: DamageInfo) -> void:
 			stamina.consume(stamina.current, false)
 			info.tag = "Guard broken"
 			_stagger(0.8)
-	health.apply_damage(info)
+	# Armor, buffs and Last Stand reduce everything that gets through.
+	var reduction := character.damage_reduction
+	if character.skill_level(Skill.DEFENSE) >= 75 and health.get_ratio() < 0.25:
+		reduction = minf(reduction + 0.2, 0.85)
+	if info.damage_type != &"starvation" and info.damage_type != &"true":
+		info.amount *= (1.0 - reduction) * abilities.incoming_mult()
+	var dealt := health.apply_damage(info)
+	if dealt > 0.0:
+		abilities.on_damage_taken(dealt)
 	if is_dead:
 		return
+	info.knockback *= Skill.knockback_taken_mult(character.skill_level(Skill.STRENGTH), character.skill_level(Skill.DEFENSE))
 	_knockback += Vector3(info.knockback.x, 0, info.knockback.z)
 	if info.poise_damage >= 30.0 and state != State.DODGING:
 		_stagger(0.45)
@@ -454,6 +521,7 @@ func respawn() -> void:
 	state = State.NORMAL
 	health.revive(0.6)
 	stamina.refill()
+	mana.refill()
 	hunger.eat(maxf(0.0, 50.0 - hunger.current))
 	model.reset_pose()
 	velocity = Vector3.ZERO
@@ -561,7 +629,9 @@ func use_slot(index: int) -> void:
 	var item: ItemData = ItemDB.get_item(s.id)
 	if item == null:
 		return
-	if item.is_consumable():
+	if item.is_equippable():
+		equip_from_slot(index)
+	elif item.is_consumable():
 		_consume(item)
 		inventory.remove_from_slot(index, 1)
 	elif item.is_placeable():
@@ -569,6 +639,71 @@ func use_slot(index: int) -> void:
 			inventory.remove_from_slot(index, 1)
 	else:
 		Events.toast.emit("%s can't be used directly" % item.display_name, Color(0.85, 0.85, 0.85))
+
+
+# --- Class & equipment -------------------------------------------------------------------
+
+## Applies a class. `fresh` gives a brand-new character its starting kit.
+func setup_class(class_data: ClassData, fresh: bool) -> void:
+	character.setup(class_data, fresh)
+	model.set_appearance(class_data)
+	if fresh:
+		equipment.clear()
+		for id in class_data.starting_equipment:
+			var item: ItemData = ItemDB.get_item(StringName(id))
+			if item:
+				equipment.equip(item)
+		for id in class_data.starting_items:
+			inventory.add_item(StringName(id), int(class_data.starting_items[id]))
+	_on_equipment_changed()
+	character.recalculate(fresh)
+
+
+## Equips the item in inventory slot `index`; the replaced item goes back to the inventory.
+func equip_from_slot(index: int) -> bool:
+	var s = inventory.get_slot(index)
+	if s == null:
+		return false
+	var item: ItemData = ItemDB.get_item(s.id)
+	var err := Equipment.check_requirements(item, character.level)
+	if err != "":
+		Events.toast.emit("%s: %s" % [item.display_name if item else "?", err], Color(1, 0.7, 0.5))
+		return false
+	inventory.remove_from_slot(index, 1)
+	var old := equipment.equip(item)
+	if old != &"":
+		var left := inventory.add_item(old, 1)
+		if left > 0 and World.instance:
+			World.instance.spawn_pickup(old, left, global_position + Vector3(0, 1, 0), false)
+	Events.toast.emit("Equipped %s" % item.display_name, item.rarity_color())
+	return true
+
+
+## Moves an equipped item back into the inventory.
+func unequip_slot(slot: int) -> bool:
+	var id := equipment.get_item_id(slot)
+	if id == &"":
+		return false
+	if inventory.free_slot_count() == 0:
+		Events.toast.emit("Inventory full", Color(1, 0.6, 0.5))
+		return false
+	equipment.unequip(slot)
+	inventory.add_item(id, 1)
+	return true
+
+
+func _on_equipment_changed() -> void:
+	var weapon := equipment.weapon()
+	var moveset: WeaponMoveset = weapon.moveset if weapon and weapon.moveset else null
+	if moveset == null and character.class_data:
+		moveset = character.class_data.unarmed_moveset
+	combat.set_moveset(moveset)
+	model.set_weapon(equipment.weapon_type(), equipment.offhand() != null)
+	character.recalculate()
+
+
+func is_stealthed() -> bool:
+	return abilities.is_stealthed()
 
 
 func _consume(item: ItemData) -> void:
@@ -616,6 +751,10 @@ func to_save() -> Dictionary:
 		"temperature": temperature.felt,
 		"temperature_buffs": temperature.get_buffs().duplicate(true),
 		"inventory": inventory.to_array(),
+		"character": character.to_save(),
+		"equipment": equipment.to_save(),
+		"mana": mana.current,
+		"abilities": abilities.to_save(),
 	}
 
 
@@ -628,6 +767,11 @@ func from_save(data: Dictionary) -> void:
 	spawn_point = Vector3(float(sp[0]), float(sp[1]), float(sp[2]))
 	var f: Array = data.get("facing", [0, 1])
 	face_direction(Vector3(float(f[0]), 0, float(f[1])), true)
+	# Progression first: it determines max health/stamina/mana.
+	equipment.from_save(data.get("equipment", {}))
+	var ch: Dictionary = data.get("character", {})
+	if ch.has("level"):
+		character.load_progress(ch)
 	health.current = clampf(float(data.get("health", health.max_health)), 1.0, health.max_health)
 	health.health_changed.emit(health.current, health.max_health)
 	stamina.current = float(data.get("stamina", stamina.max_stamina))
@@ -637,3 +781,6 @@ func from_save(data: Dictionary) -> void:
 	for id in buffs:
 		temperature.add_buff(StringName(id), float(buffs[id].offset), float(buffs[id].time_left))
 	inventory.from_array(data.get("inventory", []))
+	mana.current = minf(float(data.get("mana", mana.max_mana)), mana.max_mana)
+	mana.mana_changed.emit(mana.current, mana.max_mana)
+	abilities.from_save(data.get("abilities", {}))

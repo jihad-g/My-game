@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/staff.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"crystal_staff"
+display_name = "Crystal Staff"
+description = "A staff crowned with a humming crystal shard."
+category = 3
+rarity = 2
+max_stack = 1
+base_value = 160
+icon_color = Color(0.7, 0.5, 1.0, 1)
+icon_glyph = "St"
+equip_slot = 1
+required_level = 12
+stat_bonuses = {
+&"spell_power": 20,
+&"max_mana": 30,
+&"mana_regen": 15,
+&"damage_bonus": 2
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"staff"
