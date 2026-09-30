@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"farm_plot"
+display_name = "Farm Plot"
+description = "Tilled soil. Press F with seeds to plant; crops grow with time (also while you sleep) and are harvested with F."
+category = 12
+placement = 0
+behavior = 8
+cost = {
+&"plant_fiber": 1,
+&"stone": 1
+}
+mesh = &"farm_plot"
+collision_size = Vector3(1, 0.12, 1)
+collision_center = Vector3(0, 0.06, 0)
+blocks_movement = false
+required_level = 1
+fade_near_camera = false

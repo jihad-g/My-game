@@ -78,19 +78,46 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: using materials straight from nearby chests while crafting or building
 - [ ] Known limitation: the bed mesh is 1.9 m long in a 1 m cell and can overlap a neighbour cell's furniture
 
+## Milestone 5 — Living world  ✅ (this milestone, Phases 3–4)
+
+- [x] Villages: deterministic placement per 384 m region, flattened terrain, cleared props, no cave entrances or monster spawns, names
+- [x] Kingdoms: one capital per realm (4x4 regions) with perimeter walls, gates, towers, keep & throne, barracks, royal market; villages join the nearest kingdom
+- [x] Settlement layouts: houses (furnished, doors, roofs that hide when you're inside), shop, smithy, farms, plaza with well, stalls, notice board, banners, torches
+- [x] Buildings merged into a few meshes on a worker thread; collision; streamed in/out around the player
+- [x] NPCs: merchant, royal merchant, blacksmith/armorer, farmer, villager, guard, ruler, travelling trader; role looks and tools
+- [x] NPC routines by hour (work, lunch, plaza in the evening, sleep at home); walking along a street graph through doors and farm gates
+- [x] Guards fight monsters near capitals (no XP for their kills)
+- [x] Dialogue: greetings by role and standing, gossip built from the world (unfound villages, caves, the capital, trader days, prices, bounties)
+- [x] Shops & economy: coins (copper/silver/gold), regional supply & demand, reputation discounts, market saturation, daily restock and shop money, stock gated by reputation
+- [x] Blacksmiths (metal tools, weapons, armor, ingots, smithing manual) and the village forge/workbench usable as crafting stations
+- [x] Travelling traders every third day with rotating exotic stock
+- [x] Reputation per settlement + kingdom (villages share 50%), 5 tiers, reputation screen (J), kingdom titles with gifts from the ruler
+- [x] Notice-board requests: daily deliveries and boar hunts for coins, reputation and XP
+- [x] Farming: seeds, farm plots, crop growth by world time, harvest, bread & vegetable stew; village farms worked by farmers
+- [x] Map markers for discovered / heard-of settlements; HUD coins and current town
+- [x] Save/load: coins, reputation, titles, shop states, requests, discovered towns, crops
+- [ ] NOT IMPLEMENTED: crime/theft, attacking NPCs, losing reputation, guards chasing the player
+- [ ] NOT IMPLEMENTED: roads between settlements and traders actually travelling between them (the trader appears on trader days)
+- [ ] NOT IMPLEMENTED: NPC relationships, families, schedules by weekday, NPCs reacting to weather or combat (other than guards)
+- [ ] NOT IMPLEMENTED: full quests (multi-step, story), dialogue trees with choices beyond the fixed options
+- [ ] NOT IMPLEMENTED: buying houses, renting beds at an inn, raids on settlements, kingdom wars/politics
+- [ ] NOT IMPLEMENTED: crop watering, seasons, animals/livestock; village crops can't be harvested by the player
+- [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
+- [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
+
 ## Phase 2 — Core RPG (remaining)
 
 - [x] Crafting system (Milestone 4)
 - [~] Recipe sources — books (cave caches, boars) and discovery done; villages, kingdoms, dungeons, bosses later
 - [ ] More abilities per class / ability upgrades at higher levels (current unlocks: 1, 5, 15)
 - [ ] Item quality (Fine/Masterwork) and gear drops from more sources (only boars drop gear today)
-- [ ] Basic NPCs (dialogue, shops)
+- [x] Basic NPCs (dialogue, shops) (Milestone 5)
 - [ ] Respec (reset skill points)
 
 ## Phase 3 — World (remaining)
 
 - [~] Chunk system & procedural terrain — heightmap columns on two layers; no overhangs / multi-level caves
-- [ ] Villages (houses, farms, market, bakery, blacksmith, shops, NPCs, traders)
+- [x] Villages (houses, farms, market, blacksmith, shops, NPCs, traders) (Milestone 5)
 - [ ] Structures: ruins, towers, temples, ancient structures, landmarks, hidden locations
 - [ ] Mines (abandoned mine structures in caves); caves currently have ore-rich areas but no built mines
 - [ ] Biome-specific enemies (only the Thornback Boar exists; it spawns in meadow, forest, jungle and taiga)
@@ -98,14 +125,14 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 ## Phase 4 — Content
 
-- [ ] Kingdoms (castle, advanced blacksmith, rare shops, guards, quests, reputation)
+- [~] Kingdoms (castle, advanced blacksmith, rare shops, guards, reputation) — done in Milestone 5; kingdom quests not yet
 - [ ] Dungeons ranks E–S with scaling enemies, mechanics, loot, bosses
 - [ ] Bosses with unique mechanics
 - [ ] More enemy categories (monsters, bandits, undead, magical, elites)
-- [ ] Farming (seeds, planting, watering, harvesting, rare/magical plants)
-- [ ] Trading & economy (per-settlement inventories and prices) — items already have `base_value`
+- [~] Farming (seeds, planting, harvesting) — Milestone 5; watering, seasons, rare/magical plants not yet
+- [x] Trading & economy (per-settlement inventories and prices) (Milestone 5)
 - [ ] Raids with warnings, reputation/popularity rewards
-- [ ] NPC routines, relationships, reactions, reputation
+- [~] NPC routines and reputation (Milestone 5); relationships and reactions not yet
 
 ## Phase 5 — Building
 

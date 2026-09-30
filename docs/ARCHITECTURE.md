@@ -145,6 +145,25 @@ World (world.gd)                 wires systems, world services (temperature, pic
   `World.get_temperature_at` applies shelter; physics layer `BUILDING` (64) is in the
   player, enemy and projectile masks.
 
+## Living world (Milestone 5)
+
+- **Generation**: `TerrainGenerator.settlements` (`Settlements`) decides villages/capitals per
+  region from raw terrain (`_sample_raw`), cached behind a mutex (worker threads call it).
+  `sample_column()` flattens columns inside a settlement; chunk generation looks settlements up
+  once per chunk. Props, cave entrances and spawn slots skip towns.
+- **Layout → Site**: `SettlementLayout.build(info, day)` returns pure data (static pieces with
+  transforms and collision boxes, roofs per building, doors, stations, lights, farms, waypoints,
+  NPC roster). `SettlementManager` (child of World) streams `SettlementSite`s; a site merges the
+  statics into BlockMesh arrays on a worker thread and attaches meshes/collision on the main
+  thread, then spawns `NPC`s. Nothing about sites is saved (they are deterministic).
+- **NPCs**: `NPC.schedule(hour)` → activity → target point; `_go()` plans door/gate + street
+  graph (`SettlementSite.find_path`, Dijkstra over lot-boundary streets, segments blocked by
+  building/farm rectangles). Far NPCs update 4x/s. Talking emits `Events.npc_talk`.
+- **Economy/reputation**: `Economy` (static prices, stock tables), `SettlementManager` keeps shop
+  states (`"<id>|<role>"`), requests and hunt progress (saved in `world.living`); `Reputation`
+  and `coins` live on the Player. `Gossip` builds dialogue lines from world queries.
+- **Farming**: `BuildPiece` behaviour FARM + `Farming` rules; growth uses `GameState.world_time`.
+
 ## Survival
 
 - `StatBlock` aggregates multiplicative modifiers per source (`&"hunger"`,
@@ -163,6 +182,9 @@ World (world.gd)                 wires systems, world services (temperature, pic
 |---|---|
 | New item | Add `data/items/<id>.tres` (`ItemData`). Food fields make it edible. |
 | New recipe | Add `data/recipes/<id>.tres` (`RecipeData`); for books add the id to an item's `teaches_recipes`. |
+| New settlement building | Add a builder in `SettlementLayout` (use `_building()` for walled buildings) and give NPC roles a `work` point. |
+| New shop item | Add it to `Economy.STOCK[role]` with a reputation tier (or `TRADER_POOL`). |
+| New crop | Add to `Farming.CROPS` + seed/produce items + `BuildMeshes.build_crop` visuals. |
 | New build piece | Add `data/build_pieces/<id>.tres` (`BuildPieceData`) + `build_<mesh>()` in `BuildMeshes`. |
 | New crafting station | A build piece with behaviour STATION and a `station_id`, plus the id in `RecipeData.STATION_IDS`. |
 | New prop `data/props/<id>.tres` (`PropData`) + a `_build_<name>` mesh function in `PropLibrary`; reference it from a biome `PropRule`. |

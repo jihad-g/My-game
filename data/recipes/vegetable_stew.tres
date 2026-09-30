@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"vegetable_stew"
+result_item = &"vegetable_stew"
+result_count = 1
+ingredients = {
+&"carrot": 2,
+&"pumpkin": 1,
+&"mushroom": 1
+}
+station = 5
+tier = 0
+source = 1
+discovered_by = &"pumpkin"
+xp = 8

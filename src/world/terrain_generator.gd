@@ -42,6 +42,8 @@ const _HEIGHT_BIAS := 1024
 var world_seed: int
 var settings: WorldGenSettings
 var biomes: Array[BiomeData] = []
+## Villages and kingdoms (Milestone 5): flatten terrain, clear props, block spawns.
+var settlements: Settlements
 
 var _land_biomes: PackedInt32Array = PackedInt32Array()
 var _rare_biomes: PackedInt32Array = PackedInt32Array()
@@ -115,6 +117,7 @@ func _init(p_seed: int, p_settings: WorldGenSettings) -> void:
 	# The last LAND biome is the catch-all (list it last with full ranges).
 	if not _land_biomes.is_empty():
 		_fallback_biome = _land_biomes[_land_biomes.size() - 1]
+	settlements = Settlements.new(self)
 
 
 func _setup_noise(n: FastNoiseLite, salt: int, frequency: float, octaves: int) -> void:
@@ -171,8 +174,37 @@ func get_climate(pos: Vector3) -> Vector2:
 # --- Surface sampling ----------------------------------------------------------
 
 ## Samples one surface column: height (blocks) and biome index, packed into an
-## int (see unpack helpers). This is the single source of truth for terrain.
+## int (see unpack helpers). This is the single source of truth for terrain:
+## natural terrain, flattened inside villages and kingdoms.
 func sample_column(wx: int, wz: int) -> int:
+	return _flatten(_sample_raw(wx, wz), wx, wz, settlements.column_info(wx, wz))
+
+
+## Same as sample_column with the candidate settlements already known (chunk loop).
+func _sample_with(wx: int, wz: int, near: Array) -> int:
+	var smp := _sample_raw(wx, wz)
+	for st: SettlementInfo in near:
+		var r := st.radius + st.blend
+		if Vector2(wx - st.center.x, wz - st.center.y).length_squared() < r * r:
+			return _flatten(smp, wx, wz, st)
+	return smp
+
+
+func _flatten(smp: int, wx: int, wz: int, s: SettlementInfo) -> int:
+	if s == null:
+		return smp
+	var d := Vector2(wx - s.center.x, wz - s.center.y).length()
+	var h := unpack_height(smp)
+	var b := unpack_biome(smp)
+	var t := _ss(s.radius, s.radius + s.blend, d)
+	h = roundi(lerpf(s.height, h, t))
+	if d < s.radius + 2.0 and biomes[b].role != BiomeData.Role.LAND:
+		b = s.biome_index
+	return (h + _HEIGHT_BIAS) | (b << 16)
+
+
+## Natural terrain without settlements (settlement placement reads this).
+func _sample_raw(wx: int, wz: int) -> int:
 	var s := settings
 	var x := float(wx)
 	var z := float(wz)
@@ -319,6 +351,8 @@ func _entrance_in_cell(cx: int, cz: int) -> Vector2i:
 	var b := biomes[unpack_biome(smp)]
 	if h < SEA_LEVEL + 2 or h > 70 or b.role == BiomeData.Role.OCEAN or b.role == BiomeData.Role.BEACH:
 		return none
+	if settlements.is_inside(ex, ez, 24.0):
+		return none
 	for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 		if absi(get_height_blocks(ex + d.x, ez + d.y) - h) > 1:
 			return none
@@ -366,6 +400,14 @@ func generate_chunk(coord: Vector2i, lod: int, layer: int = Layer.SURFACE) -> Ch
 
 	data.heights.resize(w * w)
 	data.biomes.resize(w * w)
+	# Settlements whose regions touch this chunk (at most 4).
+	var near := []
+	if layer == Layer.SURFACE:
+		for rz in [Settlements.region_of(ox - step, oz - step).y, Settlements.region_of(ox + CHUNK_SIZE + step, oz + CHUNK_SIZE + step).y]:
+			for rx in [Settlements.region_of(ox - step, oz - step).x, Settlements.region_of(ox + CHUNK_SIZE + step, oz + CHUNK_SIZE + step).x]:
+				var st := settlements.get_region(Vector2i(rx, rz))
+				if st and not near.has(st):
+					near.append(st)
 	var hmin := 1 << 30
 	var hmax := -(1 << 30)
 	for j in w:
@@ -378,7 +420,7 @@ func generate_chunk(coord: Vector2i, lod: int, layer: int = Layer.SURFACE) -> Ch
 				h = get_cave_height_blocks(wx, wz, entrances)
 				b = _cave_biome
 			else:
-				var smp := sample_column(wx, wz)
+				var smp := _sample_with(wx, wz, near)
 				h = unpack_height(smp)
 				b = unpack_biome(smp)
 			data.heights[j * w + i] = h
@@ -635,6 +677,8 @@ func _place_rule(data: ChunkData, w: int, ox: int, oz: int, entrances: Array[Vec
 				continue
 			if _near_entrance(ox + lx, oz + lz, entrances, ENTRANCE_CLEARANCE):
 				continue
+			if data.layer == Layer.SURFACE and settlements.is_inside(ox + lx, oz + lz, 3.0):
+				continue  # towns are cleared (their own buildings/decor come from the layout)
 			var y := WATER_Y + 0.02 if rule.on_water else h * BLOCK_HEIGHT
 			data.props.append({
 				"prop_id": rule.prop_id,
@@ -663,6 +707,8 @@ func get_spawn_slots(coord: Vector2i) -> Array:
 		var h := get_height_blocks(ox + lx, oz + lz)
 		if h < rule.min_height or h > rule.max_height:
 			continue
+		if settlements.is_inside(ox + lx, oz + lz, 40.0):
+			continue  # monsters keep away from towns
 		out.append({
 			"key": "%d,%d:%d:%d" % [coord.x, coord.y, b, r],
 			"rule": rule,

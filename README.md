@@ -5,15 +5,21 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 4 — Building & crafting** (recipes, stations, tools, grid building, furniture,
-> storage, spike defenses, land claims, shelter) on top of the Phase 1 prototype, Milestone 2 world
-> generation and Milestone 3 RPG foundation. See [`docs/TODO.md`](docs/TODO.md) for the
+> Status: **Milestone 5 — Living world** (villages, kingdoms, townsfolk with daily routines, shops,
+> blacksmiths, travelling traders, farms, economy, reputation and kingdom titles) on top of the
+> Phase 1 prototype, world generation (M2), RPG foundation (M3) and building & crafting (M4). See [`docs/TODO.md`](docs/TODO.md) for the
 > honest status of every system and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
-![Base](docs/screenshots/base_overview.png)
+![Village](docs/screenshots/village_overview.png)
 
-| Sunscorch Desert | Stonecrown Mountains | Crystal Glade |
+| **Village plaza** | **Talking to townsfolk** | **Trading** |
 |---|---|---|
+| ![Plaza](docs/screenshots/village_plaza.png) | ![Dialogue](docs/screenshots/dialogue.png) | ![Trade](docs/screenshots/trade.png) |
+| **Kingdom capital** | **The court** | **Village at night** |
+| ![Kingdom](docs/screenshots/kingdom_overview.png) | ![Court](docs/screenshots/kingdom_court.png) | ![Night](docs/screenshots/village_night.png) |
+| **Notice board** | **Map with settlements** | **Reputation (J)** |
+| ![Board](docs/screenshots/notice_board.png) | ![Map](docs/screenshots/map_settlements.png) | ![Reputation](docs/screenshots/reputation.png) |
+| **Sunscorch Desert** | **Stonecrown Mountains** | **Crystal Glade** |
 | ![Desert](docs/screenshots/biome_desert.png) | ![Mountains](docs/screenshots/biome_mountains.png) | ![Crystal](docs/screenshots/biome_crystal_glade.png) |
 | **Murk Swamp** | **The Deeps (caves)** | **World map (M)** |
 | ![Swamp](docs/screenshots/biome_swamp.png) | ![Cave](docs/screenshots/cave_inside.png) | ![Map](docs/screenshots/world_map.png) |
@@ -23,8 +29,8 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 | ![Character](docs/screenshots/character_screen.png) | ![Menu](docs/screenshots/main_menu.png) | ![Charge](docs/screenshots/04a_boar_charge_telegraph.png) |
 | **Build mode (B)** | **Crafting (G)** | **Storage chest** |
 | ![Build](docs/screenshots/build_mode.png) | ![Crafting](docs/screenshots/crafting_screen.png) | ![Chest](docs/screenshots/chest.png) |
-| **Base at night** | **Overview** | |
-| ![Night](docs/screenshots/base_night.png) | ![Overview](docs/screenshots/03_zoomed_out_rotated.png) | |
+| **Base at night** | **Base** | **Overview** |
+| ![Night](docs/screenshots/base_night.png) | ![Base](docs/screenshots/base_overview.png) | ![Overview](docs/screenshots/03_zoomed_out_rotated.png) |
 
 ## Requirements
 
@@ -82,6 +88,8 @@ and when you quit through the pause menu or close the window.
 | Build mode on / off | B |
 | Build mode: place / deconstruct / rotate | Left mouse / Right mouse / R |
 | Open doors & chests, sleep in beds | F |
+| Talk to townsfolk, read notice boards, plant & harvest crops | F |
+| Reputation screen | J |
 | World map | M |
 | Quick save | F5 |
 | Pause | Esc |
@@ -163,6 +171,30 @@ and when you quit through the pause menu or close the window.
     shows "Your land", monsters never spawn there, and deconstructing refunds 100 %
     (50 % elsewhere). **Spike Barricades** and **Spike Traps** hurt monsters that touch
     them; a charging boar takes triple damage and is staggered.
+25. **Find a village** – the default seed has a kingdom capital ~300 m from spawn and
+    villages around it. Walk in: "Discovered: Village of …", XP and a little standing.
+    Towns are flat, cleared of wild trees and monster-free; you can't build inside them.
+26. **Townsfolk** – everyone has a job and a daily routine: merchants at their stall 8–19,
+    blacksmiths at the forge, farmers in the fields, villagers wander and gather at the well
+    at lunch and in the evening, and everyone goes home to sleep (press F9 to skip hours and
+    watch). Press F to talk: "What's new?" gives real gossip (unfound villages get added to
+    your map, nearby caves, the capital, trader days).
+27. **Trade** – talk to a merchant, blacksmith, farmer or royal merchant during work hours →
+    Trade. Prices depend on the region (wood is dear in the desert, food in the tundra),
+    your reputation, and saturation (selling many of the same thing pays less; recovers
+    daily). Shops have limited stock and coins, restocked every morning. Better stock unlocks
+    with reputation. Every third day a travelling trader parks a wagon in the square.
+28. **Work** – the notice board by the well posts daily delivery requests (and boar bounties
+    near farm villages). Hand them in for coins, reputation and XP.
+29. **Reputation** (J) – Stranger → Acquainted → Friendly → Honored → Revered, earned by trading,
+    requests and killing monsters near towns. Villages share half with their kingdom.
+    Better prices at each tier. At Friendly/Honored/Revered kingdom standing, ask the ruler
+    in the capital's keep for recognition: titles plus coins and a Royal Signet.
+30. **Farming** – buy seeds from farmers or merchants, build **Farm Plots** (B → Farming) outside
+    towns, press F to plant and later harvest. Crops grow with world time (also while you sleep).
+    Bake bread from wheat at a campfire; pumpkins teach Vegetable Stew.
+31. **Kingdom capitals** – walled cities with gates, towers, a keep with a throne, barracks,
+    a royal market and guards that attack monsters that come close.
 
 ## Run the automated tests
 
@@ -172,7 +204,7 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
 
-The suite (401 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (478 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -188,7 +220,12 @@ recipe and build cost is obtainable in the world, cost scaling, never-fail craft
 station/skill/level gating, discovery and book learning, tool tiers, grid placement rules
 (edges, stacking, distance, roofs, obstacles), walls blocking movement, doors, chests,
 refunds, land claims blocking spawns, shelter temperature, torches, beds, spike traps,
-build mode, the crafting screen, and a save → load round trip of a base.
+build mode, the crafting screen, and a save → load round trip of a base. Living-world tests
+check settlement determinism and placement (flat, no wild props/spawns/caves, kingdom
+membership), non-overlapping layouts and rosters, prices (no buy/sell loop, saturation,
+regional demand, reputation), reputation rules, daily requests, crop growth, and in the running
+game: discovery, NPC routines and street paths, dialogue and gossip, buying/selling, requests,
+hunts, guards defending a capital, titles, the village forge, farming and save/load.
 
 Balance tables are generated from the code: `godot --headless --path . -s tools/gen_rpg_tables.gd`
 → [`docs/XP_TABLE.md`](docs/XP_TABLE.md), [`docs/CLASSES_AND_SKILLS.md`](docs/CLASSES_AND_SKILLS.md).
@@ -198,6 +235,8 @@ Visual check (renders screenshots, needs a display or `xvfb-run`):
 ```bash
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=build   # base / build / crafting
+godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=town    # villages, kingdom, trade
+tools/make_video.sh /tmp/video     # scripted gameplay video (needs ffmpeg)
 ```
 
 ## Project layout
@@ -218,6 +257,9 @@ src/
   save/                  SaveManager (world list, save/load, backups)
   rpg/                   Classes, skills, progression, character stats, equipment, abilities
   inventory/             ItemData resource, Inventory
+  crafting/              Recipes, recipe book, crafting rules
+  building/              Build pieces, grid building manager, build mode, piece meshes
+  living/                Settlements (generation, layouts, sites), NPCs, economy, reputation, requests, farming, gossip
   ui/                    HUD, theme, slots, temperature gauge
 data/                    Data-driven content (.tres): items, attacks, movesets, abilities, classes, enemies, props, biomes, worldgen
 tests/                   Automated test suite + screenshot runner

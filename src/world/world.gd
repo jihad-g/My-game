@@ -12,6 +12,8 @@ static var instance: World
 const FIRE_MAX_TEMPERATURE := 28.0
 ## Degrees of protection from standing under a roof.
 const SHELTER_EFFECT := 10.0
+## Coins (copper) a new character starts with.
+const STARTING_COINS := 40
 const AUTOSAVE_INTERVAL := 120.0
 const BIOME_CHECK_INTERVAL := 0.5
 ## Debug (F10): a sample of every gear tier for testing equipment.
@@ -46,6 +48,8 @@ var current_biome: BiomeData
 
 var building: BuildingManager
 var build_mode: BuildMode
+## Villages, kingdoms, NPCs, shops, requests (Milestone 5).
+var living: SettlementManager
 var _autosave_left := AUTOSAVE_INTERVAL
 var _biome_check_left := 0.0
 var _first_ready := true
@@ -71,6 +75,10 @@ func _ready() -> void:
 	build_mode.name = "BuildMode"
 	build_mode.world = self
 	add_child(build_mode)
+	living = SettlementManager.new()
+	living.name = "Settlements"
+	living.world = self
+	add_child(living)
 	props = PropLibrary.new()
 	chunk_manager.setup(generator, props)
 	spawner.generator = generator
@@ -90,6 +98,7 @@ func _ready() -> void:
 		player.global_position = player.spawn_point
 		for id: StringName in starting_items:
 			player.inventory.add_item(id, int(starting_items[id]))
+		player.coins = STARTING_COINS
 	else:
 		_new_world = false
 		from_save(save.get("world", {}))
@@ -374,6 +383,7 @@ func to_save() -> Dictionary:
 			placed.append(entry)
 	return {
 		"buildings": building.to_save(),
+		"living": living.to_save(),
 		"layer": layer,
 		"day": day_night.day,
 		"hour": day_night.hour,
@@ -383,6 +393,7 @@ func to_save() -> Dictionary:
 
 func from_save(data: Dictionary) -> void:
 	layer = int(data.get("layer", TerrainGenerator.Layer.SURFACE))
+	living.from_save(data.get("living", {}))
 	day_night.day = int(data.get("day", 1))
 	day_night.hour = float(data.get("hour", day_night.start_hour))
 	for entry in data.get("placed", []):

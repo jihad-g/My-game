@@ -9,7 +9,9 @@ extends CanvasLayer
 ## Also (Milestone 3): mana/XP/rage bars, ability bar, buffs, character screen (K).
 ## Also (Milestone 4): crafting screen (G), build palette (B), storage chests,
 ## "Your land" / shelter indicator.
-## NOT IMPLEMENTED yet (later phases): quests, reputation, trading.
+## Also (Milestone 5): coins, current settlement, dialogue, trade, notice board,
+## reputation (J).
+## NOT IMPLEMENTED yet (later phases): full quest system.
 
 var player: Player
 var world: World
@@ -46,6 +48,12 @@ var _crafting := CraftingPanel.new()
 var _palette := BuildPalette.new()
 var _chest := ContainerPanel.new()
 var _land_label := Label.new()
+var _dialogue := DialoguePanel.new()
+var _trade := TradePanel.new()
+var _requests := RequestsPanel.new()
+var _reputation := ReputationPanel.new()
+var _coins_label := Label.new()
+var _town_label := Label.new()
 var _mana_bar: ProgressBar
 var _mana_label: Label
 var _xp_bar: ProgressBar
@@ -87,6 +95,21 @@ func _ready() -> void:
 	_root.add_child(_crafting)
 	_root.add_child(_palette)
 	_root.add_child(_chest)
+	_root.add_child(_dialogue)
+	_root.add_child(_trade)
+	_root.add_child(_requests)
+	_root.add_child(_reputation)
+	_dialogue.trade_requested.connect(func(n: NPC) -> void:
+		_dialogue.close()
+		_trade.open(n))
+	Events.npc_talk.connect(func(n: Node) -> void:
+		if not _trade.visible:
+			_dialogue.open(n as NPC))
+	Events.open_requests.connect(func(site: Node) -> void: _requests.open(site))
+	Events.coins_changed.connect(func(_c: int) -> void: _refresh_coins())
+	Events.settlement_entered.connect(func(_id: String) -> void: _refresh_town())
+	Events.settlement_left.connect(func(_id: String) -> void: _refresh_town())
+	Events.reputation_changed.connect(func(_id: String, _v: float) -> void: _refresh_town())
 	_banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_banner.offset_top = 120
@@ -120,6 +143,7 @@ func bind(p_player: Player, p_world: World) -> void:
 	_bind_rpg()
 	_crafting.bind(player)
 	_chest.bind(player)
+	_refresh_coins()
 	if world.build_mode:
 		_palette.bind(player, world.build_mode)
 		var help_was := [true]
@@ -215,6 +239,9 @@ func _build_status() -> void:
 	box.add_child(trow)
 	_temp_label.add_theme_font_size_override(&"font_size", 14)
 	box.add_child(_temp_label)
+	_coins_label.add_theme_font_size_override(&"font_size", 14)
+	_coins_label.add_theme_color_override(&"font_color", UITheme.GOLD)
+	box.add_child(_coins_label)
 	_temp_effects.add_theme_font_size_override(&"font_size", 12)
 	_temp_effects.add_theme_color_override(&"font_color", Color(1.0, 0.75, 0.6))
 	_temp_effects.autowrap_mode = TextServer.AUTOWRAP_WORD
@@ -427,8 +454,8 @@ func _refresh_abilities() -> void:
 func _build_prompt_and_toasts() -> void:
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_prompt.offset_bottom = -110
-	_prompt.offset_top = -140
+	_prompt.offset_bottom = -166
+	_prompt.offset_top = -196
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt.add_theme_font_size_override(&"font_size", 18)
 	_prompt.add_theme_color_override(&"font_color", UITheme.GOLD)
@@ -458,6 +485,10 @@ func _build_corner_info() -> void:
 	_biome_label.add_theme_color_override(&"font_color", UITheme.GOLD)
 	_biome_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v.add_child(_biome_label)
+	_town_label.add_theme_font_size_override(&"font_size", 15)
+	_town_label.add_theme_color_override(&"font_color", Color(1.0, 0.9, 0.6))
+	_town_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	v.add_child(_town_label)
 	_land_label.add_theme_font_size_override(&"font_size", 14)
 	_land_label.add_theme_color_override(&"font_color", Color(0.6, 0.85, 1.0))
 	_land_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -485,6 +516,7 @@ func _build_help() -> void:
 		"Q/E or MMB-drag rotate · Wheel zoom · PgUp/PgDn tilt",
 		"Z/X/C class abilities · T temperature shield · K character",
 		"G crafting · B build mode (LMB place, RMB remove, R rotate)",
+		"F talk to townsfolk / read notice boards · J reputation",
 		"Arrows pan camera · V recenter · M map · F5 save",
 		"F3 debug · F1 hide help",
 		"Debug: F6/F7 temp -/+10°C · F8 spawn boar · F9 +2h",
@@ -591,6 +623,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"pause"):
 		if world and world.build_mode and world.build_mode.active:
 			world.build_mode.set_active(false)
+		elif _trade.visible:
+			_trade.close()
+		elif _dialogue.visible:
+			_dialogue.close()
+		elif _requests.visible:
+			_requests.close()
+		elif _reputation.visible:
+			_reputation.visible = false
 		elif _chest.visible:
 			_chest.close()
 		elif _crafting.visible:
@@ -608,6 +648,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	elif event.is_action_pressed(&"inventory"):
 		_toggle_inventory()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"reputation"):
+		if not _loading.visible:
+			_reputation.toggle()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"crafting"):
 		if not _loading.visible:
@@ -647,6 +691,22 @@ func _process(_delta: float) -> void:
 	_refresh_abilities()
 	_update_buffs()
 	_update_land()
+
+
+func _refresh_coins() -> void:
+	if player:
+		_coins_label.text = "Coins: %s" % Economy.format_coins(player.coins)
+
+
+func _refresh_town() -> void:
+	if world == null or world.living == null or player == null:
+		return
+	var s := world.living.current
+	if s == null:
+		_town_label.text = ""
+		return
+	var rep := player.reputation
+	_town_label.text = "%s · %s" % [s.short_title(), rep.tier_name(s.id)]
 
 
 func _update_land() -> void:

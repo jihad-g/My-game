@@ -2,15 +2,15 @@ class_name BuildPieceData
 extends Resource
 ## A buildable piece: cost, grid placement, looks and behaviour.
 
-enum Category { FLOOR, WALL, DOOR, WINDOW, FENCE, ROOF, FURNITURE, STORAGE, STATION, DEFENSE, LIGHT, CLAIM }
+enum Category { FLOOR, WALL, DOOR, WINDOW, FENCE, ROOF, FURNITURE, STORAGE, STATION, DEFENSE, LIGHT, CLAIM, FARMING }
 const CATEGORY_NAMES := ["Floors", "Walls", "Doors", "Windows", "Fences", "Roofs", "Furniture", "Storage",
-	"Stations", "Defenses", "Lights", "Claims"]
+	"Stations", "Defenses", "Lights", "Claims", "Farming"]
 
 ## Grid slot: FLOOR/OBJECT sit in a cell, EDGE on a cell edge, ROOF above a cell.
 enum Placement { FLOOR, OBJECT, EDGE, ROOF }
 
 ## Behaviours implemented by BuildPiece.
-enum Behavior { NONE, DOOR, CHEST, BED, SPIKES, STATION, LIGHT, CLAIM }
+enum Behavior { NONE, DOOR, CHEST, BED, SPIKES, STATION, LIGHT, CLAIM, FARM }
 
 @export var id: StringName
 @export var display_name: String = ""

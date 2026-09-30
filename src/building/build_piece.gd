@@ -14,6 +14,12 @@ var layer: int = 0
 ## CHEST storage.
 var storage: Inventory
 var is_open := false
+## FARM: planted crop (&"" = empty) and when it was planted (world time).
+var crop: StringName = &""
+var planted_at := 0.0
+var _crop_mesh: MeshInstance3D
+var _crop_stage := -1
+var _crop_tick := 0.0
 
 var _mesh_instance := MeshInstance3D.new()
 var _leaf: Node3D
@@ -26,8 +32,8 @@ func setup(p_data: BuildPieceData) -> void:
 	data = p_data
 	name = "%s_%d_%d_%s" % [data.id, cell.x, cell.y, slot]
 	collision_layer = Layers.BUILDING
-	if data.behavior == BuildPieceData.Behavior.DOOR or data.behavior == BuildPieceData.Behavior.CHEST \
-			or data.behavior == BuildPieceData.Behavior.BED or data.behavior == BuildPieceData.Behavior.CLAIM:
+	if data.behavior in [BuildPieceData.Behavior.DOOR, BuildPieceData.Behavior.CHEST, BuildPieceData.Behavior.BED,
+			BuildPieceData.Behavior.CLAIM, BuildPieceData.Behavior.FARM]:
 		collision_layer |= Layers.INTERACTABLE
 	if not data.blocks_movement:
 		collision_layer = Layers.INTERACTABLE if collision_layer & Layers.INTERACTABLE else 0
@@ -83,6 +89,11 @@ func setup(p_data: BuildPieceData) -> void:
 			add_child(flame)
 		BuildPieceData.Behavior.CLAIM:
 			add_to_group(&"land_claims")
+		BuildPieceData.Behavior.FARM:
+			add_to_group(&"farm_plots")
+			_crop_mesh = MeshInstance3D.new()
+			_crop_mesh.position.y = 0.1
+			add_child(_crop_mesh)
 
 
 func _add_light(color: Color, energy: float, range_m: float, pos: Vector3) -> void:
@@ -92,6 +103,25 @@ func _add_light(color: Color, energy: float, range_m: float, pos: Vector3) -> vo
 	_light.omni_range = range_m
 	_light.position = pos
 	add_child(_light)
+
+
+func _process(delta: float) -> void:
+	if _crop_mesh == null:
+		return
+	_crop_tick -= delta
+	if _crop_tick > 0.0:
+		return
+	_crop_tick = 1.0
+	update_crop_visual()
+
+
+func update_crop_visual() -> void:
+	if _crop_mesh == null:
+		return
+	var st := -1 if crop == &"" else Farming.stage(crop, planted_at, GameState.world_time)
+	if st != _crop_stage:
+		_crop_stage = st
+		_crop_mesh.mesh = null if st < 0 else BuildMeshes.get_mesh(StringName("crop_%s_%d" % [crop, st]))
 
 
 func _physics_process(delta: float) -> void:
@@ -130,7 +160,7 @@ func claim_radius() -> float:
 
 func is_interactable() -> bool:
 	return data.behavior in [BuildPieceData.Behavior.DOOR, BuildPieceData.Behavior.CHEST,
-		BuildPieceData.Behavior.BED, BuildPieceData.Behavior.CLAIM]
+		BuildPieceData.Behavior.BED, BuildPieceData.Behavior.CLAIM, BuildPieceData.Behavior.FARM]
 
 
 func get_interact_text() -> String:
@@ -143,6 +173,8 @@ func get_interact_text() -> String:
 			return "Sleep / set respawn point"
 		BuildPieceData.Behavior.CLAIM:
 			return "%s (radius %d m)" % [data.display_name, roundi(data.claim_radius)]
+		BuildPieceData.Behavior.FARM:
+			return _farm_text()
 	return data.display_name
 
 
@@ -155,8 +187,61 @@ func interact(player: Node) -> void:
 		BuildPieceData.Behavior.BED:
 			if World.instance:
 				World.instance.use_bed(self, player)
+		BuildPieceData.Behavior.FARM:
+			farm_interact(player)
 		BuildPieceData.Behavior.CLAIM:
 			Events.toast.emit("This land is yours: no monsters spawn within %d m, full refunds when deconstructing" % roundi(data.claim_radius), Color(0.6, 0.85, 1.0))
+
+
+# --- Farming ------------------------------------------------------------------------------
+
+func _seed_in(player: Node) -> StringName:
+	if player == null or not "inventory" in player:
+		return &""
+	for c in Farming.CROPS:
+		if player.inventory.count_of(Farming.CROPS[c].seed) > 0:
+			return Farming.CROPS[c].seed
+	return &""
+
+
+func _farm_text() -> String:
+	if crop == &"":
+		var seed := _seed_in(World.instance.player if World.instance else null)
+		if seed == &"":
+			return "Farm plot (you need seeds)"
+		var d: ItemData = ItemDB.get_item(seed)
+		return "Plant %s" % (d.display_name if d else String(seed))
+	var name_ := String(crop).capitalize()
+	var p := Farming.progress(crop, planted_at, GameState.world_time)
+	return "Harvest %s" % name_ if p >= 1.0 else "%s: %d%% grown" % [name_, floori(p * 100.0)]
+
+
+## Plants the first seed you carry, or harvests a ripe crop. Returns what happened.
+func farm_interact(player: Node) -> StringName:
+	if crop == &"":
+		var seed := _seed_in(player)
+		if seed == &"":
+			Events.toast.emit("You need seeds (farmers and merchants sell them)", Color(1, 0.8, 0.5))
+			return &"no_seeds"
+		player.inventory.remove_item(seed, 1)
+		crop = Farming.crop_for_seed(seed)
+		planted_at = GameState.world_time
+		update_crop_visual()
+		return &"planted"
+	if Farming.progress(crop, planted_at, GameState.world_time) < 1.0:
+		Events.toast.emit(_farm_text(), Color(0.8, 1, 0.7))
+		return &"growing"
+	var c: Dictionary = Farming.CROPS[crop]
+	var n := randi_range(int(c.yield[0]), int(c.yield[1]))
+	if "character" in player and randf() < player.character.harvest_bonus_chance():
+		n += 1
+	player.give_or_drop(c.produce, n)
+	player.give_or_drop(c.seed, randi_range(int(c.seeds[0]), int(c.seeds[1])))
+	if "character" in player:
+		player.character.grant_xp(Farming.XP_PER_HARVEST, Progression.Source.FARMING)
+	crop = &""
+	update_crop_visual()
+	return &"harvested"
 
 
 func set_open(open: bool) -> void:
@@ -178,6 +263,9 @@ func save_data() -> Dictionary:
 		d["storage"] = storage.to_array()
 	if data.behavior == BuildPieceData.Behavior.DOOR:
 		d["open"] = is_open
+	if crop != &"":
+		d["crop"] = String(crop)
+		d["planted_at"] = planted_at
 	return d
 
 
@@ -186,3 +274,7 @@ func load_data(d: Dictionary) -> void:
 		storage.from_array(d.storage)
 	if d.get("open", false):
 		set_open(true)
+	if d.has("crop"):
+		crop = StringName(d.crop)
+		planted_at = float(d.get("planted_at", 0.0))
+		update_crop_visual()

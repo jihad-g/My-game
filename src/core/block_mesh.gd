@@ -15,6 +15,9 @@ var _verts := PackedVector3Array()
 var _normals := PackedVector3Array()
 var _colors := PackedColorArray()
 var _indices := PackedInt32Array()
+## Applied to every box added (lets one BlockMesh collect many placed pieces;
+## used for merging settlement buildings on a worker thread).
+var xform := Transform3D.IDENTITY
 
 ## Top faces are brightened and bottom faces darkened slightly for a stylized,
 ## readable look even under flat lighting.
@@ -25,6 +28,9 @@ const BOTTOM_TINT := 0.7
 
 ## Adds an axis-aligned box. `basis` optionally rotates/skews it around `center`.
 func box(center: Vector3, size: Vector3, color: Color, basis: Basis = Basis.IDENTITY) -> BlockMesh:
+	if xform != Transform3D.IDENTITY:
+		center = xform * center
+		basis = xform.basis * basis
 	var h := size * 0.5
 	var corners := [
 		Vector3(-h.x, -h.y, -h.z), Vector3(h.x, -h.y, -h.z),
@@ -72,6 +78,17 @@ static func append_quad_indices(indices: PackedInt32Array, base: int, a: Vector3
 
 func is_empty() -> bool:
 	return _verts.is_empty()
+
+
+## Raw surface arrays (no engine resources: safe on worker threads).
+func to_arrays() -> Array:
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = _verts
+	arrays[Mesh.ARRAY_NORMAL] = _normals
+	arrays[Mesh.ARRAY_COLOR] = _colors
+	arrays[Mesh.ARRAY_INDEX] = _indices
+	return arrays
 
 
 func commit(existing: ArrayMesh = null) -> ArrayMesh:

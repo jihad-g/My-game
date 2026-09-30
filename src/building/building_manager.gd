@@ -126,6 +126,11 @@ func check_place(data: BuildPieceData, cell: Vector2i, slot: String, player: Pla
 			return "You're standing there"
 	if world.layer == TerrainGenerator.Layer.SURFACE and center.y < TerrainGenerator.WATER_Y and not slot.begins_with("edge"):
 		return "Can't build in water"
+	if world.layer == TerrainGenerator.Layer.SURFACE:
+		var town := world.generator.settlements.in_region_of(cell.x, cell.y)
+		var margin := data.claim_radius if data.behavior == BuildPieceData.Behavior.CLAIM else 2.0
+		if town and town.contains(center, margin):
+			return "This land belongs to %s" % town.name
 	if slot != "roof":
 		var blocker := _obstruction(data, cell, slot)
 		if blocker != "":

@@ -57,6 +57,9 @@ enum State { NORMAL, DODGING, STAGGERED, DEAD, DASHING }
 var inventory := Inventory.new(24)
 var equipment := Equipment.new()
 var recipes := RecipeBook.new()
+## Money in copper (Milestone 5).
+var coins: int = 0
+var reputation := Reputation.new()
 var state: State = State.NORMAL
 var is_dead: bool = false
 var is_blocking: bool = false
@@ -812,6 +815,8 @@ func to_save() -> Dictionary:
 		"mana": mana.current,
 		"abilities": abilities.to_save(),
 		"recipes": recipes.to_save(),
+		"coins": coins,
+		"reputation": reputation.to_save(),
 	}
 
 
@@ -845,3 +850,5 @@ func from_save(data: Dictionary) -> void:
 		recipes.from_save(data.recipes)
 	else:
 		recipes.learn_starting()
+	coins = int(data.get("coins", World.STARTING_COINS))
+	reputation.from_save(data.get("reputation", {}))

@@ -2,6 +2,49 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.5.0] — Milestone 5: Living world
+
+### Added
+- **Settlements** (`src/living/settlements.gd`): deterministic villages (one chance per 384 m
+  region) and kingdom capitals (one per realm of 4x4 regions), on dry, fairly flat land.
+  The terrain is flattened inside (36 m / 50 m radius, blended back to nature); wild props,
+  cave entrances and monster spawns are kept out. Names from biome-flavoured syllables;
+  villages belong to the nearest capital within 1.4 km and fly its banner colour.
+- **Layouts** (`SettlementLayout`): lot grid (villages 5x5, capitals 7x7 of 10 m lots) with a
+  plaza (well, stalls, notice board, benches, torches, banner), furnished houses with doors
+  and roofs, a shop with a market stall, an open smithy with a working forge and workbench,
+  fenced farms with crops, and for capitals a keep with throne and carpet, barracks,
+  royal market stalls, stone houses and a perimeter wall with four gates and towers.
+- **Sites** (`SettlementSite`): streamed in within 170 m; thousands of pieces merged into a few
+  meshes on a worker thread (BlockMesh now supports a placement transform), shared collision
+  boxes, interactive doors and stations, lights; roofs hide when you walk inside.
+- **NPCs** (`NPC`): merchants, royal merchant, blacksmith/armorer, farmers, villagers, guards,
+  the ruler and the travelling trader, with role outfits and tools. Hourly routines (work, lunch
+  and evening at the plaza, sleep at home), walking on a street graph along lot boundaries,
+  through doors and farm gates. Work animations. Guards attack monsters near the capital.
+- **Dialogue** (F): greetings by role, hours and standing; "What's new?" gossip generated from
+  the world (undiscovered villages are added to the map, caves, the capital, trader days,
+  scarce goods, bounties); "Tell me about …"; guards; rulers grant **titles**.
+- **Economy** (`Economy`): coins (copper/silver/gold; new characters get 40c), shop stock tables
+  per role, reputation-gated items, regional supply & demand by biome, capital demand for gear,
+  reputation discounts, market saturation per item, finite shop money, daily restock.
+  Buying is always dearer than selling back. **Trade window**.
+- **Travelling trader**: every third day 08:00–18:00 with a wagon and rotating exotic stock.
+- **Reputation** (`Reputation`, J screen): per settlement, kingdoms get half of village gains;
+  tiers Stranger/Acquainted/Friendly/Honored/Revered with 0–15 % better prices; earned by
+  trading, requests and killing monsters near towns. Titles Friend/Knight/Champion of <kingdom>
+  with coin gifts and the **Royal Signet** amulet.
+- **Requests** (`Requests`): daily delivery requests and boar hunts on each notice board.
+- **Farming** (`Farming`): wheat/carrot/pumpkin seeds, **Farm Plot** build piece, growth by world
+  time in 4 visible stages, harvest with seeds back; Bread and Vegetable Stew recipes.
+- World map shows discovered and heard-of settlements; HUD shows coins and the current town.
+- Tests: 478 checks (+77). Screenshot runner `--only=town`.
+
+### Changed
+- Version 0.5.0. You can't build inside towns. Guard kills give no XP.
+- Save data: `player.coins`, `player.reputation`, `world.living` (shops, requests); discovered
+  settlements live in `GameState.discovered_places`.
+
 ## [0.4.0] — Milestone 4: Building & crafting
 
 ### Added

@@ -130,6 +130,8 @@ func spend_point(skill: StringName) -> bool:
 func _on_enemy_killed(enemy: Node, _id: StringName, _pos: Vector3) -> void:
 	if not enemy is Enemy or (enemy as Enemy).data == null:
 		return
+	if enemy.get_meta(&"killed_by_npc", false):
+		return  # a town guard got it
 	var d := (enemy as Enemy).data
 	grant_xp(Progression.combat_xp(d.xp_reward, d.level, level),
 		Progression.Source.BOSS if d.category == EnemyData.Category.BOSS else Progression.Source.COMBAT)

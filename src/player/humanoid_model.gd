@@ -59,6 +59,36 @@ func set_appearance(c: ClassData) -> void:
 	_build()
 
 
+## Townsperson look (Milestone 5): seeded colours + role clothing and tool.
+func set_npc_look(role: StringName, seed: int, accent: Color) -> void:
+	const SKINS := [Color(0.96, 0.78, 0.62), Color(0.85, 0.64, 0.48), Color(0.66, 0.46, 0.32), Color(0.45, 0.3, 0.2), Color(0.98, 0.85, 0.72)]
+	const HAIRS := [Color(0.42, 0.26, 0.14), Color(0.15, 0.12, 0.1), Color(0.85, 0.7, 0.35), Color(0.6, 0.25, 0.12), Color(0.75, 0.75, 0.75)]
+	const SHIRTS := [Color(0.6, 0.35, 0.25), Color(0.35, 0.5, 0.3), Color(0.3, 0.4, 0.6), Color(0.7, 0.6, 0.4), Color(0.55, 0.3, 0.45), Color(0.8, 0.75, 0.6)]
+	skin_color = SKINS[seed % SKINS.size()]
+	hair_color = HAIRS[(seed / 7) % HAIRS.size()]
+	shirt_color = SHIRTS[(seed / 13) % SHIRTS.size()]
+	pants_color = Color(0.3, 0.26, 0.22) if (seed / 5) % 2 == 0 else Color(0.25, 0.28, 0.35)
+	_accent = accent
+	_class_id = StringName("npc_%s" % role)
+	match role:
+		&"guard":
+			shirt_color = Color(0.55, 0.57, 0.62)
+			_weapon_type = &"spear"
+			_has_shield = true
+		&"blacksmith":
+			shirt_color = Color(0.4, 0.35, 0.32)
+			_weapon_type = &"hammer"
+		&"farmer":
+			_weapon_type = &"hoe"
+		&"noble":
+			shirt_color = accent.darkened(0.2)
+			pants_color = Color(0.2, 0.18, 0.22)
+			_weapon_type = &"unarmed"
+		_:
+			_weapon_type = &"unarmed"
+	_build()
+
+
 func set_weapon(weapon_type: StringName, has_shield: bool) -> void:
 	_weapon_type = weapon_type
 	_has_shield = has_shield
@@ -131,6 +161,28 @@ func _build_class_gear() -> void:
 			_part(_head, Vector3(0.06, 1.02, -0.06), Vector3(0.1, 0.12, 0.1), a)
 			_part(_head, Vector3(0, 0.02, 0.2), Vector3(0.3, 0.26, 0.08), Color(0.9, 0.9, 0.92))  # beard
 			_part(_torso, Vector3(0, -0.12, 0), Vector3(0.6, 0.36, 0.36), shirt_color * 0.9)  # robe skirt
+		&"npc_farmer":
+			_part(_head, Vector3(0, 0.52, 0), Vector3(0.74, 0.06, 0.72), Color(0.9, 0.78, 0.4))  # straw hat
+			_part(_head, Vector3(0, 0.62, 0), Vector3(0.4, 0.16, 0.4), Color(0.85, 0.72, 0.35))
+		&"npc_blacksmith":
+			_part(_torso, Vector3(0, 0.2, 0.18), Vector3(0.5, 0.62, 0.04), Color(0.35, 0.22, 0.14))  # apron
+			_part(_head, Vector3(0, 0.08, 0.2), Vector3(0.36, 0.16, 0.08), hair_color)  # beard
+		&"npc_merchant", &"npc_royal_merchant":
+			_part(_head, Vector3(0, 0.54, 0), Vector3(0.5, 0.14, 0.48), a if _class_id == &"npc_royal_merchant" else Color(0.55, 0.2, 0.2))  # cap
+			_part(_torso, Vector3(0, 0.2, 0.18), Vector3(0.44, 0.4, 0.04), Color(0.9, 0.88, 0.8))  # apron
+		&"npc_guard":
+			_part(_head, Vector3(0, 0.38, 0), Vector3(0.52, 0.3, 0.5), Color(0.6, 0.62, 0.68))  # helm
+			_part(_torso, Vector3(0, 0.3, 0.17), Vector3(0.46, 0.5, 0.04), a)  # tabard
+		&"npc_noble":
+			var gold := Color(0.95, 0.78, 0.25)
+			_part(_head, Vector3(0, 0.56, 0), Vector3(0.46, 0.1, 0.44), gold)  # crown
+			for cx in [-0.18, 0.0, 0.18]:
+				_part(_head, Vector3(cx, 0.65, 0.18), Vector3(0.08, 0.1, 0.06), gold)
+			_part(_torso, Vector3(0, 0.25, -0.2), Vector3(0.62, 0.8, 0.06), a)  # cape
+		&"npc_trader":
+			_part(_head, Vector3(0, 0.36, -0.03), Vector3(0.52, 0.38, 0.5), Color(0.45, 0.35, 0.25))  # hood
+			_part(_torso, Vector3(0, 0.35, -0.3), Vector3(0.44, 0.56, 0.3), Color(0.55, 0.4, 0.25))  # backpack
+			_part(_torso, Vector3(0, 0.7, -0.3), Vector3(0.5, 0.16, 0.32), Color(0.8, 0.75, 0.6))  # bedroll
 		&"assassin":
 			_part(_head, Vector3(0, 0.36, -0.03), Vector3(0.54, 0.4, 0.5), shirt_color * 0.8)  # hood
 			_part(_head, Vector3(0, 0.1, 0.23), Vector3(0.44, 0.16, 0.04), Color(0.12, 0.12, 0.15))  # mask
@@ -164,6 +216,15 @@ func _build_weapon() -> void:
 			_part(_weapon, Vector3(0, 0, 1.12), Vector3(0.18, 0.18, 0.18), _accent)
 		&"unarmed":
 			pass
+		&"hammer":
+			_part(_weapon, Vector3(0, 0, 0.25), Vector3(0.07, 0.07, 0.5), wood)
+			_part(_weapon, Vector3(0, 0, 0.52), Vector3(0.12, 0.3, 0.14), steel * 0.7)
+		&"hoe":
+			_part(_weapon, Vector3(0, 0, 0.4), Vector3(0.06, 0.06, 1.1), wood)
+			_part(_weapon, Vector3(0, -0.1, 0.92), Vector3(0.05, 0.25, 0.14), steel * 0.8)
+		&"spear":
+			_part(_weapon, Vector3(0, 0, 0.5), Vector3(0.07, 0.07, 1.6), wood)
+			_part(_weapon, Vector3(0, 0, 1.36), Vector3(0.08, 0.04, 0.24), steel)
 		_:
 			_part(_weapon, Vector3(0, 0, 0.5), Vector3(0.1, 0.1, 0.8), steel)
 	if _has_shield:

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"vegetable_stew"
+display_name = "Vegetable Stew"
+description = "Carrots, pumpkin and mushrooms. Filling and warming."
+category = 1
+rarity = 1
+max_stack = 10
+base_value = 16
+icon_color = Color(0.8, 0.45, 0.2, 1)
+icon_glyph = "VS"
+hunger_restore = 45.0
+health_restore = 15.0
+temperature_offset = 6.0
+temperature_duration = 180.0

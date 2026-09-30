@@ -44,6 +44,11 @@ func _ready() -> void:
 	await _run_async(&"test_crafting_system")
 	await _run_async(&"test_building_system")
 	await _run_async(&"test_building_save_load")
+	_run(&"test_m5_settlements")
+	_run(&"test_m5_economy")
+	await _run_async(&"test_m5_living")
+	await _run_async(&"test_m5_kingdom")
+	await _run_async(&"test_m5_save_load")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -1305,6 +1310,15 @@ func test_m4_data() -> void:
 	var boar: EnemyData = load("res://data/enemies/thornback_boar.tres")
 	for loot in boar.loot:
 		obtainable[loot.item_id] = true
+	# Milestone 5: shops sell things, farms grow produce from seeds.
+	for role in Economy.STOCK:
+		for e in Economy.STOCK[role]:
+			obtainable[e[0]] = true
+	for e in Economy.TRADER_POOL:
+		obtainable[e[0]] = true
+	for c in Farming.CROPS:
+		if obtainable.has(Farming.CROPS[c].seed):
+			obtainable[Farming.CROPS[c].produce] = true
 	var changed := true
 	while changed:
 		changed = false
@@ -1657,6 +1671,409 @@ func test_building_save_load() -> void:
 	check(b.pieces.has(door_key) and b.pieces[door_key].is_open, "door state restored")
 	check(b.is_claimed(flag_pos), "land claim restored")
 	check(world.player.recipes.knows(&"hearty_stew") and world.player.recipes.knows(&"rope"), "known recipes restored")
+	world.queue_free()
+	await _frames(5)
+	SaveManager.delete_world(id)
+	SaveManager.worlds_dir = saved_dir
+	SaveManager.start_transient(GameState.DEFAULT_SEED)
+
+
+# --- Milestone 5: living world ---------------------------------------------------------------
+
+func test_m5_settlements() -> void:
+	var g1 := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var g2 := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var list1 := g1.settlements.near(Vector3.ZERO, 3000.0)
+	var list2 := g2.settlements.near(Vector3.ZERO, 3000.0)
+	var same := list1.size() == list2.size()
+	for i in mini(list1.size(), list2.size()):
+		same = same and list1[i].id == list2[i].id and list1[i].center == list2[i].center and list1[i].name == list2[i].name
+	check(same and list1.size() >= 5, "settlements are deterministic (%d within 3 km)" % list1.size())
+	var villages := 0
+	var kingdoms := 0
+	var flat_ok := true
+	var member_ok := true
+	var names_ok := true
+	for s in list1:
+		if s.is_kingdom():
+			kingdoms += 1
+		else:
+			villages += 1
+			if s.kingdom_id != "":
+				var cap := g1.settlements.find(s.kingdom_id)
+				member_ok = member_ok and cap != null and cap.is_kingdom() and Vector2(cap.center - s.center).length() <= Settlements.MEMBERSHIP_RANGE
+		names_ok = names_ok and s.name.length() >= 4
+		for k in 16:
+			var a := TAU * k / 16.0
+			for r in [0.0, s.radius * 0.5, s.radius - 1.0]:
+				var x := s.center.x + roundi(cos(a) * r)
+				var z := s.center.y + roundi(sin(a) * r)
+				if g1.get_height_blocks(x, z) != s.height:
+					flat_ok = false
+	check(villages >= 4 and kingdoms >= 1, "%d villages and %d kingdom capitals near spawn" % [villages, kingdoms])
+	check(flat_ok, "settlement ground is flattened to one height")
+	check(member_ok, "villages belong to a nearby kingdom (or none)")
+	check(names_ok, "settlements have names (e.g. %s, %s)" % [list1[0].title(), list1[-1].title()])
+	# No wild props, cave entrances or monster spawns inside towns.
+	var s0: SettlementInfo = list1[0]
+	var clear := true
+	var c0 := TerrainGenerator.world_to_chunk(Vector3(s0.center.x, 0, s0.center.y))
+	for dz in range(-2, 3):
+		for dx in range(-2, 3):
+			var data := g1.generate_chunk(c0 + Vector2i(dx, dz), 0)
+			var origin := Vector3((c0.x + dx) * TerrainGenerator.CHUNK_SIZE, 0, (c0.y + dz) * TerrainGenerator.CHUNK_SIZE)
+			for pr in data.props:
+				if s0.contains(origin + pr.position):
+					clear = false
+			for sp in data.spawns:
+				if s0.contains(sp.position, 30.0):
+					clear = false
+	for e in g1.get_cave_entrances_near(s0.center.x - 100, s0.center.y - 100, s0.center.x + 100, s0.center.y + 100):
+		if s0.contains(Vector3(e.x, 0, e.y), 20.0):
+			clear = false
+	check(clear, "towns have no wild trees/rocks, monster spawns or cave entrances")
+	# Layouts
+	for s in [list1.filter(func(x: SettlementInfo) -> bool: return not x.is_kingdom())[0],
+			list1.filter(func(x: SettlementInfo) -> bool: return x.is_kingdom())[0]]:
+		var l := SettlementLayout.build(s)
+		var overlap := false
+		for i in l.buildings.size():
+			for j in range(i + 1, l.buildings.size()):
+				if (l.buildings[i].rect as Rect2).intersects(l.buildings[j].rect):
+					overlap = true
+			for f in l.farms:
+				if (l.buildings[i].rect as Rect2).intersects(f.rect):
+					overlap = true
+		check(not overlap, "%s: %d buildings and %d farms don't overlap" % [s.name, l.buildings.size(), l.farms.size()])
+		var roles := {}
+		for n in l.npcs:
+			roles[n.role] = int(roles.get(n.role, 0)) + 1
+		if s.is_kingdom():
+			check(roles.has(&"noble") and int(roles.get(&"guard", 0)) >= 4 and roles.has(&"royal_merchant") and roles.has(&"blacksmith"),
+				"kingdom has a ruler, guards, royal merchant, armorer (%s)" % [roles])
+		else:
+			check(roles.has(&"merchant") and roles.has(&"blacksmith") and roles.has(&"villager"), "village has merchant, blacksmith, villagers (%s)" % [roles])
+		var inside := true
+		for b in l.buildings:
+			inside = inside and s.contains(l.to_world(b.inside) - Vector3(0.5, 0, 0.5))
+		check(inside, "%s: all buildings are inside the flattened area" % s.name)
+		check(SettlementLayout.build(s).statics.size() == l.statics.size(), "%s layout is deterministic" % s.name)
+
+
+func test_m5_economy() -> void:
+	check(Economy.format_coins(12345) == "1g 23s 45c" and Economy.format_coins(7) == "7c", "coin formatting (1g 23s 45c)")
+	var gen := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var info: SettlementInfo = gen.settlements.near(Vector3.ZERO, 3000.0)[0]
+	var arbitrage := false
+	for id in ItemDB.all_ids():
+		for t in Reputation.TIERS.size():
+			if Economy.sell_price(info, id, t, 0.0) >= Economy.buy_price(info, id, t):
+				arbitrage = true
+	check(not arbitrage, "buying is always dearer than selling back (no money loop)")
+	check(Economy.sell_price(info, &"iron_sword", 0, 5.0) < Economy.sell_price(info, &"iron_sword", 0, 0.0), "selling the same item again pays less (saturation)")
+	check(Economy.buy_price(info, &"iron_sword", 4) < Economy.buy_price(info, &"iron_sword", 0), "reputation lowers prices")
+	var desert := SettlementInfo.new()
+	desert.biome_id = &"sunscorch_desert"
+	var tundra := SettlementInfo.new()
+	tundra.biome_id = &"snowy_tundra"
+	check(Economy.buy_price(desert, &"wood", 0) > Economy.buy_price(tundra, &"stone", 0) or Economy.demand(desert, &"wood") > 1.0,
+		"wood is dear in the desert (x%.2f)" % Economy.demand(desert, &"wood"))
+	check(Economy.demand(desert, &"cactus_fruit") < 1.0 and Economy.demand(tundra, &"hearty_stew") > 1.0, "local produce is cheap, scarce goods are dear")
+	var st := Economy.new_shop_state(info, &"blacksmith", 1)
+	st.stock["iron_sword"] = 0
+	st.sold["iron_sword"] = 4.0
+	var next := Economy.roll_day(st, info, &"blacksmith", 2)
+	check(int(next.stock["iron_sword"]) >= 1 and float(next.sold["iron_sword"]) == 2.0, "shops restock daily and saturation halves")
+	check(Economy.will_buy(&"blacksmith", &"iron_ore") and not Economy.will_buy(&"blacksmith", &"berries") and Economy.will_buy(&"farmer", &"wheat"),
+		"shopkeepers buy what fits their trade")
+	# Reputation
+	var rep := Reputation.new()
+	var village := SettlementInfo.new()
+	village.id = "v:1,1"
+	village.kingdom_id = "k:0,0"
+	rep.add(village, 20.0)
+	check(rep.tier(village.id) == 1 and is_equal_approx(rep.get_points("k:0,0"), 10.0), "village standing also counts half for its kingdom")
+	rep.on_trade(village, 120)
+	check(is_equal_approx(rep.get_points(village.id), 22.0), "trading 120 copper gives +2 standing")
+	rep.add(village, 500.0)
+	check(rep.get_points(village.id) == Reputation.MAX and rep.tier_name(village.id) == "Revered", "standing caps at Revered")
+	# Requests
+	var r1 := Requests.for_settlement(info, 5)
+	var r2 := Requests.for_settlement(info, 5)
+	var r3 := Requests.for_settlement(info, 6)
+	check(r1.size() >= 2 and str(r1) == str(r2) and str(r1) != str(r3), "daily requests are deterministic and change every day")
+	var distinct := {}
+	for r in r1:
+		if r.type == "deliver":
+			distinct[r.item] = true
+			check(ItemDB.has_item(r.item) and int(r.reward) > 10, "request: %s" % Requests.describe(r, info))
+	# Farming
+	check(Farming.stage(&"wheat", 0.0, 0.0) == 0 and Farming.stage(&"wheat", 0.0, 450.0) == 1 and Farming.stage(&"wheat", 0.0, 900.0) == 3,
+		"crops grow through stages over world time")
+	check(Farming.crop_for_seed(&"carrot_seeds") == &"carrot", "seeds map to crops")
+
+
+func _nearest(world: World, kingdom: bool) -> SettlementInfo:
+	for s in world.generator.settlements.near(world.player.global_position, 4000.0):
+		if s.is_kingdom() == kingdom:
+			return s
+	return null
+
+
+func _go_to_town(world: World, s: SettlementInfo) -> void:
+	var p := world.player
+	p.global_position = s.world_center() + Vector3(0.5, 0.4, -1.5)
+	p.velocity = Vector3.ZERO
+	var frames := 0
+	await _frames(2)
+	while (not world.chunk_manager.is_near_area_ready() or world.chunk_manager.pending_count() > 0) and frames < 3000:
+		await get_tree().process_frame
+		frames += 1
+	p.global_position = s.world_center() + Vector3(0.5, 0.4, -1.5)
+	world.living.update_now(true)
+	world.living.finish_sites()
+	await _frames(5)
+
+
+## Moves the player to flat, dry ground just outside a settlement.
+func _go_outside(world: World, s: SettlementInfo) -> void:
+	var p := world.player
+	for k in 16:
+		var a := TAU * k / 16.0
+		var q := s.world_center() + Vector3(cos(a), 0, sin(a)) * (s.radius + s.blend + 8.0)
+		if not world.is_in_water(q) and absf(world.get_ground_height(q) - s.ground_y()) < 3.0:
+			p.global_position = Vector3(q.x, world.get_ground_height(q) + 0.3, q.z)
+			break
+	await _frames(20)
+
+
+func test_m5_living() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	_clear_enemies(world)
+	check(p.coins == World.STARTING_COINS, "new characters start with %s" % Economy.format_coins(p.coins))
+	var v := _nearest(world, false)
+	if not check(v != null, "found a village"):
+		world.queue_free()
+		return
+	world.day_night.hour = 10.0
+	var xp0 := p.character.total_xp
+	await _go_to_town(world, v)
+	var site := world.living.site_of(v)
+	check(site != null and site.npcs.size() >= 5, "%s streamed in with %d townsfolk" % [v.name, site.npcs.size() if site else 0])
+	check(world.living.current == v and world.living.is_discovered(v.id), "entering discovers the village")
+	check(p.reputation.get_points(v.id) >= 2.0 and p.character.total_xp > xp0, "first visit: +2 standing and XP")
+	check(world.hud._town_label.text.begins_with(v.name), "HUD shows the current settlement (%s)" % world.hud._town_label.text)
+	# Terrain/buildings
+	check(absf(world.get_ground_height(v.world_center()) - v.ground_y()) < 0.01, "village ground is flat")
+	var body_count := 0
+	for c in site.get_children():
+		if c is StaticBody3D:
+			body_count += c.get_child_count()
+	check(body_count > 50, "buildings have collision (%d shapes)" % body_count)
+	# Paths: every door reaches the plaza along clear streets.
+	var paths_ok := true
+	for b in site.layout.buildings:
+		var path := site.find_path(b.door_out, site.layout.points.plaza[0])
+		var prev: Vector3 = b.door_out
+		for q in path:
+			if not site._segment_clear_any(prev, q):
+				paths_ok = false
+			prev = q
+	check(paths_ok, "every house door reaches the plaza without walking through walls")
+	# Routines
+	var merchant := site.npc_by_role(&"merchant")
+	check(merchant != null and merchant.activity == &"work" and merchant.is_open(), "at 10:00 the merchant is at the stall")
+	world.day_night.hour = 23.5
+	for n in site.npcs:
+		n._update_activity(true)
+	check(merchant.asleep and not merchant.visible and not merchant.is_interactable(), "at night the merchant sleeps at home")
+	var guard_count := 0
+	for n in site.npcs:
+		if n.asleep:
+			guard_count += 1
+	world.day_night.hour = 10.0
+	for n in site.npcs:
+		n._think = 0.0
+	await _frames(10)
+	check(not merchant.asleep and (merchant._path.size() > 0 or merchant.activity == &"work"), "in the morning the merchant walks to work")
+	var walked := merchant.position
+	await _frames(90)
+	check(merchant.position.distance_to(walked) > 0.5 or merchant._path.is_empty(), "townsfolk actually walk their routes")
+	for n in site.npcs:
+		n._update_activity(true)
+	# Talk
+	world.hud._dialogue.open(merchant)
+	check(world.hud._dialogue.visible and merchant.talking, "talking opens the dialogue")
+	var gossip := Gossip.lines(merchant, world.living)
+	check(gossip.size() >= 3, "townsfolk share real gossip (%d lines): \"%s\"" % [gossip.size(), gossip[0] if not gossip.is_empty() else ""])
+	world.hud._dialogue.close()
+	# Trade
+	p.global_position = site.to_global(merchant.position) + Vector3(0, 0.3, 1.5)
+	p.coins = 500
+	var st := world.living.shop_state(v, &"merchant")
+	var rope_stock := int(st.stock.get("rope", 0))
+	var price := world.living.buy_price(v, &"merchant", &"rope")
+	var rope0 := p.inventory.count_of(&"rope")
+	check(world.living.buy(v, &"merchant", &"rope") == "" and p.coins == 500 - price and p.inventory.count_of(&"rope") == rope0 + 1
+		and int(st.stock["rope"]) == rope_stock - 1, "bought rope for %s" % Economy.format_coins(price))
+	check(world.living.buy(v, &"merchant", &"cooks_journal").begins_with("Requires"), "better stock needs reputation")
+	p.inventory.add_item(&"boar_hide", 5)
+	var hide_slot := -1
+	for i in p.inventory.capacity:
+		var sl = p.inventory.get_slot(i)
+		if sl != null and sl.id == &"boar_hide":
+			hide_slot = i
+	var sp1 := world.living.sell_price(v, &"merchant", &"boar_hide")
+	var coins1 := p.coins
+	check(world.living.sell(v, &"merchant", hide_slot, 1) == "" and p.coins == coins1 + sp1, "sold a boar hide for %s" % Economy.format_coins(sp1))
+	world.living.sell(v, &"merchant", hide_slot, 3)
+	check(world.living.sell_price(v, &"merchant", &"boar_hide") < sp1, "selling more hides lowers their price (%s -> %s)" % [
+		Economy.format_coins(sp1), Economy.format_coins(world.living.sell_price(v, &"merchant", &"boar_hide"))])
+	check(world.living.sell(v, &"blacksmith", hide_slot, 1) == "Not interested in that", "the blacksmith doesn't buy hides")
+	world.hud._trade.open(merchant)
+	check(world.hud._trade.visible and world.hud._trade._buy_list.get_child_count() > 3, "trade window lists the stock")
+	world.hud._trade.close()
+	# Requests
+	var reqs := world.living.requests(v)
+	var deliver: Dictionary = {}
+	for r in reqs:
+		if r.type == "deliver":
+			deliver = r
+			break
+	p.inventory.add_item(deliver.item, int(deliver.count))
+	var rep0 := p.reputation.get_points(v.id)
+	var coins2 := p.coins
+	check(world.living.complete_request(v, deliver) == "" and p.coins == coins2 + int(deliver.reward) and p.reputation.get_points(v.id) > rep0,
+		"delivery request pays %s and reputation" % Economy.format_coins(int(deliver.reward)))
+	check(world.living.complete_request(v, deliver) == "Already done", "requests can only be done once")
+	world.hud._requests.open(site)
+	check(world.hud._requests.visible and world.hud._requests._list.get_child_count() == reqs.size(), "notice board lists today's requests")
+	world.hud._requests.close()
+	# Hunt progress
+	var boar := _spawn_boar(world, Vector3(0, 0, 30))
+	var hunt_id := "%s:%d:hunt" % [v.id, world.day_night.day]
+	var before := int(world.living.hunt_progress.get(hunt_id, 0))
+	Events.enemy_killed.emit(boar, &"thornback_boar", v.world_center() + Vector3(60, 0, 0))
+	var has_hunt := false
+	for r in reqs:
+		has_hunt = has_hunt or r.type == "hunt"
+	check(not has_hunt or int(world.living.hunt_progress.get(hunt_id, 0)) == before + 1, "monster kills near town count for hunt requests")
+	# Building is not allowed inside towns.
+	check(world.building.check_place(BuildingManager.get_piece_data(&"wood_wall"), Vector2i(floori(p.global_position.x) + 2, floori(p.global_position.z)), "edge_n", p)
+		== "This land belongs to %s" % v.name, "you can't build inside a village")
+	# Farming (outside town)
+	await _go_outside(world, v)
+	var plot := _place_near(world, &"farm_plot", 2, false)
+	p.inventory.add_item(&"wheat_seeds", 2)
+	check(plot != null and plot.farm_interact(p) == &"planted" and plot.crop == &"wheat", "planted wheat on a farm plot")
+	check(plot.farm_interact(p) == &"growing", "crops need time to grow")
+	GameState.world_time += 1000.0
+	plot.update_crop_visual()
+	var wheat0 := p.inventory.count_of(&"wheat")
+	check(plot.farm_interact(p) == &"harvested" and p.inventory.count_of(&"wheat") >= wheat0 + 2 and plot.crop == &"", "ripe wheat harvested")
+	p.inventory.add_item(&"wheat", 3)
+	var fire := (ItemDB.get_item(&"campfire_kit") as ItemData).placeable_scene.instantiate() as Node3D
+	world.placed_root.add_child(fire)
+	fire.global_position = p.global_position + Vector3(1.5, 0, 0)
+	check(Crafting.craft(p, RecipeBook.get_recipe(&"bread"), Crafting.stations_near(get_tree(), p.global_position)) == 1, "baked bread at a campfire")
+	fire.queue_free()
+	# Village smithy is a usable crafting station.
+	var smith := site.npc_by_role(&"blacksmith")
+	p.global_position = site.to_global(smith.data.work) + Vector3(0, 0.3, 0)
+	await _frames(3)
+	check(Crafting.stations_near(get_tree(), p.global_position).has(&"forge"), "the village forge works as a crafting station")
+	world.queue_free()
+	await _frames(5)
+
+
+func test_m5_kingdom() -> void:
+	var world: World = await _boot_class(&"barbarian")
+	var p := world.player
+	_clear_enemies(world)
+	var k := _nearest(world, true)
+	if not check(k != null, "found a kingdom capital"):
+		world.queue_free()
+		return
+	world.day_night.hour = 11.0
+	await _go_to_town(world, k)
+	var site := world.living.site_of(k)
+	check(site != null and site.npc_by_role(&"noble") != null, "%s has a ruler: %s" % [k.title(), site.npc_by_role(&"noble").full_name() if site else ""])
+	var guards := 0
+	for n in site.npcs:
+		if n.role == &"guard":
+			guards += 1
+	check(guards >= 4, "%d guards" % guards)
+	# Recognition
+	var noble := site.npc_by_role(&"noble")
+	check(world.living.recognition(k).begins_with("Serve"), "strangers get no title")
+	p.reputation.add(k, 65.0)
+	var coins0 := p.coins
+	var answer := world.living.recognition(k)
+	check(answer.begins_with("By my decree") and p.inventory.count_of(&"royal_signet") == 1 and p.coins == coins0 + 100,
+		"at Honored the ruler grants titles and gifts: %s" % p.reputation.title_for(k.id, k.kingdom_name))
+	check(world.living.recognition(k).begins_with("You already"), "titles are granted once")
+	check(noble.is_interactable(), "the ruler can be talked to at court")
+	# Guards defend the town.
+	var guard: NPC = null
+	for n in site.npcs:
+		if n.role == &"guard":
+			guard = n
+			break
+	var xp0 := p.character.total_xp
+	var boar := world.spawner.spawn_enemy(world.debug_enemy_scene, guard.global_position + Vector3(4, 0.3, 0), "")
+	boar.stagger(20.0)
+	boar.health.current = 30.0
+	var frames := 0
+	while not boar.is_dead and frames < 900:
+		await get_tree().physics_frame
+		frames += 1
+	check(boar.is_dead, "guards kill monsters that come near (%d frames)" % frames)
+	check(p.character.total_xp == xp0, "no XP for kills made by guards")
+	# Save / load of living-world state
+	world.queue_free()
+	await _frames(5)
+
+
+func test_m5_save_load() -> void:
+	var saved_dir := SaveManager.worlds_dir
+	SaveManager.worlds_dir = "user://test_worlds"
+	for wl in SaveManager.list_worlds():
+		SaveManager.delete_world(wl.id)
+	var id := SaveManager.create_world("Living Test", GameState.DEFAULT_SEED, &"wizard")
+	var world: World = await _boot_world()
+	_clear_enemies(world)
+	var p := world.player
+	var v := _nearest(world, false)
+	world.day_night.hour = 10.0
+	await _go_to_town(world, v)
+	p.coins = 777
+	p.reputation.add(v, 33.0)
+	world.living.buy(v, &"merchant", &"rope")
+	var stock := int(world.living.shop_state(v, &"merchant").stock["rope"])
+	var req: Dictionary = world.living.requests(v)[0]
+	if req.type == "deliver":
+		p.inventory.add_item(req.item, int(req.count))
+	world.living.complete_request(v, req)
+	var coins := p.coins
+	var rep := p.reputation.get_points(v.id)
+	await _go_outside(world, v)
+	var plot := _place_near(world, &"farm_plot", 2, false)
+	p.inventory.add_item(&"carrot_seeds", 1)
+	plot.farm_interact(p)
+	var plot_key := BuildingManager.key(plot.cell, plot.slot, plot.layer)
+	world.save_now(false)
+	world.queue_free()
+	await _frames(5)
+	check(SaveManager.load_world(id), "load living world")
+	world = await _boot_world()
+	p = world.player
+	check(p.coins == coins and is_equal_approx(p.reputation.get_points(v.id), rep), "coins and reputation restored")
+	check(int(world.living.shop_state(v, &"merchant").stock["rope"]) == stock, "shop stock restored")
+	check(world.living.requests(v)[0].done, "completed requests stay completed")
+	check(world.living.is_discovered(v.id), "discovered settlements restored")
+	var plot2: BuildPiece = world.building.pieces.get(plot_key)
+	check(plot2 != null and plot2.crop == &"carrot", "planted crops restored")
 	world.queue_free()
 	await _frames(5)
 	SaveManager.delete_world(id)

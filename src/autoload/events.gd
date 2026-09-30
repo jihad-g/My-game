@@ -36,3 +36,12 @@ signal ability_used(ability_id: StringName)
 signal open_container(container: Node)
 signal recipe_learned(recipe_id: StringName)
 signal building_changed
+
+# --- Milestone 5: living world ---
+signal npc_talk(npc: Node)
+signal open_requests(site: Node)
+signal settlement_entered(settlement_id: String)
+signal settlement_left(settlement_id: String)
+signal reputation_changed(target_id: String, value: float)
+signal coins_changed(coins: int)
+signal trade_done(settlement_id: String, copper: int)

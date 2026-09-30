@@ -53,6 +53,7 @@ const KEY_BINDINGS := {
 	&"build_mode": [KEY_B],
 	&"build_rotate": [KEY_R],
 	&"world_map": [KEY_M],
+	&"reputation": [KEY_J],
 }
 
 const MOUSE_BINDINGS := {

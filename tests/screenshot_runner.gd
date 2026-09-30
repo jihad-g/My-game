@@ -23,6 +23,10 @@ func _ready() -> void:
 		await _shot("20_main_menu")
 		get_tree().quit()
 		return
+	if "--only=town" in OS.get_cmdline_user_args():
+		await _town_showcase()
+		get_tree().quit()
+		return
 	if "--only=build" in OS.get_cmdline_user_args():
 		await _build_showcase()
 		get_tree().quit()
@@ -411,3 +415,101 @@ func _flat_area(world: World, around: Vector2i, size: Vector2i) -> Vector2i:
 				best_score = score
 				best = o
 	return best
+
+
+## Milestone 5 showcase: villages, a kingdom, townsfolk and the new windows.
+func _town_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	world.hud._help.visible = false
+	world.day_night.hour = 10.0
+	var green := [&"verdant_meadow", &"whispering_forest", &"emerald_jungle"]
+	var sets := world.generator.settlements.near(p.global_position, 4000.0)
+	var village: SettlementInfo = null
+	var kingdom: SettlementInfo = null
+	for s in sets:
+		if s.is_kingdom() and kingdom == null and s.biome_id in green:
+			kingdom = s
+		elif not s.is_kingdom() and village == null and s.biome_id in green:
+			village = s
+	if village == null:
+		village = sets.filter(func(x: SettlementInfo) -> bool: return not x.is_kingdom())[0]
+	if kingdom == null:
+		kingdom = sets.filter(func(x: SettlementInfo) -> bool: return x.is_kingdom())[0]
+	# --- Village
+	await _teleport(world, village.world_center() + Vector3(0.5, 0, -1.5))
+	world.living.update_now(true)
+	world.living.finish_sites()
+	var site := world.living.site_of(village)
+	await _wait(40)
+	world.camera_rig._target_distance = 40.0
+	world.camera_rig._target_pitch = 64.0
+	await _wait(60)
+	await _shot("50_village_overview")
+	world.camera_rig._target_distance = 14.0
+	world.camera_rig._target_pitch = 46.0
+	await _wait(60)
+	await _shot("51_village_plaza")
+	var merchant := site.npc_by_role(&"merchant")
+	p.global_position = site.to_global(merchant.position) + Vector3(0, 0.3, 0) + site.to_global(Vector3(0, 0, 0)).direction_to(site.to_global(merchant.position)) * -1.6
+	await _wait(20)
+	world.hud._dialogue.open(merchant)
+	world.hud._dialogue._say(Gossip.lines(merchant, world.living)[0])
+	await _wait(20)
+	await _shot("52_dialogue")
+	world.hud._dialogue.close()
+	p.coins = 2350
+	p.inventory.add_item(&"boar_hide", 4)
+	p.inventory.add_item(&"copper_ore", 6)
+	world.hud._trade.open(merchant)
+	await _wait(15)
+	await _shot("53_trade")
+	world.hud._trade.close()
+	world.hud._requests.open(site)
+	await _wait(15)
+	await _shot("54_notice_board")
+	world.hud._requests.close()
+	world.hud._map.toggle()
+	await _wait(120)
+	await _shot("55_map_settlements")
+	world.hud._map.toggle()
+	p.reputation.add(village, 34.0)
+	world.hud._reputation.toggle()
+	await _wait(15)
+	await _shot("56_reputation")
+	world.hud._reputation.toggle()
+	world.day_night.hour = 21.0
+	for n in site.npcs:
+		n._update_activity(true)
+	world.camera_rig._target_distance = 26.0
+	world.camera_rig._target_pitch = 55.0
+	await _wait(60)
+	await _shot("57_village_night")
+	# --- Kingdom
+	world.day_night.hour = 11.0
+	await _teleport(world, kingdom.world_center() + Vector3(0.5, 0, 6.0))
+	world.living.update_now(true)
+	world.living.finish_sites()
+	await _wait(40)
+	world.camera_rig._target_distance = 42.0
+	world.camera_rig._target_pitch = 66.0
+	await _wait(60)
+	await _shot("58_kingdom_overview")
+	var ksite := world.living.site_of(kingdom)
+	var noble := ksite.npc_by_role(&"noble")
+	p.global_position = ksite.to_global(noble.position + Vector3(0, 0.3, 2.2))
+	world.camera_rig._target_distance = 13.0
+	world.camera_rig._target_pitch = 50.0
+	await _wait(60)
+	world.hud._dialogue.open(noble)
+	await _wait(15)
+	await _shot("59_kingdom_court")
+	world.hud._dialogue.close()
+	world.queue_free()
+	await _wait(5)
