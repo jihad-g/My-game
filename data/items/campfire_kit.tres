@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="PackedScene" path="res://scenes/world/campfire.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"campfire_kit"
+display_name = "Campfire Kit"
+description = "A bundle of logs and kindling. Place it to create a campfire that keeps you warm and cooks raw food. Burns for 8 minutes."
+category = 5
+rarity = 1
+max_stack = 10
+base_value = 6
+icon_color = Color(1, 0.55, 0.2, 1)
+icon_glyph = "C"
+placeable_scene = ExtResource("2_scene")

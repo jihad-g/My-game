@@ -1,0 +1,46 @@
+; Engine configuration file.
+; Godot 4.4+ project. Open this folder in the Godot editor, or run it from the
+; command line (see README.md).
+
+config_version=5
+
+[application]
+
+config/name="Shardlands"
+config/description="Stylized blocky open-world survival RPG (prototype)."
+config/version="0.1.0"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.4", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+InputSetup="*res://src/autoload/input_setup.gd"
+Events="*res://src/autoload/events.gd"
+GameState="*res://src/autoload/game_state.gd"
+ItemDB="*res://src/autoload/item_db.gd"
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[layer_names]
+
+3d_physics/layer_1="terrain"
+3d_physics/layer_2="player"
+3d_physics/layer_3="enemy"
+3d_physics/layer_4="prop"
+3d_physics/layer_5="pickup"
+3d_physics/layer_6="interactable"
+
+[physics]
+
+common/physics_ticks_per_second=60
+
+[rendering]
+
+anti_aliasing/quality/msaa_3d=2
+lights_and_shadows/directional_shadow/size=4096

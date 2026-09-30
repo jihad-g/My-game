@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"player_slash_1"
+display_name = "Slash"
+damage = 12
+stamina_cost = 6
+windup = 0.12
+active = 0.08
+recovery = 0.26
+cancel_ratio = 0.35
+reach = 2.0
+arc_degrees = 110
+knockback = 2.5
+poise_damage = 10
+lunge_speed = 3.0
+move_multiplier = 0.3
+crit_chance_bonus = 0.0
+animation = &"slash_r"
+camera_shake = 0.12

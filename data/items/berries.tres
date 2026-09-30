@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"berries"
+display_name = "Wild Berries"
+description = "Sweet red berries. A light snack."
+category = 1
+rarity = 0
+max_stack = 30
+base_value = 2
+icon_color = Color(0.85, 0.2, 0.35, 1)
+icon_glyph = "b"
+hunger_restore = 10.0
+health_restore = 2.0

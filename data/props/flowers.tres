@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PropData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/world/prop_data.gd" id="1_prop"]
+
+[resource]
+script = ExtResource("1_prop")
+id = &"flowers"
+display_name = "Wildflowers"
+mesh_builder = &"flowers"
+interact_mode = 0
+blocks_movement = false
+collision_radius = 0.3
+collision_height = 0.4
+hits_to_break = 1
+drops = []
+regrow_time = 0.0
+interact_text = ""
+visibility_range = 45.0
+cast_shadow = false

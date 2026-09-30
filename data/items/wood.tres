@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"wood"
+display_name = "Wood"
+description = "Sturdy logs chopped from trees. A basic building and crafting material."
+category = 0
+rarity = 0
+max_stack = 99
+base_value = 1
+icon_color = Color(0.62, 0.42, 0.24, 1)
+icon_glyph = "W"

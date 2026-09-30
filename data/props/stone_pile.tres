@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="PropData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/world/prop_data.gd" id="1_prop"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"stone"
+min_count = 1
+max_count = 2
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"flint"
+min_count = 1
+max_count = 1
+chance = 0.15
+
+[resource]
+script = ExtResource("1_prop")
+id = &"stone_pile"
+display_name = "Loose Stones"
+mesh_builder = &"stone_pile"
+interact_mode = 2
+blocks_movement = false
+collision_radius = 0.4
+collision_height = 0.4
+hits_to_break = 1
+drops = [SubResource("Loot_0"), SubResource("Loot_1")]
+regrow_time = 900.0
+interact_text = "Pick up"
+visibility_range = 60.0
+cast_shadow = false

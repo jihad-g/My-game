@@ -1,0 +1,78 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://src/world/world.gd" id="1_world"]
+[ext_resource type="Resource" path="res://data/biomes/verdant_meadow.tres" id="2_biome"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/thornback_boar.tscn" id="3_boar"]
+[ext_resource type="Script" path="res://src/world/day_night_cycle.gd" id="4_daynight"]
+[ext_resource type="Script" path="res://src/world/chunk_manager.gd" id="5_chunks"]
+[ext_resource type="Script" path="res://src/world/enemy_spawner.gd" id="6_spawner"]
+[ext_resource type="Script" path="res://src/core/node_pool.gd" id="7_pool"]
+[ext_resource type="PackedScene" path="res://scenes/world/pickup.tscn" id="8_pickup"]
+[ext_resource type="Script" path="res://src/world/damage_numbers.gd" id="9_dmg"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="10_player"]
+[ext_resource type="Script" path="res://src/camera/camera_rig.gd" id="11_camera"]
+[ext_resource type="Script" path="res://src/ui/hud.gd" id="12_hud"]
+
+[sub_resource type="Environment" id="Environment_world"]
+background_mode = 1
+background_color = Color(0.45, 0.72, 1, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.9, 0.9, 1, 1)
+ambient_light_energy = 0.55
+tonemap_mode = 0
+glow_enabled = true
+glow_intensity = 0.35
+glow_bloom = 0.05
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(0.6, 0.78, 1, 1)
+fog_density = 1.0
+fog_depth_curve = 1.4
+fog_depth_begin = 70.0
+fog_depth_end = 160.0
+adjustment_enabled = true
+adjustment_saturation = 1.05
+
+[node name="World" type="Node3D"]
+script = ExtResource("1_world")
+default_biome = ExtResource("2_biome")
+debug_enemy_scene = ExtResource("3_boar")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_world")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 30, 0)
+shadow_enabled = true
+directional_shadow_mode = 1
+directional_shadow_max_distance = 70.0
+
+[node name="DayNightCycle" type="Node" parent="." node_paths=PackedStringArray("sun", "environment")]
+script = ExtResource("4_daynight")
+sun = NodePath("../Sun")
+environment = NodePath("../WorldEnvironment")
+
+[node name="ChunkManager" type="Node3D" parent="."]
+script = ExtResource("5_chunks")
+
+[node name="EnemySpawner" type="Node" parent="." node_paths=PackedStringArray("chunk_manager")]
+script = ExtResource("6_spawner")
+chunk_manager = NodePath("../ChunkManager")
+
+[node name="PickupPool" type="Node" parent="."]
+script = ExtResource("7_pool")
+scene = ExtResource("8_pickup")
+prewarm = 8
+
+[node name="Placed" type="Node3D" parent="."]
+
+[node name="DamageNumbers" type="Node3D" parent="."]
+script = ExtResource("9_dmg")
+
+[node name="Player" parent="." instance=ExtResource("10_player")]
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("11_camera")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("12_hud")

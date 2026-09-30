@@ -1,0 +1,31 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/thornback_boar.gd" id="1_boar"]
+[ext_resource type="Resource" path="res://data/enemies/thornback_boar.tres" id="2_data"]
+[ext_resource type="Script" path="res://src/components/health_component.gd" id="3_health"]
+[ext_resource type="Script" path="res://src/enemies/boar_model.gd" id="4_model"]
+[ext_resource type="Script" path="res://src/enemies/enemy_health_bar.gd" id="5_bar"]
+
+[sub_resource type="CapsuleShape3D" id="Capsule_body"]
+radius = 0.55
+height = 1.3
+
+[node name="ThornbackBoar" type="CharacterBody3D"]
+collision_layer = 4
+collision_mask = 15
+script = ExtResource("1_boar")
+data = ExtResource("2_data")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, 0)
+shape = SubResource("Capsule_body")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("3_health")
+
+[node name="Model" type="Node3D" parent="."]
+script = ExtResource("4_model")
+
+[node name="HealthBar" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, 0)
+script = ExtResource("5_bar")

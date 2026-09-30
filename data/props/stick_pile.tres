@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="PropData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/world/prop_data.gd" id="1_prop"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"stick"
+min_count = 1
+max_count = 3
+chance = 1.0
+
+[resource]
+script = ExtResource("1_prop")
+id = &"stick_pile"
+display_name = "Fallen Sticks"
+mesh_builder = &"stick_pile"
+interact_mode = 2
+blocks_movement = false
+collision_radius = 0.4
+collision_height = 0.4
+hits_to_break = 1
+drops = [SubResource("Loot_0")]
+regrow_time = 900.0
+interact_text = "Pick up"
+visibility_range = 60.0
+cast_shadow = false

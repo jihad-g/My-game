@@ -1,0 +1,49 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/enemy_data.gd" id="1_enemy"]
+[ext_resource type="Resource" path="res://data/attacks/boar_bite.tres" id="2_bite"]
+[ext_resource type="Resource" path="res://data/attacks/boar_charge.tres" id="3_charge"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"raw_meat"
+min_count = 1
+max_count = 2
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"boar_hide"
+min_count = 1
+max_count = 1
+chance = 0.6
+
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"boar_tusk"
+min_count = 1
+max_count = 1
+chance = 0.2
+
+[resource]
+script = ExtResource("1_enemy")
+id = &"thornback_boar"
+display_name = "Thornback Boar"
+category = 0
+max_health = 70.0
+walk_speed = 2.0
+run_speed = 5.2
+turn_speed = 7.0
+aggro_range = 10.0
+leash_range = 26.0
+max_poise = 35.0
+damage_multipliers = {
+&"fire": 1.5,
+&"poison": 0.75
+}
+exposed_damage_multiplier = 1.5
+attacks = [ExtResource("2_bite"), ExtResource("3_charge")]
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2")]
+xp_reward = 15
+respawn_time = 300.0

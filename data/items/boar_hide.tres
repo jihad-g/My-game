@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"boar_hide"
+display_name = "Boar Hide"
+description = "Thick, bristly hide from a Thornback Boar. Future leather armor material."
+category = 0
+rarity = 2
+max_stack = 30
+base_value = 12
+icon_color = Color(0.5, 0.34, 0.22, 1)
+icon_glyph = "H"
