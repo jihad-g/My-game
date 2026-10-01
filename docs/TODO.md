@@ -105,6 +105,26 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 13 — Beta / Release preparation  ✅
+
+- [x] Tutorial: 16 contextual hints (moving, camera, gathering, bag, crafting, chopping, combat, hunger, cold, levelling, building, night, villages, points of interest, collapsing, guide) shown when the situation comes up, with the real key names; progress per player profile; turn off or replay in Settings
+- [x] Guide (F1): every control with current keyboard and gamepad bindings, plus pages on survival, combat, the character, crafting and building, the world and saving
+- [x] Settings: tabbed screen (Gameplay, Controls, Audio, Display & graphics, Accessibility); difficulty (Story / Normal / Hard: damage taken and hunger), autosave interval or off, damage numbers, camera rotation speed, frame-rate cap, FPS counter
+- [x] Controls: rebinding for keyboard/mouse and gamepad separately, conflict warnings, per-action and full reset, saved in settings.cfg; default gamepad layout; aiming follows the left stick on a pad; toggle sprint
+- [x] Accessibility: interface scale 75-150%, colour-vision filters (protanopia, deuteranopia, tritanopia), high-contrast interface, sound captions with direction, reduced flashing (lightning, hit flashes, low-health pulse), reduced motion (panel animations, camera shake)
+- [x] Save recovery: SHA-256 checksums on save files, the previous save kept as .bak, up to 6 snapshots per world (with region files) on load, every 10 minutes of play and on crashes; loading falls back save → .bak → newest good snapshot and tells the player; Recover screen in the menu (health check, restore with undo)
+- [x] Crash handling: per-process session locks; an unclean exit produces a crash report (session, system, log tail) and a notice in the main menu; an engine crash writes an emergency snapshot of the world; file logging on
+- [x] Platform layer: achievements (20) and lifetime stats in the player profile, Achievements screen, rich presence, overlay pause; Steam backend through GodotSteam (activates when the extension and an app id are present), Steamworks config generated from game data (platform/steam/), SteamPipe build scripts
+- [x] Release tooling: export presets (Windows, Linux, Web), tools/build_release.sh, tools/fetch_export_templates.py, a browser build with a launcher page; docs/RELEASE.md
+- [x] Optimization: single-threaded streaming mode for the browser build (one generation job per frame, no prefetch, smaller detail ring); benchmarks re-run (docs/PERFORMANCE.md)
+- [x] Fixed: UI symbols missing in the browser (DejaVu Sans fallback font bundled); achievement progress read the wrong column; the first save of a new world skipped its backup when another world had been saved in the same session; the base-raid test could fail when arrow towers killed a whole wave early
+- [ ] NOT IMPLEMENTED: languages other than English (all text is in code, ready for TranslationServer but not extracted)
+- [ ] NOT IMPLEMENTED: menus with a gamepad (the game plays with a pad; menus and panels still need the mouse)
+- [ ] NOT IMPLEMENTED: screen-reader support; captions cover important sounds only (not footsteps, ambience or music)
+- [ ] NOT IMPLEMENTED: tested against real Steam (the backend is tested with a stand-in; GodotSteam and the Steamworks SDK are not bundled - see docs/RELEASE.md), achievement icons, Steam Cloud (configured on Steamworks as Auto-Cloud, documented)
+- [ ] NOT IMPLEMENTED: code signing (Windows SmartScreen warns), macOS build, installer
+- [ ] Known limitation: GDScript errors don't crash the game, so they only appear in the log (and in a crash report if the game later dies); a hard freeze is reported on the next start
+
 ## Milestone 12 — Alpha  ✅
 
 - [x] Full gameplay loop, played by a bot with the real systems (`tests/playthrough.gd`, `tools/playthrough.tscn`): gather → stone tools → workbench → floors/walls → campfire → fight 5 monsters → hunt and cook → level up and spend points → sell/buy in the nearest village → craft and equip a sword → clear E-rank ruins and loot the chest; all four classes finish it in ~11 minutes of simulated play
@@ -153,7 +173,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Settings (main menu + pause): 5 volume sliders, fullscreen, V-Sync, render scale, shadows off/low/high, horizon terrain, weather/ambient/hit particles, screen shake; saved to user://settings.cfg
 - [ ] NOT IMPLEMENTED: hand-authored models, textures or skeletal animation (everything stays code-built by design)
 - [ ] NOT IMPLEMENTED: voice, per-enemy unique sounds beyond growls/bones, dynamic music layering (tracks crossfade as a whole)
-- [ ] NOT IMPLEMENTED: key rebinding, gamepad UI navigation, colour-blind modes
+- [x] Key rebinding and colour-vision filters (Milestone 13); gamepad menu navigation NOT IMPLEMENTED
 - [ ] NOT IMPLEMENTED: weather effects on crops/fires (rain doesn't water farms or put out campfires), seasons
 - [ ] Known limitation: the music and sound are synthesized; good placeholders with a consistent style, but a composer/sound designer pass would lift them
 
@@ -285,12 +305,12 @@ Nothing below is marked `[x]` unless it runs in the game today.
 ## Phase 6 — Polish
 
 - [x] Save/load system (Milestone 2)
-- [ ] Cloud saves / save slots per character, save thumbnails
+- [~] Save backups and recovery (Milestone 13); cloud saves via Steam Auto-Cloud documented, not tested; save thumbnails NOT IMPLEMENTED
 - [~] Animations (procedural: knees/elbows, idle, run lean, jump, swim, cast, landing — Milestone 10); skeletal/authored animations NOT IMPLEMENTED
 - [x] VFX, sound & music (Milestone 10, all generated)
-- [x] UI polish: pixel-art item icons, panel transitions, settings screen (Milestone 10); key rebinding NOT IMPLEMENTED
+- [x] UI polish: pixel-art item icons, panel transitions, settings screen (Milestone 10); key rebinding (Milestone 13)
 - [x] Main menu with seed entry / world selection (Milestone 2)
-- [~] Settings menu: audio, display, graphics, comfort (Milestone 10); key rebinding NOT IMPLEMENTED
+- [x] Settings menu: audio, display, graphics, comfort (Milestone 10); gameplay, controls and accessibility (Milestone 13)
 - [~] Optimization pass: CPU profiling and budgets (Milestone 12); GPU profiling on real hardware, occlusion and instancing everywhere NOT IMPLEMENTED
 
 ## Phase 7 — Large world

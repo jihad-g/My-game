@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://ratnbham16or"
+
+[deps]
+
+files=["res://platform/steam/achievements.display.translation", "res://platform/steam/achievements.description.translation", "res://platform/steam/achievements.hidden.translation", "res://platform/steam/achievements.progress.translation", "res://platform/steam/achievements.goal.translation"]
+
+source_file="res://platform/steam/achievements.csv"
+dest_files=["res://platform/steam/achievements.display.translation", "res://platform/steam/achievements.description.translation", "res://platform/steam/achievements.hidden.translation", "res://platform/steam/achievements.progress.translation", "res://platform/steam/achievements.goal.translation"]
+
+[params]
+
+compress=true
+delimiter=0

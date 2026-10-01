@@ -1,0 +1,12 @@
+api_name,type,set_by
+items_crafted,INT,Client
+trees_felled,INT,Client
+monsters_killed,INT,Client
+bosses_killed,INT,Client
+dungeons_cleared,INT,Client
+biomes_discovered,INT,Client
+pois_discovered,INT,Client
+copper_traded,INT,Client
+raids_repelled,INT,Client
+deaths,INT,Client
+distance_km,INT,Client

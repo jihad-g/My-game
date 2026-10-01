@@ -2,7 +2,9 @@
 
 | File | Version | Platform |
 |---|---|---|
-| [Shardlands-v0.12.0-windows.zip](Shardlands-v0.12.0-windows.zip) | 0.12.0 (Milestone 12 - Alpha) | Windows 10/11, 64-bit |
+| [Shardlands-v0.13.0-windows.zip](Shardlands-v0.13.0-windows.zip) | 0.13.0 (Milestone 13 - Beta) | Windows 10/11, 64-bit |
+
+Older builds are in the git history of this folder (v0.12.0: commit 6a42fc1).
 
 ## Install on Windows
 
@@ -13,4 +15,9 @@
    (the game is not code-signed yet).
 
 Needs a graphics card with Vulkan support. Saves are kept in
-`%APPDATA%\Godot\app_userdata\Shardlands\worlds`.
+`%APPDATA%\Godot\app_userdata\Shardlands\worlds` (with automatic backups - see *Recover* in the menu).
+
+## Build it yourself
+
+See [docs/RELEASE.md](../docs/RELEASE.md): `python3 tools/fetch_export_templates.py windows linux web`
+then `tools/build_release.sh`.

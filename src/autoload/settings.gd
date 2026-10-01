@@ -44,6 +44,7 @@ var accessibility: AccessibilityLayer
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	UITheme.install_symbol_fallback()
 	accessibility = AccessibilityLayer.new()
 	accessibility.name = "Accessibility"
 	add_child(accessibility)

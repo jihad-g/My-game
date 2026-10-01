@@ -127,8 +127,8 @@ func set_stat(name: StringName, value: int) -> void:
 	backend.set_stat(name, value)
 	_dirty = true
 	for a in Achievements.LIST:
-		if a[2] == name and value >= int(a[4]):
-			unlock(a[0])
+		if a[Achievements.STAT] == name and value >= int(a[Achievements.GOAL]):
+			unlock(a[Achievements.ID])
 
 
 ## Progress toward an achievement: [current, goal].
@@ -136,11 +136,12 @@ func progress(id: StringName) -> Array:
 	var d := Achievements.get_def(id)
 	if d.is_empty():
 		return [0, 1]
+	var goal := int(d[Achievements.GOAL])
 	if is_unlocked(id):
-		return [d[4], d[4]]
-	if d[2] != &"":
-		return [mini(stat(d[2]), d[4]), d[4]]
-	return [0, d[4]]
+		return [goal, goal]
+	if d[Achievements.STAT] != &"":
+		return [mini(stat(d[Achievements.STAT]), goal), goal]
+	return [0, goal]
 
 
 func flush() -> void:

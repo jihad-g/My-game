@@ -32,7 +32,20 @@ static var _shared: Theme
 static var high_contrast := false
 
 
+## Symbols the UI uses (arrows, stars, ✕, ⚠...) that the engine's default
+## font lacks come from DejaVu Sans. Desktops would fall back to a system font;
+## browsers have none, so it ships with the game (Milestone 13).
+static func install_symbol_fallback() -> void:
+	var base := ThemeDB.fallback_font
+	if base == null or not base.fallbacks.is_empty():
+		return
+	var dv := load("res://assets/fonts/DejaVuSans.ttf") as Font
+	if dv:
+		base.fallbacks = [dv]
+
+
 static func build() -> Theme:
+	install_symbol_fallback()
 	if _shared == null:
 		_shared = Theme.new()
 		_populate(_shared)

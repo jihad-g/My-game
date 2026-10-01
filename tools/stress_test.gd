@@ -96,6 +96,9 @@ func _bench(md: PackedStringArray) -> void:
 	md.append("(`ChunkManager`), so streaming shows up as a few longer frames, not stalls. Far terrain is")
 	md.append("cached LOD tiles. Monsters only probe for stair steps when last tick's movement hit terrain or a")
 	md.append("building, not another character (crowds used to cost ~0.2 ms per monster per tick).")
+	md.append("The browser build has no worker threads: there the streamer runs one generation job per frame")
+	md.append("(~6 ms), skips prefetching and keeps a smaller detail ring, so walking costs short hitches")
+	md.append("instead of long stalls (Milestone 13).")
 	world.queue_free()
 	await get_tree().process_frame
 

@@ -1,0 +1,17 @@
+// SteamPipe app build script (Milestone 13). Replace 1000000 with the Steam app id
+// and 1000001/1000002 with its Windows and Linux depot ids, then upload with:
+//   steamcmd +login <builder account> +run_app_build ../platform/steam/app_build.vdf +quit
+// after `tools/build_release.sh windows linux` has filled build/windows and build/linux.
+"AppBuild"
+{
+	"AppID"	"1000000"
+	"Desc"	"Shardlands build"
+	"BuildOutput"	"../../build/steam_output/"
+	"ContentRoot"	"../../build/"
+	"SetLive"	""
+	"Depots"
+	{
+		"1000001"	"depot_build_windows.vdf"
+		"1000002"	"depot_build_linux.vdf"
+	}
+}

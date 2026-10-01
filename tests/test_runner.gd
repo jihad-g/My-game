@@ -83,6 +83,13 @@ func _ready() -> void:
 	await _run_async(&"test_m12_gameplay_loop")
 	_run(&"test_m12_worldgen_stress")
 	await _run_async(&"test_m12_performance")
+	_run(&"test_m13_input_rebinding")
+	await _run_async(&"test_m13_settings_accessibility")
+	await _run_async(&"test_m13_tutorial")
+	await _run_async(&"test_m13_save_recovery")
+	await _run_async(&"test_m13_crash_handling")
+	await _run_async(&"test_m13_platform")
+	_run(&"test_m13_release")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -3241,6 +3248,11 @@ func test_m7_base_raid() -> void:
 	for m in raiders:
 		obj_ok = obj_ok and m.objective.distance_to(c) < 0.1 and m.get_meta(&"raid", "") == world.raids.raid.id
 	check(obj_ok, "raiders march on the base")
+	# Sturdier raiders for this check: with lucky arrow-tower volleys the
+	# towers could kill the whole wave before anyone reached a wall.
+	for m in raiders:
+		m.health.max_health *= 4.0
+		m.health.current = m.health.max_health
 	var damaged := [false]
 	Events.building_damaged.connect(func(_pc: Node, _d: bool) -> void: damaged[0] = true)
 	var turret_hit := false
@@ -4643,3 +4655,498 @@ func test_m12_performance() -> void:
 		"streaming after long jumps: worst frame %.0f ms, ready in %.1f s" % [b.streaming.max, b.streaming.ready_s])
 	world.queue_free()
 	await _frames(5)
+
+
+# --- Milestone 13: beta / release preparation ------------------------------------------------
+
+## A stand-in for the GodotSteam singleton: records what the game sends.
+class FakeSteam:
+	extends RefCounted
+	signal overlay_toggled(active: bool, user_initiated: bool, app_id: int)
+	var achievements: Array = []
+	var stats: Dictionary = {}
+	var presence: Dictionary = {}
+	var stores := 0
+	var callbacks := 0
+
+	func steamInitEx(_retrieve: bool, _app: int) -> Dictionary:
+		return {"status": 0, "verbal": "Steamworks active"}
+
+	func run_callbacks() -> void:
+		callbacks += 1
+
+	func setAchievement(id: String) -> bool:
+		if not achievements.has(id):
+			achievements.append(id)
+		return true
+
+	func setStatInt(id: String, v: int) -> bool:
+		stats[id] = v
+		return true
+
+	func storeStats() -> bool:
+		stores += 1
+		return true
+
+	func setRichPresence(k: String, v: String) -> bool:
+		presence[k] = v
+		return true
+
+	func getPersonaName() -> String:
+		return "Steamy"
+
+
+func test_m13_input_rebinding() -> void:
+	var saved_path := Settings.path
+	Settings.path = "user://test_settings_m13.cfg"
+	InputSetup.reset_all()
+	check(InputSetup.action_label(&"interact", false) == "F" and InputSetup.action_label(&"interact", true) == "A",
+		"default bindings for keyboard and gamepad (%s / %s)" % [InputSetup.action_label(&"interact", false), InputSetup.action_label(&"interact", true)])
+	check(InputSetup.action_label(&"attack_light", false) == "LMB" and InputSetup.action_label(&"ability_2", true) == "RT", "mouse and trigger names")
+	var e := InputEventKey.new()
+	e.physical_keycode = KEY_E
+	var clashes := InputSetup.rebind(&"interact", e)
+	check(clashes.has(&"cam_rotate_right"), "rebinding warns about keys already in use")
+	check(InputSetup.action_label(&"interact", false) == "E" and InputSetup.action_label(&"interact", true) == "A", "keyboard rebind keeps the gamepad binding")
+	check(InputSetup.custom_bindings().has("interact") and not InputSetup.custom_bindings().has("dodge"), "only changed actions are saved")
+	var ok := true
+	for s in ["key:%d" % KEY_K, "mouse:%d" % MOUSE_BUTTON_MIDDLE, "pad:%d" % JOY_BUTTON_Y, "axis:%d:-" % JOY_AXIS_LEFT_Y]:
+		ok = ok and InputSetup.event_to_string(InputSetup.event_from_string(s)) == s
+	check(ok, "bindings serialize both ways (key, mouse, button, axis)")
+	Settings.save_settings()
+	var saved_file := FileAccess.get_file_as_string(Settings.path)
+	InputSetup.reset_all()  # (resetting saves at once, like the Reset button)
+	check(InputSetup.action_label(&"interact", false) == "F", "reset restores the default")
+	var sf := FileAccess.open(Settings.path, FileAccess.WRITE)
+	sf.store_string(saved_file)
+	sf.close()
+	Settings.load_settings()
+	check(InputSetup.action_label(&"interact", false) == "E", "custom bindings load from settings.cfg")
+	var panel := SettingsPanel.new()
+	add_child(panel)
+	panel.listen(&"dodge", false)
+	var k := InputEventKey.new()
+	k.physical_keycode = KEY_K
+	k.pressed = true
+	panel.capture(k)
+	check(InputSetup.action_label(&"dodge", false) == "K" and (panel.bind_buttons[&"dodge"][0] as Button).text == "K", "the Controls tab rebinds by pressing a key")
+	panel.listen(&"block", true)
+	var jb := InputEventJoypadButton.new()
+	jb.button_index = JOY_BUTTON_RIGHT_SHOULDER
+	jb.pressed = true
+	panel.capture(jb)
+	check(InputSetup.action_label(&"block", true) == "RB" and InputSetup.action_label(&"block", false) == "Ctrl", "gamepad buttons rebind separately")
+	check(panel.tabs.get_tab_count() >= 5 and panel.bind_buttons.size() >= 40, "settings has %d tabs, %d rebindable actions" % [panel.tabs.get_tab_count(), panel.bind_buttons.size()])
+	panel.queue_free()
+	var changed := [0]
+	InputSetup.device_changed.connect(func(_p: bool) -> void: changed[0] += 1, CONNECT_ONE_SHOT)
+	var pad := InputEventJoypadButton.new()
+	pad.button_index = JOY_BUTTON_A
+	pad.pressed = true
+	InputSetup._input(pad)
+	check(InputSetup.using_gamepad and changed[0] == 1, "using a gamepad switches hints and aiming to the pad")
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_W
+	key.pressed = true
+	InputSetup._input(key)
+	check(not InputSetup.using_gamepad, "and the keyboard switches back")
+	Settings.reset_controls()
+	check(InputSetup.custom_bindings().is_empty(), "reset controls clears every custom binding")
+	DirAccess.remove_absolute("user://test_settings_m13.cfg")
+	Settings.path = saved_path
+	Settings.save_settings()
+
+
+func test_m13_settings_accessibility() -> void:
+	var saved_path := Settings.path
+	var saved := Settings.values.duplicate()
+	Settings.path = "user://test_settings_m13.cfg"
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	_clear_enemies(world)
+	# Difficulty
+	var taken := []
+	for d in [0, 1, 2]:
+		Settings.set_value("difficulty", d)
+		p.health.reset_full()
+		var before := p.health.current
+		p.receive_hit(DamageInfo.create(20.0, null))
+		taken.append(before - p.health.current)
+		await _frames(2)
+	print("   damage taken (story/normal/hard): %s" % str(taken))
+	check(taken[0] < taken[1] * 0.6 and taken[2] > taken[1] * 1.4, "difficulty scales the damage you take")
+	Settings.set_value("difficulty", 1)
+	check(is_equal_approx(Settings.hunger_mult(), 1.0), "normal difficulty keeps hunger as designed")
+	# Display
+	Settings.set_value("max_fps", 60)
+	check(Engine.max_fps == 60, "frame rate cap applies")
+	Settings.set_value("max_fps", 0)
+	Settings.set_value("ui_scale", 1.25)
+	check(is_equal_approx(get_tree().root.content_scale_factor, 1.25), "interface scale applies")
+	Settings.set_value("ui_scale", 1.0)
+	Settings.set_value("show_fps", true)
+	check(Settings.accessibility.fps_label.visible, "FPS counter")
+	Settings.set_value("show_fps", false)
+	# Colour vision
+	Settings.set_value("colorblind_mode", 2)
+	check(Settings.accessibility.filter.visible and int((Settings.accessibility.filter.material as ShaderMaterial).get_shader_parameter(&"mode")) == 2,
+		"colour-vision filter (deuteranopia)")
+	Settings.set_value("colorblind_mode", 0)
+	check(not Settings.accessibility.filter.visible, "filter off by default")
+	# High contrast
+	Settings.set_value("high_contrast", true)
+	var panel_box := UITheme.build().get_stylebox(&"panel", &"PanelContainer") as StyleBoxFlat
+	check(panel_box.bg_color.a > 0.95 and panel_box.border_width_top >= 3, "high-contrast panels are opaque with bold borders")
+	check(world.hud._root.theme == UITheme.build(), "every screen shares the theme, so it updates live")
+	Settings.set_value("high_contrast", false)
+	check((UITheme.build().get_stylebox(&"panel", &"PanelContainer") as StyleBoxFlat).bg_color.a < 0.9, "and back")
+	# Captions
+	Settings.set_value("captions", true)
+	Audio.play_at(&"monster_growl", p.global_position + world.camera_rig.global_transform.basis.x * 12.0, 0.0, 0.0, 45.0, 0)
+	await _frames(1)
+	var cap := ""
+	for c in Settings.accessibility.captions.get_children():
+		cap += (c as Label).text
+	check(cap.contains("Monster growls") and (cap.contains("right") or cap.contains("left")), "sound captions with direction (%s)" % cap)
+	Audio.play(&"ui_click", 0.0, 0.0, &"UI", 0)
+	Settings.set_value("captions", false)
+	await _frames(1)
+	check(Settings.accessibility.captions.get_child_count() == 0, "captions off clears them")
+	# Reduced flashing
+	if world.weather:
+		Settings.set_value("reduce_flashing", true)
+		world.weather.strike()
+		check(world.weather._flash <= 0.2, "reduced flashing: lightning only glows")
+		Settings.set_value("reduce_flashing", false)
+		world.weather.strike()
+		check(world.weather._flash > 0.9, "normal lightning flash")
+	# Reduced motion
+	Settings.set_value("reduce_motion", true)
+	check(not world.camera_rig.shake_enabled, "reduced motion turns camera shake off")
+	var box := PanelContainer.new()
+	world.hud._root.add_child(box)
+	UIFx.pop_in(box)
+	check(box.scale == Vector2.ONE and box.modulate.a == 1.0, "panels appear without animation")
+	box.queue_free()
+	Settings.set_value("reduce_motion", false)
+	# Damage numbers and autosave
+	Settings.set_value("autosave_minutes", 0)
+	check(Settings.autosave_interval() == 0.0, "autosave can be turned off")
+	Settings.set_value("autosave_minutes", 5)
+	check(Settings.autosave_interval() == 300.0, "autosave every 5 minutes")
+	# Toggle sprint
+	Settings.set_value("toggle_sprint", true)
+	p.stamina.refill()
+	Input.action_press(&"move_forward")
+	Input.action_press(&"sprint")
+	await get_tree().physics_frame
+	var latched := p._sprint_held()
+	Input.action_release(&"sprint")
+	await _frames(3)
+	var still := p._sprint_held()
+	Input.action_release(&"move_forward")
+	await _frames(2)
+	check(latched and still and not p._sprint_held(), "toggle sprint: one press keeps running until you stop")
+	Settings.set_value("toggle_sprint", false)
+	# Settings file round trip with the new keys.
+	Settings.set_value("difficulty", 2)
+	Settings.values = Settings.DEFAULTS.duplicate()
+	Settings.load_settings()
+	check(int(Settings.get_value("difficulty")) == 2, "new settings save and load")
+	var cf := ConfigFile.new()
+	cf.set_value("settings", "difficulty", "hard?!")
+	cf.save(Settings.path)
+	Settings.load_settings()
+	check(int(Settings.get_value("difficulty")) == 1, "a damaged settings file falls back to defaults")
+	world.queue_free()
+	await _frames(5)
+	DirAccess.remove_absolute("user://test_settings_m13.cfg")
+	Settings.path = saved_path
+	Settings.values = saved
+	Settings.apply()
+
+
+func test_m13_tutorial() -> void:
+	var saved_profile := Tutorial.profile_path
+	Tutorial.profile_path = "user://test_profile_m13.cfg"
+	DirAccess.remove_absolute(Tutorial.profile_path)
+	Tutorial.reset_progress()
+	Settings.values["tutorial_hints"] = true
+	InputSetup.reset_all()
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	_clear_enemies(world)
+	await _frames(30)
+	check(Tutorial.current.get("id") == &"move", "the first hint is about moving")
+	var card := world.hud.tutorial_card
+	check(card.visible and card.text().contains("[WASD]") and card.text().contains("[Shift]"), "the hint names the real keys (%s)" % card.text())
+	var e := InputEventKey.new()
+	e.physical_keycode = KEY_K
+	InputSetup.rebind(&"sprint", e)
+	await _frames(1)
+	check(card.text().contains("[K]"), "hints follow rebinding")
+	InputSetup.reset_action(&"sprint")
+	p.global_position += Vector3(10, 0, 0)
+	p.global_position.y = world.get_ground_height(p.global_position) + 0.3
+	await _frames(20)
+	check(Tutorial.is_done(&"move"), "walking completes the movement hint")
+	await get_tree().create_timer(Tutorial.GAP + 0.6).timeout
+	check(Tutorial.current.get("id") == &"camera", "next: the camera (%s)" % Tutorial.current.get("id"))
+	world.camera_rig._target_yaw += 45.0
+	await _frames(20)
+	check(Tutorial.is_done(&"camera"), "turning the camera completes it")
+	Tutorial._gap = 0.0
+	await _frames(30)
+	check(Tutorial.current.get("id") == &"gather", "then gathering (%s)" % Tutorial.current.get("id"))
+	Events.item_picked_up.emit(&"stick", 1)
+	await _frames(20)
+	check(Tutorial.is_done(&"gather"), "picking something up completes it")
+	# Situational hints wait for their moment.
+	check(not Tutorial.is_done(&"night") and Tutorial.current.get("id") != &"night", "the night hint waits for night")
+	# Progress is per profile, not per world.
+	Tutorial.load_progress()
+	check(Tutorial.is_done(&"move") and Tutorial.is_done(&"gather"), "progress is saved to the player profile")
+	Tutorial.complete(&"inventory")
+	check(Tutorial.is_done(&"inventory"), "hints can be dismissed")
+	Settings.values["tutorial_hints"] = false
+	await _frames(5)
+	check(Tutorial.current.is_empty() and not card.visible, "turning hints off hides them")
+	Settings.values["tutorial_hints"] = true
+	# Guide
+	var guide := world.hud.guide
+	guide.toggle()
+	check(guide.visible and guide._controls.text.contains("Interact / gather") and guide.tabs.get_tab_count() >= 6, "F1 opens the guide (%d pages)" % guide.tabs.get_tab_count())
+	check(Tutorial._flags.has(&"guide_opened"), "opening the guide counts for the tutorial")
+	guide.toggle()
+	check((world.hud._help.get_node("HelpText") as Label).text.contains("guide"), "the corner cheat sheet points to the guide")
+	Tutorial.reset_progress()
+	check(Tutorial.done.is_empty(), "the tutorial can be replayed")
+	world.queue_free()
+	await _frames(5)
+	DirAccess.remove_absolute(Tutorial.profile_path)
+	Tutorial.profile_path = saved_profile
+	Tutorial.load_progress()
+
+
+func test_m13_save_recovery() -> void:
+	var saved_dir := SaveManager.worlds_dir
+	SaveManager.worlds_dir = "user://test_worlds_m13"
+	_remove_dir("user://test_worlds_m13")
+	var id := SaveManager.create_world("Recovery Test", 4242, &"knight")
+	var world: World = await _boot_world()
+	check(SaveManager.save_world(world), "world saved")
+	var path := "%s/%s/save.json" % [SaveManager.worlds_dir, id]
+	check(FileAccess.get_file_as_string(path).begins_with(SaveManager.HEADER), "save files carry a SHA-256 checksum")
+	check(SaveManager.verify_world(id).ok, "a fresh world verifies")
+	check(SaveManager.list_backups(id).size() >= 1, "a backup snapshot is made")
+	world.player.inventory.add_item(&"iron_ore", 5)
+	check(SaveManager.save_world(world), "second save (the first is kept as .bak)")
+	world.queue_free()
+	await _frames(5)
+	# One flipped character inside valid JSON: only the checksum can tell.
+	var damaged := FileAccess.get_file_as_string(path).replace("iron_ore", "iron_orf")
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(damaged)
+	f.close()
+	check(not SaveManager.verify_world(id).ok and "save.json is damaged (the previous save is fine)" in SaveManager.verify_world(id).problems,
+		"silent damage is detected (%s)" % ", ".join(SaveManager.verify_world(id).problems))
+	check(SaveManager.load_world(id) and SaveManager.last_load.source == "bak", "loading falls back to the previous save")
+	# Both saves damaged: the newest good snapshot.
+	for pth in [path, path + ".bak"]:
+		var g := FileAccess.open(pth, FileAccess.WRITE)
+		g.store_string(SaveManager.HEADER + "0000\n{\"broken\": true}")
+		g.close()
+	check(SaveManager.load_world(id) and SaveManager.last_load.source == "backup" and not SaveManager.pending.is_empty(),
+		"then to the newest backup (%s)" % SaveManager.last_load.get("backup", ""))
+	SaveManager.pending = {}
+	# Restore from the menu.
+	var backups := SaveManager.list_backups(id)
+	var count := backups.size()
+	var recovery := RecoveryPanel.new()
+	add_child(recovery)
+	recovery.open(id)
+	check(recovery._list.get_child_count() >= 1, "the Recover screen lists the backups")
+	check(recovery.restore(backups[backups.size() - 1].name), "restoring a backup")
+	check(SaveManager.verify_world(id).save, "the restored save is healthy")
+	var reasons := []
+	for b in SaveManager.list_backups(id):
+		reasons.append(b.reason)
+	check(reasons.has("before restore"), "the replaced save was kept as a backup (undo)")
+	recovery.queue_free()
+	# Crash snapshot of a live world.
+	check(SaveManager.load_world(id), "reload")
+	world = await _boot_world()
+	var snap := SaveManager.snapshot_world(world, "crash")
+	check(snap != "" and SaveManager.list_backups(id)[0].reason == "crash", "an emergency snapshot never touches save.json")
+	# Old snapshots are pruned.
+	for k in 8:
+		SaveManager._snapshot_files(id, "autosave")
+	check(SaveManager.list_backups(id).size() <= SaveManager.MAX_SNAPSHOTS, "only the newest %d backups are kept" % SaveManager.MAX_SNAPSHOTS)
+	world.queue_free()
+	await _frames(5)
+	check(SaveManager.delete_world(id) and not DirAccess.dir_exists_absolute(SaveManager.backups_path(id)), "deleting a world removes its backups too")
+	SaveManager.worlds_dir = saved_dir
+	SaveManager.start_transient(GameState.DEFAULT_SEED)
+
+
+func _remove_dir(path: String) -> void:
+	var d := DirAccess.open(path)
+	if d == null:
+		return
+	for sub in d.get_directories():
+		_remove_dir(path + "/" + sub)
+	for f in d.get_files():
+		d.remove(f)
+	DirAccess.remove_absolute(path)
+
+
+func test_m13_crash_handling() -> void:
+	var ch := CrashHandler
+	var saved := [ch.sessions_dir, ch.reports_dir, ch.logs_dir, ch.crashed_last_time, ch.previous_session, ch.last_report]
+	ch.sessions_dir = "user://test_sessions"
+	ch.reports_dir = "user://test_crash_reports"
+	ch.logs_dir = "user://test_logs"
+	for d in [ch.sessions_dir, ch.reports_dir, ch.logs_dir]:
+		_remove_dir(d)
+		DirAccess.make_dir_recursive_absolute(d)
+	ch.crashed_last_time = false
+	# A session that died: its process is gone, its lock is still there.
+	var dead := FileAccess.open(ch.sessions_dir + "/999999.lock", FileAccess.WRITE)
+	dead.store_string(JSON.stringify({"started": 1000.0, "heartbeat": 1600.0, "version": "0.13.0", "world": "my_world",
+		"level": 7, "position": [1, 2, 3], "scene": "res://scenes/main.tscn"}))
+	dead.close()
+	var lf := FileAccess.open(ch.logs_dir + "/godot2026-01-01T00.00.00.log", FileAccess.WRITE)
+	for n in 300:
+		lf.store_line("log line %d" % n)
+	lf.store_line("ERROR: something went wrong")
+	lf.close()
+	# A session that is still running (another instance) must be left alone.
+	var pid := OS.create_process("sleep", ["5"])
+	var alive := FileAccess.open(ch.sessions_dir + "/%d.lock" % pid, FileAccess.WRITE)
+	alive.store_string("{}")
+	alive.close()
+	ch.check_previous_session()
+	check(ch.crashed_last_time and String(ch.previous_session.get("world", "")) == "my_world", "an unclean exit is detected at startup")
+	check(not FileAccess.file_exists(ch.sessions_dir + "/999999.lock"), "the stale lock is cleared")
+	check(FileAccess.file_exists(ch.sessions_dir + "/%d.lock" % pid), "another running instance is not a crash")
+	var report := FileAccess.get_file_as_string(ch.last_report + "/report.txt")
+	check(report.contains("0.13.0") and report.contains("my_world") and report.contains("OS:") and report.contains("10m 00s"),
+		"the crash report has the session and system info")
+	var tail := FileAccess.get_file_as_string(ch.last_report + "/log_tail.txt")
+	check(tail.contains("ERROR: something went wrong") and not tail.contains("log line 50\n"), "and the end of the previous log")
+	OS.kill(pid)
+	# The running game's own lock.
+	ch.write_lock()
+	check(FileAccess.file_exists(ch.lock_path) and String(JSON.parse_string(FileAccess.get_file_as_string(ch.lock_path)).get("version", "")) != "",
+		"this session holds a lock with what it's doing")
+	# Emergency snapshot on an engine crash.
+	var saved_dir := SaveManager.worlds_dir
+	SaveManager.worlds_dir = "user://test_worlds_m13"
+	var id := SaveManager.create_world("Crash Test", 99, &"wizard")
+	var world: World = await _boot_world()
+	SaveManager.save_world(world)
+	ch._emergency_done = false
+	ch._notification(Node.NOTIFICATION_CRASH)
+	check(SaveManager.list_backups(id)[0].reason == "crash", "a crash writes an emergency backup of the world")
+	world.queue_free()
+	await _frames(5)
+	# The menu tells the player.
+	var menu := (load("res://scenes/menu/main_menu.tscn") as PackedScene).instantiate() as MainMenu
+	add_child(menu)
+	await _frames(2)
+	check(menu.crash_notice.visible, "the main menu shows the crash notice")
+	menu.queue_free()
+	SaveManager.delete_world(id)
+	SaveManager.worlds_dir = saved_dir
+	SaveManager.start_transient(GameState.DEFAULT_SEED)
+	for d in [ch.sessions_dir, ch.reports_dir, ch.logs_dir]:
+		_remove_dir(d)
+	ch.sessions_dir = saved[0]
+	ch.reports_dir = saved[1]
+	ch.logs_dir = saved[2]
+	ch.crashed_last_time = saved[3]
+	ch.previous_session = saved[4]
+	ch.last_report = saved[5]
+	ch.lock_path = "%s/%s.lock" % [ch.sessions_dir, ch._session_name()]
+	ch.write_lock()
+
+
+func test_m13_platform() -> void:
+	var saved_path := Platform.profile_path
+	var saved_backend := Platform.backend
+	Platform.profile_path = "user://test_profile_platform.cfg"
+	DirAccess.remove_absolute(Platform.profile_path)
+	Platform.load_profile()
+	check(saved_backend.id() == "local", "without Steam the game uses the local platform")
+	var fake := FakeSteam.new()
+	var sb := SteamBackend.new(fake, 480)
+	check(sb.init() and sb.user_name() == "Steamy", "the Steam backend starts through GodotSteam")
+	Platform.backend = sb
+	sb.overlay_changed.connect(Platform._on_overlay)
+	Platform._process(0.016)
+	check(fake.callbacks > 0, "Steam callbacks are pumped every frame")
+	Events.item_crafted.emit(&"rope", 1)
+	check(Platform.is_unlocked(&"first_craft") and fake.achievements.has("first_craft") and int(fake.stats.get("items_crafted", 0)) == 1,
+		"crafting unlocks an achievement on Steam and in the profile")
+	var p := Platform.progress(&"master_crafter")
+	check(p[0] == 1 and p[1] == 500, "progress toward stat achievements (%d/%d)" % p)
+	Platform.add_stat(&"monsters_killed", 500)
+	check(Platform.is_unlocked(&"slayer") and Platform.is_unlocked(&"first_blood"), "stat milestones unlock")
+	Platform.flush()
+	check(fake.stores > 0, "stats are stored to Steam")
+	var unlocked := Platform.unlocked.size()
+	Platform.load_profile()
+	check(Platform.unlocked.size() == unlocked and Platform.stat(&"monsters_killed") == 500, "achievements and stats are saved in the profile")
+	check(not Platform.unlock(&"first_craft") and not Platform.unlock(&"no_such_achievement"), "achievements unlock once")
+	var world: World = await _boot_class(&"assassin")
+	Platform._presence_left = 0.0
+	Platform._process(0.016)
+	check(String(fake.presence.get("status", "")).begins_with("Level 1 Assassin"), "rich presence (%s)" % fake.presence.get("status", ""))
+	fake.overlay_toggled.emit(true, true, 480)
+	check(get_tree().paused, "the Steam overlay pauses a single-player game")
+	world.hud.set_paused(false)
+	var panel := AchievementsPanel.new()
+	add_child(panel)
+	panel.refresh()
+	check(panel._list.get_child_count() == Achievements.LIST.size(), "the Achievements screen lists all %d" % Achievements.LIST.size())
+	panel.queue_free()
+	world.queue_free()
+	await _frames(5)
+	Platform.backend = saved_backend
+	DirAccess.remove_absolute(Platform.profile_path)
+	Platform.profile_path = saved_path
+	Platform.load_profile()
+
+
+func test_m13_release() -> void:
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.13"), "version 0.13 (beta)")
+	var cf := ConfigFile.new()
+	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
+	var names := []
+	for sec in cf.get_sections():
+		if cf.has_section_key(sec, "name"):
+			names.append(cf.get_value(sec, "name"))
+			check(String(cf.get_value(sec, "exclude_filter")).contains("tests/*") and String(cf.get_value(sec, "include_filter")).contains("*.json"),
+				"%s export leaves out tests/tools and keeps the blueprint JSON" % cf.get_value(sec, "name"))
+	check(names.has("Windows Desktop") and names.has("Linux") and names.has("Web"), "Windows, Linux and Web presets (%s)" % str(names))
+	var csv := FileAccess.get_file_as_string("res://platform/steam/achievements.csv").strip_edges().split("\n")
+	check(csv.size() == Achievements.LIST.size() + 1, "Steam achievement list matches the game (%d)" % (csv.size() - 1))
+	check(FileAccess.file_exists("res://platform/steam/app_build.vdf") and FileAccess.file_exists("res://platform/steam/rich_presence.vdf"), "SteamPipe build scripts")
+	var symbols_ok := true
+	for ch in "→★✕⚠●↺♛":
+		var c := ch.unicode_at(0)
+		symbols_ok = symbols_ok and (ThemeDB.fallback_font.has_char(c) or ThemeDB.fallback_font.fallbacks.any(func(f: Font) -> bool: return f.has_char(c)))
+	check(symbols_ok, "UI symbols render on every platform (bundled fallback font)")
+	var page := FileAccess.get_file_as_string("res://tools/web/shardlands.html")
+	check(page.contains("{PARTS}") and page.contains("{VERSION}"), "web launcher template")
+	# Browser builds have no threads: streaming does one job per frame.
+	var cm := ChunkManager.new()
+	cm.single_threaded = true
+	add_child(cm)
+	cm.setup(TerrainGenerator.new(1, _settings()), PropLibrary.new())
+	check(cm._threads == 1 and cm.max_prefetch == 0 and cm.prewarm_radius_m <= 400 and cm.lod_radii[2] <= 7, "single-threaded (web) streaming mode")
+	cm.queue_free()
+	var ach_ids := {}
+	for a in Achievements.LIST:
+		check(not ach_ids.has(a[0]) and (a[3] == &"" or Achievements.STATS.has(a[3])), "achievement %s is well-formed" % a[0])
+		ach_ids[a[0]] = true

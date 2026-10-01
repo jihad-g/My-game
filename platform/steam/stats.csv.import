@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bpgn2xarbnqqy"
+
+[deps]
+
+files=["res://platform/steam/stats.type.translation", "res://platform/steam/stats.set.translation"]
+
+source_file="res://platform/steam/stats.csv"
+dest_files=["res://platform/steam/stats.type.translation", "res://platform/steam/stats.set.translation"]
+
+[params]
+
+compress=true
+delimiter=0

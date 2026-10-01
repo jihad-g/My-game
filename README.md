@@ -5,12 +5,14 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 12 — Alpha (v0.12.0)**: the full loop (gather → craft → build → fight → level →
-> trade → gear up → dungeons) is played end to end by an automated bot; classes, XP, crafting and the
-> economy are tuned against a balance model whose limits the tests enforce ([`docs/BALANCE.md`](docs/BALANCE.md));
-> world generation is stress-tested over 20 seeds and frame-time budgets are benchmarked
-> ([`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)). Built on Milestones 1–11, including co-op for up to 8
-> players ([`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md)). See
+> Status: **Milestone 13 — Beta (v0.13.0)**: release preparation on top of the alpha loop - a
+> contextual tutorial and an in-game guide (F1), a full settings screen with key and gamepad rebinding,
+> difficulty and accessibility options (interface scale, colour-vision filters, high contrast, sound
+> captions, reduced flashing and motion), checksummed saves with automatic backups and a Recover screen,
+> crash reports, achievements with a Steam backend, and release builds for Windows, Linux and the browser
+> ([`docs/RELEASE.md`](docs/RELEASE.md)). Download a Windows build from [`releases/`](releases/).
+> Built on Milestones 1–12 (balance: [`docs/BALANCE.md`](docs/BALANCE.md), performance:
+> [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md)). See
 > [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
@@ -104,6 +106,11 @@ and when you quit through the pause menu or close the window.
 
 ## Controls
 
+Every gameplay key can be changed in **Settings → Controls** (keyboard/mouse and gamepad separately).
+**F1** opens the guide with your current bindings. Gamepad (Xbox layout): left stick move and aim, right
+stick camera, X light, Y heavy, B dodge, A interact, LB block, RB/RT/LT abilities, L3 sprint, R3 lock-on,
+D-pad spells and hotbar, View bag, Menu pause. Menus still need the mouse.
+
 | Action | Key |
 |---|---|
 | Move (camera-relative) | W A S D |
@@ -139,7 +146,7 @@ and when you quit through the pause menu or close the window.
 | Quick save | F5 |
 | Pause | Esc |
 | Respawn after death | R |
-| Help overlay / debug overlay | F1 / F3 |
+| Guide (all controls, how things work) / debug overlay | F1 / F3 |
 | **Debug:** cycle the weather | F2 |
 | Chat (multiplayer) | Enter |
 | **Debug:** air temperature −10 / +10 °C | F6 / F7 |
@@ -384,6 +391,20 @@ and when you quit through the pause menu or close the window.
     `--headless` for just the log): a fresh character gathers, crafts tools, builds a little base, fights,
     cooks, levels up, trades in the nearest village, makes a sword and clears the nearest ruins.
 
+68. **Tutorial and guide** – start a new world: tips appear when they matter (an enemy is near, you get
+    hungry, night falls, you reach a village) with your real keys. Close one with ✕. **F1** opens the
+    guide. Settings → Gameplay → *Replay the tutorial* shows them again.
+69. **Settings** – Esc → Settings: try *Difficulty* (Story halves the damage you take), *Controls*
+    (click a binding, press a new key; a warning names any action that already uses it), and
+    *Accessibility* (colour-vision filter, high contrast, sound captions, interface scale).
+70. **Save recovery** – in the main menu, *Recover* on a world lists its backups (made when you load a
+    world, every 10 minutes and on crashes). Restoring one keeps the current save as a backup too. If a
+    save file is damaged the game loads the newest good copy and tells you.
+71. **Crash report** – if the game ever closes unexpectedly, the next start shows a notice with *Open
+    report* (system info and the end of the log) and *Recover world*.
+72. **Achievements** – main menu or pause menu → *Achievements*: 20 of them with progress bars and your
+    lifetime stats (monsters defeated, trees felled, kilometres walked...).
+
 ## Run the automated tests
 
 ```bash
@@ -392,7 +413,7 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
 
-The suite (1041 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (1159 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -450,6 +471,14 @@ weather rules per climate (snow in the cold, sandstorms in deserts, more rain wh
 terrain AO, settings save/load/apply, animation states (footsteps, knees, jump, swim, cast, trails),
 self-cleaning particles, and in the running game: sky, sun and moon, moon phases, rain (particles, colder
 air, Wet, ambience), lightning, fog, snow, fireflies by night, combat music, landing and graphics settings.
+
+Beta tests (Milestone 13): rebinding (conflicts, saving, gamepad, the Controls tab), every new setting
+in the running game (difficulty, frame cap, interface scale, colour filters, high contrast, captions,
+reduced flashing and motion, autosave, toggle sprint, a damaged settings file), the tutorial (first hints,
+key names following rebinding, completion, profile progress, guide), save recovery (checksums, silent
+damage, fallback to the previous save and to a backup, restore with undo, emergency snapshots, pruning),
+crash handling (stale and running sessions, report contents, log tail, emergency save, menu notice), the
+platform layer with a stand-in Steam (achievements, stats, presence, overlay pause) and the release config.
 
 Alpha tests (Milestone 12): the balance limits (every class beats level-appropriate monsters with margin
 at levels 1-100 and none dominates, a Wizard never matches the fighters physically, gear unlocks into the

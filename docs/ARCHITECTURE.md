@@ -323,6 +323,46 @@ unchanged offline; online, small hooks reroute guest actions (`Inventory.remote`
 - Movement cost: `Enemy._blocked_by_world()` gates `GroundMotion.try_step_up()` (which also ignores other
   characters), so crowds don't run stair-step physics queries every tick.
 
+## Release preparation (Milestone 13)
+
+Autoload order: InputSetup, Events, GameState, ItemDB, SaveManager, Audio, Settings, Tutorial, Net,
+CrashHandler, Platform.
+
+- **Input** (`InputSetup`): defaults for keyboard/mouse (`KEY_BINDINGS`, `MOUSE_BINDINGS`) and gamepad
+  (`PAD_BINDINGS`) are applied with `reset_all()`; `rebind()` replaces the binding of one device kind and
+  returns conflicts; `custom_bindings()`/`apply_custom_bindings()` (strings like `key:70`, `axis:1:-`) are
+  what Settings saves in the `[input]` section. `using_gamepad` flips on the last input device and
+  `action_label()` gives hint text. `Player.get_aim_direction()` uses the stick on a pad.
+- **Settings** (`Settings` autoload): `DEFAULTS` + typed loading (bad values fall back), `apply()` for
+  engine/window/theme/accessibility, `apply_to_world()` for world nodes. Derived values used by systems:
+  `damage_taken_mult()` (Player.receive_hit), `hunger_mult()` (HungerComponent), `autosave_interval()`
+  (World), `reduce_flashing()` (WeatherSystem lightning, HUD vignette), `reduce_motion()` (UIFx, camera).
+  `AccessibilityLayer` (a CanvasLayer child) holds the colour-vision shader, captions and FPS label;
+  `Audio.caption_hook` feeds it every sound. `UITheme.build()` returns one shared Theme so
+  `set_high_contrast()` restyles every screen.
+- **Tutorial** (autoload): `STEPS` with `show`/`done` conditions evaluated in `_condition()` against the
+  world plus flags from Events and UI (`Tutorial.notify(&"inventory_opened")`); one hint at a time
+  (`hint_changed` → HUD `TutorialCard`); progress in `user://profile.cfg [tutorial]`. `GuidePanel` (F1)
+  builds its Controls page from `InputSetup.REBINDABLE`.
+- **Save recovery** (`SaveManager`): `_write_json` prefixes a `#shardlands-save sha256=` header line and
+  checks the write; `_read_json` verifies it (header-less files still load). `load_world` falls back
+  save → .bak → `list_backups()` and records `last_load`. Snapshots (`backups/<stamp>/` with save, meta,
+  regions, `snapshot.json`) come from `_snapshot_files` (load, every `SNAPSHOT_INTERVAL` of play) and
+  `snapshot_world` (live state, used for crashes); `restore_backup` snapshots the current files first;
+  `verify_world` feeds the menu's `RecoveryPanel`.
+- **Crash handling** (`CrashHandler`): `user://sessions/<pid>.lock` with a heartbeat (scene, world,
+  position); stale locks of dead processes become `crash_reports/<stamp>/report.txt` + `log_tail.txt`
+  (previous rotated log). `NOTIFICATION_CRASH` → `emergency_save()` → `SaveManager.snapshot_world(…,
+  "crash")`. The main menu shows `crashed_last_time`.
+- **Platform** (`Platform` autoload, `src/platform/`): `Achievements.LIST`/`STATS` define everything;
+  Events update stats (`add_stat`) and unlock achievements; the profile (`[achievements]`, `[stats]`)
+  is the source of truth and is mirrored to the backend. `PlatformBackend` is the local platform;
+  `SteamBackend` wraps the GodotSteam singleton with `has_method` guards (tests inject a fake).
+- **Release**: `export_presets.cfg` (Windows, Linux, Web), `tools/build_release.sh`,
+  `tools/fetch_export_templates.py`, `tools/web/shardlands.html` (launcher that reassembles the split
+  engine), `tools/export_steam_config.gd` → `platform/steam/`. `ChunkManager.single_threaded` (no
+  `threads` feature, i.e. the web build) limits streaming to one job per frame.
+
 ## Survival
 
 - `StatBlock` aggregates multiplicative modifiers per source (`&"hunger"`,

@@ -2,6 +2,46 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.13.0] — Milestone 13: Beta / Release preparation
+
+### Added
+- **Tutorial** (`Tutorial` autoload, `TutorialCard`): 16 contextual hints that appear when the situation
+  comes up and clear when you do the thing, with the real key names for keyboard or gamepad; progress is
+  kept per player profile. Settings → Gameplay turns them off or replays them.
+- **Guide** (F1, `GuidePanel`): all controls with current bindings, and pages on survival, combat, the
+  character, crafting and building, the world and saving.
+- **Settings** (`SettingsPanel`, tabbed): difficulty (Story / Normal / Hard), autosave interval, damage
+  numbers, camera rotation speed, frame-rate cap, FPS counter.
+- **Controls**: rebinding of every gameplay action for keyboard/mouse and gamepad separately, conflict
+  warnings, resets; default gamepad layout with stick aiming; toggle sprint.
+- **Accessibility** (`AccessibilityLayer`): interface scale, colour-vision filters (protanopia,
+  deuteranopia, tritanopia), high-contrast UI, directional sound captions, reduced flashing, reduced motion.
+- **Save recovery**: checksummed save files, rotating world snapshots including region files, automatic
+  fallback (save → previous save → newest good snapshot) with a notice, and a Recover screen with restore
+  and undo.
+- **Crash handling** (`CrashHandler`): unclean exits produce a crash report (session, system, log tail)
+  and a main-menu notice; an engine crash writes an emergency snapshot.
+- **Platform layer** (`Platform`, `SteamBackend`): 20 achievements and lifetime stats, an Achievements
+  screen, rich presence and overlay pause; Steam through GodotSteam when installed; Steamworks config
+  generated from game data (`tools/export_steam_config.gd`, `platform/steam/`).
+- **Release tooling**: export presets (Windows, Linux, Web), `tools/build_release.sh`,
+  `tools/fetch_export_templates.py`, browser build with launcher page, `docs/RELEASE.md`.
+- Tests for all of it (rebinding, settings and accessibility, tutorial and guide, save recovery, crash
+  reports, platform with a stand-in Steam, release config).
+
+### Changed
+- Browser builds stream in a single-threaded mode (one generation job per frame, no prefetch, smaller
+  detail ring) instead of stalling.
+- The UI theme is shared by all screens so the high-contrast setting updates them live.
+- The corner cheat sheet is built from the current bindings and points to the guide.
+
+### Fixed
+- The first save of a new world could skip its backup snapshot.
+- The base-raid test could fail when arrow towers killed a whole wave before it reached the walls.
+- UI symbols (✕, arrows, stars, ⚠) showed as empty boxes where no system font has them (browsers):
+  DejaVu Sans now ships as a fallback font (`assets/fonts/`, Bitstream Vera licence).
+- Browser build: no errors from layout-aware key names or process ids (crash locks use a fixed name).
+
 ## [0.12.0] — Milestone 12: Alpha
 
 ### Added

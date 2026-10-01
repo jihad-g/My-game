@@ -39,7 +39,7 @@ var _emergency_done := false
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_started = Time.get_unix_time_from_system()
-	lock_path = "%s/%d.lock" % [sessions_dir, OS.get_process_id()]
+	lock_path = "%s/%s.lock" % [sessions_dir, _session_name()]
 	check_previous_session()
 	write_lock()
 
@@ -55,10 +55,11 @@ func check_previous_session() -> void:
 		if not f.ends_with(".lock"):
 			continue
 		var path := "%s/%s" % [sessions_dir, f]
-		if path == lock_path:
+		if path == lock_path and not OS.has_feature("web"):
 			continue
+		# Browsers have no process ids: a lock left by an earlier visit is a crash.
 		var pid := f.get_basename().to_int()
-		if pid > 0 and pid != OS.get_process_id() and OS.is_process_running(pid):
+		if not OS.has_feature("web") and pid > 0 and pid != OS.get_process_id() and OS.is_process_running(pid):
 			continue
 		var text := FileAccess.get_file_as_string(path)
 		var data = JSON.parse_string(text)
@@ -73,7 +74,7 @@ func write_lock(extra: Dictionary = {}) -> void:
 		"started": _started,
 		"heartbeat": Time.get_unix_time_from_system(),
 		"version": ProjectSettings.get_setting("application/config/version", "0"),
-		"pid": OS.get_process_id(),
+		"pid": 0 if OS.has_feature("web") else OS.get_process_id(),
 		"scene": get_tree().current_scene.scene_file_path if get_tree() and get_tree().current_scene else "",
 		"fps": Engine.get_frames_per_second(),
 	}
@@ -98,6 +99,10 @@ func _process(delta: float) -> void:
 	if _beat <= 0.0:
 		_beat = HEARTBEAT
 		write_lock()
+
+
+func _session_name() -> String:
+	return "web" if OS.has_feature("web") else str(OS.get_process_id())
 
 
 ## Clean exit: no lock = no crash next time.

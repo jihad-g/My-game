@@ -1,0 +1,200 @@
+<title>Shardlands</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Rubik:wght@400;500&display=swap">
+<style>
+/* Layout: one full-window game canvas; a launcher card floats over it until the engine starts. */
+:root {
+	--night: #11131f;       /* sky behind the world */
+	--panel: #1d1a28;       /* in-game panel purple-black */
+	--gold: #ffcc59;        /* the game's UI gold */
+	--parchment: #f7efdb;   /* body text */
+	--moss: #7bc95a;        /* stamina-bar green, used for progress */
+	--dim: #b9b0c9;
+	--display: "Pixelify Sans", "Trebuchet MS", system-ui, sans-serif;
+	--body: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+	color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+	margin: 0;
+	background: var(--night);
+	color: var(--parchment);
+	font-family: var(--body);
+	overflow: hidden;
+}
+#canvas {
+	display: block;
+	position: fixed;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	outline: none;
+	background: var(--night);
+}
+#launcher {
+	position: fixed;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	padding-inline: 16px;
+	background:
+		radial-gradient(ellipse at 50% 120%, #2b4a2a 0%, transparent 55%),
+		linear-gradient(180deg, #151a2e 0%, var(--night) 70%);
+}
+.card {
+	width: min(560px, 100%);
+	background: var(--panel);
+	border: 2px solid #d9ad5c;
+	border-radius: 10px;
+	box-shadow: 0 0 0 4px #00000055, 0 18px 40px #00000080;
+	padding: 28px 28px 24px;
+	display: grid;
+	gap: 16px;
+}
+h1 {
+	margin: 0;
+	font-family: var(--display);
+	font-weight: 700;
+	font-size: clamp(2.6rem, 9vw, 3.6rem);
+	letter-spacing: 0.04em;
+	color: var(--gold);
+	text-shadow: 0 3px 0 #6b4a12, 0 6px 14px #000;
+	text-wrap: balance;
+	line-height: 1;
+}
+.tag { margin: 0; color: var(--dim); font-size: 0.95rem; }
+.keys {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 6px 14px;
+	font-size: 0.88rem;
+	color: var(--dim);
+}
+kbd {
+	font-family: var(--display);
+	font-size: 0.85rem;
+	color: var(--parchment);
+	background: #2c2738;
+	border: 1px solid #4b4260;
+	border-bottom-width: 3px;
+	border-radius: 4px;
+	padding: 1px 6px;
+}
+button {
+	font-family: var(--display);
+	font-weight: 700;
+	font-size: 1.4rem;
+	letter-spacing: 0.06em;
+	color: #1b1407;
+	background: var(--gold);
+	border: 0;
+	border-bottom: 4px solid #a8751f;
+	border-radius: 8px;
+	padding: 12px 18px;
+	cursor: pointer;
+}
+button:hover { filter: brightness(1.08); }
+button:focus-visible { outline: 3px solid var(--parchment); outline-offset: 3px; }
+button:disabled { filter: grayscale(0.6); cursor: progress; }
+.progress { height: 12px; background: #0b0a10; border-radius: 6px; overflow: hidden; border: 1px solid #000; }
+.progress > div { height: 100%; width: 0%; background: var(--moss); transition: width 0.2s; }
+.small { margin: 0; font-size: 0.8rem; color: var(--dim); line-height: 1.45; }
+.error { color: #ff9d7a; white-space: pre-wrap; }
+@media (prefers-reduced-motion: reduce) { .progress > div { transition: none; } }
+</style>
+
+<canvas id="canvas" tabindex="0">Your browser doesn't support the canvas element.</canvas>
+
+<div id="launcher">
+	<div class="card">
+		<h1>SHARDLANDS</h1>
+		<p class="tag">A blocky open-world survival RPG · v{VERSION} beta · runs in your browser</p>
+		<div class="keys">
+			<span><kbd>WASD</kbd> move</span>
+			<span><kbd>LMB</kbd> attack / chop</span>
+			<span><kbd>F</kbd> gather / talk</span>
+			<span><kbd>Space</kbd> dodge</span>
+			<span><kbd>I</kbd> bag · <kbd>G</kbd> craft</span>
+			<span><kbd>B</kbd> build · <kbd>Esc</kbd> menu</span>
+		</div>
+		<button id="play" type="button">Play</button>
+		<div class="progress" id="bar" hidden><div id="fill"></div></div>
+		<p class="small" id="status">Downloads about 50 MB the first time. Needs a keyboard and mouse and a recent Chrome, Edge or Firefox.
+			Worlds you save are kept in this browser. Pick "Quick play" in the game's menu to jump straight in.</p>
+	</div>
+</div>
+
+<script>
+// The host serves files of at most 15 MB, and only common web types. So the
+// engine (index.wasm, 43.7 MB) is stored in 4 parts and the game data
+// (index.pck) under a .wasm name; this hands the engine the files it asks for.
+(function () {
+	const PARTS = {PARTS};
+	const realFetch = window.fetch.bind(window);
+	function bytes(p) {
+		return realFetch(p).then((r) => {
+			if (!r.ok) throw new Error('Could not load ' + p + ' (HTTP ' + r.status + ')');
+			return r.arrayBuffer();
+		});
+	}
+	window.fetch = function (input, init) {
+		const url = typeof input === 'string' ? input : (input && input.url);
+		const name = url ? url.split('?')[0].split('/').pop() : '';
+		if (name === 'index.wasm') {
+			return Promise.all(PARTS.map(bytes)).then((bufs) => new Response(new Blob(bufs, { type: 'application/wasm' }),
+				{ status: 200, headers: { 'Content-Type': 'application/wasm' } }));
+		}
+		if (name === 'index.pck') {
+			return bytes('game-data.pck.wasm').then((buf) => new Response(buf,
+				{ status: 200, headers: { 'Content-Type': 'application/octet-stream' } }));
+		}
+		return realFetch(input, init);
+	};
+})();
+</script>
+<script src="index.js"></script>
+<script>
+(function () {
+	const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":false,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":{PCK_SIZE},"index.wasm":{WASM_SIZE}},"focusCanvas":true,"gdextensionLibs":[]};
+	const launcher = document.getElementById('launcher');
+	const play = document.getElementById('play');
+	const bar = document.getElementById('bar');
+	const fill = document.getElementById('fill');
+	const status = document.getElementById('status');
+
+	function fail(err) {
+		console.error(err);
+		status.textContent = 'The game could not start: ' + (err && err.message ? err.message : String(err)) +
+			'\nTry Chrome or Edge, and check that hardware acceleration is on in the browser settings.';
+		status.classList.add('error');
+		play.disabled = false;
+		play.textContent = 'Try again';
+	}
+
+	const missing = Engine.getMissingFeatures({ threads: false });
+	if (missing.length) {
+		fail(new Error('This browser is missing: ' + missing.join(', ')));
+	}
+
+	play.addEventListener('click', function () {
+		play.disabled = true;
+		play.textContent = 'Loading…';
+		bar.hidden = false;
+		status.classList.remove('error');
+		status.textContent = 'Downloading the game…';
+		const engine = new Engine(GODOT_CONFIG);
+		engine.startGame({
+			onProgress: function (current, total) {
+				if (current > 0 && total > 0) {
+					fill.style.width = Math.min(100, Math.round(current / total * 100)) + '%';
+					status.textContent = 'Downloading the game… ' + Math.round(current / 1048576) + ' / ' + Math.round(total / 1048576) + ' MB';
+					if (current >= total) status.textContent = 'Starting the engine…';
+				}
+			},
+		}).then(function () {
+			launcher.remove();
+			document.getElementById('canvas').focus();
+		}, fail);
+	});
+})();
+</script>

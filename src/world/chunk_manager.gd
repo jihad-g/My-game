@@ -41,6 +41,8 @@ signal chunk_removed(coord: Vector2i)
 ## Settlements/POIs within this distance (m) are laid out in the background.
 @export var prewarm_radius_m: int = 1500
 
+## True on builds without threads (the web export): see setup().
+var single_threaded := not OS.has_feature("threads")
 var generator: TerrainGenerator
 var library: PropLibrary
 var focus: Node3D
@@ -76,6 +78,16 @@ func setup(p_generator: TerrainGenerator, p_library: PropLibrary) -> void:
 	generator = p_generator
 	library = p_library
 	_threads = max_concurrent_tasks if max_concurrent_tasks > 0 else clampi(OS.get_processor_count() - 1, 2, 8)
+	if single_threaded:
+		# Browser build without threads (Milestone 13): "worker" tasks run on
+		# the main thread, so do one job per frame, no speculative prefetch, a
+		# smaller detail ring and towns laid out only nearby.
+		_threads = 1
+		max_prefetch = 0
+		max_applies_per_frame = 2
+		prewarm_radius_m = mini(prewarm_radius_m, 400)
+		if lod_radii.size() == 3:
+			lod_radii = PackedInt32Array([lod_radii[0], mini(lod_radii[1], 5), mini(lod_radii[2], 7)])
 	if far_terrain_enabled and far == null:
 		far = FarTerrain.new()
 		far.name = "FarTerrain"
@@ -310,7 +322,7 @@ func _dispatch() -> void:
 		if _pending.has(coord) or _cache.has(Vector4i(coord.x, coord.y, lod, layer)):
 			continue
 		_start_task(coord, lod, true)
-	if far:
+	if far and not (single_threaded and not _pending.is_empty()):
 		far.dispatch(maxi(1, _threads - _pending.size()))
 
 

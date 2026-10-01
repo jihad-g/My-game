@@ -24,6 +24,7 @@ var _class_info := Label.new()
 
 var _settings := SettingsPanel.new()
 var recovery := RecoveryPanel.new()
+var achievements := AchievementsPanel.new()
 var crash_notice := PanelContainer.new()
 var _mp_name := LineEdit.new()
 var _mp_host := CheckBox.new()
@@ -41,6 +42,8 @@ func _ready() -> void:
 	UIFx.attach(_settings)
 	add_child(recovery)
 	UIFx.attach(recovery)
+	add_child(achievements)
+	UIFx.attach(achievements)
 	recovery.restored.connect(func(_id: String) -> void:
 		_status.text = "Backup restored."
 		_refresh_list())
@@ -106,7 +109,7 @@ func _build() -> void:
 	title.add_theme_constant_override(&"outline_size", 12)
 	root.add_child(title)
 	var sub := Label.new()
-	sub.text = "A blocky open-world survival RPG · prototype v%s" % ProjectSettings.get_setting("application/config/version", "")
+	sub.text = "A blocky open-world survival RPG · beta v%s" % ProjectSettings.get_setting("application/config/version", "")
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.add_theme_color_override(&"font_color", UITheme.TEXT_DIM)
 	root.add_child(sub)
@@ -224,6 +227,10 @@ func _build() -> void:
 	settings_btn.text = "Settings"
 	settings_btn.pressed.connect(func() -> void: _settings.visible = true)
 	bottom.add_child(settings_btn)
+	var ach_btn := Button.new()
+	ach_btn.text = "Achievements"
+	ach_btn.pressed.connect(func() -> void: achievements.visible = true)
+	bottom.add_child(ach_btn)
 	var quit := Button.new()
 	quit.text = "Quit"
 	quit.pressed.connect(func() -> void: get_tree().quit())

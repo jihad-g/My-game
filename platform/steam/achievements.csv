@@ -1,0 +1,21 @@
+api_name,display_name,description,hidden,progress_stat,goal
+first_craft,"Handy","Craft your first item.",0,items_crafted,1
+master_crafter,"Master Crafter","Craft 500 items.",0,items_crafted,500
+lumberjack,"Lumberjack","Fell 100 trees.",0,trees_felled,100
+homestead,"Homestead","Have 25 building pieces standing.",0,,25
+first_blood,"First Blood","Defeat a monster.",0,monsters_killed,1
+slayer,"Slayer","Defeat 500 monsters.",0,monsters_killed,500
+boss_slayer,"Giant Killer","Defeat a boss.",0,bosses_killed,1
+dungeon_delver,"Dungeon Delver","Clear a dungeon.",0,dungeons_cleared,1
+s_rank,"Into the Abyss","Clear an S-rank dungeon.",0,,1
+level_10,"Seasoned","Reach level 10.",0,,10
+level_50,"Veteran","Reach level 50.",0,,50
+level_100,"Legend of the Shardlands","Reach level 100.",0,,100
+explorer,"Wanderer","Discover 8 different biomes.",0,biomes_discovered,8
+cartographer,"Cartographer","Discover 25 points of interest.",0,pois_discovered,25
+merchant,"Merchant Prince","Trade goods worth 5,000 copper.",0,copper_traded,5000
+defender,"Defender","Repel a raid.",0,raids_repelled,1
+spellbinder,"Spellbinder","Learn 4 spells.",0,,4
+legendary,"Forged in Starlight","Craft a legendary item.",1,,1
+crafting_100,"Artisan","Reach 100 Crafting skill.",0,,100
+together,"Better Together","Play a co-op session with a friend.",0,,1

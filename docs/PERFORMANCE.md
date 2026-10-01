@@ -11,28 +11,28 @@ a chunk with a second generator (determinism), and lay out every floor of up to 
 
 | Seed | Spawn | Biome | Towns ≤2 km | Nearest town | POIs ≤2.5 km | Dungeon floors | Chunk avg / max | Problems |
 |---:|---|---|---:|---:|---:|---:|---:|---|
-| 20250101 | 0, 0 (0 m) | whispering_forest | 14 | 297 m | 49 | 4 | 5.3 / 12.2 ms | none |
-| 1321476956 | 0, 0 (0 m) | whispering_forest | 10 | 327 m | 40 | 4 | 5.8 / 13.2 ms | none |
-| 17539747 | 0, 24 (24 m) | whispering_forest | 15 | 549 m | 61 | 4 | 5.2 / 11.6 ms | none |
-| 3348728241 | 0, 0 (0 m) | whispering_forest | 16 | 134 m | 44 | 4 | 6.2 / 16.1 ms | none |
-| 2863338820 | 24, 0 (24 m) | whispering_forest | 18 | 256 m | 51 | 4 | 5.8 / 14.4 ms | none |
-| 85463406 | 0, 24 (24 m) | whispering_forest | 22 | 482 m | 60 | 4 | 5.7 / 11.9 ms | none |
-| 1024873269 | -12, 0 (12 m) | whispering_forest | 16 | 168 m | 55 | 4 | 6.5 / 17.6 ms | none |
-| 4179236141 | 0, 0 (0 m) | whispering_forest | 19 | 336 m | 43 | 5 | 5.5 / 11.8 ms | none |
-| 1040420088 | 24, 0 (24 m) | whispering_forest | 19 | 287 m | 46 | 4 | 5.6 / 8.8 ms | none |
-| 2363282938 | 0, 0 (0 m) | whispering_forest | 16 | 389 m | 59 | 4 | 6.0 / 16.0 ms | none |
-| 1603148953 | 0, 0 (0 m) | whispering_forest | 17 | 310 m | 55 | 4 | 6.7 / 13.0 ms | none |
-| 2491055202 | 12, 0 (12 m) | whispering_forest | 18 | 196 m | 74 | 4 | 7.6 / 15.4 ms | none |
-| 4196633446 | 0, 0 (0 m) | whispering_forest | 17 | 307 m | 48 | 4 | 6.9 / 15.2 ms | none |
-| 3921778136 | 0, 0 (0 m) | whispering_forest | 8 | 560 m | 53 | 4 | 6.9 / 11.9 ms | none |
-| 2742593386 | 12, 0 (12 m) | whispering_forest | 18 | 205 m | 55 | 4 | 7.4 / 13.2 ms | none |
-| 2909386517 | 0, 0 (0 m) | whispering_forest | 13 | 487 m | 47 | 4 | 6.1 / 14.9 ms | none |
-| 1022020124 | 0, 24 (24 m) | whispering_forest | 10 | 301 m | 51 | 4 | 5.6 / 12.3 ms | none |
+| 20250101 | 0, 0 (0 m) | whispering_forest | 14 | 297 m | 49 | 4 | 5.2 / 12.2 ms | none |
+| 1321476956 | 0, 0 (0 m) | whispering_forest | 10 | 327 m | 40 | 4 | 5.7 / 13.4 ms | none |
+| 17539747 | 0, 24 (24 m) | whispering_forest | 15 | 549 m | 61 | 4 | 5.5 / 12.2 ms | none |
+| 3348728241 | 0, 0 (0 m) | whispering_forest | 16 | 134 m | 44 | 4 | 6.0 / 15.1 ms | none |
+| 2863338820 | 24, 0 (24 m) | whispering_forest | 18 | 256 m | 51 | 4 | 5.9 / 14.9 ms | none |
+| 85463406 | 0, 24 (24 m) | whispering_forest | 22 | 482 m | 60 | 4 | 6.3 / 14.4 ms | none |
+| 1024873269 | -12, 0 (12 m) | whispering_forest | 16 | 168 m | 55 | 4 | 6.0 / 15.9 ms | none |
+| 4179236141 | 0, 0 (0 m) | whispering_forest | 19 | 336 m | 43 | 5 | 5.5 / 12.5 ms | none |
+| 1040420088 | 24, 0 (24 m) | whispering_forest | 19 | 287 m | 46 | 4 | 5.6 / 7.1 ms | none |
+| 2363282938 | 0, 0 (0 m) | whispering_forest | 16 | 389 m | 59 | 4 | 5.3 / 11.7 ms | none |
+| 1603148953 | 0, 0 (0 m) | whispering_forest | 17 | 310 m | 55 | 4 | 5.5 / 11.7 ms | none |
+| 2491055202 | 12, 0 (12 m) | whispering_forest | 18 | 196 m | 74 | 4 | 5.1 / 6.8 ms | none |
+| 4196633446 | 0, 0 (0 m) | whispering_forest | 17 | 307 m | 48 | 4 | 5.5 / 12.8 ms | none |
+| 3921778136 | 0, 0 (0 m) | whispering_forest | 8 | 560 m | 53 | 4 | 5.1 / 7.4 ms | none |
+| 2742593386 | 12, 0 (12 m) | whispering_forest | 18 | 205 m | 55 | 4 | 5.8 / 10.5 ms | none |
+| 2909386517 | 0, 0 (0 m) | whispering_forest | 13 | 487 m | 47 | 4 | 6.8 / 15.5 ms | none |
+| 1022020124 | 0, 24 (24 m) | whispering_forest | 10 | 301 m | 51 | 4 | 5.6 / 12.7 ms | none |
 | 2315145301 | -12, 0 (12 m) | whispering_forest | 9 | 279 m | 44 | 4 | 5.4 / 11.9 ms | none |
-| 4240162672 | 12, 0 (12 m) | whispering_forest | 9 | 649 m | 47 | 5 | 5.6 / 8.1 ms | none |
-| 2993265328 | 12, 0 (12 m) | whispering_forest | 16 | 281 m | 59 | 4 | 5.8 / 8.6 ms | none |
+| 4240162672 | 12, 0 (12 m) | whispering_forest | 9 | 649 m | 47 | 5 | 5.3 / 7.5 ms | none |
+| 2993265328 | 12, 0 (12 m) | whispering_forest | 16 | 281 m | 59 | 4 | 5.5 / 9.3 ms | none |
 
-**0 problems** over 20 seeds. LOD0 chunk generation: 6.1 ms average, 17.6 ms worst (budget 60 ms;
+**0 problems** over 20 seeds. LOD0 chunk generation: 5.6 ms average, 15.9 ms worst (budget 60 ms;
 generation runs on worker threads, so this is latency, not frame time).
 
 ## In-game frame times
@@ -42,15 +42,18 @@ Main scene, knight at the default spawn, view distance from the default settings
 
 | Scenario | Load | Average | 95th pct | Worst |
 |---|---|---:|---:|---:|
-| Idle (exploring) | 3539 nodes | 6.9 ms | 8.0 ms | 8.2 ms |
-| Monster crowd, AI on | 40 monsters | 7.8 ms | 17.1 ms | 39.8 ms |
-| Large base | 322 building pieces | 6.8 ms | 8.9 ms | 15.9 ms |
-| Particle bursts | 3 bursts / frame | 6.9 ms | 8.3 ms | 8.5 ms |
-| Streaming (4 × 700 m jumps) | near area ready ≤ 0.4 s | 6.9 ms | 8.1 ms | 33.1 ms |
+| Idle (exploring) | 3932 nodes | 6.9 ms | 7.8 ms | 7.9 ms |
+| Monster crowd, AI on | 40 monsters | 7.4 ms | 18.0 ms | 37.3 ms |
+| Large base | 322 building pieces | 6.8 ms | 7.8 ms | 15.9 ms |
+| Particle bursts | 3 bursts / frame | 6.9 ms | 8.1 ms | 8.4 ms |
+| Streaming (4 × 700 m jumps) | near area ready ≤ 0.3 s | 6.9 ms | 7.9 ms | 32.6 ms |
 
-Static memory after the run: 231 MB.
+Static memory after the run: 242 MB.
 
 Notes: chunk meshes are built on worker threads and committed under a per-frame budget
 (`ChunkManager`), so streaming shows up as a few longer frames, not stalls. Far terrain is
 cached LOD tiles. Monsters only probe for stair steps when last tick's movement hit terrain or a
 building, not another character (crowds used to cost ~0.2 ms per monster per tick).
+The browser build has no worker threads: there the streamer runs one generation job per frame
+(~6 ms), skips prefetching and keeps a smaller detail ring, so walking costs short hitches
+instead of long stalls (Milestone 13).

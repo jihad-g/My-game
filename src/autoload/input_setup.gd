@@ -362,7 +362,10 @@ static func event_label(ev: InputEvent) -> String:
 			KEY_TAB: return "Tab"
 			KEY_PAGEUP: return "PgUp"
 			KEY_PAGEDOWN: return "PgDn"
-		var name := OS.get_keycode_string(DisplayServer.keyboard_get_keycode_from_physical(k)) if DisplayServer.get_name() != "headless" else ""
+		# Layout-aware name (AZERTY shows "Z" for the physical W key) where the
+		# platform supports it; browsers and headless runs use the US name.
+		var name := OS.get_keycode_string(DisplayServer.keyboard_get_keycode_from_physical(k)) \
+			if DisplayServer.get_name() != "headless" and not OS.has_feature("web") else ""
 		if name == "":
 			name = OS.get_keycode_string(k)
 		return name

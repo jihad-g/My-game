@@ -89,6 +89,7 @@ var mp_hud := MultiplayerHud.new()
 var _pause_box: Control
 var _settings := SettingsPanel.new()
 var guide := GuidePanel.new()
+var achievements := AchievementsPanel.new()
 var tutorial_card := TutorialCard.new()
 ## Red edge glow when hurt / low on health (Milestone 10).
 var _vignette := ColorRect.new()
@@ -681,6 +682,17 @@ func _build_overlays() -> void:
 	_settings.visible = false
 	_settings.closed.connect(func() -> void: _pause_box.visible = true)
 	_pause.add_child(_settings)
+	var ach_btn := Button.new()
+	ach_btn.text = "Achievements"
+	ach_btn.pressed.connect(func() -> void: achievements.visible = true)
+	pv.add_child(ach_btn)
+	var guide_btn := Button.new()
+	guide_btn.text = "Guide"
+	guide_btn.pressed.connect(func() -> void:
+		set_paused(false)
+		guide.toggle())
+	pv.add_child(guide_btn)
+	_pause.add_child(achievements)
 	_save_button = Button.new()
 	_save_button.text = "Save world"
 	_save_button.pressed.connect(func() -> void:
@@ -776,6 +788,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			world.blueprints.placer.end()
 		elif world and world.build_mode and world.build_mode.active:
 			world.build_mode.set_active(false)
+		elif achievements.visible:
+			achievements.visible = false
 		elif guide.visible:
 			guide.visible = false
 		elif _blueprints.visible:

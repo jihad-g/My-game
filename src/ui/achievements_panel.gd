@@ -73,7 +73,7 @@ func refresh() -> void:
 		info.add_child(desc)
 		row.add_child(info)
 		var p := Platform.progress(id)
-		if not done and int(p[1]) > 1 and a[2] != &"":
+		if not done and int(p[1]) > 1 and a[Achievements.STAT] != &"":
 			var bar := ProgressBar.new()
 			bar.custom_minimum_size = Vector2(140, 14)
 			bar.max_value = float(p[1])

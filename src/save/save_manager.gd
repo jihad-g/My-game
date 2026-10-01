@@ -112,6 +112,8 @@ func create_world(world_name: String, seed_value: int, class_id: StringName = Cl
 	GameState.reset(seed_value)
 	GameState.set_region_directory(regions_path(id))
 	_session_start_msec = Time.get_ticks_msec()
+	_last_snapshot_msec = -1  # the first save of a new world gets a backup
+	last_load = {}
 	return id
 
 
@@ -173,6 +175,8 @@ func start_transient(seed_value: int, class_id: StringName = ClassRegistry.DEFAU
 	pending = {}
 	new_character_class = class_id
 	GameState.reset(seed_value)
+	_last_snapshot_msec = -1
+	last_load = {}
 
 
 ## Writes the current world. Returns false for transient worlds or on errors.
