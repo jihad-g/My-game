@@ -53,6 +53,10 @@ var _trade := TradePanel.new()
 var _requests := RequestsPanel.new()
 var _reputation := ReputationPanel.new()
 var _coins_label := Label.new()
+var _boss_panel := PanelContainer.new()
+var _boss_name := Label.new()
+var _boss_bar: ProgressBar
+var _boss: Enemy
 var _town_label := Label.new()
 var _mana_bar: ProgressBar
 var _mana_label: Label
@@ -107,6 +111,21 @@ func _ready() -> void:
 			_dialogue.open(n as NPC))
 	Events.open_requests.connect(func(site: Node) -> void: _requests.open(site))
 	Events.coins_changed.connect(func(_c: int) -> void: _refresh_coins())
+	_build_boss_bar()
+	Events.boss_started.connect(func(b: Node) -> void:
+		_boss = b as Enemy
+		_boss_name.text = _boss.display_name()
+		_boss_panel.visible = true)
+	Events.dungeon_entered.connect(func(_id: String, f: int) -> void:
+		if world and world.dungeon:
+			_biome_label.text = "%s · Floor %d/%d" % [world.dungeon.poi.title(), f + 1, world.dungeon.plan.floor_count])
+	Events.dungeon_left.connect(func(_id: String, _c: bool) -> void:
+		if world and world.current_biome:
+			_biome_label.text = world.current_biome.display_name)
+	Events.boss_ended.connect(func(b: Node) -> void:
+		if b == _boss:
+			_boss_panel.visible = false
+			_boss = null)
 	Events.settlement_entered.connect(func(_id: String) -> void: _refresh_town())
 	Events.settlement_left.connect(func(_id: String) -> void: _refresh_town())
 	Events.reputation_changed.connect(func(_id: String, _v: float) -> void: _refresh_town())
@@ -691,6 +710,39 @@ func _process(_delta: float) -> void:
 	_refresh_abilities()
 	_update_buffs()
 	_update_land()
+	_update_boss_bar()
+
+
+func _build_boss_bar() -> void:
+	_boss_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_boss_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_boss_panel.offset_top = 70
+	_boss_panel.visible = false
+	_boss_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_boss_panel)
+	var v := VBoxContainer.new()
+	_boss_panel.add_child(v)
+	_boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_name.add_theme_font_size_override(&"font_size", 20)
+	_boss_name.add_theme_color_override(&"font_color", Color(1.0, 0.55, 0.4))
+	v.add_child(_boss_name)
+	var parts := _make_bar(Color(0.75, 0.1, 0.12), 560)
+	_boss_bar = parts[0]
+	_boss_bar.custom_minimum_size.y = 22
+	v.add_child(_boss_bar)
+
+
+func _update_boss_bar() -> void:
+	if _boss == null:
+		return
+	if not is_instance_valid(_boss) or _boss.is_dead or not _boss.is_inside_tree():
+		_boss_panel.visible = false
+		_boss = null
+		return
+	_boss_bar.max_value = _boss.health.max_health
+	_boss_bar.value = _boss.health.current
+	var enr: bool = _boss.get("enraged") == true
+	_boss_name.text = "%s%s" % [_boss.display_name(), "  - ENRAGED" if enr else ""]
 
 
 func _refresh_coins() -> void:

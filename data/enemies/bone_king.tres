@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/bone_king_swipe.tres" id="2_melee"]
+[ext_resource type="Resource" path="res://data/attacks/bone_king_cleave.tres" id="3_heavy"]
+[ext_resource type="Resource" path="res://data/enemies/skeleton_warrior.tres" id="4_summon"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"royal_bone"
+min_count = 1
+max_count = 1
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"ancient_bone"
+min_count = 3
+max_count = 6
+chance = 1.0
+
+[resource]
+script = ExtResource("1_md")
+id = &"bone_king"
+display_name = "Bone King"
+category = 7
+level = 12
+max_health = 900.0
+walk_speed = 2.4
+run_speed = 4.6
+turn_speed = 9.0
+aggro_range = 18.0
+leash_range = 34.0
+max_poise = 250.0
+damage_multipliers = {
+&"fire": 1.2,
+&"poison": 0.0
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 400
+respawn_time = 600.0
+style = 3
+look = &"bone_king"
+model_scale = 1.7
+tint = Color(0.88, 0.86, 0.78, 1)
+accent = Color(1, 0.25, 0.2, 1)
+melee = ExtResource("2_melee")
+heavy = ExtResource("3_heavy")
+heavy_cooldown = 5.0
+boss_title = "The Bone King"
+boss_moves = [&"cleave", &"slam", &"summon", &"charge", &"slam"]
+slam_damage = 30.0
+slam_radius = 4.5
+summon = ExtResource("4_summon")
+summon_count = 2

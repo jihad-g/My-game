@@ -26,6 +26,10 @@ const STAT_NAMES := {
 	&"defense": "Defense", &"crafting": "Crafting", &"dexterity": "Dexterity",
 }
 
+## Description of potion/shrine buffs (see PlayerAbilities outgoing/incoming_mult).
+const BUFF_TEXT := {&"might": "+20% damage", &"stoneskin": "-20% damage taken",
+	&"starlight": "+15% damage, full mana", &"blessing": "+10% damage, -10% damage taken"}
+
 @export var id: StringName
 @export var display_name: String = ""
 @export_multiline var description: String = ""
@@ -46,6 +50,10 @@ const STAT_NAMES := {
 ## Temporary temperature offset in degrees C (+ warms, - cools).
 @export var temperature_offset: float = 0.0
 @export var temperature_duration: float = 0.0
+## Potions (Milestone 6): mana restored and a timed buff (PlayerAbilities buff id).
+@export var mana_restore: float = 0.0
+@export var buff_id: StringName
+@export var buff_duration: float = 0.0
 
 @export_group("Equipment")
 @export var equip_slot: EquipSlot = EquipSlot.NONE
@@ -112,6 +120,10 @@ func effect_lines() -> PackedStringArray:
 	if temperature_offset != 0.0 and temperature_duration > 0.0:
 		lines.append("%s %+d°C for %ds" % ["Warms" if temperature_offset > 0 else "Cools",
 			roundi(temperature_offset), roundi(temperature_duration)])
+	if mana_restore > 0.0:
+		lines.append("Restores %d mana" % roundi(mana_restore))
+	if buff_id != &"" and buff_duration > 0.0:
+		lines.append("%s for %d min" % [BUFF_TEXT.get(buff_id, String(buff_id).capitalize()), roundi(buff_duration / 60.0)])
 	if is_tool():
 		lines.append("%s tier %d (used automatically when harvesting)" % [String(tool_kind).capitalize(), tool_tier])
 	if is_recipe_book():

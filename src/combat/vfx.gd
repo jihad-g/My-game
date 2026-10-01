@@ -79,3 +79,36 @@ static func bolt(parent: Node, points: PackedVector3Array, color: Color, time: f
 	var tw := mi.create_tween()
 	tw.tween_property(mi.material_override, "albedo_color:a", 0.0, time)
 	tw.tween_callback(mi.queue_free)
+
+
+## Red danger zone on the ground that fills up over `time` (boss slams).
+static func danger_zone(parent: Node, pos: Vector3, radius: float, time: float) -> Node3D:
+	var root := Node3D.new()
+	parent.add_child(root)
+	root.global_position = pos + Vector3(0, 0.08, 0)
+	var edge := MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.93
+	torus.outer_radius = 1.0
+	torus.rings = 32
+	torus.ring_segments = 3
+	edge.mesh = torus
+	edge.scale = Vector3(radius, 0.2, radius)
+	edge.material_override = _unshaded(Color(1, 0.2, 0.1, 0.8))
+	edge.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(edge)
+	var fill := MeshInstance3D.new()
+	var disc := CylinderMesh.new()
+	disc.top_radius = 1.0
+	disc.bottom_radius = 1.0
+	disc.height = 0.02
+	disc.radial_segments = 24
+	fill.mesh = disc
+	fill.material_override = _unshaded(Color(1, 0.15, 0.1, 0.35))
+	fill.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	fill.scale = Vector3(0.05, 1, 0.05)
+	root.add_child(fill)
+	var tw := root.create_tween()
+	tw.tween_property(fill, "scale", Vector3(radius, 1, radius), time)
+	tw.tween_callback(root.queue_free)
+	return root

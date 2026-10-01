@@ -332,3 +332,47 @@ func _build_forgotten_cache(b: BlockMesh) -> void:
 	b.box(Vector3(0.3, 0.28, 0.31), Vector3(0.06, 0.56, 0.02), Color(0.45, 0.45, 0.5))
 	b.box(Vector3(0.55, 0.1, 0.2), Vector3(0.3, 0.2, 0.3), Color(0.55, 0.55, 0.6))
 	b.box(Vector3(-0.2, 0.7, 0.05), Vector3(0.3, 0.08, 0.22), Color(0.55, 0.2, 0.2))  # a book on top
+
+
+# --- Milestone 6: magical plants & rare ore -----------------------------------------
+
+func _build_sunbloom(b: BlockMesh) -> void:
+	var stem := Color(0.35, 0.6, 0.25)
+	b.box(Vector3(0, 0.25, 0), Vector3(0.06, 0.5, 0.06), stem)
+	b.box(Vector3(0.1, 0.2, 0.05), Vector3(0.2, 0.05, 0.1), stem * 1.1)
+	b.box(Vector3(0, 0.55, 0), Vector3(0.34, 0.08, 0.34), Color(1.0, 0.82, 0.25))
+	b.box(Vector3(0, 0.58, 0), Vector3(0.14, 0.08, 0.14), Color(1.0, 0.55, 0.15))
+
+
+func _build_frost_lotus(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.03, 0), Vector3(0.6, 0.04, 0.6), Color(0.45, 0.65, 0.55))
+	for k in 4:
+		var a := k * PI * 0.5 + PI * 0.25
+		b.box(Vector3(cos(a) * 0.12, 0.14, sin(a) * 0.12), Vector3(0.14, 0.16, 0.14), Color(0.8, 0.93, 1.0), Basis(Vector3.UP, a))
+	b.box(Vector3(0, 0.2, 0), Vector3(0.1, 0.12, 0.1), Color(0.6, 0.85, 1.0))
+
+
+func _build_emberroot(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.06, 0), Vector3(0.36, 0.12, 0.3), Color(0.35, 0.22, 0.14))
+	b.box(Vector3(0.05, 0.16, 0), Vector3(0.12, 0.16, 0.1), Color(1.0, 0.45, 0.15))
+	b.box(Vector3(-0.1, 0.13, 0.05), Vector3(0.08, 0.1, 0.08), Color(1.0, 0.6, 0.2))
+	b.box(Vector3(0.0, 0.28, 0.0), Vector3(0.04, 0.2, 0.04), Color(0.4, 0.55, 0.2))
+
+
+func _build_dreamcap(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.12, 0), Vector3(0.08, 0.24, 0.08), Color(0.8, 0.85, 0.95))
+	b.box(Vector3(0, 0.28, 0), Vector3(0.36, 0.1, 0.36), Color(0.35, 0.5, 1.0))
+	b.box(Vector3(0.15, 0.08, 0.1), Vector3(0.05, 0.14, 0.05), Color(0.8, 0.85, 0.95))
+	b.box(Vector3(0.15, 0.17, 0.1), Vector3(0.16, 0.06, 0.16), Color(0.45, 0.6, 1.0))
+
+
+func _build_starlight_orchid(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.3, 0), Vector3(0.05, 0.6, 0.05), Color(0.4, 0.6, 0.45))
+	for k in 5:
+		var a := TAU * k / 5.0
+		b.box(Vector3(cos(a) * 0.12, 0.62, sin(a) * 0.12), Vector3(0.14, 0.04, 0.08), Color(0.92, 0.88, 1.0), Basis(Vector3.UP, a))
+	b.box(Vector3(0, 0.64, 0), Vector3(0.08, 0.08, 0.08), Color(1.0, 0.95, 0.6))
+
+
+func _build_ore_mithril(b: BlockMesh) -> void:
+	_ore_rock(b, Color(0.55, 0.75, 1.0))

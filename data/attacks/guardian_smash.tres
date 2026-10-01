@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"guardian_smash"
+display_name = "Sunfall"
+damage = 28
+windup = 0.9
+active = 0.15
+recovery = 0.7
+cancel_ratio = 0.0
+reach = 3.4
+arc_degrees = 140
+knockback = 9
+poise_damage = 40
+lunge_speed = 1.0
+move_multiplier = 0.0
+animation = &"overhead"
+camera_shake = 0.3

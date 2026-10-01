@@ -1,0 +1,68 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/golem_smash.tres" id="2_melee"]
+[ext_resource type="Resource" path="res://data/attacks/colossus_smash.tres" id="3_heavy"]
+[ext_resource type="Resource" path="res://data/enemies/arcane_wisp.tres" id="4_summon"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"void_shard"
+min_count = 2
+max_count = 3
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"arcane_dust"
+min_count = 4
+max_count = 8
+chance = 1.0
+
+[resource]
+script = ExtResource("1_md")
+id = &"arcane_colossus"
+display_name = "Arcane Colossus"
+category = 7
+level = 14
+max_health = 1100.0
+walk_speed = 1.8
+run_speed = 3.8
+turn_speed = 9.0
+aggro_range = 18.0
+leash_range = 34.0
+max_poise = 300.0
+damage_multipliers = {
+&"physical": 0.85,
+&"poison": 0.0
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 500
+respawn_time = 600.0
+style = 3
+look = &"arcane_colossus"
+model_scale = 2.0
+tint = Color(0.5, 0.45, 0.65, 1)
+accent = Color(0.8, 0.45, 1, 1)
+melee = ExtResource("2_melee")
+heavy = ExtResource("3_heavy")
+heavy_cooldown = 5.5
+projectile_damage = 14.0
+projectile_type = &"arcane"
+projectile_speed = 12.0
+projectile_color = Color(0.75, 0.5, 1, 1)
+projectile_windup = 0.6
+projectile_cooldown = 3.0
+preferred_min = 0.0
+preferred_max = 12.0
+projectile_status = [&"chilled", 2.0, {}]
+boss_title = "The Arcane Colossus"
+boss_moves = [&"volley", &"cleave", &"slam", &"summon", &"volley"]
+slam_damage = 34.0
+slam_radius = 5.0
+volley_count = 5
+summon = ExtResource("4_summon")
+summon_count = 2

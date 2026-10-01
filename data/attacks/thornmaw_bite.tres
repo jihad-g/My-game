@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"thornmaw_bite"
+display_name = "Crushing Bite"
+damage = 32
+windup = 0.9
+active = 0.15
+recovery = 0.7
+cancel_ratio = 0.0
+reach = 3.8
+arc_degrees = 110
+knockback = 9
+poise_damage = 45
+lunge_speed = 4.0
+move_multiplier = 0.0
+animation = &"bite"
+camera_shake = 0.3

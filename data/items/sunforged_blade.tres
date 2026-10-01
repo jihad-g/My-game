@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/sword.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"sunforged_blade"
+display_name = "Sunforged Blade"
+description = "A sword forged from mithril and sunstone. Warm to hold, terrible to face."
+category = 3
+rarity = 6
+max_stack = 1
+base_value = 2500
+icon_color = Color(1, 0.8, 0.35, 1)
+icon_glyph = "Sw"
+equip_slot = 1
+required_level = 30
+stat_bonuses = {
+&"damage_bonus": 22,
+&"crit_chance": 8,
+&"strength": 4
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"sword"

@@ -133,7 +133,12 @@ func _on_enemy_killed(enemy: Node, _id: StringName, _pos: Vector3) -> void:
 	if enemy.get_meta(&"killed_by_npc", false):
 		return  # a town guard got it
 	var d := (enemy as Enemy).data
-	grant_xp(Progression.combat_xp(d.xp_reward, d.level, level),
+	var xp_base := d.xp_reward
+	var lvl := d.level
+	if enemy.has_method("xp_value"):
+		xp_base = enemy.xp_value()
+		lvl = enemy.effective_level()
+	grant_xp(Progression.combat_xp(xp_base, lvl, level),
 		Progression.Source.BOSS if d.category == EnemyData.Category.BOSS else Progression.Source.COMBAT)
 
 

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/staff.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"staff_of_the_archmage"
+display_name = "Staff of the Archmage"
+description = "Crowned with a void shard that hums with power."
+category = 3
+rarity = 6
+max_stack = 1
+base_value = 2500
+icon_color = Color(0.6, 0.4, 1, 1)
+icon_glyph = "St"
+equip_slot = 1
+required_level = 30
+stat_bonuses = {
+&"damage_bonus": 6,
+&"spell_power": 45,
+&"max_mana": 60,
+&"mana_regen": 30
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"staff"

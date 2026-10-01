@@ -45,3 +45,10 @@ signal settlement_left(settlement_id: String)
 signal reputation_changed(target_id: String, value: float)
 signal coins_changed(coins: int)
 signal trade_done(settlement_id: String, copper: int)
+
+# --- Milestone 6: exploration ---
+signal boss_started(boss: Node)
+signal boss_ended(boss: Node)
+signal poi_discovered(poi_id: String)
+signal dungeon_entered(dungeon_id: String, floor: int)
+signal dungeon_left(dungeon_id: String, cleared: bool)

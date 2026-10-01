@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/skel_slash.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"ancient_bone"
+min_count = 1
+max_count = 2
+chance = 0.6
+
+[resource]
+script = ExtResource("1_md")
+id = &"skeleton_warrior"
+display_name = "Skeleton Warrior"
+category = 3
+level = 4
+max_health = 70.0
+walk_speed = 2.2
+run_speed = 4.0
+turn_speed = 9.0
+aggro_range = 12.0
+leash_range = 34.0
+max_poise = 30.0
+damage_multipliers = {
+&"fire": 1.25,
+&"poison": 0.0
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0")]
+xp_reward = 18
+respawn_time = 600.0
+style = 0
+look = &"skeleton"
+model_scale = 1.0
+tint = Color(0.88, 0.86, 0.78, 1)
+accent = Color(1, 0.3, 0.2, 1)
+melee = ExtResource("2_melee")

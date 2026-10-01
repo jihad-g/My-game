@@ -2,6 +2,45 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.6.0] — Milestone 6: Exploration
+
+### Added
+- **Points of interest** (`src/exploration`): `Exploration` places ruins, wizard towers, temples,
+  dungeon entrances and hidden groves per 256 m cell (weighted by biome), clear of towns,
+  on flattened ground; rank E→S grows with distance from the world centre. `PoiLayout` +
+  `PoiSite` build them near the player; `ExplorationManager` handles discovery and saved state.
+- **Ruins** with skeleton guardians, a chest and sometimes a hidden vault under a cracked floor.
+- **Wizard towers** (3 storeys, door, roof hides inside) with a Tower Warden, wisps, a lectern
+  tome and a chest.
+- **Temples** with a dormant Temple Guardian boss, a sealed golden chest (guaranteed legendary
+  recipe) and an altar blessing (+10% damage, −10% damage taken, 20 min, daily).
+- **Hidden groves**: secret glades with an ancient tree, rune stones and regrowing magical plants.
+- **Dungeons E→S** (`DungeonPlan`, `DungeonInstance`): procedural floors (1–3 by rank) of rooms
+  and corridors built far above the world; themed monsters and elites, spike-trap rooms,
+  treasure rooms, a secret room behind a cracked wall, stairs, and a boss arena whose gate
+  seals until the boss dies; boss chest + exit portal; dungeons repopulate after 3 days;
+  dungeon map; saving inside stores the entrance; dying carries you out.
+- **Monsters** (`Monster`, `MonsterData`, `MonsterModel`, `BeastModel`): data-driven melee,
+  ranged and caster AI; 7 monsters (skeleton warrior/archer, arcane sentinel/wisp, thorn
+  crawler, grotto cultist, tower warden) and 4 **bosses** (Bone King, Arcane Colossus, Elder
+  Thornmaw, Temple Guardian) with cleave, slam (ground danger zone), volley, charge, summon,
+  enrage and a boss health bar. Per-instance rank scaling of health, damage, level and XP.
+  Guards' kills still give no XP.
+- **Player afflictions**: burning, poison (damage over time) and chill (slow) from monsters.
+- **Rare resources**: mithril ore (high peaks, the Deeps; iron pickaxe) → ingots → tier-4 mithril
+  tools; void shards, sunstones, thorn hearts and royal bone from bosses; monster materials.
+- **Magical plants**: sunbloom, frost lotus, emberroot, dreamcap (biome props) and the starlight
+  orchid (hidden groves only).
+- **Alchemy Table** station and 7 potions/elixirs (heal, mana, warming, cooling, might,
+  stoneskin, starlight) with timed buffs.
+- **Legendary items** (7) and **Legendary Recipe** scrolls from temples, A/S bosses and far vaults.
+- Map: dungeon/ruin/tower/temple markers (groves only once found); gossip about nearby places.
+- Tests: 562 checks (+84). Screenshot runner `--only=explore`.
+
+### Changed
+- Version 0.6.0. Projectiles have a collision mask (enemy projectiles hit the player).
+- `World` gains a dungeon mode (surface streaming paused). Save data: `world.exploration`.
+
 ## [0.5.0] — Milestone 5: Living world
 
 ### Added

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"alchemists_grimoire"
+display_name = "Alchemist's Grimoire"
+description = "Notes on elixirs. Use to learn them. Found in wizard towers."
+category = 6
+rarity = 3
+max_stack = 1
+base_value = 120
+icon_color = Color(0.4, 0.7, 0.45, 1)
+icon_glyph = "Bk"
+teaches_recipes = [&"elixir_of_might", &"stoneskin_elixir", &"elixir_of_starlight"]

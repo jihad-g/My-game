@@ -52,7 +52,7 @@ func _process(delta: float) -> void:
 ## Streams sites and updates the current settlement (also used by tests).
 func update_now(spawn_all: bool = false) -> void:
 	var p := world.player.global_position
-	if world.layer != TerrainGenerator.Layer.SURFACE:
+	if world.layer != TerrainGenerator.Layer.SURFACE or world.dungeon != null:
 		for id in sites.keys():
 			_free_site(id)
 		_set_current(null)

@@ -44,6 +44,8 @@ var settings: WorldGenSettings
 var biomes: Array[BiomeData] = []
 ## Villages and kingdoms (Milestone 5): flatten terrain, clear props, block spawns.
 var settlements: Settlements
+## Ruins, towers, temples, dungeon entrances, hidden groves (Milestone 6).
+var pois: Exploration
 
 var _land_biomes: PackedInt32Array = PackedInt32Array()
 var _rare_biomes: PackedInt32Array = PackedInt32Array()
@@ -118,6 +120,7 @@ func _init(p_seed: int, p_settings: WorldGenSettings) -> void:
 	if not _land_biomes.is_empty():
 		_fallback_biome = _land_biomes[_land_biomes.size() - 1]
 	settlements = Settlements.new(self)
+	pois = Exploration.new(self)
 
 
 func _setup_noise(n: FastNoiseLite, salt: int, frequency: float, octaves: int) -> void:
@@ -177,7 +180,10 @@ func get_climate(pos: Vector3) -> Vector2:
 ## int (see unpack helpers). This is the single source of truth for terrain:
 ## natural terrain, flattened inside villages and kingdoms.
 func sample_column(wx: int, wz: int) -> int:
-	return _flatten(_sample_raw(wx, wz), wx, wz, settlements.column_info(wx, wz))
+	var s: SettlementInfo = settlements.column_info(wx, wz)
+	if s == null:
+		s = pois.column_info(wx, wz)
+	return _flatten(_sample_raw(wx, wz), wx, wz, s)
 
 
 ## Same as sample_column with the candidate settlements already known (chunk loop).
@@ -351,7 +357,7 @@ func _entrance_in_cell(cx: int, cz: int) -> Vector2i:
 	var b := biomes[unpack_biome(smp)]
 	if h < SEA_LEVEL + 2 or h > 70 or b.role == BiomeData.Role.OCEAN or b.role == BiomeData.Role.BEACH:
 		return none
-	if settlements.is_inside(ex, ez, 24.0):
+	if settlements.is_inside(ex, ez, 24.0) or pois.is_inside(ex, ez, 20.0):
 		return none
 	for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
 		if absi(get_height_blocks(ex + d.x, ez + d.y) - h) > 1:
@@ -408,6 +414,11 @@ func generate_chunk(coord: Vector2i, lod: int, layer: int = Layer.SURFACE) -> Ch
 				var st := settlements.get_region(Vector2i(rx, rz))
 				if st and not near.has(st):
 					near.append(st)
+		for cz in [Exploration.cell_of(ox - step, oz - step).y, Exploration.cell_of(ox + CHUNK_SIZE + step, oz + CHUNK_SIZE + step).y]:
+			for cx in [Exploration.cell_of(ox - step, oz - step).x, Exploration.cell_of(ox + CHUNK_SIZE + step, oz + CHUNK_SIZE + step).x]:
+				var poi := pois.get_cell(Vector2i(cx, cz))
+				if poi and poi.flatten and not near.has(poi):
+					near.append(poi)
 	var hmin := 1 << 30
 	var hmax := -(1 << 30)
 	for j in w:
@@ -677,7 +688,7 @@ func _place_rule(data: ChunkData, w: int, ox: int, oz: int, entrances: Array[Vec
 				continue
 			if _near_entrance(ox + lx, oz + lz, entrances, ENTRANCE_CLEARANCE):
 				continue
-			if data.layer == Layer.SURFACE and settlements.is_inside(ox + lx, oz + lz, 3.0):
+			if data.layer == Layer.SURFACE and (settlements.is_inside(ox + lx, oz + lz, 3.0) or pois.is_inside(ox + lx, oz + lz, 2.0)):
 				continue  # towns are cleared (their own buildings/decor come from the layout)
 			var y := WATER_Y + 0.02 if rule.on_water else h * BLOCK_HEIGHT
 			data.props.append({
@@ -707,8 +718,8 @@ func get_spawn_slots(coord: Vector2i) -> Array:
 		var h := get_height_blocks(ox + lx, oz + lz)
 		if h < rule.min_height or h > rule.max_height:
 			continue
-		if settlements.is_inside(ox + lx, oz + lz, 40.0):
-			continue  # monsters keep away from towns
+		if settlements.is_inside(ox + lx, oz + lz, 40.0) or pois.is_inside(ox + lx, oz + lz, 30.0):
+			continue  # monsters keep away from towns; POIs have their own guardians
 		out.append({
 			"key": "%d,%d:%d:%d" % [coord.x, coord.y, b, r],
 			"rule": rule,

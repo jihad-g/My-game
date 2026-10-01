@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"stoneskin_elixir"
+result_item = &"stoneskin_elixir"
+result_count = 1
+ingredients = {
+&"mithril_ore": 1,
+&"sunbloom": 1,
+&"ancient_bone": 2
+}
+station = 6
+tier = 2
+source = 2
+source_hint = "Alchemist's Grimoire (wizard towers)"
+xp = 20

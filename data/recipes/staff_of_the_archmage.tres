@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"staff_of_the_archmage"
+result_item = &"staff_of_the_archmage"
+result_count = 1
+ingredients = {
+&"void_shard": 2,
+&"crystal_shard": 4,
+&"arcane_dust": 8,
+&"plank": 2
+}
+station = 4
+tier = 6
+source = 2
+source_hint = "Legendary Recipe scroll (temples, A/S dungeon bosses)"
+xp = 200

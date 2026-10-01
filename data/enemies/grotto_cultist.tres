@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/cultist_staff.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"leather"
+min_count = 1
+max_count = 2
+chance = 0.3
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"glowcap"
+min_count = 1
+max_count = 1
+chance = 0.3
+
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"emberroot"
+min_count = 1
+max_count = 1
+chance = 0.15
+
+[resource]
+script = ExtResource("1_md")
+id = &"grotto_cultist"
+display_name = "Grotto Cultist"
+category = 1
+level = 6
+max_health = 55.0
+walk_speed = 2.4
+run_speed = 4.2
+turn_speed = 9.0
+aggro_range = 13.0
+leash_range = 34.0
+max_poise = 15.0
+damage_multipliers = {}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2")]
+xp_reward = 22
+respawn_time = 600.0
+style = 2
+look = &"cultist"
+model_scale = 1.0
+tint = Color(0.35, 0.2, 0.3, 1)
+accent = Color(1, 0.5, 0.2, 1)
+melee = ExtResource("2_melee")
+projectile_damage = 12.0
+projectile_type = &"fire"
+projectile_speed = 13.0
+projectile_color = Color(1, 0.5, 0.15, 1)
+projectile_windup = 0.7
+projectile_cooldown = 2.3
+preferred_min = 5.0
+preferred_max = 10.0
+projectile_status = [&"burn", 3.0, {"dps": 4.0}]

@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/cultist_staff.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"arcane_dust"
+min_count = 2
+max_count = 4
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"wisp_essence"
+min_count = 1
+max_count = 2
+chance = 0.6
+
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"alchemists_grimoire"
+min_count = 1
+max_count = 1
+chance = 0.3
+
+[sub_resource type="Resource" id="Loot_3"]
+script = ExtResource("9_loot")
+item_id = &"arcane_codex"
+min_count = 1
+max_count = 1
+chance = 0.15
+
+[resource]
+script = ExtResource("1_md")
+id = &"tower_warden"
+display_name = "Tower Warden"
+category = 6
+level = 10
+max_health = 220.0
+walk_speed = 2.2
+run_speed = 4.0
+turn_speed = 9.0
+aggro_range = 14.0
+leash_range = 34.0
+max_poise = 50.0
+damage_multipliers = {
+&"arcane": 0.7
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2"), SubResource("Loot_3")]
+xp_reward = 90
+respawn_time = 600.0
+style = 2
+look = &"warden"
+model_scale = 1.15
+tint = Color(0.2, 0.25, 0.5, 1)
+accent = Color(0.5, 0.8, 1, 1)
+melee = ExtResource("2_melee")
+projectile_damage = 15.0
+projectile_type = &"arcane"
+projectile_speed = 14.0
+projectile_color = Color(0.5, 0.8, 1, 1)
+projectile_windup = 0.55
+projectile_cooldown = 1.5
+preferred_min = 6.0
+preferred_max = 11.0
+projectile_status = [&"chilled", 2.0, {}]

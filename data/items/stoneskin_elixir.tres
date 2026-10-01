@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"stoneskin_elixir"
+display_name = "Stoneskin Elixir"
+description = "Grey, gritty and very reassuring."
+category = 1
+rarity = 3
+max_stack = 5
+base_value = 90
+icon_color = Color(0.6, 0.6, 0.65, 1)
+icon_glyph = "SE"
+buff_id = &"stoneskin"
+buff_duration = 300.0

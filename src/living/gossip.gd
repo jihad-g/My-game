@@ -56,6 +56,30 @@ static func lines(npc: NPC, manager: SettlementManager) -> Array[String]:
 			GameState.discovered_places["heard:%s" % o.id] = GameState.world_time
 			out.append("Travellers speak of %s, %s to the %s. It's on your map now." % [o.title(), distance_text(o.distance_to(here)), direction(here, o.world_center())])
 			break
+	# Dungeons and other places of interest nearby.
+	var pois := manager.world.generator.pois
+	var told := 0
+	for p in pois.near(here, 900.0):
+		if p.is_hidden() or GameState.discovered_places.has("poi:%s" % p.id) or told >= 1:
+			continue
+		GameState.discovered_places["heard:%s" % p.id] = GameState.world_time
+		var what := ""
+		match p.kind:
+			PoiInfo.Kind.DUNGEON:
+				what = "Adventurers speak of a dungeon, the %s - rank %s, they say. It lies %s to the %s. It's on your map now." % [
+					p.title().split(" (")[0], p.rank_letter(), distance_text(p.distance_to(here)), direction(here, p.world_center())]
+			PoiInfo.Kind.TEMPLE:
+				what = "There's an old temple %s to the %s. A stone guardian watches its altar." % [distance_text(p.distance_to(here)), direction(here, p.world_center())]
+			PoiInfo.Kind.TOWER:
+				what = "A wizard's tower stands %s to the %s. The warden doesn't welcome visitors." % [distance_text(p.distance_to(here)), direction(here, p.world_center())]
+			_:
+				what = "Old ruins lie %s to the %s. Skeletons guard them - and maybe a hidden vault." % [distance_text(p.distance_to(here)), direction(here, p.world_center())]
+		out.append(what)
+		told += 1
+	for p in pois.near(here, 1200.0):
+		if p.is_hidden() and not GameState.discovered_places.has("poi:%s" % p.id):
+			out.append("My grandmother swore there's a hidden grove somewhere to the %s, where starlight orchids grow." % direction(here, p.world_center()))
+			break
 	# Caves nearby.
 	var gen := manager.world.generator
 	var caves := gen.get_cave_entrances_near(s.center.x - 400, s.center.y - 400, s.center.x + 400, s.center.y + 400)

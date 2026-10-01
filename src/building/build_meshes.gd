@@ -367,3 +367,151 @@ static func build_carpet(b: BlockMesh) -> void:
 static func _banner_cloth(b: BlockMesh, color: Color) -> void:
 	b.box(Vector3(0, 2.95, 0.05), Vector3(0.8, 1.2, 0.04), color)
 	b.box(Vector3(0, 2.95, 0.08), Vector3(0.26, 0.26, 0.02), Color(0.95, 0.85, 0.4))
+
+
+# --- Milestone 6 -----------------------------------------------------------------------
+
+static func build_alchemy_table(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.8, 0), Vector3(1.3, 0.12, 0.75), WOOD_DARK)
+	for sx in [-0.55, 0.55]:
+		for sz in [-0.28, 0.28]:
+			b.box(Vector3(sx, 0.4, sz), Vector3(0.1, 0.8, 0.1), WOOD_DARK)
+	b.box(Vector3(-0.35, 1.0, 0), Vector3(0.22, 0.3, 0.22), Color(0.45, 0.85, 0.5))  # flask
+	b.box(Vector3(-0.35, 1.2, 0), Vector3(0.08, 0.14, 0.08), Color(0.8, 0.8, 0.85))
+	b.box(Vector3(0.05, 0.96, 0.05), Vector3(0.16, 0.22, 0.16), Color(0.85, 0.35, 0.6))
+	b.box(Vector3(0.4, 0.92, -0.1), Vector3(0.3, 0.12, 0.3), IRON * 0.7)  # mortar
+	b.box(Vector3(0.4, 1.05, -0.1), Vector3(0.05, 0.25, 0.05), WOOD)
+
+
+# --- Milestone 6: ruins, towers, temples, dungeons, groves -------------------------------
+
+const OLD_STONE := Color(0.55, 0.54, 0.5)
+const MOSS := Color(0.35, 0.5, 0.25)
+
+
+static func build_ruin_wall_low(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.1, 0), Vector3(1.0, 1.2, 0.35), OLD_STONE)
+	b.box(Vector3(-0.25, 0.8, 0), Vector3(0.5, 0.2, 0.35), OLD_STONE * 0.92)
+	b.box(Vector3(0.1, 0.72, 0.1), Vector3(0.4, 0.06, 0.2), MOSS)
+
+
+static func build_ruin_wall_mid(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.5, 0), Vector3(1.0, 2.0, 0.35), OLD_STONE)
+	b.box(Vector3(0.25, 1.65, 0), Vector3(0.5, 0.3, 0.35), OLD_STONE * 0.9)
+	b.box(Vector3(-0.2, 1.52, 0.1), Vector3(0.5, 0.06, 0.22), MOSS)
+
+
+static func build_pillar(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.15, 0), Vector3(0.9, 0.3, 0.9), OLD_STONE * 0.9)
+	b.box(Vector3(0, 1.7, 0), Vector3(0.6, 2.8, 0.6), OLD_STONE)
+	b.box(Vector3(0, 3.2, 0), Vector3(0.9, 0.3, 0.9), OLD_STONE * 0.95)
+
+
+static func build_pillar_broken(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.15, 0), Vector3(0.9, 0.3, 0.9), OLD_STONE * 0.9)
+	b.box(Vector3(0, 0.85, 0), Vector3(0.6, 1.1, 0.6), OLD_STONE)
+	b.box(Vector3(0.7, 0.2, 0.3), Vector3(0.6, 0.4, 1.2), OLD_STONE * 0.95, Basis(Vector3.UP, 0.4))
+
+
+static func build_rubble(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.12, 0), Vector3(0.5, 0.24, 0.4), OLD_STONE)
+	b.box(Vector3(0.35, 0.08, 0.25), Vector3(0.3, 0.16, 0.3), OLD_STONE * 0.9)
+	b.box(Vector3(-0.3, 0.1, 0.2), Vector3(0.35, 0.2, 0.3), OLD_STONE * 1.05)
+	b.box(Vector3(0.1, 0.03, -0.3), Vector3(0.5, 0.06, 0.3), MOSS)
+
+
+static func build_statue(b: BlockMesh) -> void:
+	var st := Color(0.72, 0.7, 0.66)
+	b.box(Vector3(0, 0.5, 0), Vector3(1.4, 1.0, 1.4), OLD_STONE * 0.85)
+	b.box(Vector3(0, 1.6, 0), Vector3(0.7, 1.2, 0.45), st)
+	b.box(Vector3(0, 2.5, 0), Vector3(0.5, 0.55, 0.5), st)
+	b.box(Vector3(-0.5, 1.9, 0.15), Vector3(0.22, 0.9, 0.22), st, Basis(Vector3.BACK, 0.4))
+	b.box(Vector3(0.55, 2.2, 0), Vector3(0.22, 1.1, 0.22), st, Basis(Vector3.BACK, -0.2))
+	b.box(Vector3(0.75, 2.9, 0), Vector3(0.12, 0.9, 0.12), st * 0.9)
+
+
+static func build_altar(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.45, 0), Vector3(1.8, 0.9, 1.0), OLD_STONE * 0.9)
+	b.box(Vector3(0, 0.95, 0), Vector3(2.0, 0.12, 1.1), OLD_STONE)
+	b.box(Vector3(0, 0.46, 0.51), Vector3(1.0, 0.4, 0.02), Color(0.95, 0.75, 0.3))
+
+
+static func build_altar_glow(b: BlockMesh) -> void:
+	b.box(Vector3(0, 1.08, 0), Vector3(0.5, 0.12, 0.5), Color(1.0, 0.85, 0.4))
+
+
+static func build_lectern(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.5, 0), Vector3(0.2, 1.0, 0.2), WOOD_DARK)
+	b.box(Vector3(0, 0.05, 0), Vector3(0.6, 0.1, 0.5), WOOD_DARK)
+	b.box(Vector3(0, 1.05, 0), Vector3(0.7, 0.08, 0.5), WOOD, Basis(Vector3.RIGHT, -0.4))
+
+
+static func build_lectern_book(b: BlockMesh) -> void:
+	b.box(Vector3(-0.15, 1.13, 0.02), Vector3(0.28, 0.04, 0.36), Color(0.95, 0.9, 0.7), Basis(Vector3.RIGHT, -0.4))
+	b.box(Vector3(0.15, 1.13, 0.02), Vector3(0.28, 0.04, 0.36), Color(0.95, 0.9, 0.7), Basis(Vector3.RIGHT, -0.4))
+
+
+static func build_brazier(b: BlockMesh) -> void:
+	b.box(Vector3(0, 0.5, 0), Vector3(0.3, 1.0, 0.3), IRON * 0.7)
+	b.box(Vector3(0, 1.05, 0), Vector3(0.7, 0.2, 0.7), IRON * 0.8)
+	b.box(Vector3(0, 0.05, 0), Vector3(0.6, 0.1, 0.6), IRON * 0.6)
+
+
+static func build_brazier_fire(b: BlockMesh) -> void:
+	b.box(Vector3(0, 1.3, 0), Vector3(0.45, 0.35, 0.45), Color(1.0, 0.6, 0.2))
+	b.box(Vector3(0, 1.5, 0), Vector3(0.25, 0.3, 0.25), Color(1.0, 0.85, 0.4))
+
+
+static func build_dungeon_arch(b: BlockMesh) -> void:
+	var st := Color(0.4, 0.38, 0.42)
+	b.box(Vector3(-1.7, 1.8, 0), Vector3(0.9, 3.6, 1.2), st)
+	b.box(Vector3(1.7, 1.8, 0), Vector3(0.9, 3.6, 1.2), st)
+	b.box(Vector3(0, 3.9, 0), Vector3(4.4, 0.8, 1.3), st * 0.95)
+	b.box(Vector3(0, 4.5, 0), Vector3(1.0, 0.6, 0.4), Color(0.7, 0.2, 0.2))  # keystone
+	# stairs down into darkness
+	for k in 4:
+		b.box(Vector3(0, -0.15 - k * 0.3, 0.3 - k * 0.5), Vector3(2.5, 0.3, 0.5), st * (0.8 - k * 0.12))
+	b.box(Vector3(0, -1.2, -1.6), Vector3(2.5, 2.4, 0.2), Color(0.03, 0.03, 0.05))
+	b.box(Vector3(-1.3, -0.6, -0.6), Vector3(0.2, 1.5, 2.4), st * 0.6)
+	b.box(Vector3(1.3, -0.6, -0.6), Vector3(0.2, 1.5, 2.4), st * 0.6)
+
+
+static func build_standing_stone(b: BlockMesh) -> void:
+	b.box(Vector3(0, 1.2, 0), Vector3(0.8, 2.6, 0.5), Color(0.5, 0.5, 0.55))
+	b.box(Vector3(0.05, 2.6, 0), Vector3(0.6, 0.3, 0.45), Color(0.45, 0.45, 0.5))
+
+
+static func build_rune_glow(b: BlockMesh) -> void:
+	b.box(Vector3(0, 1.4, 0.26), Vector3(0.2, 0.5, 0.02), Color(0.5, 0.9, 1.0))
+	b.box(Vector3(0, 1.0, 0.26), Vector3(0.35, 0.08, 0.02), Color(0.5, 0.9, 1.0))
+
+
+static func build_ancient_tree(b: BlockMesh) -> void:
+	var bark := Color(0.35, 0.25, 0.3)
+	b.box(Vector3(0, 3.0, 0), Vector3(1.6, 6.0, 1.6), bark)
+	for k in 4:
+		var a := k * PI * 0.5 + 0.4
+		b.box(Vector3(cos(a) * 1.1, 0.4, sin(a) * 1.1), Vector3(1.2, 0.8, 0.5), bark * 0.9, Basis(Vector3.UP, a))
+	var leaf := Color(0.35, 0.65, 0.6)
+	b.box(Vector3(0, 7.0, 0), Vector3(7.0, 2.4, 7.0), leaf)
+	b.box(Vector3(0, 8.6, 0), Vector3(4.6, 1.6, 4.6), leaf * 1.1)
+	b.box(Vector3(1.8, 6.2, 1.5), Vector3(2.4, 1.2, 2.4), Color(0.8, 0.55, 0.85))
+
+
+static func build_mushroom_ring(b: BlockMesh) -> void:
+	for k in 9:
+		var a := TAU * k / 9.0
+		var p := Vector3(cos(a) * 2.6, 0, sin(a) * 2.6)
+		b.box(p + Vector3(0, 0.12, 0), Vector3(0.08, 0.24, 0.08), Color(0.9, 0.9, 0.85))
+		b.box(p + Vector3(0, 0.28, 0), Vector3(0.3, 0.1, 0.3), Color(0.6, 0.9, 1.0) if k % 2 == 0 else Color(0.95, 0.6, 1.0))
+
+
+static func build_dungeon_floor(b: BlockMesh) -> void:
+	b.box(Vector3(0, -0.25, 0), Vector3(1.0, 0.5, 1.0), Color(0.3, 0.29, 0.32))
+	b.box(Vector3(0, 0.005, 0), Vector3(0.94, 0.01, 0.94), Color(0.34, 0.33, 0.36))
+
+
+static func build_dungeon_wall(b: BlockMesh) -> void:
+	b.box(Vector3(0, 1.75, 0), Vector3(1.0, 3.5, 0.5), Color(0.25, 0.24, 0.28))
+	b.box(Vector3(0, 3.55, 0), Vector3(1.04, 0.14, 0.56), Color(0.32, 0.3, 0.34))
+	b.box(Vector3(0, 0.1, 0), Vector3(1.04, 0.2, 0.56), Color(0.2, 0.19, 0.22))

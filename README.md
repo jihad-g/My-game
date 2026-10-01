@@ -5,15 +5,21 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 5 — Living world** (villages, kingdoms, townsfolk with daily routines, shops,
-> blacksmiths, travelling traders, farms, economy, reputation and kingdom titles) on top of the
-> Phase 1 prototype, world generation (M2), RPG foundation (M3) and building & crafting (M4). See [`docs/TODO.md`](docs/TODO.md) for the
+> Status: **Milestone 6 — Exploration** (dungeons ranked E→S, ruins, wizard towers, temples, hidden
+> groves, bosses, rare resources, magical plants and potions, legendary recipes) on top of the
+> prototype, world generation (M2), RPG (M3), building & crafting (M4) and the living world (M5). See [`docs/TODO.md`](docs/TODO.md) for the
 > honest status of every system and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
 ![Village](docs/screenshots/village_overview.png)
 
-| **Village plaza** | **Talking to townsfolk** | **Trading** |
+| **Dungeon entrance (Rank E)** | **Inside a dungeon** | **Boss: The Elder Thornmaw** |
 |---|---|---|
+| ![Entrance](docs/screenshots/dungeon_entrance.png) | ![Dungeon](docs/screenshots/dungeon_start.png) | ![Boss](docs/screenshots/dungeon_boss.png) |
+| **Temple & its guardian** | **Wizard tower** | **Hidden grove** |
+| ![Temple](docs/screenshots/poi_temple.png) | ![Tower](docs/screenshots/poi_tower.png) | ![Grove](docs/screenshots/poi_grove.png) |
+| **Ruins** | **Dungeon map** | **Dungeon room** |
+| ![Ruins](docs/screenshots/poi_ruins.png) | ![Map](docs/screenshots/dungeon_map.png) | ![Room](docs/screenshots/dungeon_room.png) |
+| **Village plaza** | **Talking to townsfolk** | **Trading** |
 | ![Plaza](docs/screenshots/village_plaza.png) | ![Dialogue](docs/screenshots/dialogue.png) | ![Trade](docs/screenshots/trade.png) |
 | **Kingdom capital** | **The court** | **Village at night** |
 | ![Kingdom](docs/screenshots/kingdom_overview.png) | ![Court](docs/screenshots/kingdom_court.png) | ![Night](docs/screenshots/village_night.png) |
@@ -195,6 +201,33 @@ and when you quit through the pause menu or close the window.
     Bake bread from wheat at a campfire; pumpkins teach Vegetable Stew.
 31. **Kingdom capitals** – walled cities with gates, towers, a keep with a throne, barracks,
     a royal market and guards that attack monsters that come close.
+32. **Points of interest** – press M: diamonds mark dungeons (with their rank letter), R ruins,
+    W wizard towers, T temples. Townsfolk gossip about nearby ones (they then appear on the map).
+    The default seed has a Rank E dungeon ~120 m from spawn and ruins ~200 m away.
+33. **Ruins** – skeleton guardians, a chest, and sometimes a **cracked floor**: hit it to open a
+    hidden vault with better loot.
+34. **Wizard towers** – a Tower Warden (elite caster) and wisps guard it; inside (the roof hides)
+    a lectern holds a recipe tome (Alchemist's Grimoire, Arcane Codex, … legendary scrolls far out).
+35. **Temples** – a dormant **Temple Guardian** boss wakes when you approach the altar. Defeat it
+    to unseal the golden chest (always a **legendary recipe**) and pray at the altar for the
+    Blessing of the Ancients (+10% damage, −10% damage taken, 20 min, once per day).
+36. **Dungeons E→S** – rank grows with distance from the world's centre (E near spawn, S beyond
+    ~3.5 km). Press F at the archway. Floors (1–3) of rooms and corridors: monsters, elites,
+    spike-trap rooms (watch the spikes peek before they spring), treasure rooms, stairs down, and a
+    secret room behind a **cracked wall** (attack it). The final room is a boss arena: the gate
+    slams shut, a boss bar appears and the boss slams, cleaves, charges, fires volleys, summons
+    adds and enrages at half health. Its death opens a portal home and a boss chest. Cleared
+    dungeons repopulate after 3 in-game days. Saving inside saves you at the entrance; dying
+    carries you out. Themes: Crypt (Bone King), Arcane Sanctum (Arcane Colossus), Thornwild
+    Grotto (Elder Thornmaw).
+37. **Hidden groves** – secret glades (never on the map until found) with an ancient tree,
+    glowing rune stones and magical plants including the rare **Starlight Orchid**.
+38. **Rare resources & potions** – Mithril veins on high peaks and in the Deeps (iron pickaxe),
+    Sunbloom (deserts/meadows), Frost Lotus (tundra), Emberroot (mountains), Dreamcap (caves).
+    Build an **Alchemy Table** for Healing Draughts, Mana Tonics, Warming/Cooling Draughts and
+    (with the Alchemist's Grimoire) Elixirs of Might, Stoneskin and Starlight. Bosses drop
+    Royal Bone, Void Shards, Thorn Hearts and Sunstones for the 7 **legendary** items (each
+    taught by a Legendary Recipe scroll; they need Crafting 90).
 
 ## Run the automated tests
 
@@ -204,7 +237,7 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
 
-The suite (478 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (562 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -226,6 +259,13 @@ membership), non-overlapping layouts and rosters, prices (no buy/sell loop, satu
 regional demand, reputation), reputation rules, daily requests, crop growth, and in the running
 game: discovery, NPC routines and street paths, dialogue and gossip, buying/selling, requests,
 hunts, guards defending a capital, titles, the village forge, farming and save/load.
+Exploration tests check monster/boss data, legendary scrolls, potions and rare props; POI
+determinism, rank growth with distance, distance from towns, flattened and cleared ground,
+layouts per kind, dungeon plans for every rank (all rooms connected), rank-gated loot; and in
+the running game: melee, archers, poison, rank scaling, a boss fight (boss bar, enrage, summons),
+potions, ruins chests and hidden vaults, tower tomes, temple guardian → chest → blessing, hidden
+groves, and a full dungeon run (floor, map, save position, secret wall, traps, descending,
+sealed arena, boss, portal, exit, cooldown, death, save/load).
 
 Balance tables are generated from the code: `godot --headless --path . -s tools/gen_rpg_tables.gd`
 → [`docs/XP_TABLE.md`](docs/XP_TABLE.md), [`docs/CLASSES_AND_SKILLS.md`](docs/CLASSES_AND_SKILLS.md).
@@ -236,6 +276,7 @@ Visual check (renders screenshots, needs a display or `xvfb-run`):
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=build   # base / build / crafting
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=town    # villages, kingdom, trade
+godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=explore # ruins, tower, temple, grove, dungeon
 tools/make_video.sh /tmp/video     # scripted gameplay video (needs ffmpeg)
 ```
 
@@ -260,6 +301,7 @@ src/
   crafting/              Recipes, recipe book, crafting rules
   building/              Build pieces, grid building manager, build mode, piece meshes
   living/                Settlements (generation, layouts, sites), NPCs, economy, reputation, requests, farming, gossip
+  exploration/           Points of interest, POI sites, dungeons (plans, instances, traps, doors), loot tables, chests
   ui/                    HUD, theme, slots, temperature gauge
 data/                    Data-driven content (.tres): items, attacks, movesets, abilities, classes, enemies, props, biomes, worldgen
 tests/                   Automated test suite + screenshot runner

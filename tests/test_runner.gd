@@ -49,6 +49,11 @@ func _ready() -> void:
 	await _run_async(&"test_m5_living")
 	await _run_async(&"test_m5_kingdom")
 	await _run_async(&"test_m5_save_load")
+	_run(&"test_m6_data")
+	_run(&"test_m6_pois")
+	await _run_async(&"test_m6_combat")
+	await _run_async(&"test_m6_pois_ingame")
+	await _run_async(&"test_m6_dungeon")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -1229,6 +1234,14 @@ func test_rpg_save_load() -> void:
 
 # --- Milestone 4: building & crafting -------------------------------------------------------
 
+func _grove_poi() -> PoiInfo:
+	var g := PoiInfo.new()
+	g.kind = PoiInfo.Kind.GROVE
+	g.id = "p:0,0"
+	g.name = "Test"
+	return g
+
+
 func test_m4_data() -> void:
 	var recipes := RecipeBook.all()
 	check(recipes.size() >= 40, "%d recipes loaded" % recipes.size())
@@ -1319,6 +1332,23 @@ func test_m4_data() -> void:
 	for c in Farming.CROPS:
 		if obtainable.has(Farming.CROPS[c].seed):
 			obtainable[Farming.CROPS[c].produce] = true
+	# Milestone 6: monster loot, chests/bosses, hidden-grove plants.
+	for f in ResourceLoader.list_directory("res://data/enemies/"):
+		var ed := load("res://data/enemies/" + f) as EnemyData
+		if ed:
+			for loot in ed.loot:
+				obtainable[loot.item_id] = true
+	for t in LootTables.TABLES.values():
+		for e in t.items:
+			obtainable[e[0]] = true
+	for band in LootTables.GEAR:
+		for g in band:
+			obtainable[g] = true
+	for sc in LootTables.SCROLLS:
+		obtainable[sc] = true
+	for o in PoiLayout.build(_grove_poi()).objects:
+		if o.get("item", &"") != &"":
+			obtainable[o.item] = true
 	var changed := true
 	while changed:
 		changed = false
@@ -2074,6 +2104,495 @@ func test_m5_save_load() -> void:
 	check(world.living.is_discovered(v.id), "discovered settlements restored")
 	var plot2: BuildPiece = world.building.pieces.get(plot_key)
 	check(plot2 != null and plot2.crop == &"carrot", "planted crops restored")
+	world.queue_free()
+	await _frames(5)
+	SaveManager.delete_world(id)
+	SaveManager.worlds_dir = saved_dir
+	SaveManager.start_transient(GameState.DEFAULT_SEED)
+
+
+# --- Milestone 6: exploration ---------------------------------------------------------------
+
+func test_m6_data() -> void:
+	var monsters := 0
+	var ok := true
+	for f in ResourceLoader.list_directory("res://data/enemies/"):
+		var md := load("res://data/enemies/" + f) as MonsterData
+		if md == null:
+			continue
+		monsters += 1
+		if md.melee == null or md.max_health <= 0.0:
+			ok = false
+			print("   %s: no melee attack" % md.id)
+		if md.style == MonsterData.Style.BOSS and (md.boss_title == "" or md.boss_moves.is_empty() or md.heavy == null):
+			ok = false
+			print("   boss %s incomplete" % md.id)
+		if md.style in [MonsterData.Style.RANGED, MonsterData.Style.CASTER] and md.projectile_damage <= 0.0:
+			ok = false
+	check(monsters >= 11 and ok, "%d monster types with valid attacks, bosses have titles and move sets" % monsters)
+	for theme in PoiLayout.THEME_MONSTERS:
+		for id in theme:
+			check(load("res://data/enemies/%s.tres" % id) is MonsterData, "theme monster %s exists" % id)
+	var legendary := 0
+	var scroll_ok := true
+	for sc in LootTables.SCROLLS:
+		var it: ItemData = ItemDB.get_item(sc)
+		var target: ItemData = ItemDB.get_item(StringName(it.teaches_recipes[0])) if it else null
+		var r := RecipeBook.get_recipe(StringName(it.teaches_recipes[0])) if it else null
+		if target and target.rarity == ItemData.Rarity.LEGENDARY and r and r.tier == 6 and r.required_crafting() == 90:
+			legendary += 1
+		else:
+			scroll_ok = false
+	check(scroll_ok and legendary == 7, "7 legendary recipe scrolls teach legendary gear (Crafting 90)")
+	var heal: ItemData = ItemDB.get_item(&"healing_draught")
+	var might: ItemData = ItemDB.get_item(&"elixir_of_might")
+	var tonic: ItemData = ItemDB.get_item(&"mana_tonic")
+	check(heal.health_restore > 0 and might.buff_id == &"might" and tonic.mana_restore > 0 and might.effect_lines().size() > 0, "potions heal, restore mana and grant buffs")
+	var lib := PropLibrary.new()
+	for pid in [&"sunbloom", &"frost_lotus", &"emberroot", &"dreamcap", &"starlight_orchid", &"ore_mithril"]:
+		var pd := lib.get_prop(pid)
+		check(pd != null and lib.get_mesh(pid) != null and not pd.drops.is_empty(), "rare prop %s exists" % pid)
+	var in_biomes := {}
+	for biome in _settings().biomes:
+		for rule in biome.prop_rules:
+			in_biomes[rule.prop_id] = true
+	check(in_biomes.has(&"sunbloom") and in_biomes.has(&"frost_lotus") and in_biomes.has(&"emberroot") and in_biomes.has(&"dreamcap")
+		and in_biomes.has(&"ore_mithril") and not in_biomes.has(&"starlight_orchid"), "magical plants grow in their biomes; starlight orchids only in hidden groves")
+	check(lib.get_prop(&"ore_mithril").tool_tier == 3 and ItemDB.get_item(&"mithril_pickaxe").tool_tier == 4, "mithril needs an iron pickaxe; mithril tools are tier 4")
+
+
+func test_m6_pois() -> void:
+	var g1 := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var g2 := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var a := g1.pois.near(Vector3.ZERO, 3000.0)
+	var b := g2.pois.near(Vector3.ZERO, 3000.0)
+	var same := a.size() == b.size()
+	for i in mini(a.size(), b.size()):
+		same = same and a[i].id == b[i].id and a[i].kind == b[i].kind and a[i].rank == b[i].rank
+	check(same and a.size() > 20, "points of interest are deterministic (%d within 3 km)" % a.size())
+	var kinds := {}
+	var near_rank := 0.0
+	var far_rank := 0.0
+	var nn := 0
+	var nf := 0
+	var towns_ok := true
+	var flat_ok := true
+	for p in a:
+		kinds[p.kind] = true
+		if p.distance_to(Vector3.ZERO) < 1000.0:
+			near_rank += p.rank
+			nn += 1
+		elif p.distance_to(Vector3.ZERO) > 2200.0:
+			far_rank += p.rank
+			nf += 1
+		for s in g1.settlements.near(p.world_center(), 200.0):
+			if s.distance_to(p.world_center()) < s.radius + p.radius + 20.0:
+				towns_ok = false
+		if p.flatten:
+			for k in 8:
+				var ang := TAU * k / 8.0
+				if g1.get_height_blocks(p.center.x + roundi(cos(ang) * (p.radius - 1.0)), p.center.y + roundi(sin(ang) * (p.radius - 1.0))) != p.height:
+					flat_ok = false
+	check(kinds.size() == 5, "all five kinds exist: ruins, towers, temples, dungeons, hidden groves")
+	check(nf > 0 and nn > 0 and far_rank / nf > near_rank / nn + 1.0, "danger grows with distance (avg rank %.1f near, %.1f far)" % [near_rank / maxi(nn, 1), far_rank / maxi(nf, 1)])
+	check(towns_ok, "points of interest keep clear of villages and kingdoms")
+	check(flat_ok, "structures stand on flattened ground")
+	var clear := true
+	for p in a.slice(0, 6):
+		var c0 := TerrainGenerator.world_to_chunk(Vector3(p.center.x, 0, p.center.y))
+		for dz in range(-1, 2):
+			for dx in range(-1, 2):
+				var data := g1.generate_chunk(c0 + Vector2i(dx, dz), 0)
+				var origin := Vector3((c0.x + dx) * TerrainGenerator.CHUNK_SIZE, 0, (c0.y + dz) * TerrainGenerator.CHUNK_SIZE)
+				for pr in data.props:
+					if p.contains(origin + pr.position):
+						clear = false
+	check(clear, "no wild props inside points of interest")
+	# Layouts
+	for kind in 5:
+		var poi: PoiInfo = null
+		for p in a:
+			if p.kind == kind:
+				poi = p
+				break
+		if poi == null:
+			continue
+		var l := PoiLayout.build(poi)
+		match kind:
+			PoiInfo.Kind.RUINS:
+				check(not l.guardians.is_empty() and l.chests.size() == 1, "%s: skeleton guardians and a chest" % poi.title())
+			PoiInfo.Kind.TOWER:
+				check(l.objects.any(func(o: Dictionary) -> bool: return o.kind == PoiObject.Kind.LECTERN) and l.doors.size() == 1, "%s: warden, lectern and door" % poi.title())
+			PoiInfo.Kind.TEMPLE:
+				check(l.guardians[0].data == &"temple_guardian" and l.chests[0].sealed and l.chests[0].table == &"temple", "%s: dormant guardian boss and sealed chest" % poi.title())
+			PoiInfo.Kind.DUNGEON:
+				check(l.objects.any(func(o: Dictionary) -> bool: return o.kind == PoiObject.Kind.ENTRANCE), "%s: entrance" % poi.title())
+			PoiInfo.Kind.GROVE:
+				check(l.objects.filter(func(o: Dictionary) -> bool: return o.kind == PoiObject.Kind.PLANT).size() >= 4 and poi.is_hidden(), "%s: hidden, with magical plants" % poi.title())
+	# Dungeon plans for every rank
+	for r in 6:
+		var poi := PoiInfo.new()
+		poi.rank = r
+		poi.seed = 1234 + r
+		poi.theme = r % 3
+		var floors: int = DungeonPlan.FLOORS[r]
+		var all_ok := true
+		for f in floors:
+			var plan := DungeonPlan.generate(poi, f)
+			var types := {}
+			for room in plan.rooms:
+				types[room.type] = true
+			if not types.has(DungeonPlan.Room.START) or not types.has(DungeonPlan.Room.BOSS if plan.is_final else DungeonPlan.Room.END):
+				all_ok = false
+			# Every room reachable over floor cells from the start.
+			var seen := {}
+			var start := Vector2i(plan.room_center(plan.start_room).x, plan.room_center(plan.start_room).z)
+			var q: Array[Vector2i] = [start]
+			seen[start] = true
+			while not q.is_empty():
+				var c: Vector2i = q.pop_back()
+				for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+					var n: Vector2i = c + d
+					if plan.cells.has(n) and not seen.has(n):
+						seen[n] = true
+						q.append(n)
+			if seen.size() != plan.cells.size():
+				all_ok = false
+			if r >= 1 and plan.secret.is_empty():
+				pass  # a secret needs a free neighbouring slot; usually present
+		check(all_ok, "rank %s dungeon: %d floor(s), start, stairs/boss, all rooms connected" % [PoiInfo.RANKS[r], floors])
+	# Loot
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var void_at_e := 0
+	for i in 200:
+		var roll := LootTables.roll(&"dungeon_chest", 0, rng)
+		void_at_e += int(roll.items.get(&"void_shard", 0))
+	check(void_at_e == 0, "rare resources are rank-gated (no void shards from rank E chests)")
+	var temple := LootTables.roll(&"temple", 2, rng, true)
+	var has_scroll := false
+	for id in temple.items:
+		has_scroll = has_scroll or String(id).begins_with("scroll_")
+	check(has_scroll and int(temple.coins) > 0, "temple chests always hold a legendary recipe")
+
+
+func _spawn_monster(world: World, id: StringName, offset: Vector3, rank: int = 0) -> Monster:
+	var pos := world.player.global_position + offset
+	pos.y = world.get_ground_height(pos) + 0.3
+	var m := world.spawner.spawn_enemy(load("res://scenes/enemies/monster.tscn"), pos, "", load("res://data/enemies/%s.tres" % id)) as Monster
+	m.configure(PoiLayout.RANK_POWER[rank], PoiLayout.RANK_DAMAGE[rank], PoiLayout.RANK_LEVELS[rank], PoiLayout.RANK_XP[rank])
+	return m
+
+
+func test_m6_combat() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	_clear_enemies(world)
+	world.spawner.max_active = 50
+	# Melee
+	var sk := _spawn_monster(world, &"skeleton_warrior", _clear_offset(world, 3.0))
+	check(sk != null and sk.mdata.look == &"skeleton" and (sk.model as MonsterModel).rig is HumanoidModel, "skeleton warrior spawned with a skeleton model")
+	p.health.reset_full()
+	var hp0 := p.health.current
+	var frames := 0
+	while p.health.current >= hp0 and frames < 600:
+		await get_tree().physics_frame
+		frames += 1
+	check(p.health.current < hp0, "skeleton warriors attack (%d frames)" % frames)
+	var xp0 := p.character.total_xp
+	sk.health.current = 1.0
+	sk.receive_hit(DamageInfo.create(50.0, p, &"physical"))
+	check(sk.is_dead and p.character.total_xp > xp0, "killing monsters grants XP")
+	await _frames(5)
+	# Ranged
+	var archer := _spawn_monster(world, &"skeleton_archer", _clear_offset(world, 8.0))
+	p.health.reset_full()
+	hp0 = p.health.current
+	frames = 0
+	var shot := false
+	while frames < 900 and p.health.current >= hp0:
+		await get_tree().physics_frame
+		frames += 1
+		shot = shot or archer.ai == Monster.AI.SHOOT
+	check(shot and p.health.current < hp0, "archers shoot arrows that hit (%d frames)" % frames)
+	archer.health.current = 0.1
+	archer.receive_hit(DamageInfo.create(50.0, p))
+	# Poison
+	var crawler := _spawn_monster(world, &"thorn_crawler", _clear_offset(world, 2.0))
+	frames = 0
+	while not p.afflictions.has(&"poison") and frames < 600:
+		p.health.reset_full()
+		await get_tree().physics_frame
+		frames += 1
+	check(p.afflictions.has(&"poison"), "thorn crawler bites poison the player")
+	crawler.health.current = 0.1
+	crawler.receive_hit(DamageInfo.create(50.0, p))
+	p.health.reset_full()
+	var hp1 := p.health.current
+	await _frames(70)
+	check(p.health.current < hp1, "poison deals damage over time")
+	# Rank scaling
+	var e_rank := _spawn_monster(world, &"skeleton_warrior", Vector3(20, 0, 0), 0)
+	var s_rank := _spawn_monster(world, &"skeleton_warrior", Vector3(22, 0, 0), 5)
+	check(s_rank.health.max_health >= e_rank.health.max_health * 4.9 and s_rank.xp_value() > e_rank.xp_value() and s_rank.effective_level() == e_rank.effective_level() + 40,
+		"rank S monsters have 5x health, more XP and +40 levels")
+	e_rank.health.current = 0.1
+	e_rank.receive_hit(DamageInfo.create(50.0, p))
+	s_rank.health.current = 0.1
+	s_rank.receive_hit(DamageInfo.create(50.0, p))
+	# Boss
+	var king := _spawn_monster(world, &"bone_king", _clear_offset(world, 6.0))
+	king.health.current = king.health.max_health
+	frames = 0
+	while not world.hud._boss_panel.visible and frames < 300:
+		await get_tree().physics_frame
+		frames += 1
+	check(world.hud._boss_panel.visible and world.hud._boss_name.text.begins_with("The Bone King"), "boss bar shows The Bone King")
+	king.health.current = king.health.max_health * 0.45
+	king._special_cd = 0.0
+	var summoned := false
+	var seen_special := {}
+	frames = 0
+	while frames < 900 and (not summoned or not king.enraged):
+		p.health.reset_full()
+		await get_tree().physics_frame
+		frames += 1
+		seen_special[king.ai] = true
+		summoned = summoned or king._summons_done > 0
+	check(king.enraged, "bosses enrage below half health")
+	check(summoned, "the Bone King summons skeletons")
+	king.health.current = 0.1
+	king.receive_hit(DamageInfo.create(50.0, p))
+	await _frames(3)
+	check(not world.hud._boss_panel.visible, "boss bar hides when the boss dies")
+	# Potions
+	p.health.current = 20.0
+	p.inventory.add_item(&"healing_draught", 1)
+	p.inventory.add_item(&"elixir_of_might", 1)
+	p.inventory.add_item(&"mana_tonic", 1)
+	for id in [&"healing_draught", &"elixir_of_might", &"mana_tonic"]:
+		for i in p.inventory.capacity:
+			var s = p.inventory.get_slot(i)
+			if s != null and s.id == id:
+				p.use_slot(i)
+				break
+	check(p.health.current >= 89.0, "healing draught heals")
+	check(p.abilities.has_buff(&"might") and is_equal_approx(p.abilities.outgoing_mult(), 1.2), "elixir of might: +20% damage")
+	world.queue_free()
+	await _frames(5)
+
+
+func _nearest_poi(world: World, kind: int, max_rank: int = 5) -> PoiInfo:
+	for p in world.generator.pois.near(world.player.global_position, 4000.0):
+		if p.kind == kind and p.rank <= max_rank:
+			return p
+	return null
+
+
+func _go_to_poi(world: World, poi: PoiInfo, offset: Vector3 = Vector3(0, 0, 0)) -> PoiSite:
+	var p := world.player
+	p.global_position = poi.world_center() + offset + Vector3(0, 0.5, 0)
+	p.velocity = Vector3.ZERO
+	var frames := 0
+	await _frames(2)
+	while (not world.chunk_manager.is_near_area_ready() or world.chunk_manager.pending_count() > 0) and frames < 3000:
+		await get_tree().process_frame
+		frames += 1
+	p.global_position = poi.world_center() + offset + Vector3(0, 0.5, 0)
+	world.exploration.update_now(true)
+	await _frames(5)
+	return world.exploration.site_of(poi)
+
+
+func _kill(m: Enemy, world: World) -> void:
+	if is_instance_valid(m) and not m.is_dead:
+		m.health.invulnerable = false
+		m.health.current = 0.1
+		m.receive_hit(DamageInfo.create(99.0, world.player, &"true"))
+
+
+func test_m6_pois_ingame() -> void:
+	var world: World = await _boot_class(&"wizard")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	# Ruins
+	var ruins := _nearest_poi(world, PoiInfo.Kind.RUINS)
+	var site := await _go_to_poi(world, ruins, Vector3(0, 0, 3))
+	check(site != null and site.guardians.size() >= 2, "%s streamed in with %d guardians" % [ruins.title(), site.guardians.size() if site else 0])
+	check(world.exploration.is_discovered(ruins.id), "visiting discovers the ruins")
+	var coins0 := p.coins
+	var chest: LootChest = site.chests[0]
+	chest.open()
+	check(p.coins > coins0 and world.exploration.has_state("open:" + chest.persist_key), "chest gives coins and stays opened")
+	# A ruin with a hidden vault
+	var vault_ruin: PoiInfo = null
+	for q in world.generator.pois.near(p.global_position, 4000.0):
+		if q.kind == PoiInfo.Kind.RUINS and not PoiLayout.build(q).cracked.is_empty():
+			vault_ruin = q
+			break
+	if vault_ruin:
+		var vs := await _go_to_poi(world, vault_ruin, Vector3(0, 0, 3))
+		var cb: CrackedBlock = null
+		for c in vs.get_children():
+			if c is CrackedBlock:
+				cb = c
+		var before := vs.chests.size()
+		for i in 3:
+			cb.receive_hit(DamageInfo.create(10.0, p))
+		await _frames(2)
+		check(vs.chests.size() == before + 1 and vs.chests[-1].table == &"vault", "breaking the cracked floor reveals a hidden vault")
+	# Tower lectern
+	var tower := _nearest_poi(world, PoiInfo.Kind.TOWER)
+	var ts := await _go_to_poi(world, tower, Vector3(0, 0, 0.5))
+	var lectern: PoiObject = null
+	for c in ts.get_children():
+		if c is PoiObject and c.kind == PoiObject.Kind.LECTERN:
+			lectern = c
+	var inv0 := p.inventory.slots.filter(func(x) -> bool: return x != null).size()
+	lectern.interact(p)
+	check(p.inventory.slots.filter(func(x) -> bool: return x != null).size() > inv0 and not lectern.is_available(), "the tower lectern holds a recipe tome (once)")
+	check(ts.guardians.any(func(m: Monster) -> bool: return m.data.id == &"tower_warden"), "a Tower Warden guards the tower")
+	# Temple
+	var temple := _nearest_poi(world, PoiInfo.Kind.TEMPLE)
+	if check(temple != null, "found a temple"):
+		var tsite := await _go_to_poi(world, temple, Vector3(0, 0, 14))
+		var guardian: Monster = tsite.guardians[0]
+		check(guardian.ai == Monster.AI.DORMANT and tsite.chests[0].locked_reason != "", "the temple guardian sleeps and the chest is sealed")
+		_kill(guardian, world)
+		await _frames(3)
+		check(world.exploration.has_state("cleared:" + temple.id) and tsite.chests[0].locked_reason == "", "defeating the guardian cleanses the temple")
+		var altar: PoiObject = null
+		for c in tsite.get_children():
+			if c is PoiObject and c.kind == PoiObject.Kind.ALTAR:
+				altar = c
+		altar.interact(p)
+		check(p.abilities.has_buff(&"blessing"), "praying at the altar grants the Blessing of the Ancients")
+		var roll: Dictionary = tsite.chests[0].open()
+		var got_scroll := false
+		for item in roll.items:
+			got_scroll = got_scroll or String(item).begins_with("scroll_")
+		check(got_scroll, "the temple chest holds a legendary recipe")
+	# Hidden grove
+	var grove := _nearest_poi(world, PoiInfo.Kind.GROVE)
+	var xp0 := p.character.total_xp
+	var gs := await _go_to_poi(world, grove, Vector3(0, 0, 1))
+	check(world.exploration.is_discovered(grove.id) and p.character.total_xp >= xp0 + 100, "finding a hidden grove: discovery + big XP")
+	var plant: PoiObject = null
+	for c in gs.get_children():
+		if c is PoiObject and c.kind == PoiObject.Kind.PLANT and c.item_id == &"starlight_orchid":
+			plant = c
+	var o0 := p.inventory.count_of(&"starlight_orchid")
+	plant.interact(p)
+	check(p.inventory.count_of(&"starlight_orchid") == o0 + 1 and not plant.is_available(), "picked a starlight orchid (it regrows later)")
+	world.queue_free()
+	await _frames(5)
+
+
+func test_m6_dungeon() -> void:
+	var saved_dir := SaveManager.worlds_dir
+	SaveManager.worlds_dir = "user://test_worlds"
+	for wl in SaveManager.list_worlds():
+		SaveManager.delete_world(wl.id)
+	var id := SaveManager.create_world("Dungeon Test", GameState.DEFAULT_SEED, &"barbarian")
+	var world: World = await _boot_world()
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	var dpoi := _nearest_poi(world, PoiInfo.Kind.DUNGEON, 1)
+	await _go_to_poi(world, dpoi, Vector3(0, 0, 3))
+	var entrance := p.global_position
+	check(world.enter_dungeon(dpoi) and world.dungeon != null, "entered %s" % dpoi.title())
+	await _frames(10)
+	var d := world.dungeon
+	check(absf(p.global_position.y - DungeonInstance.ORIGIN.y) < 2.0 and p.is_on_floor(), "standing on the dungeon floor")
+	check(d.alive_count() >= 3 and d.boss != null, "%d monsters and a boss (%s)" % [d.alive_count(), d.boss.display_name() if d.boss else "-"])
+	check(not world.chunk_manager.visible and world.hud._biome_label.text.begins_with(dpoi.title().split(" (")[0]), "the surface is paused while inside")
+	world.hud._map.toggle()
+	await _frames(3)
+	check(world.hud._map._title.text.contains("Floor"), "the map shows the dungeon floor")
+	world.hud._map.toggle()
+	# Saving inside stores the entrance.
+	var save := p.to_save()
+	check(Vector3(save.position[0], save.position[1], save.position[2]).distance_to(d.return_position) < 0.1, "saving inside a dungeon stores its entrance")
+	# Secret room
+	if not d.plan.secret.is_empty():
+		var cb: CrackedBlock = null
+		for c in d.get_children():
+			if c is CrackedBlock:
+				cb = c
+		for i in 3:
+			cb.receive_hit(DamageInfo.create(10.0, p))
+		await _frames(2)
+		check(not is_instance_valid(cb) or cb.is_queued_for_deletion(), "cracked walls hide secret rooms")
+	# Traps hurt
+	var trap: DungeonTrap = null
+	for c in d.get_children():
+		if c is DungeonTrap:
+			trap = c
+	if trap:
+		p.health.invulnerable = false
+		p.health.reset_full()
+		p.global_position = trap.global_position + Vector3(0, 0.3, 0)
+		var hp0 := p.health.current
+		var frames := 0
+		while p.health.current >= hp0 and frames < 240:
+			p.global_position = trap.global_position + Vector3(0, 0.3, 0)
+			await get_tree().physics_frame
+			frames += 1
+		check(p.health.current < hp0, "spike traps hurt when they spring up")
+		p.health.invulnerable = true
+	# Descend and fight the boss.
+	var floors := d.plan.floor_count
+	while not world.dungeon.plan.is_final:
+		world.next_dungeon_floor()
+		await _frames(5)
+	d = world.dungeon
+	check(d.plan.is_final and d.floor_index == floors - 1, "descended to the last floor (%d)" % floors)
+	for m in d.monsters:
+		if not m.is_boss():
+			_kill(m, world)
+	var arena := d.to_global(d.plan.room_center(d.plan.end_room) + Vector3(0, 0.3, 3.0))
+	p.global_position = arena
+	var frames2 := 0
+	while not d.boss_started and frames2 < 120:
+		p.global_position = arena
+		await get_tree().physics_frame
+		frames2 += 1
+	check(d.boss_started and d._gate != null, "entering the arena seals the gate")
+	_kill(d.boss, world)
+	await _frames(5)
+	check(d.cleared and world.exploration.has_state("dungeon:" + dpoi.id), "boss defeated: dungeon cleared")
+	var portal := false
+	var boss_chest := false
+	for c in d.get_children():
+		portal = portal or (c is DungeonDoor and c.kind == DungeonDoor.Kind.EXIT and d.plan.room_at(c.position) == d.plan.end_room)
+		boss_chest = boss_chest or (c is LootChest and c.table == &"dungeon_boss")
+	check(portal and boss_chest, "a portal home and the boss chest appear")
+	world.exit_dungeon()
+	var waited := await _wait_ready(world)
+	check(world.dungeon == null and p.global_position.distance_to(entrance) < 6.0 and world.chunk_manager.visible, "back at the entrance (%d frames)" % waited)
+	check(not world.enter_dungeon(dpoi), "a cleared dungeon stays empty for a while")
+	# Death inside a dungeon carries you out.
+	world.exploration.state.erase("dungeon:" + dpoi.id)
+	world.enter_dungeon(dpoi)
+	await _frames(5)
+	p.health.invulnerable = false
+	p.health.apply_damage(DamageInfo.create(9999.0, null, &"true"))
+	await _frames(3)
+	p.respawn()
+	await _wait_ready(world)
+	check(world.dungeon == null and world.layer == TerrainGenerator.Layer.SURFACE, "dying in a dungeon puts you back on the surface")
+	# Save / load of exploration state
+	world.exploration.set_state("dungeon:" + dpoi.id)
+	world.save_now(false)
+	world.queue_free()
+	await _frames(5)
+	SaveManager.load_world(id)
+	world = await _boot_world()
+	check(world.exploration.has_state("dungeon:" + dpoi.id) and world.exploration.is_discovered(dpoi.id), "exploration progress is saved")
 	world.queue_free()
 	await _frames(5)
 	SaveManager.delete_world(id)

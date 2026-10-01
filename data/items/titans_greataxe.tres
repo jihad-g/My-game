@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/axe.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"titans_greataxe"
+display_name = "Titan's Greataxe"
+description = "An axe of mithril bound with the Bone King's own bones."
+category = 3
+rarity = 6
+max_stack = 1
+base_value = 2500
+icon_color = Color(0.9, 0.88, 0.8, 1)
+icon_glyph = "Ax"
+equip_slot = 1
+required_level = 30
+stat_bonuses = {
+&"damage_bonus": 28,
+&"strength": 6,
+&"max_stamina": 20
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"axe"

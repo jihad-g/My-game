@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"sunstone"
+display_name = "Sunstone"
+description = "Warm, glowing stone from the heart of a temple guardian."
+category = 0
+rarity = 4
+max_stack = 99
+base_value = 120
+icon_color = Color(1, 0.75, 0.3, 1)
+icon_glyph = "Su"

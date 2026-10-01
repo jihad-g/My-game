@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"starlight_orchid"
+display_name = "Starlight Orchid"
+description = "The rarest flower of all, found only in hidden groves."
+category = 0
+rarity = 4
+max_stack = 99
+base_value = 90
+icon_color = Color(0.9, 0.85, 1, 1)
+icon_glyph = "SO"

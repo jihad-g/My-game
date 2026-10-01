@@ -105,6 +105,29 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 6 — Exploration  ✅ (this milestone, Phases 3–4)
+
+- [x] Points of interest per 256 m cell, deterministic, ranked by distance (E near spawn → S far), kept clear of towns, flattened ground
+- [x] Ruins: broken walls, pillars, skeleton guardians, chest, hidden vault under a cracked floor
+- [x] Wizard towers: three-storey stone tower, door, roof hides inside, Tower Warden + wisps, lectern tome, chest
+- [x] Temples: raised platform, pillars, braziers, statue, altar; dormant Temple Guardian boss; sealed golden chest with a guaranteed legendary recipe; altar blessing
+- [x] Hidden groves: not on the map until found; ancient tree, rune stones, mushroom ring, magical plants that regrow
+- [x] Dungeons E→S: entrances with rank signs, 1–3 floors, rooms + corridors, monsters and elites, spike-trap rooms, treasure rooms, secret room behind a cracked wall, stairs, boss arena with sealing gate, boss chest, exit portal, 3-day repopulation, dungeon map
+- [x] Three dungeon themes with their own monsters and bosses: Crypt (Bone King), Arcane Sanctum (Arcane Colossus), Thornwild Grotto (Elder Thornmaw)
+- [x] Monster framework: data-driven melee, ranged and caster AI; bosses with cleave/slam/volley/charge/summon, enrage, boss bar; rank scaling of health/damage/level/XP
+- [x] Player afflictions from monsters: burning, poison, chill
+- [x] Rare resources: mithril (ore, ingots, tier-4 tools), void shards, sunstones, thorn hearts, royal bone, wisp essence, thorn venom, ancient bone
+- [x] Magical plants: sunbloom, frost lotus, emberroot, dreamcap, starlight orchid (groves only)
+- [x] Alchemy table + 7 potions/elixirs (healing, mana, warming, cooling, might, stoneskin, starlight)
+- [x] 7 legendary items with legendary recipe scrolls (temples, A/S bosses, far vaults/towers)
+- [x] Gossip points you to dungeons, ruins, towers, temples and hints at hidden groves; map markers; save/load of all progress
+- [ ] NOT IMPLEMENTED: dungeon fog of war (the floor map shows every room except the secret one), keys/locked doors, puzzles beyond cracked walls
+- [ ] NOT IMPLEMENTED: multi-storey tower interiors (only the ground floor is walkable), climbing
+- [ ] NOT IMPLEMENTED: world bosses roaming the overworld, dungeon modifiers/affixes, party/co-op
+- [ ] NOT IMPLEMENTED: unique legendary effects (legendaries are strong stat items, no special procs)
+- [ ] Known limitation: dungeons are built in the sky (y = 800) with the surface paused; a short load when entering
+- [ ] Known limitation: monsters don't path-find around walls (they slide along them); dungeon rooms are designed with clear lines
+
 ## Phase 2 — Core RPG (remaining)
 
 - [x] Crafting system (Milestone 4)
@@ -118,7 +141,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 - [~] Chunk system & procedural terrain — heightmap columns on two layers; no overhangs / multi-level caves
 - [x] Villages (houses, farms, market, blacksmith, shops, NPCs, traders) (Milestone 5)
-- [ ] Structures: ruins, towers, temples, ancient structures, landmarks, hidden locations
+- [x] Structures: ruins, towers, temples, hidden groves (Milestone 6)
 - [ ] Mines (abandoned mine structures in caves); caves currently have ore-rich areas but no built mines
 - [ ] Biome-specific enemies (only the Thornback Boar exists; it spawns in meadow, forest, jungle and taiga)
 - [ ] Underground water, lava and deeper cave levels
@@ -126,8 +149,8 @@ Nothing below is marked `[x]` unless it runs in the game today.
 ## Phase 4 — Content
 
 - [~] Kingdoms (castle, advanced blacksmith, rare shops, guards, reputation) — done in Milestone 5; kingdom quests not yet
-- [ ] Dungeons ranks E–S with scaling enemies, mechanics, loot, bosses
-- [ ] Bosses with unique mechanics
+- [x] Dungeons ranks E–S with scaling enemies, traps, secrets, loot, bosses (Milestone 6)
+- [x] Bosses with unique mechanics (Milestone 6: 4 bosses)
 - [ ] More enemy categories (monsters, bandits, undead, magical, elites)
 - [~] Farming (seeds, planting, harvesting) — Milestone 5; watering, seasons, rare/magical plants not yet
 - [x] Trading & economy (per-settlement inventories and prices) (Milestone 5)

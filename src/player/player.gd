@@ -59,6 +59,10 @@ var equipment := Equipment.new()
 var recipes := RecipeBook.new()
 ## Money in copper (Milestone 5).
 var coins: int = 0
+## Damage-over-time and slows from monster attacks (Milestone 6):
+## id -> {time, dps}. burn/poison tick damage, chilled slows.
+var afflictions: Dictionary = {}
+var _affliction_tick := 0.0
 var reputation := Reputation.new()
 var state: State = State.NORMAL
 var is_dead: bool = false
@@ -156,6 +160,7 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		return
 	_dodge_cooldown_left -= delta
+	_update_afflictions(delta)
 	hunger.activity_multiplier = 1.0
 	_update_water()
 
@@ -477,6 +482,44 @@ func receive_hit(info: DamageInfo) -> void:
 	_knockback += Vector3(info.knockback.x, 0, info.knockback.z)
 	if info.poise_damage >= 30.0 and state != State.DODGING:
 		_stagger(0.45)
+	for e in info.status_effects:
+		afflict(StringName(e[0]), float(e[1]), e[2] if e.size() > 2 else {})
+
+
+## Applies burn / poison (damage over time) or chilled (slow) to the player.
+func afflict(id: StringName, duration: float, params: Dictionary) -> void:
+	if is_dead:
+		return
+	var cur: Dictionary = afflictions.get(id, {"time": 0.0, "dps": 0.0})
+	cur.time = maxf(float(cur.time), duration)
+	cur.dps = maxf(float(cur.dps), float(params.get("dps", 4.0)))
+	afflictions[id] = cur
+	var names := {&"burn": "Burning", &"poison": "Poisoned", &"chilled": "Chilled"}
+	Events.damage_dealt.emit(global_position + Vector3(0, 2.3, 0), 0.0, false, true, names.get(id, String(id)))
+	_update_affliction_stats()
+
+
+func _update_afflictions(delta: float) -> void:
+	if afflictions.is_empty():
+		return
+	_affliction_tick -= delta
+	var tick := _affliction_tick <= 0.0
+	if tick:
+		_affliction_tick = 0.5
+	for id in afflictions.keys():
+		var a: Dictionary = afflictions[id]
+		a.time = float(a.time) - delta
+		if tick and id in [&"burn", &"poison"] and not is_dead:
+			var info := DamageInfo.create(float(a.dps) * 0.5, null, &"true")
+			info.tag = "Burn" if id == &"burn" else "Poison"
+			health.apply_damage(info)
+		if float(a.time) <= 0.0:
+			afflictions.erase(id)
+			_update_affliction_stats()
+
+
+func _update_affliction_stats() -> void:
+	stats.set_source(&"afflictions", {Stats.MOVE_SPEED: 0.7} if afflictions.has(&"chilled") else {})
 
 
 func _is_in_front(info: DamageInfo) -> bool:
@@ -526,6 +569,8 @@ func respawn() -> void:
 		return
 	is_dead = false
 	state = State.NORMAL
+	afflictions.clear()
+	_update_affliction_stats()
 	health.revive(0.6)
 	stamina.refill()
 	mana.refill()
@@ -772,7 +817,14 @@ func _consume(item: ItemData) -> void:
 		health.heal(item.health_restore)
 	if item.temperature_offset != 0.0 and item.temperature_duration > 0.0:
 		temperature.add_buff(StringName("food_%s" % item.id), item.temperature_offset, item.temperature_duration)
-	Events.toast.emit("Ate %s" % item.display_name, Color(0.7, 1, 0.6))
+	if item.mana_restore > 0.0:
+		mana.restore(item.mana_restore)
+	if item.buff_id != &"" and item.buff_duration > 0.0:
+		abilities.add_buff(item.buff_id, item.buff_duration)
+		if item.buff_id == &"starlight":
+			mana.refill()
+	var potion := item.mana_restore > 0.0 or item.buff_id != &"" or item.hunger_restore <= 0.0
+	Events.toast.emit("%s %s" % ["Drank" if potion else "Ate", item.display_name], Color(0.7, 1, 0.6))
 
 
 func _place(item: ItemData) -> bool:
@@ -800,7 +852,7 @@ func drop_slot(index: int, count: int) -> void:
 
 func to_save() -> Dictionary:
 	return {
-		"position": [global_position.x, global_position.y, global_position.z],
+		"position": _save_position(),
 		"spawn_point": [spawn_point.x, spawn_point.y, spawn_point.z],
 		"facing": [_facing.x, _facing.z],
 		"health": health.current,
@@ -818,6 +870,14 @@ func to_save() -> Dictionary:
 		"coins": coins,
 		"reputation": reputation.to_save(),
 	}
+
+
+## Inside a dungeon we save the entrance (dungeons are rebuilt, not saved).
+func _save_position() -> Array:
+	var p := global_position
+	if World.instance and World.instance.dungeon:
+		p = World.instance.dungeon.return_position
+	return [p.x, p.y, p.z]
 
 
 func from_save(data: Dictionary) -> void:

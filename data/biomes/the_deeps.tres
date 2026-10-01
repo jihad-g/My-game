@@ -138,6 +138,36 @@ show_in_lod1 = false
 on_water = false
 salt = 190
 
+[sub_resource type="Resource" id="Rule_9"]
+script = ExtResource("2_rule")
+prop_id = &"dreamcap"
+cell_size = 8
+density = 0.08
+clustering = 0.4
+min_height = -250
+max_height = -238
+max_slope = 2
+min_scale = 0.9
+max_scale = 1.1
+show_in_lod1 = false
+on_water = false
+salt = 507
+
+[sub_resource type="Resource" id="Rule_10"]
+script = ExtResource("2_rule")
+prop_id = &"ore_mithril"
+cell_size = 16
+density = 0.12
+clustering = 0.4
+min_height = -250
+max_height = -238
+max_slope = 2
+min_scale = 0.9
+max_scale = 1.1
+show_in_lod1 = false
+on_water = false
+salt = 508
+
 [resource]
 script = ExtResource("1_biome")
 id = &"the_deeps"
@@ -152,5 +182,5 @@ top_color_alt = Color(0.4, 0.37, 0.4, 1)
 side_color = Color(0.3, 0.28, 0.32, 1)
 shore_color = Color(0.4, 0.4, 0.4, 1)
 underwater_color = Color(0.3, 0.3, 0.3, 1)
-prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_7"), SubResource("Rule_8")]
+prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_7"), SubResource("Rule_8"), SubResource("Rule_9"), SubResource("Rule_10")]
 enemy_spawns = []

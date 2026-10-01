@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"cooling_draught"
+result_item = &"cooling_draught"
+result_count = 1
+ingredients = {
+&"frost_lotus": 1,
+&"berries": 1
+}
+station = 6
+tier = 0
+source = 1
+discovered_by = &"frost_lotus"
+xp = 4

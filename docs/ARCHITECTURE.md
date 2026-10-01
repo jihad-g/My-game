@@ -164,6 +164,25 @@ World (world.gd)                 wires systems, world services (temperature, pic
   and `coins` live on the Player. `Gossip` builds dialogue lines from world queries.
 - **Farming**: `BuildPiece` behaviour FARM + `Farming` rules; growth uses `GameState.world_time`.
 
+## Exploration (Milestone 6)
+
+- **Placement**: `TerrainGenerator.pois` (`Exploration`) decides one POI per 256 m cell from raw
+  terrain (cached, thread-safe). `PoiInfo` extends `SettlementInfo`, so `sample_column()`
+  flattens POIs with the same code as towns; props, caves and spawns skip them.
+- **POI sites**: `PoiLayout.build(poi)` → statics/boxes/roofs, chests, cracked blocks, objects
+  (lectern, altar, entrance, plants), lights, guardians. `PoiSite` builds it with
+  `StaticGeometry` (merge into BlockMesh arrays + attach), spawns guardians from the monster
+  pool and wires temple logic. `ExplorationManager.state` (saved) records opened chests,
+  vaults, cleansed temples, tomes, plants and dungeon clears.
+- **Dungeons**: `DungeonPlan.generate(poi, floor)` (rooms on a slot grid, spanning tree +
+  loops, room roles, secret corridor) → `DungeonInstance` at `ORIGIN` (y = 800): floor/wall
+  geometry with merged wall-run collision, monsters (rank-scaled), traps, chests, doors,
+  boss arena gate. `World.enter_dungeon / next_dungeon_floor / exit_dungeon` pause chunk
+  streaming, route ground height/temperature to the dungeon and restore the surface.
+- **Monsters**: `Monster` (generic AI over `MonsterData`) shares Enemy's pooling, hits,
+  status effects and loot. Bosses emit `Events.boss_started/boss_ended` for the HUD bar.
+- **Loot**: `LootTables` (rank-gated entries, gear bands, legendary scrolls); `LootChest`.
+
 ## Survival
 
 - `StatBlock` aggregates multiplicative modifiers per source (`&"hunger"`,
@@ -184,6 +203,9 @@ World (world.gd)                 wires systems, world services (temperature, pic
 | New recipe | Add `data/recipes/<id>.tres` (`RecipeData`); for books add the id to an item's `teaches_recipes`. |
 | New settlement building | Add a builder in `SettlementLayout` (use `_building()` for walled buildings) and give NPC roles a `work` point. |
 | New shop item | Add it to `Economy.STOCK[role]` with a reputation tier (or `TRADER_POOL`). |
+| New monster | Add `data/enemies/<id>.tres` (`MonsterData`: style, look, attacks, projectile, boss moves). Use it in `PoiLayout.THEME_MONSTERS` or a POI layout. |
+| New POI kind | Add a `PoiInfo.Kind`, weights in `Exploration.WEIGHTS`, a builder in `PoiLayout`. |
+| New loot | Add entries to `LootTables.TABLES` (with a minimum rank). |
 | New crop | Add to `Farming.CROPS` + seed/produce items + `BuildMeshes.build_crop` visuals. |
 | New build piece | Add `data/build_pieces/<id>.tres` (`BuildPieceData`) + `build_<mesh>()` in `BuildMeshes`. |
 | New crafting station | A build piece with behaviour STATION and a `station_id`, plus the id in `RecipeData.STATION_IDS`. |

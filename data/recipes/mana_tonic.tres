@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"mana_tonic"
+result_item = &"mana_tonic"
+result_count = 1
+ingredients = {
+&"dreamcap": 1,
+&"glowcap": 1
+}
+station = 6
+tier = 1
+source = 1
+discovered_by = &"dreamcap"
+xp = 12

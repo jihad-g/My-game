@@ -50,6 +50,10 @@ var building: BuildingManager
 var build_mode: BuildMode
 ## Villages, kingdoms, NPCs, shops, requests (Milestone 5).
 var living: SettlementManager
+## Ruins, towers, temples, dungeon entrances, groves (Milestone 6).
+var exploration: ExplorationManager
+## The dungeon floor the player is in (null on the surface/caves).
+var dungeon: DungeonInstance
 var _autosave_left := AUTOSAVE_INTERVAL
 var _biome_check_left := 0.0
 var _first_ready := true
@@ -79,6 +83,10 @@ func _ready() -> void:
 	living.name = "Settlements"
 	living.world = self
 	add_child(living)
+	exploration = ExplorationManager.new()
+	exploration.name = "Exploration"
+	exploration.world = self
+	add_child(exploration)
 	props = PropLibrary.new()
 	chunk_manager.setup(generator, props)
 	spawner.generator = generator
@@ -217,19 +225,99 @@ func travel_to_layer(target_layer: int, at: Vector3) -> void:
 	layer_changed.emit(layer)
 
 
+# --- Dungeons (Milestone 6) --------------------------------------------------------------
+
+## Enters a dungeon from its entrance on the surface.
+func enter_dungeon(poi: PoiInfo) -> bool:
+	if dungeon or not is_ready or layer != TerrainGenerator.Layer.SURFACE:
+		return false
+	var left := exploration.dungeon_cleared_left(poi)
+	if left > 0.0:
+		Events.toast.emit("%s lies empty. Its dead stir again in %d hours." % [poi.title(), ceili(left / 50.0)], Color(0.85, 0.85, 0.85))
+		return false
+	_load_dungeon_floor(poi, 0, player.global_position + Vector3(0, 0.3, 2.5))
+	Events.toast.emit("Entered %s" % poi.title(), Color(1.0, 0.8, 0.5))
+	return true
+
+
+func next_dungeon_floor() -> void:
+	if dungeon == null:
+		return
+	var poi := dungeon.poi
+	var f := dungeon.floor_index + 1
+	var ret := dungeon.return_position
+	_load_dungeon_floor(poi, f, ret)
+	Events.toast.emit("Floor %d of %d" % [f + 1, dungeon.plan.floor_count], Color(1.0, 0.8, 0.5))
+
+
+func _load_dungeon_floor(poi: PoiInfo, floor_index: int, ret: Vector3) -> void:
+	player.set_lock_target(null)
+	if dungeon:
+		dungeon.queue_free()
+		remove_child(dungeon)
+	else:
+		spawner.despawn_all()
+		spawner.set_process(false)
+		for e in get_tree().get_nodes_in_group(&"enemies"):
+			if e is Enemy and e.visible:
+				NodePool.release_or_free(e)
+		pickup_pool.release_all()
+		chunk_manager.process_mode = Node.PROCESS_MODE_DISABLED
+		chunk_manager.visible = false
+	dungeon = DungeonInstance.new()
+	dungeon.setup(poi, floor_index, ret)
+	add_child(dungeon)
+	living.update_now()
+	exploration.update_now()
+	player.global_position = dungeon.start_position()
+	player.velocity = Vector3.ZERO
+	camera_rig.snap_to_target()
+	_apply_layer_environment()
+	Events.dungeon_entered.emit(poi.id, floor_index)
+
+
+## Leaves the dungeon (portal, death). `to` defaults to the entrance.
+func exit_dungeon(to: Vector3 = Vector3.INF) -> void:
+	if dungeon == null:
+		return
+	var poi := dungeon.poi
+	var cleared := dungeon.cleared
+	var dest := dungeon.return_position if to == Vector3.INF else to
+	dungeon.queue_free()
+	remove_child(dungeon)
+	dungeon = null
+	pickup_pool.release_all()
+	chunk_manager.process_mode = Node.PROCESS_MODE_INHERIT
+	chunk_manager.visible = true
+	spawner.set_process(true)
+	is_ready = false
+	player.frozen = true
+	player.global_position = dest
+	camera_rig.snap_to_target()
+	hud.set_loading(true, "Returning to the surface...")
+	_apply_layer_environment()
+	Events.dungeon_left.emit(poi.id, cleared)
+
+
 func _apply_layer_environment() -> void:
-	var underground := layer == TerrainGenerator.Layer.UNDERGROUND
+	var underground := layer == TerrainGenerator.Layer.UNDERGROUND or dungeon != null
 	day_night.underground = underground
 	day_night.advance_hours(0.0)  # re-apply lighting now
 	player.set_lantern(underground)
 
 
 func _on_player_respawned() -> void:
+	if dungeon:
+		exit_dungeon(player.spawn_point)
+		Events.toast.emit("You were carried out of the dungeon...", Color(1, 0.7, 0.5))
+		return
 	if layer != TerrainGenerator.Layer.SURFACE:
 		travel_to_layer(TerrainGenerator.Layer.SURFACE, player.spawn_point - Vector3(1.8, 0, 0.6))
 
 
 func _update_biome() -> void:
+	if dungeon:
+		return
 	var b := generator.get_biome_at(player.global_position, layer)
 	if b == current_biome:
 		return
@@ -243,13 +331,15 @@ func _update_biome() -> void:
 # --- World services -------------------------------------------------------------------
 
 func get_ground_height(pos: Vector3) -> float:
+	if dungeon:
+		return dungeon.floor_y()
 	return generator.get_height_at(pos, layer)
 
 
 ## Air temperature from climate fields, time of day, altitude and water.
 ## Continuous across biome borders. Caves keep a steady, mild temperature.
 func get_air_temperature(pos: Vector3) -> float:
-	if layer == TerrainGenerator.Layer.UNDERGROUND:
+	if layer == TerrainGenerator.Layer.UNDERGROUND or dungeon:
 		return worldgen.cave_temperature + debug_temperature_offset
 	var climate := generator.get_climate(pos)
 	var t := climate.x + day_night.get_temperature_factor() * climate.y
@@ -384,6 +474,7 @@ func to_save() -> Dictionary:
 	return {
 		"buildings": building.to_save(),
 		"living": living.to_save(),
+		"exploration": exploration.to_save(),
 		"layer": layer,
 		"day": day_night.day,
 		"hour": day_night.hour,
@@ -394,6 +485,7 @@ func to_save() -> Dictionary:
 func from_save(data: Dictionary) -> void:
 	layer = int(data.get("layer", TerrainGenerator.Layer.SURFACE))
 	living.from_save(data.get("living", {}))
+	exploration.from_save(data.get("exploration", {}))
 	day_night.day = int(data.get("day", 1))
 	day_night.hour = float(data.get("hour", day_night.start_hour))
 	for entry in data.get("placed", []):

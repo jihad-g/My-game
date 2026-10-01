@@ -89,6 +89,37 @@ func set_npc_look(role: StringName, seed: int, accent: Color) -> void:
 	_build()
 
 
+## Monster look (Milestone 6): skeletons, cultists, golems and their bosses.
+func set_monster_look(look: StringName, tint: Color, accent: Color) -> void:
+	_accent = accent
+	_class_id = StringName("mon_%s" % look)
+	_has_shield = false
+	match look:
+		&"skeleton", &"skeleton_archer", &"bone_king":
+			skin_color = tint
+			hair_color = tint * 0.9
+			shirt_color = tint * 0.85
+			pants_color = tint * 0.8
+			boot_color = tint * 0.7
+			_weapon_type = &"bow" if look == &"skeleton_archer" else (&"axe" if look == &"bone_king" else &"sword")
+			_has_shield = look == &"skeleton"
+		&"cultist", &"warden":
+			skin_color = Color(0.75, 0.62, 0.55)
+			hair_color = Color(0.15, 0.1, 0.12)
+			shirt_color = tint
+			pants_color = tint * 0.7
+			boot_color = Color(0.2, 0.15, 0.15)
+			_weapon_type = &"staff"
+		_:  # golems: golem, arcane_colossus, temple_guardian
+			skin_color = tint
+			hair_color = tint * 0.8
+			shirt_color = tint * 0.95
+			pants_color = tint * 0.85
+			boot_color = tint * 0.7
+			_weapon_type = &"unarmed"
+	_build()
+
+
 func set_weapon(weapon_type: StringName, has_shield: bool) -> void:
 	_weapon_type = weapon_type
 	_has_shield = has_shield
@@ -161,6 +192,39 @@ func _build_class_gear() -> void:
 			_part(_head, Vector3(0.06, 1.02, -0.06), Vector3(0.1, 0.12, 0.1), a)
 			_part(_head, Vector3(0, 0.02, 0.2), Vector3(0.3, 0.26, 0.08), Color(0.9, 0.9, 0.92))  # beard
 			_part(_torso, Vector3(0, -0.12, 0), Vector3(0.6, 0.36, 0.36), shirt_color * 0.9)  # robe skirt
+		&"mon_skeleton", &"mon_skeleton_archer", &"mon_bone_king":
+			_part(_head, Vector3(-0.1, 0.26, 0.23), Vector3(0.1, 0.1, 0.02), a)  # glowing eyes
+			_part(_head, Vector3(0.1, 0.26, 0.23), Vector3(0.1, 0.1, 0.02), a)
+			_part(_head, Vector3(0, 0.08, 0.2), Vector3(0.3, 0.08, 0.06), Color(0.15, 0.12, 0.1))  # jaw gap
+			for k in 3:
+				_part(_torso, Vector3(0, 0.15 + k * 0.15, 0.17), Vector3(0.46, 0.04, 0.02), Color(0.2, 0.18, 0.16))  # ribs
+			if _class_id == &"mon_skeleton_archer":
+				_part(_head, Vector3(0, 0.36, -0.03), Vector3(0.52, 0.38, 0.5), Color(0.3, 0.25, 0.22))  # hood
+			if _class_id == &"mon_bone_king":
+				var gold := Color(0.95, 0.75, 0.2)
+				_part(_head, Vector3(0, 0.56, 0), Vector3(0.5, 0.12, 0.48), gold)
+				for cx in [-0.2, 0.0, 0.2]:
+					_part(_head, Vector3(cx, 0.68, 0.2), Vector3(0.09, 0.14, 0.06), gold)
+				_part(_torso, Vector3(0, 0.25, -0.2), Vector3(0.66, 0.9, 0.06), Color(0.45, 0.1, 0.12))  # cape
+		&"mon_cultist", &"mon_warden":
+			_part(_head, Vector3(0, 0.36, -0.03), Vector3(0.54, 0.42, 0.5), shirt_color * 0.8)  # hood
+			_part(_head, Vector3(-0.1, 0.26, 0.23), Vector3(0.08, 0.06, 0.02), a)
+			_part(_head, Vector3(0.1, 0.26, 0.23), Vector3(0.08, 0.06, 0.02), a)
+			_part(_torso, Vector3(0, -0.12, 0), Vector3(0.62, 0.4, 0.38), shirt_color * 0.9)  # robe skirt
+			_part(_torso, Vector3(0, 0.3, 0.17), Vector3(0.14, 0.5, 0.02), a)  # sash
+			if _class_id == &"mon_warden":
+				_part(_head, Vector3(0, 0.62, 0), Vector3(0.66, 0.06, 0.64), shirt_color * 0.7)
+				_part(_head, Vector3(0, 0.8, 0), Vector3(0.3, 0.3, 0.3), shirt_color * 0.75)
+		&"mon_golem", &"mon_arcane_colossus", &"mon_temple_guardian":
+			_part(_torso, Vector3(0, 0.3, 0.18), Vector3(0.24, 0.24, 0.04), a)  # glowing core
+			_part(_torso, Vector3(-0.42, 0.6, 0), Vector3(0.34, 0.26, 0.4), skin_color * 0.9)  # boulder shoulders
+			_part(_torso, Vector3(0.42, 0.6, 0), Vector3(0.34, 0.26, 0.4), skin_color * 0.9)
+			_part(_head, Vector3(0, 0.26, 0.23), Vector3(0.34, 0.06, 0.02), a)  # eye slit
+			if _class_id == &"mon_arcane_colossus":
+				for k in 3:
+					_part(_torso, Vector3(-0.2 + k * 0.2, 0.9 + (k % 2) * 0.1, -0.1), Vector3(0.1, 0.3, 0.1), a)
+			if _class_id == &"mon_temple_guardian":
+				_part(_torso, Vector3(0, 0.75, -0.15), Vector3(0.7, 0.7, 0.05), Color(0.95, 0.78, 0.3))  # sun disk
 		&"npc_farmer":
 			_part(_head, Vector3(0, 0.52, 0), Vector3(0.74, 0.06, 0.72), Color(0.9, 0.78, 0.4))  # straw hat
 			_part(_head, Vector3(0, 0.62, 0), Vector3(0.4, 0.16, 0.4), Color(0.85, 0.72, 0.35))
@@ -222,6 +286,11 @@ func _build_weapon() -> void:
 		&"hoe":
 			_part(_weapon, Vector3(0, 0, 0.4), Vector3(0.06, 0.06, 1.1), wood)
 			_part(_weapon, Vector3(0, -0.1, 0.92), Vector3(0.05, 0.25, 0.14), steel * 0.8)
+		&"bow":
+			_part(_weapon, Vector3(0, 0.25, 0.15), Vector3(0.05, 0.5, 0.05), wood)
+			_part(_weapon, Vector3(0, -0.25, 0.15), Vector3(0.05, 0.5, 0.05), wood)
+			_part(_weapon, Vector3(0, 0, 0.3), Vector3(0.04, 0.2, 0.04), wood)
+			_part(_weapon, Vector3(0, 0, 0.08), Vector3(0.02, 0.9, 0.02), Color(0.9, 0.9, 0.85))
 		&"spear":
 			_part(_weapon, Vector3(0, 0, 0.5), Vector3(0.07, 0.07, 1.6), wood)
 			_part(_weapon, Vector3(0, 0, 1.36), Vector3(0.08, 0.04, 0.24), steel)

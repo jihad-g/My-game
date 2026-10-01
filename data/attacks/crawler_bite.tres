@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"crawler_bite"
+display_name = "Bite"
+damage = 9
+windup = 0.3
+active = 0.1
+recovery = 0.4
+cancel_ratio = 0.0
+reach = 1.9
+arc_degrees = 90
+knockback = 2
+poise_damage = 8
+lunge_speed = 3.0
+move_multiplier = 0.0
+animation = &"bite"
+camera_shake = 0.0

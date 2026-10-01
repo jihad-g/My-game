@@ -23,6 +23,10 @@ func _ready() -> void:
 		await _shot("20_main_menu")
 		get_tree().quit()
 		return
+	if "--only=explore" in OS.get_cmdline_user_args():
+		await _explore_showcase()
+		get_tree().quit()
+		return
 	if "--only=town" in OS.get_cmdline_user_args():
 		await _town_showcase()
 		get_tree().quit()
@@ -511,5 +515,71 @@ func _town_showcase() -> void:
 	await _wait(15)
 	await _shot("59_kingdom_court")
 	world.hud._dialogue.close()
+	world.queue_free()
+	await _wait(5)
+
+
+## Milestone 6 showcase: ruins, tower, temple, grove, a dungeon and its boss.
+func _explore_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	world.hud._help.visible = false
+	world.day_night.hour = 10.0
+	var all := world.generator.pois.near(p.global_position, 3000.0)
+	var n := 60
+	for kind in [PoiInfo.Kind.RUINS, PoiInfo.Kind.TOWER, PoiInfo.Kind.TEMPLE, PoiInfo.Kind.GROVE, PoiInfo.Kind.DUNGEON]:
+		var poi: PoiInfo = null
+		for q in all:
+			if q.kind == kind:
+				poi = q
+				break
+		if poi == null:
+			continue
+		await _teleport(world, poi.world_center() + Vector3(0, 0, poi.radius * 0.6 + 1.5))
+		world.exploration.update_now(true)
+		await _wait(30)
+		world.camera_rig._target_distance = 20.0 if kind != PoiInfo.Kind.TEMPLE else 26.0
+		world.camera_rig._target_pitch = 60.0
+		await _wait(60)
+		await _shot("%02d_poi_%s" % [n, PoiInfo.KIND_NAMES[kind].to_lower().replace(" ", "_")])
+		n += 1
+		if kind == PoiInfo.Kind.DUNGEON:
+			world.enter_dungeon(poi)
+			await _wait(40)
+			world.camera_rig._target_distance = 16.0
+			await _wait(40)
+			await _shot("%02d_dungeon_start" % n)
+			n += 1
+			var d := world.dungeon
+			for i in d.plan.rooms.size():
+				if d.plan.rooms[i].type == DungeonPlan.Room.NORMAL:
+					p.global_position = d.to_global(d.plan.room_center(i) + Vector3(0, 0.3, 3.0))
+					await _wait(50)
+					await _shot("%02d_dungeon_room" % n)
+					n += 1
+					break
+			world.hud._map.toggle()
+			await _wait(20)
+			await _shot("%02d_dungeon_map" % n)
+			n += 1
+			world.hud._map.toggle()
+			# Jump to the last floor's boss arena.
+			while not d.plan.is_final:
+				world.next_dungeon_floor()
+				await _wait(20)
+				d = world.dungeon
+			for m in d.monsters:
+				if is_instance_valid(m) and not m.is_boss() and not m.is_dead:
+					m.health.current = 0.0
+			p.global_position = d.to_global(d.plan.room_center(d.plan.end_room) + Vector3(0, 0.3, 4.0))
+			await _wait(60)
+			await _shot("%02d_dungeon_boss" % n)
+			n += 1
 	world.queue_free()
 	await _wait(5)

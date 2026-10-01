@@ -4,9 +4,9 @@ extends Resource
 ## use more materials (Skill.material_cost_mult).
 
 ## Where the recipe can be crafted (a nearby station of this id, or by hand).
-enum Station { HAND, WORKBENCH, FORGE, TAILORING, ARCANE, CAMPFIRE }
-const STATION_NAMES := ["By hand", "Workbench", "Forge", "Tailoring Table", "Arcane Altar", "Campfire"]
-const STATION_IDS := [&"hand", &"workbench", &"forge", &"tailoring", &"arcane", &"campfire"]
+enum Station { HAND, WORKBENCH, FORGE, TAILORING, ARCANE, CAMPFIRE, ALCHEMY }
+const STATION_NAMES := ["By hand", "Workbench", "Forge", "Tailoring Table", "Arcane Altar", "Campfire", "Alchemy Table"]
+const STATION_IDS := [&"hand", &"workbench", &"forge", &"tailoring", &"arcane", &"campfire", &"alchemy"]
 
 ## How the recipe is learned.
 enum Source { STARTING, DISCOVERY, BOOK }

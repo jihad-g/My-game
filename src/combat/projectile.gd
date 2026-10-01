@@ -9,6 +9,8 @@ var lifetime := 1.5
 var exclude: Array[RID] = []
 var color := Color(1.0, 0.5, 0.15)
 var on_hit: Callable  ## optional func(target: Node, dealt: float)
+## What the projectile can hit (enemy projectiles use PLAYER instead of ENEMY).
+var mask := Layers.TERRAIN | Layers.ENEMY | Layers.PROP | Layers.BUILDING
 
 var _age := 0.0
 var _shape := SphereShape3D.new()
@@ -44,7 +46,7 @@ func _physics_process(delta: float) -> void:
 	params.shape = _shape
 	params.transform = Transform3D(Basis.IDENTITY, from)
 	params.motion = motion
-	params.collision_mask = Layers.TERRAIN | Layers.ENEMY | Layers.PROP | Layers.BUILDING
+	params.collision_mask = mask
 	params.exclude = exclude
 	var fractions := space.cast_motion(params)
 	if fractions.size() == 2 and fractions[1] < 1.0:

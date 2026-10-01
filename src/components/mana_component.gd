@@ -40,6 +40,10 @@ func try_spend(amount: float) -> bool:
 	return true
 
 
+func restore(amount: float) -> void:
+	_set_current(current + amount)
+
+
 func refill() -> void:
 	_set_current(max_mana)
 

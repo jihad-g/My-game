@@ -200,6 +200,12 @@ func outgoing_mult() -> float:
 		m *= 1.0 + 0.003 * rage  # +3% per 10 rage
 	if has_buff(&"battle_cry"):
 		m *= 1.25
+	if has_buff(&"might"):
+		m *= 1.2
+	if has_buff(&"starlight"):
+		m *= 1.15
+	if has_buff(&"blessing"):
+		m *= 1.1
 	return m
 
 
@@ -210,6 +216,10 @@ func incoming_mult() -> float:
 		m *= 0.5
 	if has_buff(&"berserk"):
 		m *= 1.15
+	if has_buff(&"stoneskin"):
+		m *= 0.8
+	if has_buff(&"blessing"):
+		m *= 0.9
 	return m
 
 

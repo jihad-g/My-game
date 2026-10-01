@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"golem_smash"
+display_name = "Smash"
+damage = 20
+windup = 0.8
+active = 0.15
+recovery = 0.6
+cancel_ratio = 0.0
+reach = 2.4
+arc_degrees = 90
+knockback = 6
+poise_damage = 30
+lunge_speed = 0.5
+move_multiplier = 0.0
+animation = &"overhead"
+camera_shake = 0.2

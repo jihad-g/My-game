@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"bone_king_cleave"
+display_name = "Bone Cleave"
+damage = 32
+windup = 0.95
+active = 0.15
+recovery = 0.7
+cancel_ratio = 0.0
+reach = 3.6
+arc_degrees = 170
+knockback = 9
+poise_damage = 45
+lunge_speed = 3.0
+move_multiplier = 0.0
+animation = &"overhead"
+camera_shake = 0.35

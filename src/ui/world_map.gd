@@ -18,6 +18,9 @@ var _image: Image
 var _center := Vector3.ZERO
 var _legend_biomes: Dictionary = {}
 var _marker := Control.new()
+## Dungeon map scaling (pixels per cell, offset).
+var _dscale := 2.5
+var _doff := Vector2(5, 5)
 
 
 func _ready() -> void:
@@ -50,7 +53,7 @@ func _ready() -> void:
 	_legend.custom_minimum_size.x = 240
 	h.add_child(_legend)
 	var hint := Label.new()
-	hint.text = "M / Esc: close · %d m across · black dots: cave entrances · squares: villages, crowns: kingdom capitals (? = heard of)" % int(SIZE_PX * METRES_PER_PX)
+	hint.text = "M / Esc: close · %d m across · black dots: cave entrances · squares: villages, crowns: kingdom capitals (? = heard of) · diamonds: dungeons (rank), R ruins, W towers, T temples, H groves" % int(SIZE_PX * METRES_PER_PX)
 	hint.add_theme_font_size_override(&"font_size", 12)
 	hint.add_theme_color_override(&"font_color", UITheme.TEXT_DIM)
 	v.add_child(hint)
@@ -66,6 +69,9 @@ func refresh() -> void:
 	if world == null or _task_id != -1:
 		return
 	_center = world.player.global_position
+	if world.dungeon:
+		_render_dungeon()
+		return
 	_title.text = "Map · %s" % ("The Deeps (underground)" if world.layer == TerrainGenerator.Layer.UNDERGROUND else "Surface")
 	_legend.text = "Charting..."
 	var gen := world.generator
@@ -142,6 +148,39 @@ func _render(gen: TerrainGenerator, layer: int, center: Vector3) -> void:
 	_legend_biomes = legend
 
 
+## Dungeon floor map: rooms (explored or not - no fog yet), you, the exits.
+func _render_dungeon() -> void:
+	var d := world.dungeon
+	_title.text = "Map · %s · Floor %d/%d" % [d.poi.title(), d.floor_index + 1, d.plan.floor_count]
+	var img := Image.create(SIZE_PX, SIZE_PX, false, Image.FORMAT_RGB8)
+	img.fill(Color(0.06, 0.05, 0.07))
+	var colors := {DungeonPlan.Room.START: Color(0.35, 0.6, 0.9), DungeonPlan.Room.BOSS: Color(0.8, 0.25, 0.2),
+		DungeonPlan.Room.END: Color(0.9, 0.75, 0.3), DungeonPlan.Room.TREASURE: Color(0.85, 0.7, 0.3), DungeonPlan.Room.TRAP: Color(0.6, 0.35, 0.35)}
+	var lo := Vector2i(1 << 20, 1 << 20)
+	var hi := Vector2i(-(1 << 20), -(1 << 20))
+	for c: Vector2i in d.plan.cells:
+		lo = lo.min(c)
+		hi = hi.max(c)
+	var ext := maxi(hi.x - lo.x, hi.y - lo.y) + 1
+	_dscale = float(SIZE_PX - 16) / float(ext)
+	_doff = Vector2(8, 8) - Vector2(lo) * _dscale + (Vector2(SIZE_PX - 16, SIZE_PX - 16) - Vector2(hi - lo + Vector2i.ONE) * _dscale) * 0.5
+	var cellpx := maxi(1, ceili(_dscale))
+	for c: Vector2i in d.plan.cells:
+		var room := d.plan.room_at(Vector3(c.x + 0.5, 0, c.y + 0.5))
+		if room >= 0 and d.plan.rooms[room].type == DungeonPlan.Room.SECRET:
+			continue  # secret rooms stay secret
+		var col: Color = colors.get(d.plan.rooms[room].type, Color(0.5, 0.48, 0.5)) if room >= 0 else Color(0.38, 0.36, 0.4)
+		var px := int(c.x * _dscale + _doff.x)
+		var py := int(c.y * _dscale + _doff.y)
+		for dy in cellpx:
+			for dx in cellpx:
+				if px + dx < SIZE_PX and py + dy < SIZE_PX:
+					img.set_pixel(px + dx, py + dy, col)
+	_texture_rect.texture = ImageTexture.create_from_image(img)
+	_legend.text = "[color=#5a9ae6]■[/color] Entrance (exit portal)\n[color=#e6c04d]■[/color] Stairs / treasure\n[color=#9a5959]■[/color] Traps\n[color=#cc4033]■[/color] Boss\n\nCracked walls hide secrets..."
+	_marker.queue_redraw()
+
+
 ## Settlements on the map that you discovered or heard of.
 func _visible_settlements() -> Array[SettlementInfo]:
 	var out: Array[SettlementInfo] = []
@@ -158,6 +197,27 @@ func _draw_marker() -> void:
 		return
 	var sz := _marker.size
 	var font := ThemeDB.fallback_font
+	if world.dungeon:
+		var lp := world.dungeon.to_local(world.player.global_position)
+		var q := (Vector2(lp.x, lp.z) * _dscale + _doff) / SIZE_PX * sz
+		_marker.draw_circle(q, 7.0, Color(1, 0.2, 0.2))
+		_marker.draw_arc(q, 7.0, 0, TAU, 16, Color.WHITE, 2.0)
+		return
+	if world.layer == TerrainGenerator.Layer.SURFACE:
+		for poi in world.generator.pois.near(_center, SIZE_PX * METRES_PER_PX * 0.72):
+			var known: bool = world.exploration.is_discovered(poi.id)
+			var heard := GameState.discovered_places.has("heard:%s" % poi.id)
+			if not known and (poi.is_hidden() or not heard):
+				continue
+			var rel_p := (poi.world_center() - _center) / (SIZE_PX * METRES_PER_PX)
+			var q := sz * 0.5 + Vector2(rel_p.x, rel_p.z) * sz
+			if q.x < 0 or q.y < 0 or q.x > sz.x or q.y > sz.y:
+				continue
+			var col: Color = [Color(0.75, 0.72, 0.65), Color(0.5, 0.6, 1.0), Color(1.0, 0.85, 0.35), Color(0.8, 0.25, 0.3), Color(0.5, 1.0, 0.8)][poi.kind]
+			_marker.draw_polygon(PackedVector2Array([q + Vector2(0, -8), q + Vector2(8, 0), q + Vector2(0, 8), q + Vector2(-8, 0)]), PackedColorArray([col]))
+			var label: String = poi.rank_letter() if poi.kind == PoiInfo.Kind.DUNGEON else PoiInfo.KIND_NAMES[poi.kind].substr(0, 1)
+			_marker.draw_string_outline(font, q + Vector2(-4, 5), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 3, Color.BLACK)
+			_marker.draw_string(font, q + Vector2(-4, 5), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.WHITE)
 	for st in _visible_settlements():
 		var rel_s := (st.world_center() - _center) / (SIZE_PX * METRES_PER_PX)
 		var q := sz * 0.5 + Vector2(rel_s.x, rel_s.z) * sz

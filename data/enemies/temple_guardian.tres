@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/golem_smash.tres" id="2_melee"]
+[ext_resource type="Resource" path="res://data/attacks/guardian_smash.tres" id="3_heavy"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"sunstone"
+min_count = 2
+max_count = 3
+chance = 1.0
+
+[resource]
+script = ExtResource("1_md")
+id = &"temple_guardian"
+display_name = "Temple Guardian"
+category = 7
+level = 11
+max_health = 750.0
+walk_speed = 1.8
+run_speed = 3.8
+turn_speed = 9.0
+aggro_range = 16.0
+leash_range = 34.0
+max_poise = 250.0
+damage_multipliers = {
+&"poison": 0.0,
+&"fire": 0.6
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0")]
+xp_reward = 350
+respawn_time = 600.0
+style = 3
+look = &"temple_guardian"
+model_scale = 1.8
+tint = Color(0.8, 0.7, 0.45, 1)
+accent = Color(1, 0.8, 0.3, 1)
+melee = ExtResource("2_melee")
+heavy = ExtResource("3_heavy")
+heavy_cooldown = 5.0
+projectile_damage = 14.0
+projectile_type = &"fire"
+projectile_speed = 13.0
+projectile_color = Color(1, 0.75, 0.25, 1)
+projectile_windup = 0.6
+projectile_cooldown = 3.0
+preferred_min = 0.0
+preferred_max = 12.0
+projectile_status = [&"burn", 3.0, {"dps": 5.0}]
+boss_title = "The Temple Guardian"
+boss_moves = [&"slam", &"volley", &"cleave", &"charge"]
+slam_damage = 28.0
+slam_radius = 4.5
+volley_count = 5
