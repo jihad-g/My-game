@@ -371,9 +371,26 @@ func _get_move_input() -> Vector3:
 	return dir.limit_length(1.0)
 
 
+## Sprint input, honouring the "toggle sprint" accessibility setting: one
+## press starts sprinting until you stop moving or run out of stamina.
+var _sprint_latched := false
+var _sprint_frame := -1
+
+
+func _sprint_held() -> bool:
+	if not Settings.get_value("toggle_sprint"):
+		return Input.is_action_pressed(&"sprint")
+	if Input.is_action_just_pressed(&"sprint") and _sprint_frame != Engine.get_physics_frames():
+		_sprint_frame = Engine.get_physics_frames()
+		_sprint_latched = not _sprint_latched
+	if _get_move_input() == Vector3.ZERO or stamina.current <= 1.0:
+		_sprint_latched = false
+	return _sprint_latched
+
+
 func _move_normal(input: Vector3, delta: float) -> void:
 	var speed := walk_speed
-	var sprinting := Input.is_action_pressed(&"sprint") and input != Vector3.ZERO \
+	var sprinting := _sprint_held() and input != Vector3.ZERO \
 		and not is_blocking and not combat.is_attacking() and stamina.current > 1.0
 	if sprinting:
 		speed = sprint_speed
@@ -420,6 +437,10 @@ func get_aim_direction() -> Vector3:
 	var aim_point: Vector3
 	if is_instance_valid(lock_target):
 		aim_point = lock_target.global_position
+	elif InputSetup.using_gamepad:
+		# Gamepad: act where the left stick points (or keep facing).
+		var mv := _get_move_input()
+		return mv.normalized() if mv.length() > 0.2 else _facing
 	elif camera_rig:
 		aim_point = camera_rig.get_mouse_world_point(global_position.y)
 	else:
@@ -444,7 +465,7 @@ func get_facing() -> Vector3:
 
 func _update_facing(delta: float) -> void:
 	if state == State.NORMAL and not combat.is_attacking():
-		var sprinting := Input.is_action_pressed(&"sprint") and Vector2(velocity.x, velocity.z).length() > walk_speed
+		var sprinting := _sprint_held() and Vector2(velocity.x, velocity.z).length() > walk_speed
 		if not sprinting:
 			_facing = get_aim_direction()
 	var target_yaw := atan2(_facing.x, _facing.z)
@@ -571,7 +592,7 @@ func receive_hit(info: DamageInfo) -> void:
 	if character.skill_level(Skill.DEFENSE) >= 75 and health.get_ratio() < 0.25:
 		reduction = minf(reduction + 0.2, 0.85)
 	if info.damage_type != &"starvation" and info.damage_type != &"true":
-		info.amount *= (1.0 - reduction) * abilities.incoming_mult()
+		info.amount *= (1.0 - reduction) * abilities.incoming_mult() * Settings.damage_taken_mult()
 		var inc := status.incoming(info.damage_type)
 		info.amount *= float(inc[0])
 		if inc[1] != "":
@@ -996,7 +1017,7 @@ func _place(item: ItemData) -> bool:
 
 func _place_target() -> Vector3:
 	var target := global_position + _facing * 1.6
-	if camera_rig and camera_rig.is_inside_tree() and DisplayServer.get_name() != "headless":
+	if camera_rig and camera_rig.is_inside_tree() and DisplayServer.get_name() != "headless" and not InputSetup.using_gamepad:
 		var aim := camera_rig.get_mouse_world_point(global_position.y)
 		if aim.distance_to(global_position) <= 4.0:
 			target = aim

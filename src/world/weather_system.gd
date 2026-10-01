@@ -257,7 +257,8 @@ func _update_lightning(delta: float, outdoor: bool) -> void:
 ## distance, thunder after the light (sound travels slower).
 func strike() -> void:
 	lightning_strikes += 1
-	_flash = 1.0
+	# Reduced flashing (accessibility): a soft glow instead of a white-out.
+	_flash = 0.15 if Settings.reduce_flashing() else 1.0
 	var p := world.player.global_position if world and world.player else global_position
 	var a := randf() * TAU
 	var dist := randf_range(60.0, 220.0)

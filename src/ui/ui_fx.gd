@@ -19,6 +19,10 @@ static func attach(panel: Control, sounds: bool = true) -> void:
 
 
 static func pop_in(panel: Control, time: float = 0.14) -> void:
+	if Settings.reduce_motion():
+		panel.scale = Vector2.ONE
+		panel.modulate.a = 1.0
+		return
 	panel.pivot_offset = panel.size * 0.5
 	panel.scale = Vector2(0.94, 0.94)
 	panel.modulate.a = 0.0

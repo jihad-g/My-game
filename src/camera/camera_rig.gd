@@ -34,6 +34,8 @@ var _dragging := false
 var _shake := 0.0
 ## Screen shake on/off (Settings).
 var shake_enabled := true
+## Rotation speed multiplier (Settings → Gameplay).
+var rotate_speed_scale := 1.0
 
 
 func _ready() -> void:
@@ -85,7 +87,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	var rot_input := Input.get_axis(&"cam_rotate_right", &"cam_rotate_left")
-	_target_yaw += rot_input * rotate_speed_deg * delta
+	_target_yaw += rot_input * rotate_speed_deg * rotate_speed_scale * delta
 	var pitch_input := Input.get_axis(&"cam_pitch_down", &"cam_pitch_up")
 	_target_pitch = clampf(_target_pitch + pitch_input * 60.0 * delta, min_pitch_deg, max_pitch_deg)
 

@@ -88,6 +88,8 @@ var _pause := ColorRect.new()
 var mp_hud := MultiplayerHud.new()
 var _pause_box: Control
 var _settings := SettingsPanel.new()
+var guide := GuidePanel.new()
+var tutorial_card := TutorialCard.new()
 ## Red edge glow when hurt / low on health (Milestone 10).
 var _vignette := ColorRect.new()
 var _vignette_hit := 0.0
@@ -121,6 +123,8 @@ func _ready() -> void:
 	_root.add_child(_reputation)
 	_root.add_child(_spellbook)
 	_root.add_child(_blueprints)
+	_root.add_child(tutorial_card)
+	_root.add_child(guide)
 	_dialogue.trade_requested.connect(func(n: NPC) -> void:
 		_dialogue.close()
 		if not Net.client_blocked("Trading"):
@@ -168,7 +172,7 @@ func _ready() -> void:
 	Events.target_changed.connect(_on_target_changed)
 	Events.player_died.connect(func() -> void: _death.visible = true)
 	Events.player_respawned.connect(func() -> void: _death.visible = false)
-	for panel in [_inv_panel, _map, _character, _crafting, _chest, _dialogue, _trade, _requests, _reputation, _spellbook, _blueprints, _settings]:
+	for panel in [_inv_panel, _map, _character, _crafting, _chest, _dialogue, _trade, _requests, _reputation, _spellbook, _blueprints, _settings, guide]:
 		UIFx.attach(panel)
 
 
@@ -602,22 +606,27 @@ func _build_help() -> void:
 	_help.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(_help)
 	var l := Label.new()
+	l.name = "HelpText"
 	l.add_theme_font_size_override(&"font_size", 12)
-	l.text = "\n".join([
-		"WASD move · Shift sprint · Space dodge roll",
-		"LMB light combo · RMB heavy · Hold Ctrl block (tap = parry)",
-		"Tab lock-on target · F interact / gather · I inventory",
-		"1-8 use hotbar item (eat / place campfire)",
-		"Q/E or MMB-drag rotate · Wheel zoom · PgUp/PgDn tilt",
-		"Z/X/C class abilities · T temperature shield · K character",
-		"Y/H cast spells · L spellbook · N blueprints",
-		"G crafting · B build mode (LMB place, RMB remove, R rotate, U repair)",
-		"F talk to townsfolk / read notice boards · J reputation",
-		"Arrows pan camera · V recenter · M map · F5 save",
-		"F3 debug · F1 hide help",
-		"Debug: F6/F7 temp -/+10°C · F8 spawn boar · F9 +2h",
-	])
 	_help.add_child(l)
+	_refresh_help()
+	InputSetup.bindings_changed.connect(_refresh_help)
+	InputSetup.device_changed.connect(func(_p: bool) -> void: _refresh_help())
+
+
+## The always-visible cheat sheet, from the current bindings (Milestone 13).
+func _refresh_help() -> void:
+	var k := func(a: StringName) -> String: return InputSetup.action_label(a)
+	var l := _help.get_node_or_null("HelpText") as Label
+	if l == null:
+		return
+	l.text = "\n".join([
+		"%s move · %s sprint · %s dodge" % [InputSetup.move_label(), k.call(&"sprint"), k.call(&"dodge")],
+		"%s light · %s heavy · %s block/parry · %s lock-on" % [k.call(&"attack_light"), k.call(&"attack_heavy"), k.call(&"block"), k.call(&"target_lock")],
+		"%s interact · %s bag · %s craft · %s build · %s character" % [k.call(&"interact"), k.call(&"inventory"), k.call(&"crafting"), k.call(&"build_mode"), k.call(&"character_screen")],
+		"%s abilities · %s map · %s save" % ["/".join([k.call(&"ability_1"), k.call(&"ability_2"), k.call(&"ability_3")]), k.call(&"world_map"), k.call(&"quick_save")],
+		"%s guide (all controls)" % k.call(&"toggle_help"),
+	])
 
 
 func _build_overlays() -> void:
@@ -708,7 +717,11 @@ func _update_vignette(delta: float) -> void:
 	_vignette_hit = maxf(0.0, _vignette_hit - delta * 2.5)
 	var low := clampf(1.0 - player.health.get_ratio() / 0.3, 0.0, 1.0) if not player.is_dead else 0.0
 	var pulse := low * (0.55 + 0.45 * sin(Time.get_ticks_msec() / 1000.0 * 5.0))
-	var a := clampf(maxf(pulse * 0.8, _vignette_hit), 0.0, 1.0)
+	var hit := _vignette_hit
+	if Settings.reduce_flashing():
+		pulse = low * 0.75  # steady, no pulsing
+		hit *= 0.35
+	var a := clampf(maxf(pulse * 0.8, hit), 0.0, 1.0)
 	(_vignette.material as ShaderMaterial).set_shader_parameter(&"strength", a)
 	_vignette.visible = a > 0.01
 
@@ -763,6 +776,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			world.blueprints.placer.end()
 		elif world and world.build_mode and world.build_mode.active:
 			world.build_mode.set_active(false)
+		elif guide.visible:
+			guide.visible = false
 		elif _blueprints.visible:
 			_blueprints.visible = false
 		elif _trade.visible:
@@ -812,19 +827,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"character_screen"):
 		if not _loading.visible:
 			_character.toggle()
+			Tutorial.notify(&"character_opened")
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"world_map"):
 		if not _loading.visible:
 			_map.toggle()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"toggle_help"):
-		_help.visible = not _help.visible
+		guide.toggle()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"toggle_debug"):
 		_debug.visible = not _debug.visible
 
 
 func _toggle_inventory() -> void:
 	_inv_panel.visible = not _inv_panel.visible
+	if _inv_panel.visible:
+		Tutorial.notify(&"inventory_opened")
 	_selected_slot = -1
 	_refresh_inventory()
 

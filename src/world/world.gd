@@ -182,7 +182,7 @@ func _process(delta: float) -> void:
 	if _biome_check_left <= 0.0:
 		_biome_check_left = BIOME_CHECK_INTERVAL
 		_update_biome()
-	if SaveManager.is_persistent():
+	if SaveManager.is_persistent() and Settings.autosave_interval() > 0.0:
 		_autosave_left -= delta
 		if _autosave_left <= 0.0:
 			save_now(false)
@@ -292,6 +292,12 @@ func _on_area_ready() -> void:
 				save_now(false)
 		else:
 			Events.toast.emit("Welcome back", Color(0.8, 1.0, 0.7))
+			# Save recovery (Milestone 13): tell the player what was loaded.
+			match String(SaveManager.last_load.get("source", "")):
+				"bak":
+					Events.toast.emit("Your last save was damaged - loaded the save before it.", Color(1, 0.8, 0.4))
+				"backup":
+					Events.toast.emit("Your save was damaged - restored the backup from %s." % String(SaveManager.last_load.backup), Color(1, 0.8, 0.4))
 
 
 func _notification(what: int) -> void:
@@ -634,7 +640,7 @@ func debug_spawn_enemy() -> Enemy:
 
 ## Saves the world if it is persistent. `notify` shows a toast.
 func save_now(notify: bool = true) -> bool:
-	_autosave_left = AUTOSAVE_INTERVAL
+	_autosave_left = Settings.autosave_interval() if Settings.autosave_interval() > 0.0 else AUTOSAVE_INTERVAL
 	if not SaveManager.is_persistent():
 		if notify:
 			Events.toast.emit("This world is temporary (quick play) - it can't be saved", Color(1, 0.7, 0.5))

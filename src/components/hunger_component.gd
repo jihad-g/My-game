@@ -48,6 +48,7 @@ func _process(delta: float) -> void:
 	var rate := drain_per_second * activity_multiplier
 	if stats:
 		rate *= stats.get_mult(Stats.HUNGER_RATE)
+		rate *= Settings.hunger_mult()  # difficulty (only the player's hunger has stats)
 	_set_current(current - rate * delta)
 	if current <= 0.0 and health and not health.is_dead:
 		health.apply_raw_damage(starvation_damage_per_second * delta, &"starvation")

@@ -26,6 +26,8 @@ func _ready() -> void:
 
 
 func _on_damage(pos: Vector3, amount: float, is_crit: bool, target_is_player: bool, tag: String) -> void:
+	if not Settings.get_value("damage_numbers"):
+		return
 	var text := str(roundi(amount)) if amount >= 1.0 else ("%.1f" % amount)
 	if tag != "":
 		text = tag if amount <= 0.0 else "%s\n%s" % [tag, text]

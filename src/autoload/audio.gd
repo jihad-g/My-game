@@ -163,6 +163,11 @@ func _pick(sound: StringName, min_gap_ms: int) -> AudioStream:
 
 # --- Playback --------------------------------------------------------------------------------
 
+## Called with (sound, position or null) for every sound that plays - the
+## accessibility layer shows captions through it (Milestone 13).
+var caption_hook: Callable
+
+
 ## Non-positional sound (player actions, UI). Returns false if skipped.
 func play(sound: StringName, volume_db: float = 0.0, pitch_jitter: float = 0.06, bus: StringName = &"SFX", min_gap_ms: int = 40) -> bool:
 	var s := _pick(sound, min_gap_ms)
@@ -175,6 +180,8 @@ func play(sound: StringName, volume_db: float = 0.0, pitch_jitter: float = 0.06,
 	p.volume_db = volume_db
 	p.pitch_scale = 1.0 + randf_range(-pitch_jitter, pitch_jitter)
 	p.play()
+	if caption_hook.is_valid() and bus != &"UI":
+		caption_hook.call(sound, null)
 	return true
 
 
@@ -195,6 +202,8 @@ func play_at(sound: StringName, pos: Vector3, volume_db: float = 0.0, pitch_jitt
 	p.max_distance = max_distance
 	p.pitch_scale = 1.0 + randf_range(-pitch_jitter, pitch_jitter)
 	p.play()
+	if caption_hook.is_valid():
+		caption_hook.call(sound, pos)
 	return true
 
 

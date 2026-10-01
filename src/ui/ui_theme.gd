@@ -26,16 +26,40 @@ static func panel_style(bg: Color = PANEL_BG, border: Color = PANEL_BORDER, bord
 	return s
 
 
-static func build() -> Theme:
-	var t := Theme.new()
-	t.default_font_size = 16
-	t.set_color(&"font_color", &"Label", TEXT)
-	t.set_color(&"font_outline_color", &"Label", Color(0, 0, 0, 0.85))
-	t.set_constant(&"outline_size", &"Label", 4)
-	t.set_stylebox(&"panel", &"PanelContainer", panel_style())
-	t.set_stylebox(&"panel", &"Panel", panel_style())
+## One theme shared by every screen, so the high-contrast setting can update
+## all open UI at once (Milestone 13).
+static var _shared: Theme
+static var high_contrast := false
 
-	var btn := panel_style(Color(0.24, 0.19, 0.28, 0.95), PANEL_BORDER, 2, 6)
+
+static func build() -> Theme:
+	if _shared == null:
+		_shared = Theme.new()
+		_populate(_shared)
+	return _shared
+
+
+## Accessibility: opaque panels, white text with thick outlines, bright borders.
+static func set_high_contrast(on: bool) -> void:
+	if on == high_contrast and _shared != null:
+		return
+	high_contrast = on
+	if _shared:
+		_shared.clear()
+		_populate(_shared)
+
+
+static func _populate(t: Theme) -> void:
+	var hc := high_contrast
+	t.default_font_size = 16
+	t.set_color(&"font_color", &"Label", Color.WHITE if hc else TEXT)
+	t.set_color(&"font_outline_color", &"Label", Color(0, 0, 0, 1.0 if hc else 0.85))
+	t.set_constant(&"outline_size", &"Label", 7 if hc else 4)
+	var panel := panel_style(Color(0.02, 0.02, 0.03, 0.97), Color(1, 0.9, 0.3), 3) if hc else panel_style()
+	t.set_stylebox(&"panel", &"PanelContainer", panel)
+	t.set_stylebox(&"panel", &"Panel", panel)
+
+	var btn := panel_style(Color(0.05, 0.05, 0.08, 1.0) if hc else Color(0.24, 0.19, 0.28, 0.95), Color.WHITE if hc else PANEL_BORDER, 3 if hc else 2, 6)
 	btn.content_margin_left = 14
 	btn.content_margin_right = 14
 	btn.content_margin_top = 6
@@ -67,7 +91,11 @@ static func build() -> Theme:
 	t.set_stylebox(&"background", &"ProgressBar", bar_bg)
 	t.set_color(&"font_color", &"TooltipLabel", TEXT)
 	t.set_stylebox(&"panel", &"TooltipPanel", panel_style(Color(0.1, 0.08, 0.13, 0.96)))
-	return t
+	if hc:
+		t.set_color(&"font_color", &"Button", Color.WHITE)
+		t.set_color(&"font_hover_color", &"Button", Color(1, 0.95, 0.3))
+		t.set_color(&"font_outline_color", &"Button", Color.BLACK)
+		t.set_constant(&"outline_size", &"Button", 4)
 
 
 static func bar_fill(color: Color) -> StyleBoxFlat:

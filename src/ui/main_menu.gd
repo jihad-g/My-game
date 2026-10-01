@@ -23,6 +23,8 @@ var _class_info := Label.new()
 
 
 var _settings := SettingsPanel.new()
+var recovery := RecoveryPanel.new()
+var crash_notice := PanelContainer.new()
 var _mp_name := LineEdit.new()
 var _mp_host := CheckBox.new()
 var _mp_address := LineEdit.new()
@@ -37,6 +39,11 @@ func _ready() -> void:
 	_settings.visible = false
 	add_child(_settings)
 	UIFx.attach(_settings)
+	add_child(recovery)
+	UIFx.attach(recovery)
+	recovery.restored.connect(func(_id: String) -> void:
+		_status.text = "Backup restored."
+		_refresh_list())
 	_refresh_list()
 	if not _cmdline_handled:
 		_cmdline_handled = true
@@ -103,6 +110,8 @@ func _build() -> void:
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.add_theme_color_override(&"font_color", UITheme.TEXT_DIM)
 	root.add_child(sub)
+
+	_build_crash_notice(root)
 
 	var cols := HBoxContainer.new()
 	cols.add_theme_constant_override(&"separation", 18)
@@ -230,6 +239,43 @@ func _build() -> void:
 	add_child(_confirm)
 
 
+## "The game closed unexpectedly" notice (Milestone 13, CrashHandler).
+func _build_crash_notice(root: VBoxContainer) -> void:
+	crash_notice.visible = CrashHandler.crashed_last_time
+	crash_notice.add_theme_stylebox_override(&"panel", UITheme.panel_style(Color(0.25, 0.1, 0.08, 0.95), Color(1, 0.6, 0.4)))
+	root.add_child(crash_notice)
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override(&"separation", 10)
+	crash_notice.add_child(h)
+	var l := Label.new()
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var ps := CrashHandler.previous_session
+	var where := ""
+	if ps.has("world"):
+		where = " while playing \"%s\"" % ps.world
+	l.text = "Shardlands closed unexpectedly last time%s. A crash report was saved - sending it to us helps fix the problem.%s" % [
+		where, "\nAn emergency backup of your world was made: use Recover if anything is missing." if String(ps.get("emergency_snapshot", "")) != "" else ""]
+	h.add_child(l)
+	var report := Button.new()
+	report.text = "Open report"
+	report.pressed.connect(func() -> void:
+		if CrashHandler.last_report != "":
+			OS.shell_open(ProjectSettings.globalize_path(CrashHandler.last_report)))
+	h.add_child(report)
+	if ps.has("world") and SaveManager.world_exists(String(ps.world)):
+		var rec := Button.new()
+		rec.text = "Recover world"
+		rec.pressed.connect(func() -> void: recovery.open(String(ps.world)))
+		h.add_child(rec)
+	var dismiss := Button.new()
+	dismiss.text = "Dismiss"
+	dismiss.pressed.connect(func() -> void:
+		CrashHandler.crashed_last_time = false
+		crash_notice.visible = false)
+	h.add_child(dismiss)
+
+
 func _select_class(id: StringName) -> void:
 	_selected_class = id
 	for cid in _class_buttons:
@@ -306,6 +352,14 @@ func _refresh_list() -> void:
 			else:
 				_status.text = "Could not load '%s' (see log)" % id)
 		h.add_child(play)
+		var health := SaveManager.verify_world(id)
+		if not health.ok:
+			info.add_child(_small("⚠ " + ", ".join(health.problems) + " - the newest good copy will be loaded"))
+		var rec := Button.new()
+		rec.text = "Recover"
+		rec.tooltip_text = "Backups of this world"
+		rec.pressed.connect(func() -> void: recovery.open(id))
+		h.add_child(rec)
 		var del := Button.new()
 		del.text = "Delete"
 		del.pressed.connect(func() -> void:
