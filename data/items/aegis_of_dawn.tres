@@ -14,7 +14,7 @@ base_value = 2500
 icon_color = Color(1, 0.85, 0.4, 1)
 icon_glyph = "Sh"
 equip_slot = 2
-required_level = 30
+required_level = 48
 stat_bonuses = {
 &"armor": 30,
 &"block": 20,

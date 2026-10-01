@@ -78,7 +78,7 @@ const REGION := {
 	&"murk_swamp": {&"cheap": [&"mushroom", &"plant_fiber", &"clay"], &"dear": [&"stone", &"bread", &"iron_ingot"]},
 }
 const REGIONAL_CHEAP := 0.7
-const REGIONAL_DEAR := 1.35
+const REGIONAL_DEAR := 1.3
 
 
 static func format_coins(copper: int) -> String:

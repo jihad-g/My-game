@@ -26,13 +26,13 @@ skill_efficiency = {
 &"crafting": 1.1,
 &"dexterity": 0.9
 }
-base_health = 65
+base_health = 72
 health_per_defense = 1.6
 base_stamina = 85
 base_mana = 70
 mana_per_point = 4.0
 physical_power = 0.7
-spell_power = 1.3
+spell_power = 1.45
 base_armor = 0
 weapon_proficiency = {
 &"staff": 1.0,

@@ -10,6 +10,6 @@ description = "Smelted iron. The backbone of real weapons and armor."
 category = 0
 rarity = 2
 max_stack = 99
-base_value = 16
+base_value = 32
 icon_color = Color(0.66, 0.68, 0.74, 1)
 icon_glyph = "Fe"

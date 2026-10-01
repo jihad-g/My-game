@@ -4,10 +4,12 @@ extends RefCounted
 ## Local coordinates: origin = POI centre at its (flattened) ground height.
 
 ## Rank scaling (E..S) for guardians and dungeon monsters.
-const RANK_POWER := [1.0, 1.4, 2.0, 2.8, 3.8, 5.0]
-const RANK_DAMAGE := [1.0, 1.2, 1.45, 1.75, 2.1, 2.5]
-const RANK_LEVELS := [0, 4, 10, 18, 28, 40]
-const RANK_XP := [1.0, 1.5, 2.2, 3.2, 4.5, 6.0]
+## Rank scaling (rebalanced in Milestone 12 against the class power curve,
+## see docs/BALANCE.md): health, damage, levels and XP per rank E..S.
+const RANK_POWER := [1.0, 1.6, 2.6, 4.2, 6.5, 10.0]
+const RANK_DAMAGE := [1.0, 1.35, 1.8, 2.5, 3.4, 4.6]
+const RANK_LEVELS := [0, 6, 14, 24, 38, 54]
+const RANK_XP := [1.0, 1.7, 2.8, 4.6, 7.5, 12.0]
 ## Monsters per dungeon theme: [melee, ranged/caster, boss]
 const THEME_MONSTERS := [
 	[&"skeleton_warrior", &"skeleton_archer", &"bone_king"],

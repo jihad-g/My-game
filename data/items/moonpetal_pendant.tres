@@ -10,11 +10,11 @@ description = "A pressed moonpetal sealed in crystal."
 category = 4
 rarity = 5
 max_stack = 1
-base_value = 400
+base_value = 480
 icon_color = Color(0.9, 0.93, 1.0, 1)
 icon_glyph = "Am"
 equip_slot = 8
-required_level = 20
+required_level = 38
 stat_bonuses = {
 &"mana_control": 5,
 &"max_mana": 25,

@@ -15,7 +15,7 @@ base_value = 160
 icon_color = Color(0.7, 0.5, 1.0, 1)
 icon_glyph = "St"
 equip_slot = 1
-required_level = 12
+required_level = 15
 stat_bonuses = {
 &"spell_power": 20,
 &"max_mana": 30,

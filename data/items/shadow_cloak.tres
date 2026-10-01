@@ -10,11 +10,11 @@ description = "A dark cloak that muffles footsteps."
 category = 4
 rarity = 2
 max_stack = 1
-base_value = 90
+base_value = 120
 icon_color = Color(0.2, 0.2, 0.28, 1)
 icon_glyph = "Ck"
 equip_slot = 4
-required_level = 8
+required_level = 15
 stat_bonuses = {
 &"armor": 5,
 &"dexterity": 3,

@@ -15,7 +15,7 @@ base_value = 2500
 icon_color = Color(0.3, 0.25, 0.4, 1)
 icon_glyph = "Dg"
 equip_slot = 1
-required_level = 30
+required_level = 48
 stat_bonuses = {
 &"damage_bonus": 14,
 &"crit_chance": 15,

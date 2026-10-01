@@ -9,104 +9,104 @@ XP sources today: combat (enemy XP × level-difference factor: up to +50% vs str
 | Level | XP required (to next) | Total XP to reach | Unlocks at this level |
 |---:|---:|---:|---|
 | 1 | 100 | 0 | Abilities — Barbarian: Whirlwind, Knight: Shield Bash, Wizard: Firebolt, Assassin: Shadow Step; Basic gear |
-| 2 | 140 | 100 | +2 skill points |
-| 3 | 220 | 240 | +2 skill points |
-| 4 | 320 | 460 | +2 skill points |
-| 5 | 440 | 780 | +3 skill points; Abilities — Barbarian: Battle Cry, Knight: Guardian Stance, Wizard: Frost Nova, Assassin: Poison Blade |
-| 6 | 590 | 1,220 | +2 skill points |
-| 7 | 760 | 1,810 | +2 skill points |
-| 8 | 960 | 2,570 | +2 skill points |
-| 9 | 1,180 | 3,530 | +2 skill points |
-| 10 | 1,440 | 4,710 | +3 skill points; Common gear |
-| 11 | 1,710 | 6,150 | +2 skill points |
-| 12 | 2,030 | 7,860 | +2 skill points |
-| 13 | 2,370 | 9,890 | +2 skill points |
-| 14 | 2,740 | 12,260 | +2 skill points |
-| 15 | 3,160 | 15,000 | +3 skill points; Abilities — Barbarian: Berserk, Knight: Rallying Charge, Wizard: Chain Lightning, Assassin: Vanish |
-| 16 | 3,610 | 18,160 | +2 skill points |
-| 17 | 4,090 | 21,770 | +2 skill points |
-| 18 | 4,620 | 25,860 | +2 skill points |
-| 19 | 5,200 | 30,480 | +2 skill points |
-| 20 | 5,810 | 35,680 | +3 skill points; Uncommon gear |
-| 21 | 6,480 | 41,490 | +2 skill points |
-| 22 | 7,190 | 47,970 | +2 skill points |
-| 23 | 7,950 | 55,160 | +2 skill points |
-| 24 | 8,770 | 63,110 | +2 skill points |
-| 25 | 9,640 | 71,880 | +3 skill points |
-| 26 | 10,570 | 81,520 | +2 skill points |
-| 27 | 11,550 | 92,090 | +2 skill points |
-| 28 | 12,600 | 103,640 | +2 skill points |
-| 29 | 13,710 | 116,240 | +2 skill points |
-| 30 | 14,880 | 129,950 | +3 skill points |
-| 31 | 16,120 | 144,830 | +2 skill points |
-| 32 | 17,430 | 160,950 | +2 skill points |
-| 33 | 18,810 | 178,380 | +2 skill points |
-| 34 | 20,260 | 197,190 | +2 skill points |
-| 35 | 21,790 | 217,450 | +3 skill points; Rare gear |
-| 36 | 23,390 | 239,240 | +2 skill points |
-| 37 | 25,070 | 262,630 | +2 skill points |
-| 38 | 26,830 | 287,700 | +2 skill points |
-| 39 | 28,680 | 314,530 | +2 skill points |
-| 40 | 30,600 | 343,210 | +3 skill points |
-| 41 | 32,620 | 373,810 | +2 skill points |
-| 42 | 34,720 | 406,430 | +2 skill points |
-| 43 | 36,920 | 441,150 | +2 skill points |
-| 44 | 39,210 | 478,070 | +2 skill points |
-| 45 | 41,590 | 517,280 | +3 skill points |
-| 46 | 44,070 | 558,870 | +2 skill points |
-| 47 | 46,650 | 602,940 | +2 skill points |
-| 48 | 49,330 | 649,590 | +2 skill points |
-| 49 | 52,110 | 698,920 | +2 skill points |
-| 50 | 55,000 | 751,030 | +3 skill points |
-| 51 | 57,990 | 806,030 | +2 skill points |
-| 52 | 61,100 | 864,020 | +2 skill points |
-| 53 | 64,310 | 925,120 | +2 skill points |
-| 54 | 67,640 | 989,430 | +2 skill points |
-| 55 | 71,090 | 1,057,070 | +3 skill points; Very Rare gear |
-| 56 | 74,650 | 1,128,160 | +2 skill points |
-| 57 | 78,330 | 1,202,810 | +2 skill points |
-| 58 | 82,130 | 1,281,140 | +2 skill points |
-| 59 | 86,060 | 1,363,270 | +2 skill points |
-| 60 | 90,110 | 1,449,330 | +3 skill points |
-| 61 | 94,290 | 1,539,440 | +2 skill points |
-| 62 | 98,600 | 1,633,730 | +2 skill points |
-| 63 | 103,040 | 1,732,330 | +2 skill points |
-| 64 | 107,620 | 1,835,370 | +2 skill points |
-| 65 | 112,330 | 1,942,990 | +3 skill points |
-| 66 | 117,180 | 2,055,320 | +2 skill points |
-| 67 | 122,170 | 2,172,500 | +2 skill points |
-| 68 | 127,300 | 2,294,670 | +2 skill points |
-| 69 | 132,580 | 2,421,970 | +2 skill points |
-| 70 | 138,000 | 2,554,550 | +3 skill points |
-| 71 | 143,580 | 2,692,550 | +2 skill points |
-| 72 | 149,300 | 2,836,130 | +2 skill points |
-| 73 | 155,170 | 2,985,430 | +2 skill points |
-| 74 | 161,200 | 3,140,600 | +2 skill points |
-| 75 | 167,390 | 3,301,800 | +3 skill points; Magical gear |
-| 76 | 173,740 | 3,469,190 | +2 skill points |
-| 77 | 180,240 | 3,642,930 | +2 skill points |
-| 78 | 186,910 | 3,823,170 | +2 skill points |
-| 79 | 193,750 | 4,010,080 | +2 skill points |
-| 80 | 200,750 | 4,203,830 | +3 skill points |
-| 81 | 207,920 | 4,404,580 | +2 skill points |
-| 82 | 215,260 | 4,612,500 | +2 skill points |
-| 83 | 222,780 | 4,827,760 | +2 skill points |
-| 84 | 230,470 | 5,050,540 | +2 skill points |
-| 85 | 238,340 | 5,281,010 | +3 skill points |
-| 86 | 246,390 | 5,519,350 | +2 skill points |
-| 87 | 254,620 | 5,765,740 | +2 skill points |
-| 88 | 263,040 | 6,020,360 | +2 skill points |
-| 89 | 271,640 | 6,283,400 | +2 skill points |
-| 90 | 280,420 | 6,555,040 | +3 skill points; Legendary gear |
-| 91 | 289,400 | 6,835,460 | +2 skill points |
-| 92 | 298,570 | 7,124,860 | +2 skill points |
-| 93 | 307,940 | 7,423,430 | +2 skill points |
-| 94 | 317,500 | 7,731,370 | +2 skill points |
-| 95 | 327,260 | 8,048,870 | +3 skill points |
-| 96 | 337,220 | 8,376,130 | +2 skill points |
-| 97 | 347,380 | 8,713,350 | +2 skill points |
-| 98 | 357,750 | 9,060,730 | +2 skill points |
-| 99 | 368,320 | 9,418,480 | +2 skill points |
-| 100 | — | 9,786,800 | +3 skill points; Maximum level |
+| 2 | 130 | 100 | +2 skill points |
+| 3 | 190 | 230 | +2 skill points |
+| 4 | 260 | 420 | +2 skill points |
+| 5 | 340 | 680 | +3 skill points; Abilities — Barbarian: Battle Cry, Knight: Guardian Stance, Wizard: Frost Nova, Assassin: Poison Blade; Common gear |
+| 6 | 440 | 1,020 | +2 skill points |
+| 7 | 550 | 1,460 | +2 skill points |
+| 8 | 670 | 2,010 | +2 skill points |
+| 9 | 800 | 2,680 | +2 skill points |
+| 10 | 950 | 3,480 | +3 skill points |
+| 11 | 1,100 | 4,430 | +2 skill points |
+| 12 | 1,260 | 5,530 | +2 skill points |
+| 13 | 1,430 | 6,790 | +2 skill points |
+| 14 | 1,620 | 8,220 | +2 skill points |
+| 15 | 1,810 | 9,840 | +3 skill points; Abilities — Barbarian: Berserk, Knight: Rallying Charge, Wizard: Chain Lightning, Assassin: Vanish; Uncommon gear |
+| 16 | 2,010 | 11,650 | +2 skill points |
+| 17 | 2,220 | 13,660 | +2 skill points |
+| 18 | 2,450 | 15,880 | +2 skill points |
+| 19 | 2,680 | 18,330 | +2 skill points |
+| 20 | 2,930 | 21,010 | +3 skill points |
+| 21 | 3,180 | 23,940 | +2 skill points |
+| 22 | 3,450 | 27,120 | +2 skill points; Rare gear |
+| 23 | 3,730 | 30,570 | +2 skill points |
+| 24 | 4,020 | 34,300 | +2 skill points |
+| 25 | 4,320 | 38,320 | +3 skill points |
+| 26 | 4,630 | 42,640 | +2 skill points |
+| 27 | 4,960 | 47,270 | +2 skill points |
+| 28 | 5,290 | 52,230 | +2 skill points |
+| 29 | 5,640 | 57,520 | +2 skill points |
+| 30 | 6,000 | 63,160 | +3 skill points; Very Rare gear |
+| 31 | 6,380 | 69,160 | +2 skill points |
+| 32 | 6,770 | 75,540 | +2 skill points |
+| 33 | 7,170 | 82,310 | +2 skill points |
+| 34 | 7,580 | 89,480 | +2 skill points |
+| 35 | 8,010 | 97,060 | +3 skill points |
+| 36 | 8,460 | 105,070 | +2 skill points |
+| 37 | 8,910 | 113,530 | +2 skill points |
+| 38 | 9,380 | 122,440 | +2 skill points; Magical gear |
+| 39 | 9,870 | 131,820 | +2 skill points |
+| 40 | 10,370 | 141,690 | +3 skill points |
+| 41 | 10,890 | 152,060 | +2 skill points |
+| 42 | 11,420 | 162,950 | +2 skill points |
+| 43 | 11,970 | 174,370 | +2 skill points |
+| 44 | 12,530 | 186,340 | +2 skill points |
+| 45 | 13,120 | 198,870 | +3 skill points |
+| 46 | 13,710 | 211,990 | +2 skill points |
+| 47 | 14,330 | 225,700 | +2 skill points |
+| 48 | 14,960 | 240,030 | +2 skill points; Legendary gear |
+| 49 | 15,610 | 254,990 | +2 skill points |
+| 50 | 16,270 | 270,600 | +3 skill points |
+| 51 | 16,960 | 286,870 | +2 skill points |
+| 52 | 17,660 | 303,830 | +2 skill points |
+| 53 | 18,380 | 321,490 | +2 skill points |
+| 54 | 19,120 | 339,870 | +2 skill points |
+| 55 | 19,880 | 358,990 | +3 skill points |
+| 56 | 20,660 | 378,870 | +2 skill points |
+| 57 | 21,450 | 399,530 | +2 skill points |
+| 58 | 22,270 | 420,980 | +2 skill points |
+| 59 | 23,110 | 443,250 | +2 skill points |
+| 60 | 23,960 | 466,360 | +3 skill points |
+| 61 | 24,840 | 490,320 | +2 skill points |
+| 62 | 25,740 | 515,160 | +2 skill points |
+| 63 | 26,660 | 540,900 | +2 skill points |
+| 64 | 27,600 | 567,560 | +2 skill points |
+| 65 | 28,570 | 595,160 | +3 skill points |
+| 66 | 29,550 | 623,730 | +2 skill points |
+| 67 | 30,560 | 653,280 | +2 skill points |
+| 68 | 31,590 | 683,840 | +2 skill points |
+| 69 | 32,640 | 715,430 | +2 skill points |
+| 70 | 33,720 | 748,070 | +3 skill points |
+| 71 | 34,820 | 781,790 | +2 skill points |
+| 72 | 35,940 | 816,610 | +2 skill points |
+| 73 | 37,090 | 852,550 | +2 skill points |
+| 74 | 38,260 | 889,640 | +2 skill points |
+| 75 | 39,460 | 927,900 | +3 skill points |
+| 76 | 40,680 | 967,360 | +2 skill points |
+| 77 | 41,930 | 1,008,040 | +2 skill points |
+| 78 | 43,200 | 1,049,970 | +2 skill points |
+| 79 | 44,490 | 1,093,170 | +2 skill points |
+| 80 | 45,820 | 1,137,660 | +3 skill points |
+| 81 | 47,170 | 1,183,480 | +2 skill points |
+| 82 | 48,540 | 1,230,650 | +2 skill points |
+| 83 | 49,940 | 1,279,190 | +2 skill points |
+| 84 | 51,370 | 1,329,130 | +2 skill points |
+| 85 | 52,830 | 1,380,500 | +3 skill points |
+| 86 | 54,320 | 1,433,330 | +2 skill points |
+| 87 | 55,830 | 1,487,650 | +2 skill points |
+| 88 | 57,370 | 1,543,480 | +2 skill points |
+| 89 | 58,940 | 1,600,850 | +2 skill points |
+| 90 | 60,540 | 1,659,790 | +3 skill points |
+| 91 | 62,160 | 1,720,330 | +2 skill points |
+| 92 | 63,820 | 1,782,490 | +2 skill points |
+| 93 | 65,510 | 1,846,310 | +2 skill points |
+| 94 | 67,220 | 1,911,820 | +2 skill points |
+| 95 | 68,970 | 1,979,040 | +3 skill points |
+| 96 | 70,750 | 2,048,010 | +2 skill points |
+| 97 | 72,550 | 2,118,760 | +2 skill points |
+| 98 | 74,390 | 2,191,310 | +2 skill points |
+| 99 | 76,260 | 2,265,700 | +2 skill points |
+| 100 | — | 2,341,960 | +3 skill points; Maximum level |
 
 Total skill points earned by level 100: 218 (plus 50 starting points). Five skills × 100 = 500, so no character can master everything.

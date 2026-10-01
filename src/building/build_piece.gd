@@ -249,9 +249,9 @@ func _turret_update(delta: float) -> void:
 	p.mask = Layers.TERRAIN | Layers.ENEMY
 	p.exclude = [get_rid()]
 	var dmg := data.turret_damage
-	var src := self
+	var src: WeakRef = weakref(self)  # the tower may be destroyed before the arrow lands
 	p.info_builder = func(_t: Node) -> DamageInfo:
-		var info := DamageInfo.create(dmg, src if is_instance_valid(src) else null, &"physical")
+		var info := DamageInfo.create(dmg, src.get_ref() as Node, &"physical")
 		info.direction = dir
 		info.knockback = dir * 1.5
 		info.poise_damage = 6.0

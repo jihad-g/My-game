@@ -14,8 +14,11 @@ static func try_step_up(body: CharacterBody3D, horizontal_motion: Vector3, max_s
 	if probe.length() < 0.12:
 		probe = probe.normalized() * 0.12
 	var xf := body.global_transform
-	if not body.test_move(xf, probe):
+	var blocker := KinematicCollision3D.new()
+	if not body.test_move(xf, probe, blocker):
 		return false  # path is clear
+	if blocker.get_collider() is CharacterBody3D:
+		return false  # another character, not a step (crowds would probe every tick)
 	var up := Vector3(0.0, max_step, 0.0)
 	if body.test_move(xf, up):
 		return false  # ceiling in the way

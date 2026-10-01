@@ -5,10 +5,12 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 11 — Multiplayer Foundation** (co-op for up to 8 players: listen or dedicated
-> server, join by IP, player synchronisation with interpolation, server-authoritative inventories,
-> world changes and building, the same world generated on every machine from the seed and verified by
-> checksum, chat, saved guest characters) on top of Milestones 1–10. See [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
+> Status: **Milestone 12 — Alpha (v0.12.0)**: the full loop (gather → craft → build → fight → level →
+> trade → gear up → dungeons) is played end to end by an automated bot; classes, XP, crafting and the
+> economy are tuned against a balance model whose limits the tests enforce ([`docs/BALANCE.md`](docs/BALANCE.md));
+> world generation is stress-tested over 20 seeds and frame-time budgets are benchmarked
+> ([`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)). Built on Milestones 1–11, including co-op for up to 8
+> players ([`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md)). See
 > [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
@@ -375,6 +377,13 @@ and when you quit through the pause menu or close the window.
     either it plays the world "server"). Guests' characters are saved with the world and come back when
     they rejoin with the same name. Command-line join: `godot --path . -- --connect=127.0.0.1 --name=Ann --class=wizard`.
 
+66. **Gear progression (alpha balance)** – gear unlocks at levels 1 / 5 / 15 / 22 / 30 / 38 / 48: iron
+    gear from the Smithing Manual at 10, mithril weapons (sword, dirk, war axe) once you have smelted
+    mithril, legendaries at 48. Ruins (rank E) are an easy first trip; each rank further out is a big step up.
+67. **Watch the bot play** – `godot --path . res://tools/playthrough.tscn -- --class=wizard` (or
+    `--headless` for just the log): a fresh character gathers, crafts tools, builds a little base, fights,
+    cooks, levels up, trades in the nearest village, makes a sword and clears the nearest ruins.
+
 ## Run the automated tests
 
 ```bash
@@ -383,7 +392,7 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
 
-The suite (958 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (1041 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -442,8 +451,20 @@ terrain AO, settings save/load/apply, animation states (footsteps, knees, jump, 
 self-cleaning particles, and in the running game: sky, sun and moon, moon phases, rain (particles, colder
 air, Wet, ambience), lightning, fog, snow, fireflies by night, combat music, landing and graphics settings.
 
+Alpha tests (Milestone 12): the balance limits (every class beats level-appropriate monsters with margin
+at levels 1-100 and none dominates, a Wizard never matches the fighters physically, gear unlocks into the
+late game, XP pacing, no recipe or trade loop makes money, processing keeps value), the **full gameplay
+loop** played by a bot in the running game, a world-generation stress test over several seeds (spawn,
+towns and ruins in reach, valid meshes at the centre, far away, at the world edge and in caves,
+determinism, dungeon layouts) and frame-time budgets (idle, a 24-monster fight, a 200-piece base,
+particle storms, long teleports).
+
 Balance tables are generated from the code: `godot --headless --path . -s tools/gen_rpg_tables.gd`
-→ [`docs/XP_TABLE.md`](docs/XP_TABLE.md), [`docs/CLASSES_AND_SKILLS.md`](docs/CLASSES_AND_SKILLS.md).
+→ [`docs/XP_TABLE.md`](docs/XP_TABLE.md), [`docs/CLASSES_AND_SKILLS.md`](docs/CLASSES_AND_SKILLS.md);
+`godot --headless --path . res://tools/balance_report.tscn` → [`docs/BALANCE.md`](docs/BALANCE.md);
+`godot --headless --path . res://tools/stress_test.tscn` → [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)
+(add `-- --seeds=50` for a longer run; drop `--headless` to include rendering);
+`godot --headless --path . res://tools/playthrough.tscn -- --class=knight --seed=N` prints a bot playthrough.
 
 Visual check (renders screenshots, needs a display or `xvfb-run`):
 

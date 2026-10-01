@@ -42,9 +42,12 @@ func required_crafting() -> int:
 
 
 ## Materials actually consumed at the given Crafting skill (rounded up, min 1).
+## A single item is never scaled up: a novice still cooks one raw meat into one
+## meal (wasting half a piece is not a thing) - skill saves on bulk materials.
 func cost_at(crafting: int) -> Dictionary:
 	var out := {}
 	var mult := Skill.material_cost_mult(crafting)
 	for item in ingredients:
-		out[item] = maxi(1, ceili(int(ingredients[item]) * mult - 0.001))
+		var n := int(ingredients[item])
+		out[item] = 1 if n <= 1 else maxi(1, ceili(n * mult - 0.001))
 	return out

@@ -1185,10 +1185,11 @@ func _fire(tgt: Node3D, spread: float) -> void:
 	var dmg := mdata.projectile_damage * damage_mult * status.outgoing_mult()
 	var dtype := mdata.projectile_type
 	var st := mdata.projectile_status
-	var src := self
+	# Weak: the shooter may die (and be freed) before the projectile lands.
+	var src: WeakRef = weakref(self)
 	var siege := mdata.siege_mult
 	p.info_builder = func(t: Node) -> DamageInfo:
-		var info := DamageInfo.create(dmg * (siege if t is BuildPiece else 1.0), src if is_instance_valid(src) else null, dtype)
+		var info := DamageInfo.create(dmg * (siege if t is BuildPiece else 1.0), src.get_ref() as Node, dtype)
 		info.direction = dir
 		info.knockback = dir * 2.0
 		info.poise_damage = 8.0
@@ -1202,7 +1203,7 @@ func _fire(tgt: Node3D, spread: float) -> void:
 			var parent := p.get_parent()
 			if parent == null:
 				return
-			var h := GroundHazard.spawn(parent, pos, r, 0.05, dmg * 0.6, dtype, src if is_instance_valid(src) else null)
+			var h := GroundHazard.spawn(parent, pos, r, 0.05, dmg * 0.6, dtype, src.get_ref() as Node)
 			h.hurts_town = raid
 			h.building_mult = siege
 			h.tag = "Blast"

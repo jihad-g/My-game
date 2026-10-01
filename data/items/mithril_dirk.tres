@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/dagger.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"mithril_dirk"
+display_name = "Mithril Dirk"
+description = "A pale blade that seems to find the heart on its own."
+category = 3
+rarity = 3
+max_stack = 1
+base_value = 250
+icon_color = Color(0.7, 0.85, 1, 1)
+icon_glyph = "Dg"
+equip_slot = 1
+required_level = 22
+stat_bonuses = {
+&"damage_bonus": 8,
+&"crit_chance": 7
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"dagger"

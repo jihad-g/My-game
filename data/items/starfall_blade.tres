@@ -15,7 +15,7 @@ base_value = 2600
 icon_color = Color(0.7, 0.75, 1, 1)
 icon_glyph = "Sw"
 equip_slot = 1
-required_level = 30
+required_level = 48
 stat_bonuses = {
 &"damage_bonus": 26,
 &"crit_chance": 10,

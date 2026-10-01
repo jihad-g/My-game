@@ -11,8 +11,8 @@ extends RefCounted
 const CELL := 256
 const MARGIN := 40
 const POI_CHANCE := 0.6
-## Distance per rank step (m): E < 700 <= D < 1400 ... S beyond 3500.
-const RANK_STEP := 700.0
+## Distance per rank step (m): E < 1200 <= D < 2400 ... S beyond 6000 (Milestone 12).
+const RANK_STEP := 1200.0
 const SIZES := {  # kind -> [radius, blend]
 	PoiInfo.Kind.RUINS: [11.0, 6.0], PoiInfo.Kind.TOWER: [7.0, 5.0], PoiInfo.Kind.TEMPLE: [15.0, 7.0],
 	PoiInfo.Kind.DUNGEON: [8.0, 5.0], PoiInfo.Kind.GROVE: [10.0, 0.0],

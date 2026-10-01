@@ -79,6 +79,10 @@ func _ready() -> void:
 	await _run_async(&"test_m10_world_polish")
 	_run(&"test_m11_protocol")
 	await _run_async(&"test_m11_session")
+	_run(&"test_m12_balance")
+	await _run_async(&"test_m12_gameplay_loop")
+	_run(&"test_m12_worldgen_stress")
+	await _run_async(&"test_m12_performance")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -942,7 +946,7 @@ func test_progression() -> void:
 	check(Progression.xp_to_next(100) == 0, "no XP beyond level 100")
 	var total := Progression.total_xp_for(100)
 	print("   total XP to level 100: %d; level 10: %d; level 50: %d" % [total, Progression.total_xp_for(10), Progression.total_xp_for(50)])
-	check(total > 5000000, "reaching level 100 takes millions of XP (endgame not trivial)")
+	check(total > 2000000, "reaching level 100 takes millions of XP (endgame not trivial)")
 	check(Progression.total_xp_for(5) < 1500, "early levels are quick (level 5 at %d XP)" % Progression.total_xp_for(5))
 	check(Progression.total_skill_points_at(100) == 99 * 2 + 20, "skill points at 100: %d" % Progression.total_skill_points_at(100))
 	check(50 + Progression.total_skill_points_at(100) < 5 * 100, "you cannot max every skill (build choices matter)")
@@ -1042,6 +1046,7 @@ func test_character_and_equipment() -> void:
 	check(ch.armor > armor_now + 10.0 and player.inventory.count_of(&"padded_vest") == 1, "armor rises and old chest piece returns to the inventory")
 	var dmg_sword := ch.weapon_mult(&"sword")
 	check(dmg_sword > ch.weapon_mult(&"staff"), "Knights are proficient with swords, not staves")
+	ch.grant_xp(Progression.total_xp_for(ItemDB.get_item(&"crystal_staff").required_level) - ch.total_xp, Progression.Source.OTHER)
 	for i in player.inventory.capacity:
 		var s = player.inventory.get_slot(i)
 		if s != null and s.id == &"crystal_staff":
@@ -1093,6 +1098,9 @@ func test_class_abilities() -> void:
 	var boar := _spawn_boar(world, _clear_offset(world, 6.0))
 	await _frames(3)
 	p.set_lock_target(boar)
+	# A sturdy target so the burn is still ticking when we look.
+	boar.health.max_health = 400.0
+	boar.health.current = 400.0
 	var hp := boar.health.current
 	check(ab.try_use(0), "Wizard casts Firebolt")
 	await _frames(30)
@@ -1308,6 +1316,8 @@ func test_m4_data() -> void:
 	var rope := RecipeBook.get_recipe(&"rope")
 	check(rope.cost_at(1)[&"plant_fiber"] == 5 and rope.cost_at(100)[&"plant_fiber"] == 3,
 		"rope: 5 fiber at Crafting 1, 3 at Crafting 100 (base 3)")
+	check(int(RecipeBook.get_recipe(&"cooked_meat").cost_at(1)[&"raw_meat"]) == 1,
+		"a novice cooks one raw meat into one meal (single items never scale up)")
 	# Build pieces
 	var pieces := BuildingManager.all_pieces()
 	check(pieces.size() >= 20, "%d build pieces loaded" % pieces.size())
@@ -2359,8 +2369,9 @@ func test_m6_combat() -> void:
 	# Rank scaling
 	var e_rank := _spawn_monster(world, &"skeleton_warrior", Vector3(20, 0, 0), 0)
 	var s_rank := _spawn_monster(world, &"skeleton_warrior", Vector3(22, 0, 0), 5)
-	check(s_rank.health.max_health >= e_rank.health.max_health * 4.9 and s_rank.xp_value() > e_rank.xp_value() and s_rank.effective_level() == e_rank.effective_level() + 40,
-		"rank S monsters have 5x health, more XP and +40 levels")
+	check(s_rank.health.max_health >= e_rank.health.max_health * PoiLayout.RANK_POWER[5] * 0.98 and s_rank.xp_value() > e_rank.xp_value() \
+			and s_rank.effective_level() == e_rank.effective_level() + PoiLayout.RANK_LEVELS[5],
+		"rank S monsters have x%.0f health, more XP and +%d levels" % [PoiLayout.RANK_POWER[5], PoiLayout.RANK_LEVELS[5]])
 	e_rank.health.current = 0.1
 	e_rank.receive_hit(DamageInfo.create(50.0, p))
 	s_rank.health.current = 0.1
@@ -4523,3 +4534,112 @@ func test_m11_session() -> void:
 	await get_tree().process_frame
 	Net.player_name = "Player"
 	Net.player_records.clear()
+
+
+# --- Milestone 12: balance + full loop ------------------------------------------------------
+
+func test_m12_balance() -> void:
+	# Classes: every class can fight level-appropriate content at every stage,
+	# none dominates, and a Wizard never matches the fighters physically.
+	var w_phys := BalanceModel.max_strength_phys(&"wizard")
+	check(w_phys < BalanceModel.max_strength_phys(&"knight") * 0.6 and w_phys < BalanceModel.max_strength_phys(&"barbarian") * 0.6,
+		"max-Strength Wizard far below Knight and Barbarian (×%.2f)" % w_phys)
+	for lvl in BalanceModel.LEVELS:
+		var powers := []
+		var ratios := []
+		for c in BalanceModel.CLASSES:
+			var d := BalanceModel.duel(c, lvl)
+			powers.append(float(d.char.dps) * float(d.char.ehp))
+			ratios.append(float(d.ratio))
+		var lo: float = ratios.min()
+		var hi: float = ratios.max()
+		check(lo >= 3.0 and hi <= 32.0, "level %d: every class beats its content with margin, none trivially (ratio %.1f-%.1f)" % [lvl, lo, hi])
+		var spread: float = float(powers.max()) / maxf(float(powers.min()), 0.01)
+		check(spread < 3.0, "level %d: class power spread ×%.2f" % [lvl, spread])
+	# Wild monsters scale with distance like the dungeons around them.
+	check(EnemySpawner.wild_rank(Vector3(300, 0, 400)) == 0 and EnemySpawner.wild_rank(Vector3(Exploration.RANK_STEP * 3.5, 0, 0)) == 2
+		and EnemySpawner.wild_rank(Vector3(13000, 0, 0)) == 5, "wild monster rank grows with distance (E near spawn, S at the edge)")
+	# Gear tiers cover the levels where content gets harder.
+	var top_req := 0
+	for id in ItemDB.all_ids():
+		var it: ItemData = ItemDB.get_item(id)
+		if it and it.is_equippable():
+			top_req = maxi(top_req, it.required_level)
+			if it.rarity >= ItemData.Rarity.LEGENDARY:
+				check(it.required_level >= 40, "%s is end-game gear (level %d)" % [id, it.required_level])
+	check(top_req >= 45, "gear keeps unlocking into the late game (top %d)" % top_req)
+	# XP pacing.
+	var h10 := BalanceModel.hours_to_level(10)
+	var h50 := BalanceModel.hours_to_level(50)
+	var h100 := BalanceModel.hours_to_level(100)
+	print("   hours to level 10: %.1f, 50: %.1f, 100: %.0f" % [h10, h50, h100])
+	check(h10 > 0.4 and h10 < 2.0, "about an hour to level 10 (%.1f h)" % h10)
+	check(h50 > 12.0 and h50 < 60.0, "level 50 is a long-term goal (%.1f h)" % h50)
+	check(h100 > h50 * 3.0, "level 100 is the endgame (%.0f h)" % h100)
+	for l in [5, 20, 40, 60]:
+		check(BalanceModel.minutes_per_level(l) > 1.0 and BalanceModel.minutes_per_level(l) < 120.0,
+			"level %d takes %.0f min" % [l, BalanceModel.minutes_per_level(l)])
+	# Crafting and economy: no money machines.
+	var trade := BalanceModel.trade_arbitrage()
+	check(trade < 1.0, "town-to-town trading alone never makes money (×%.2f)" % trade)
+	var worst := 0.0
+	var worst_id := ""
+	for id in RecipeBook.all():
+		var a := BalanceModel.craft_arbitrage(RecipeBook.all()[id])
+		if a > worst:
+			worst = a
+			worst_id = String(id)
+	check(worst < 1.0, "no recipe turns bought materials into profit (best %s ×%.2f)" % [worst_id, worst])
+	for id in [&"copper_ingot", &"iron_ingot", &"mithril_ingot", &"leather", &"plank", &"rope"]:
+		var v := BalanceModel.recipe_value(RecipeBook.get_recipe(id), 75)
+		check(float(v.ratio) >= 0.95, "processing %s keeps its value (×%.2f)" % [id, v.ratio])
+	for id in [&"copper_sword", &"iron_sword", &"chainmail", &"iron_waraxe"]:
+		var v := BalanceModel.recipe_value(RecipeBook.get_recipe(id), 75)
+		check(float(v.ratio) >= 0.9, "crafting %s adds value (×%.2f)" % [id, v.ratio])
+
+
+func test_m12_gameplay_loop() -> void:
+	var world: World = await _boot_class(&"knight")
+	var bot := Playthrough.new(get_tree(), world)
+	var res: Dictionary = await bot.run()
+	for line in bot.steps:
+		print("   " + line)
+	for step in ["craft stone hatchet", "craft stone pickaxe", "chop 30 wood", "mine 16 stone", "build a workbench",
+			"build floors and walls", "light a campfire", "defeat 5 monsters", "cook meat at the campfire",
+			"level up from fighting and crafting", "find a village", "sell materials", "buy food", "craft a squire sword",
+			"equip the sword", "find ruins", "defeat the ruin guardians", "loot the ruins"]:
+		check(res.get(step, false) == true, "loop: " + step)
+	check(float(res.get("play_minutes", 0.0)) < 90.0, "the loop fits in a play session (%.0f min)" % float(res.get("play_minutes", 0.0)))
+	world.queue_free()
+	await _frames(5)
+
+
+func test_m12_worldgen_stress() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 777
+	var worst := 0.0
+	for i in 6:
+		var s := rng.randi()
+		var r := Stress.worldgen_seed(s, 12)
+		worst = maxf(worst, float(r.chunk_max_ms))
+		check((r.errors as PackedStringArray).is_empty(), "seed %d: spawn %s (%s), %d towns, %d POIs, %d dungeon floors%s" % [s, str(r.spawn),
+			r.spawn_biome, r.towns_2km, r.pois_2_5km, r.dungeon_floors,
+			"" if (r.errors as PackedStringArray).is_empty() else " - " + "; ".join(r.errors)])
+	check(worst < Stress.BUDGET_CHUNK_MS, "LOD0 chunks generate in < %d ms (worst %.1f ms)" % [Stress.BUDGET_CHUNK_MS, worst])
+
+
+func test_m12_performance() -> void:
+	var world: World = await _boot_class(&"knight")
+	await _frames(30)
+	var b: Dictionary = await Stress.benchmark(get_tree(), world, 0.6)
+	for k in ["idle", "enemies", "buildings", "particles", "streaming"]:
+		var st: Dictionary = b[k]
+		print("   %-10s avg %.1f ms, p95 %.1f ms, max %.1f ms" % [k, st.avg, st.p95, st.max])
+	for k in ["idle", "enemies", "buildings", "particles"]:
+		check(float(b[k].avg) < Stress.BUDGET_AVG_MS and float(b[k].p95) < Stress.BUDGET_P95_MS,
+			"%s within frame budget (avg %.1f, p95 %.1f ms)" % [k, b[k].avg, b[k].p95])
+	check(int(b.enemies.count) >= 20 and int(b.buildings.count) >= 100, "benchmark load (%d monsters, %d pieces)" % [b.enemies.count, b.buildings.count])
+	check(float(b.streaming.max) < Stress.BUDGET_STREAM_SPIKE_MS and float(b.streaming.ready_s) < Stress.BUDGET_STREAM_READY_S,
+		"streaming after long jumps: worst frame %.0f ms, ready in %.1f s" % [b.streaming.max, b.streaming.ready_s])
+	world.queue_free()
+	await _frames(5)

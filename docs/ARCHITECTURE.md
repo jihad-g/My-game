@@ -302,6 +302,27 @@ unchanged offline; online, small hooks reroute guest actions (`Inventory.remote`
 `Pickup`, `BuildMode`, `BuildPiece`, `CraftingPanel`, `Player`) and broadcast host actions
 (`Chunk.harvest_prop`, `BuildingManager.place/remove/destroy`, `World.spawn_pickup/place_object`).
 
+## Balance, playtesting & performance (Milestone 12)
+
+- `src/rpg/balance_model.gd` (`BalanceModel`): pure functions over the game's own data — a class's build
+  at a level (`BUILDS` skill shares), the best gear it may wear, its moveset DPS (and Firebolt for the
+  Wizard, mana-limited), effective HP; the level-appropriate reference monster (Skeleton Warrior scaled by
+  `PoiLayout` rank tables); duels (time to kill / time to die), minutes per level, recipe value and the
+  best shop arbitrage (craft-and-sell, town-to-town). `tools/balance_report.gd` turns it into
+  docs/BALANCE.md; `test_m12_balance` enforces limits on the same numbers.
+- `tests/playthrough.gd` (`Playthrough`): a bot that drives the real systems (props, `Crafting`,
+  `BuildingManager`, `PlayerCombat.build_damage`, `SettlementManager.buy/sell`, `PoiSite` guardians and
+  chests) through the core loop and logs simulated play time. Used by `test_m12_gameplay_loop` and
+  `tools/playthrough.tscn`.
+- `tests/stress.gd` (`Stress`): `worldgen_seed()` (spawn, reachable towns/ruins, mesh validation at the
+  centre/far/edge/caves, determinism, dungeon plans) and `benchmark()` (frame-time scenarios in a booted
+  world) plus the budgets (`BUDGET_*`). Used by `test_m12_worldgen_stress`, `test_m12_performance` and
+  `tools/stress_test.tscn` (docs/PERFORMANCE.md).
+- Wild monsters: `EnemySpawner.wild_rank(pos)` (one rank per `Exploration.RANK_STEP` = 1.2 km) and
+  `scale_for_distance()` configure spawns like dungeon ranks.
+- Movement cost: `Enemy._blocked_by_world()` gates `GroundMotion.try_step_up()` (which also ignores other
+  characters), so crowds don't run stair-step physics queries every tick.
+
 ## Survival
 
 - `StatBlock` aggregates multiplicative modifiers per source (`&"hunger"`,

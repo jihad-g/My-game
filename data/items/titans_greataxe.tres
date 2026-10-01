@@ -15,7 +15,7 @@ base_value = 2500
 icon_color = Color(0.9, 0.88, 0.8, 1)
 icon_glyph = "Ax"
 equip_slot = 1
-required_level = 30
+required_level = 48
 stat_bonuses = {
 &"damage_bonus": 28,
 &"strength": 6,

@@ -98,11 +98,26 @@ func _try_spawn(coord: Vector2i, s: Dictionary) -> bool:
 	var enemy := spawn_enemy(rule.enemy_scene, s.position, s.key, rule.enemy_data)
 	if enemy == null:
 		return false
+	scale_for_distance(enemy)
 	if not _by_chunk.has(coord):
 		_by_chunk[coord] = []
 	_by_chunk[coord].append(enemy)
 	enemy.enemy_died.connect(_on_enemy_died.bind(coord), CONNECT_ONE_SHOT)
 	return true
+
+
+## Monsters out in the wild get tougher (and worth more) the further they are
+## from the world origin: one rank below the dungeons of that area
+## (Milestone 12). Starter wildlife (boars) stays as it is.
+static func wild_rank(pos: Vector3) -> int:
+	return clampi(int(Vector2(pos.x, pos.z).length() / Exploration.RANK_STEP) - 1, 0, 5)
+
+
+func scale_for_distance(enemy: Enemy) -> void:
+	if enemy is Monster:
+		var r := wild_rank(enemy.global_position)
+		if r > 0:
+			(enemy as Monster).configure(PoiLayout.RANK_POWER[r], PoiLayout.RANK_DAMAGE[r], PoiLayout.RANK_LEVELS[r], PoiLayout.RANK_XP[r])
 
 
 ## Spawns an enemy from a pool. Also used by debug tools (empty key = untracked).

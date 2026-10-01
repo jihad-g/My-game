@@ -161,7 +161,8 @@ func _physics_process(delta: float) -> void:
 	velocity.z = move_toward(velocity.z, _desired_velocity.z, accel)
 	velocity += _knockback
 	_apply_gravity(delta)
-	if is_on_floor():
+	# Only probe for a step when something stopped us last tick (saves physics queries).
+	if is_on_floor() and is_on_wall() and _blocked_by_world():
 		GroundMotion.try_step_up(self, Vector3(velocity.x, 0, velocity.z) * delta, max_step_height)
 	move_and_slide()
 	velocity -= _knockback
@@ -174,6 +175,16 @@ func _physics_process(delta: float) -> void:
 		poise = move_toward(poise, data.max_poise, data.max_poise * 0.25 * delta)
 	if global_position.y < -60.0:
 		NodePool.release_or_free(self)
+
+
+## True when last tick's movement ran into terrain or a building (a possible
+## step), not just another character.
+func _blocked_by_world() -> bool:
+	for i in get_slide_collision_count():
+		var c := get_slide_collision(i)
+		if c.get_normal().y < 0.7 and not c.get_collider() is CharacterBody3D:
+			return true
+	return false
 
 
 func _apply_gravity(delta: float) -> void:

@@ -2,6 +2,45 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.12.0] — Milestone 12: Alpha
+
+### Added
+- **Full gameplay loop bot** (`tests/playthrough.gd`, `tools/playthrough.tscn`, `test_m12_gameplay_loop`):
+  a fresh character plays the core loop with the real systems — gather, stone tools, workbench, floors and
+  walls, campfire, five fights, hunting and cooking, levelling and spending points, selling and buying in the
+  nearest village, crafting and equipping a sword, clearing E-rank ruins and looting the chest. All four
+  classes finish it (~11 simulated minutes).
+- **Balance model and report** (`BalanceModel`, `tools/balance_report.tscn` → `docs/BALANCE.md`): class
+  builds, best gear per level, time-to-kill/time-to-die against level-appropriate monsters, XP pacing,
+  recipe values and shop arbitrage. `test_m12_balance` enforces the same numbers.
+- **World-generation stress test and benchmarks** (`tests/stress.gd`, `tools/stress_test.tscn` →
+  `docs/PERFORMANCE.md`, `test_m12_worldgen_stress`, `test_m12_performance`): 20 seeds checked for spawn,
+  reachable towns and ruins, valid meshes (centre, far points, world edge, caves), determinism and dungeon
+  layouts; frame-time budgets for idle, a 40-monster fight, a 300-piece base, particle storms and long
+  teleports.
+- Mid-tier weapons: Iron Dirk (Smithing Manual), Mithril Sword, Mithril Dirk, Mithril War Axe (discovered
+  with mithril ingots; also in rank C-B loot).
+
+### Changed
+- **Classes**: Firebolt 24 damage / 9 mana (was 16 / 12); Wizard 72 base health (65), spell power ×1.45 (×1.3).
+- **Gear tiers** now unlock at levels 1 / 5 / 15 / 22 / 30 / 38 / 48 (Legendary was 30), so every dungeon
+  rank has gear to chase.
+- **XP**: curve 100 + 30·n^1.5 + 0.05·n³ (~1 h to level 10, ~20 h to 50, ~400 h to 100); monsters give full
+  XP within 5 levels of the player, then −5% per level down to 10%.
+- **Dungeon ranks**: health ×1 / 1.6 / 2.6 / 4.2 / 6.5 / 10, damage ×1 → ×4.6, +0 → +54 levels, XP ×1 → ×12;
+  POI rank steps every 1.2 km (was 700 m); wild monsters now scale with distance from spawn too.
+- **Item values**: ingots, leather and rope are worth at least their materials; iron/copper/mithril gear
+  and tools are worth more than their inputs; a few craft-and-sell exploits removed (Sun Hat, Copper Dagger,
+  Leather Jerkin, rings, Cooling Salad). Regional "dear" prices ×1.3 (×1.35).
+- Sun Hat recipe needs a rope.
+
+### Fixed
+- Monster crowds: enemies ran up to four physics queries per tick looking for stair steps whenever another
+  character blocked them (40 monsters: 34 ms frames → 9 ms). They now only probe when last tick's movement
+  hit terrain or a building.
+- Projectiles from monsters and arrow towers that were destroyed mid-flight logged "Lambda capture was freed".
+- A novice crafter needed two of every single ingredient (two raw meat for one cooked meal).
+
 ## [0.11.0] — Milestone 11: Multiplayer Foundation
 
 ### Added

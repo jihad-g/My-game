@@ -71,9 +71,9 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Shelter affects temperature; torches give a little warmth
 - [x] Buildings, chest contents, door states and known recipes are saved
 - [ ] NOT IMPLEMENTED: item quality (Fine/Masterwork) — `Skill.quality_chance` exists, crafted items are always normal
-- [ ] NOT IMPLEMENTED: building durability, monsters attacking/breaking buildings, raids
+- [x] Building durability, monsters breaking buildings, raids (Milestone 7)
 - [ ] NOT IMPLEMENTED: multi-storey buildings (one wall height; roofs sit on top of it), stairs, foundations on steep slopes
-- [ ] NOT IMPLEMENTED: blueprints / auto-build, the companion web designer
+- [x] Blueprints / auto-build and the companion web designer (Milestone 8)
 - [ ] NOT IMPLEMENTED: crafting queues / crafting time (crafting is instant), station upgrades, fuel for forges
 - [ ] NOT IMPLEMENTED: using materials straight from nearby chests while crafting or building
 - [ ] Known limitation: the bed mesh is 1.9 m long in a 1 m cell and can overlap a neighbour cell's furniture
@@ -100,10 +100,27 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: roads between settlements and traders actually travelling between them (the trader appears on trader days)
 - [ ] NOT IMPLEMENTED: NPC relationships, families, schedules by weekday, NPCs reacting to weather or combat (other than guards)
 - [ ] NOT IMPLEMENTED: full quests (multi-step, story), dialogue trees with choices beyond the fixed options
-- [ ] NOT IMPLEMENTED: buying houses, renting beds at an inn, raids on settlements, kingdom wars/politics
+- [ ] NOT IMPLEMENTED: buying houses, renting beds at an inn, kingdom wars/politics (raids on settlements: Milestone 7)
 - [ ] NOT IMPLEMENTED: crop watering, seasons, animals/livestock; village crops can't be harvested by the player
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
+
+## Milestone 12 — Alpha  ✅
+
+- [x] Full gameplay loop, played by a bot with the real systems (`tests/playthrough.gd`, `tools/playthrough.tscn`): gather → stone tools → workbench → floors/walls → campfire → fight 5 monsters → hunt and cook → level up and spend points → sell/buy in the nearest village → craft and equip a sword → clear E-rank ruins and loot the chest; all four classes finish it in ~11 minutes of simulated play
+- [x] Balance model (`BalanceModel`) and report (`tools/balance_report.tscn` → docs/BALANCE.md): per-class builds, best gear by level, time-to-kill / time-to-die against level-appropriate monsters, XP pacing, recipe value, shop arbitrage — the balance tests enforce the same numbers
+- [x] Classes: Firebolt 16→24 damage / 12→9 mana, Wizard health 65→72 and spell power ×1.45; class power spread ≤ ×2.3 at every level; a max-Strength Wizard still hits ~45% as hard as a Knight
+- [x] Gear tiers stretched to level 48 (Common 5, Uncommon 15, Rare 22, Very Rare 30, Magical 38, Legendary 48) so dungeons of every rank have gear to chase; new mid-tier weapons: Iron Dirk, Mithril Sword, Mithril Dirk, Mithril War Axe
+- [x] XP: new curve (100 + 30·n^1.5 + 0.05·n³) — ~1 h to level 10, ~20 h to 50, ~400 h to 100; full XP within 5 levels of a monster; dungeon ranks scale ×1→×10 health, ×1→×4.6 damage, +0→+54 levels; wild monsters scale with distance from spawn (one rank per 1.2 km)
+- [x] Crafting/economy: processed materials keep their value (ingots, leather, rope, planks ≥ ×1.0), gear is worth more than its materials, no recipe or town-to-town trade makes money from shop purchases (worst ×0.85); a single ingredient is never scaled up by low Crafting skill
+- [x] World generation stress test across 20 seeds (spawn on land, towns and E-rank ruins in reach, valid meshes at the centre, far points, world edge and in caves, determinism, every dungeon floor) — 0 problems (docs/PERFORMANCE.md)
+- [x] Performance benchmarks with budgets enforced by the tests: idle, 40-monster fight, 300+ building pieces, particle storms, 700 m teleports (docs/PERFORMANCE.md)
+- [x] Fixed: monsters in a crowd ran 4 physics queries each per tick looking for stair steps (34 ms frames with 40 monsters → 9 ms)
+- [x] Fixed: projectiles from monsters/arrow towers that died mid-flight logged errors (weak references)
+- [x] Fixed: a novice needed 2 raw meat to cook 1 meal (and 2 of every "×1" ingredient)
+- [ ] NOT IMPLEMENTED: frame-time budgets with rendering (the benchmarks run headless = CPU only; run `tools/stress_test.tscn` without `--headless` on target hardware)
+- [ ] Known limitation: levels 75-100 rely on S-rank content only (the slowest stretch: ~550 min per level at 80); end-game content beyond S rank would smooth it
+- [ ] Known limitation: the early game is forgiving (a level 1-10 character can take ~15-25 hits from a matching monster); packs and elites are the real threat
 
 ## Milestone 11 — Multiplayer Foundation  ✅
 
@@ -157,7 +174,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: buildings, placed objects and construction sites are still in save.json (fine for bases; would move to regions for thousands of structures)
 - [ ] NOT IMPLEMENTED: far-terrain impostors for trees, towns and POIs (the horizon shows terrain and water only)
 - [ ] NOT IMPLEMENTED: off-screen simulation (settlements, raids and farms only advance near the player)
-- [ ] Design note: POI rank grows 700 m per step, so ~95% of the world's POIs are rank S (see WORLD_SURVEY.md); rank scaling should probably stretch to the world size
+- [x] POI rank steps stretched from 700 m to 1.2 km (Milestone 12); most of the outer world is still rank S by design (see WORLD_SURVEY.md)
 - [ ] Known limitation: the first chunk containing a new scene type (cave entrance, POI) can take ~20 ms to build once (scene load); later ones are ~1 ms
 
 ## Milestone 8 — Blueprint System  ✅ (this milestone, Phase 5)
@@ -244,7 +261,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Villages (houses, farms, market, blacksmith, shops, NPCs, traders) (Milestone 5)
 - [x] Structures: ruins, towers, temples, hidden groves (Milestone 6)
 - [ ] Mines (abandoned mine structures in caves); caves currently have ore-rich areas but no built mines
-- [ ] Biome-specific enemies (only the Thornback Boar exists; it spawns in meadow, forest, jungle and taiga)
+- [x] Biome-specific enemies (Milestones 6-7: undead, magical, beasts, bandits, elites per biome)
 - [ ] Underground water, lava and deeper cave levels
 
 ## Phase 4 — Content
@@ -274,7 +291,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] UI polish: pixel-art item icons, panel transitions, settings screen (Milestone 10); key rebinding NOT IMPLEMENTED
 - [x] Main menu with seed entry / world selection (Milestone 2)
 - [~] Settings menu: audio, display, graphics, comfort (Milestone 10); key rebinding NOT IMPLEMENTED
-- [ ] Optimization pass (profiling on real hardware, occlusion, GPU instancing everywhere)
+- [~] Optimization pass: CPU profiling and budgets (Milestone 12); GPU profiling on real hardware, occlusion and instancing everywhere NOT IMPLEMENTED
 
 ## Phase 7 — Large world
 
@@ -288,9 +305,8 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 - Dropped loot pickups are not saved (they despawn after 5 minutes anyway). Enemies are not saved (killed spawn slots are).
 - Swimming never drowns you; with no stamina you just swim slowly.
-- Most higher-tier gear can only be obtained with the F10 debug key until crafting exists.
 - Class abilities share the generic swing/cast poses (each has its own sound and VFX since Milestone 10).
-- Enemies have a level but no level-based stat scaling yet (only one enemy type exists).
+- Monster stats scale by dungeon rank and, in the wild, by distance from spawn (Milestone 12) - not by the player's level (by design).
 - The world map reveals everything (no fog-of-war yet).
 - Placed objects on the other layer stay in memory (harmless, but not culled).
 - Debug-spawned enemies (F8) are not tied to a chunk and never despawn unless killed.

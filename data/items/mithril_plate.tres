@@ -14,7 +14,7 @@ base_value = 2500
 icon_color = Color(0.7, 0.85, 1, 1)
 icon_glyph = "Ch"
 equip_slot = 4
-required_level = 30
+required_level = 48
 stat_bonuses = {
 &"armor": 45,
 &"max_health": 60,

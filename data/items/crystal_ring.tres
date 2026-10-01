@@ -10,11 +10,11 @@ description = "A ring set with a crystal shard."
 category = 4
 rarity = 3
 max_stack = 1
-base_value = 180
+base_value = 150
 icon_color = Color(0.7, 0.5, 1.0, 1)
 icon_glyph = "Rg"
 equip_slot = 7
-required_level = 15
+required_level = 22
 stat_bonuses = {
 &"spell_power": 10,
 &"mana_control": 3

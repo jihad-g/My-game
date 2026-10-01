@@ -11,9 +11,9 @@ const TOMES := [&"tome_blink", &"tome_healing_light", &"tome_poison_cloud", &"to
 ## Gear by rank band (a random piece is rolled when a table says "gear").
 const GEAR := [
 	[&"copper_sword", &"copper_dagger", &"leather_gloves", &"fur_cap", &"wooden_buckler", &"copper_ring"],
-	[&"iron_sword", &"iron_waraxe", &"chainmail", &"iron_kite_shield", &"fur_boots", &"leather_jerkin"],
-	[&"crystal_staff", &"shadow_cloak", &"crystal_ring", &"tusk_charm", &"copper_pickaxe"],
-	[&"moonpetal_pendant", &"mithril_pickaxe", &"mithril_hatchet", &"crystal_ring", &"shadow_cloak"],
+	[&"iron_sword", &"iron_dirk", &"iron_waraxe", &"chainmail", &"iron_kite_shield", &"fur_boots", &"leather_jerkin"],
+	[&"crystal_staff", &"shadow_cloak", &"crystal_ring", &"tusk_charm", &"copper_pickaxe", &"mithril_dirk"],
+	[&"moonpetal_pendant", &"mithril_sword", &"mithril_waraxe", &"mithril_dirk", &"crystal_ring", &"shadow_cloak"],
 ]
 const TABLES := {
 	&"ruin_chest": {"coins": 15, "gear": 0.15, "items": [
