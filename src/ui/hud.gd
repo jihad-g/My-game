@@ -84,6 +84,8 @@ var _loading := ColorRect.new()
 var _loading_label := Label.new()
 var _death := ColorRect.new()
 var _pause := ColorRect.new()
+## Who's online and the chat (Milestone 11).
+var mp_hud := MultiplayerHud.new()
 var _pause_box: Control
 var _settings := SettingsPanel.new()
 ## Red edge glow when hurt / low on health (Milestone 10).
@@ -105,6 +107,7 @@ func _ready() -> void:
 	_build_target_frame()
 	_build_prompt_and_toasts()
 	_build_corner_info()
+	_root.add_child(mp_hud)
 	_build_help()
 	_build_ability_bar()
 	_root.add_child(_map)
@@ -120,7 +123,8 @@ func _ready() -> void:
 	_root.add_child(_blueprints)
 	_dialogue.trade_requested.connect(func(n: NPC) -> void:
 		_dialogue.close()
-		_trade.open(n))
+		if not Net.client_blocked("Trading"):
+			_trade.open(n))
 	Events.npc_talk.connect(func(n: Node) -> void:
 		if not _trade.visible:
 			_dialogue.open(n as NPC))

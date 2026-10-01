@@ -193,6 +193,8 @@ func harvest_prop(index: int, gatherer: Node) -> void:
 	_hide_instance(entry)
 	_instances.erase(index)
 	GameState.mark_prop_removed(coord, index, layer)
+	if Net.is_server():
+		Net.server.broadcast_prop_removed(coord, layer, index)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = HashUtils.hash3(index, int(GameState.world_time * 10.0), coord.x * 31 + coord.y)
 	# Crafting skill: chance of one extra item per drop.
@@ -213,6 +215,22 @@ func harvest_prop(index: int, gatherer: Node) -> void:
 			gatherer.give_item(loot.item_id, n)
 		elif World.instance:
 			World.instance.spawn_pickup(loot.item_id, n, world_pos + Vector3(0, 0.8, 0))
+
+
+## Hides a prop that is gone (another player took it; multiplayer, Milestone 11).
+func hide_prop(index: int) -> void:
+	if not _instances.has(index):
+		return
+	_hide_instance(_instances[index])
+	_instances.erase(index)
+
+
+## Hides every prop the world state says is removed (after a region snapshot).
+func refresh_removed() -> void:
+	for index in _instances.keys():
+		var pdata := library.get_prop(_instances[index].prop_id)
+		if pdata and GameState.is_prop_removed(coord, index, pdata.regrow_time, layer):
+			hide_prop(index)
 
 
 ## Quick "wobble" feedback when a harvestable prop is hit.

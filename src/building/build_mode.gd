@@ -137,6 +137,9 @@ func place_current() -> BuildPiece:
 	if _reason != "":
 		Events.toast.emit(_reason, Color(1, 0.6, 0.5))
 		return null
+	if Net.is_client():
+		Net.client.place_piece(selected, _address.cell, _address.slot, rot, world.layer)
+		return null
 	var piece := world.building.place(selected, _address.cell, _address.slot, rot, world.player)
 	if piece:
 		Events.item_crafted.emit(selected.id, 1)  # building grants a little crafting XP
@@ -145,7 +148,9 @@ func place_current() -> BuildPiece:
 
 func remove_under_cursor() -> void:
 	var piece := world.building.piece_at(_cursor())
-	if piece:
+	if piece and Net.is_client():
+		Net.client.remove_piece(piece)
+	elif piece:
 		world.building.remove(piece, world.player)
 
 

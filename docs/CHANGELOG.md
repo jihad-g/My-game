@@ -2,6 +2,26 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.11.0] — Milestone 11: Multiplayer Foundation
+
+### Added
+- **Networking** (`Net` autoload, `NetServer`, `NetClient`, `NetProtocol`): ENet sessions for up to 8
+  players; listen server (menu *Host*, `--host`) and dedicated headless server (`--server`); join from the
+  menu or `--connect=IP[:port]`; protocol version and world checksum checks. See `docs/MULTIPLAYER.md`.
+- **Player sync** (`RemotePlayer`): 20 Hz state, interpolation, replicated animations and weapon looks,
+  nameplates, server speed checks and corrections, join/leave messages, chat (Enter), who's-online bar.
+- **Authoritative inventories**: guests' inventories/equipment live on the server; harvesting, gathering,
+  pickups, dropping, moving, using, equipping, crafting and placing objects are validated requests.
+- **World & building sync**: prop removals, region snapshots, networked pickups and placed objects;
+  building placement/removal/doors through the server with ownership.
+- **Persistence**: guests' characters saved with the host's world (`net_players`) and restored on rejoin.
+- Tests: protocol unit tests and a two-process host/guest session test, including a dedicated-server rejoin.
+
+### Changed
+- `Inventory.remote` (read-only mirror for guests), `Chunk.hide_prop/refresh_removed`,
+  `RegionStore.export_region/import_region`, `HumanoidModel.anim_event`, `Pickup.net_id`,
+  building entries carry an `owner`. Monsters, raids and rare events pause while a session is online.
+
 ## [0.10.0] — Milestone 10: Art & Polish
 
 ### Added

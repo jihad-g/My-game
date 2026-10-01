@@ -291,6 +291,17 @@ live in `save.json`. Per-chunk changes live in a `RegionStore` (Milestone 9):
   and outline passes), cached per item; `UIFx.attach(panel)` pop-in + sounds; `SettingsPanel` +
   `Settings` autoload (`user://settings.cfg`, `apply()` / `apply_to_world()`).
 
+## Multiplayer (Milestone 11)
+
+Full protocol and rules: [`MULTIPLAYER.md`](MULTIPLAYER.md). In short: the `Net` autoload holds the
+ENet peer and every RPC; `NetServer` validates guests' requests against the host's state (its own
+`Inventory`/`Equipment` per guest, the generator for prop existence, `BuildingManager.check_place`
+for buildings) and broadcasts results; `NetClient` loads the same world from the seed (verified by
+`NetProtocol.world_checksum`) and applies the server's snapshots. Single-player code paths are
+unchanged offline; online, small hooks reroute guest actions (`Inventory.remote`, `PropBody`,
+`Pickup`, `BuildMode`, `BuildPiece`, `CraftingPanel`, `Player`) and broadcast host actions
+(`Chunk.harvest_prop`, `BuildingManager.place/remove/destroy`, `World.spawn_pickup/place_object`).
+
 ## Survival
 
 - `StatBlock` aggregates multiplicative modifiers per source (`&"hunger"`,

@@ -36,6 +36,13 @@ func receive_hit(info: DamageInfo) -> void:
 	VFX.debris(get_parent(), global_position + Vector3(0, 0.9, 0), data_color(), 6 if axe else 8)
 	if hits_left <= 0:
 		Audio.play_at(&"tree_fall" if axe and data.collision_height > 2.0 else &"rock_break", global_position, -2.0)
+		if Net.is_client():
+			# The server decides; it removes the prop for everyone if it agrees.
+			hits_left = 1 << 20
+			Net.client.harvest(chunk, prop_index, false, func(ok: bool) -> void:
+				if not ok and is_instance_valid(self):
+					hits_left = maxi(1, data.hits_to_break))
+			return
 		chunk.harvest_prop(prop_index, null)
 
 
@@ -55,6 +62,10 @@ func data_color() -> Color:
 
 
 func interact(player: Node) -> void:
+	if is_interactable() and is_instance_valid(chunk) and Net.is_client():
+		Audio.play(&"gather", -6.0)
+		Net.client.harvest(chunk, prop_index, true)
+		return
 	if is_interactable() and is_instance_valid(chunk):
 		Audio.play(&"gather", -6.0)
 		chunk.harvest_prop(prop_index, player)

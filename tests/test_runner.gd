@@ -77,6 +77,8 @@ func _ready() -> void:
 	_run(&"test_m10_settings")
 	await _run_async(&"test_m10_animation")
 	await _run_async(&"test_m10_world_polish")
+	_run(&"test_m11_protocol")
+	await _run_async(&"test_m11_session")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -4320,3 +4322,204 @@ func test_m10_world_polish() -> void:
 	check(world.hud._clock.text.contains("\n"), "clock shows the weather")
 	world.queue_free()
 	await get_tree().process_frame
+
+
+# --- Milestone 11: multiplayer ------------------------------------------------------------
+
+func test_m11_protocol() -> void:
+	var st := NetProtocol.encode_state(Vector3(1, 2, 3), 0.5, Vector3(4, 0, 5), 0.8, NetProtocol.F_SWIMMING, 0, 0.75)
+	var d := NetProtocol.decode_state(st)
+	check(d.pos == Vector3(1, 2, 3) and is_equal_approx(d.yaw, 0.5) and d.flags == NetProtocol.F_SWIMMING and is_equal_approx(d.hp, 0.75), "state packet round trip")
+	check(NetProtocol.decode_state([1, 2]).is_empty() and NetProtocol.decode_state("x").is_empty()
+		and NetProtocol.decode_state([INF, 0, 0, 0, 0, 0, 0, 0, 0, 0]).is_empty()
+		and NetProtocol.decode_state([0, 0, 0, 0, 0, 0, 0, "x", 0, 0]).is_empty(), "malformed packets are rejected")
+	check(NetProtocol.decode_state([0, 0, 0, 0, 0, 0, 99.0, 0, 7, 5.0]).layer == 1, "packet values are clamped")
+	check(NetProtocol.clean_name("  Ab<script>c!!  ") == "Abscriptc" and NetProtocol.clean_name("") == "Player"
+		and NetProtocol.clean_name("x".repeat(40)).length() == 16, "player names are cleaned")
+	check(NetProtocol.slot_arg(3, 10) == 3 and NetProtocol.slot_arg(10, 10) == -1 and NetProtocol.slot_arg("a", 10) == -1, "slot arguments validated")
+	var g1 := TerrainGenerator.new(4242, _settings())
+	var g2 := TerrainGenerator.new(4242, _settings())
+	var g3 := TerrainGenerator.new(4243, _settings())
+	check(NetProtocol.world_checksum(g1) == NetProtocol.world_checksum(g2), "same seed, same world checksum")
+	check(NetProtocol.world_checksum(g1) != NetProtocol.world_checksum(g3), "other seed, other checksum")
+	# A guest's inventory is a read-only mirror.
+	var inv := Inventory.new(8)
+	inv.add_item(&"wood", 5)
+	var moves := []
+	inv.remote = true
+	inv.remote_mover = func(f: int, t: int) -> void: moves.append([f, t])
+	check(inv.add_item(&"stone", 3) == 3 and not inv.remove_item(&"wood", 1) and inv.remove_from_slot(0, 1) == 0, "remote inventory refuses local changes")
+	inv.move_slot(0, 4)
+	check(moves == [[0, 4]] and inv.get_slot(0) != null, "slot moves become requests")
+	inv.from_array([{"id": "stone", "count": 7}])
+	check(inv.count_of(&"stone") == 7 and inv.count_of(&"wood") == 0, "server snapshots apply")
+	# Puppet interpolation.
+	var rp := RemotePlayer.new()
+	rp._snaps = [{"t": 1.0, "pos": Vector3(0, 0, 0), "yaw": 0.0, "move": 0.0, "flags": 0, "layer": 0, "hp": 1.0},
+		{"t": 1.1, "pos": Vector3(1, 0, 0), "yaw": 0.0, "move": 1.0, "flags": 0, "layer": 0, "hp": 1.0}]
+	check(rp.sample(1.05).pos.is_equal_approx(Vector3(0.5, 0, 0)), "puppets interpolate between snapshots")
+	check(rp.sample(1.2).pos.x > 1.5 and rp.sample(2.0).pos.x < 3.1, "late packets extrapolate a little, then hold")
+	rp.free()
+	# Region export/import (what a guest receives).
+	var rs := RegionStore.new()
+	rs.mark_prop(Vector2i(3, 4), 0, 9, 5.0)
+	var ex := rs.export_region(RegionStore.region_of(Vector2i(3, 4), 0))
+	var rs2 := RegionStore.new()
+	rs2.import_region(RegionStore.region_of(Vector2i(3, 4), 0), ex.props, ex.deaths)
+	check(is_equal_approx(rs2.prop_time(Vector2i(3, 4), 0, 9), 5.0), "region snapshots transfer")
+
+
+func test_m11_session() -> void:
+	SaveManager.start_transient(31337, &"knight")
+	Net.player_name = "Hosty"
+	var world: World = await _boot_world()
+	var p := world.player
+	p.health.invulnerable = true
+	check(world.is_ready, "host world ready")
+	var port := 24600 + randi() % 800
+	check(Net.host(port) == OK and Net.is_server(), "hosting on port %d" % port)
+	check(world.spawner.max_active == 0, "monsters pause while hosting")
+	var out := "user://net_client_result.json"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(out))
+	var args := ["--headless", "--path", ProjectSettings.globalize_path("res://"), "res://tests/net_client_runner.tscn", "--",
+		"--connect=127.0.0.1:%d" % port, "--out=%s" % out]
+	var pid := OS.create_process(OS.get_executable_path(), args)
+	check(pid > 0, "guest process started")
+	var chats := []
+	Net.chat_received.connect(func(from: String, text: String) -> void: chats.append([from, text]))
+	# Wait for the guest to join and load.
+	var t0 := Time.get_ticks_msec()
+	while (Net.server.peers.is_empty() or not Net.server.peers.values()[0].ready) and Time.get_ticks_msec() - t0 < 90000:
+		await get_tree().process_frame
+	var joined: bool = not Net.server.peers.is_empty() and Net.server.peers.values()[0].ready
+	check(joined, "guest joined and loaded the world (%.1f s)" % ((Time.get_ticks_msec() - t0) / 1000.0))
+	if not joined:
+		OS.kill(pid)
+		Net.leave()
+		world.queue_free()
+		return
+	var ps = Net.server.peers.values()[0]
+	check(ps.name == "Guesty" and ps.class_id == &"barbarian", "guest name and class (%s, %s)" % [ps.name, ps.class_id])
+	check(Net.players.size() == 2, "two players in the session")
+	check(is_instance_valid(ps.puppet) and ps.puppet.is_inside_tree(), "guest puppet in the host's world")
+	# Give the guest materials (authoritative inventory).
+	Net.server.give(ps, &"wood", 20)
+	# Walk the host a little so the guest sees it move.
+	for i in 40:
+		p.global_position += Vector3(0.1, 0, 0)
+		await get_tree().physics_frame
+	# The host builds and harvests; the guest must see both.
+	var hcell := Vector2i(floori(p.global_position.x), floori(p.global_position.z) - 3)
+	var fdata := BuildingManager.get_piece_data(&"wood_floor")
+	var hpiece := world.building.place(fdata, hcell, "floor", 0, p, false)
+	if hpiece == null:
+		hcell += Vector2i(2, -2)
+		hpiece = world.building.place(fdata, hcell, "floor", 0, p, false)
+	check(hpiece != null, "host placed a floor")
+	Net.say("TEST host_piece %d,%d" % [hcell.x, hcell.y])
+	var harvested := ""
+	for chunk in world.chunk_manager._chunks.values():
+		if chunk.lod != 0 or harvested != "":
+			continue
+		for c in chunk.get_children():
+			if c is PropBody and c.data.interact_mode == PropData.InteractMode.HARVEST:
+				harvested = "%d,%d,%d,%d" % [chunk.coord.x, chunk.coord.y, chunk.layer, c.prop_index]
+				chunk.harvest_prop(c.prop_index, p)
+				break
+	check(harvested != "", "host harvested a prop")
+	Net.say("TEST host_prop " + harvested)
+	var max_puppet_move := 0.0
+	var start_pos: Vector3 = ps.puppet.global_position
+	var phase := 0.0
+	var home := p.global_position
+	while OS.is_process_running(pid) and Time.get_ticks_msec() - t0 < 160000:
+		await get_tree().process_frame
+		# The host strolls back and forth so the guest can watch it move.
+		phase += get_process_delta_time()
+		var hp := home + Vector3(sin(phase * 0.8) * 2.5, 0, 0)
+		hp.y = world.get_ground_height(hp) + 0.1
+		p.global_position = hp
+		if is_instance_valid(ps.puppet):
+			max_puppet_move = maxf(max_puppet_move, ps.puppet.global_position.distance_to(start_pos))
+	check(not OS.is_process_running(pid), "guest finished")
+	if OS.is_process_running(pid):
+		OS.kill(pid)
+	var res = JSON.parse_string(FileAccess.get_file_as_string(out))
+	check(res is Dictionary, "guest wrote its report")
+	if not res is Dictionary:
+		Net.leave()
+		world.queue_free()
+		return
+	print("   guest report: %s" % JSON.stringify(res))
+	check(res.get("welcome") == true and String(res.get("seed")) == "31337", "welcome with the host's seed")
+	check(res.get("world_loaded") == true, "guest generated the same world locally")
+	check(res.get("remote_inventory") == true and res.get("local_add_refused") == true, "guest inventory is server-owned")
+	check(res.get("monsters_paused") == true, "guest has no local monsters")
+	check(res.get("host_seen") == true and res.get("spawn_near_host") == true, "guest sees the host next to it (%.1f m)" % float(res.get("host_distance", -1)))
+	check(float(res.get("host_moved", 0.0)) > 1.5, "host movement reaches the guest")
+	check(max_puppet_move > 1.0, "guest movement reaches the host (%.1f m)" % max_puppet_move)
+	check(res.get("got_items") == true, "items given by the server arrive")
+	check(res.get("gather_ok") == true and res.get("gather_removed_locally") == true, "guest gathered through the server (%s)" % String(res.get("gather_msg", "")))
+	var gathered := ""
+	for c in chats:
+		if String(c[1]).begins_with("TEST gathered "):
+			gathered = String(c[1]).substr(14)
+	var gp := gathered.split(",")
+	check(gp.size() == 4 and GameState.is_prop_removed(Vector2i(gp[0].to_int(), gp[1].to_int()), gp[3].to_int(), 0.0, gp[2].to_int()),
+		"the guest's gathering removed the prop on the host")
+	check(res.get("place_ok") == true and res.get("place_seen") == true, "guest built through the server (%s)" % String(res.get("place_msg", "")))
+	check(int(res.get("wood_after_build", 0)) == int(res.get("wood_before", 0)) - 2 + int((res.get("gather_items", {}) as Dictionary).get("wood", 0)),
+		"building cost came out of the server inventory")
+	var built := ""
+	for c in chats:
+		if String(c[1]).begins_with("TEST built "):
+			built = String(c[1]).substr(11)
+	var bp := built.split(",")
+	var gpiece: BuildPiece = world.building.pieces.get(BuildingManager.key(Vector2i(bp[0].to_int(), bp[1].to_int()), "floor", 0)) if bp.size() == 2 else null
+	check(gpiece != null and String(gpiece.get_meta(&"owner", "")) == "Guesty", "guest's floor exists on the host, owned by the guest")
+	check(res.get("drop_ok") == true and res.get("drop_seen") == true and res.get("pickup_ok") == true and res.get("wood_drop_roundtrip") == true,
+		"drop and pick up go through the server")
+	check(res.get("host_piece_seen") == true and res.get("host_piece_owner") == "Hosty", "host's building reaches the guest")
+	check(res.get("remove_others_refused") == true, "guests can't remove other players' buildings")
+	check(res.get("host_prop_seen") == true, "host's harvest reaches the guest")
+	var height := ""
+	for c in chats:
+		if String(c[1]).begins_with("TEST height "):
+			height = String(c[1]).substr(12)
+	check(height != "" and absf(height.to_float() - world.generator.get_height_at(Vector3(37.5, 0, -81.5))) < 0.001, "identical terrain on both machines")
+	check(absf(float(res.get("world_time", -1000.0)) - GameState.world_time) < 30.0, "world time synchronised")
+	check(res.get("corrected") == true and Net.stats.corrections > 0, "impossible movement is corrected by the server")
+	var hello := false
+	for c in chats:
+		if c[0] == "Guesty" and c[1] == "hello from guest":
+			hello = true
+	check(hello, "chat reaches the host")
+	await get_tree().create_timer(0.5).timeout
+	check(Net.server.peers.is_empty() and Net.players.size() == 1, "guest left cleanly")
+	check(Net.player_records.has("Guesty") and (Net.player_records.Guesty.inventory as Array).size() > 0, "guest's character is kept for next time")
+	var saved: Dictionary = world.to_save()
+	check((saved.get("net_players", {}) as Dictionary).has("Guesty"), "guest records saved with the host's world")
+	# Dedicated server + returning player.
+	var rec_wood := 0
+	for s in Net.player_records.Guesty.inventory:
+		if s != null and String(s.id) == "wood":
+			rec_wood += int(s.count)
+	Net.leave()
+	check(Net.host(port + 1, true) == OK and Net.dedicated and not Net.players.has(1), "dedicated server (no host player)")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(out))
+	var pid2 := OS.create_process(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"),
+		"res://tests/net_client_runner.tscn", "--", "--connect=127.0.0.1:%d" % (port + 1), "--out=%s" % out, "--rejoin"])
+	var t1 := Time.get_ticks_msec()
+	while OS.is_process_running(pid2) and Time.get_ticks_msec() - t1 < 60000:
+		await get_tree().process_frame
+	if OS.is_process_running(pid2):
+		OS.kill(pid2)
+	var res2 = JSON.parse_string(FileAccess.get_file_as_string(out))
+	check(res2 is Dictionary and res2.get("fresh") == false and int(res2.get("welcome_wood", -1)) == rec_wood and res2.get("host_name") == "",
+		"returning player gets their inventory back (%s wood) from a dedicated server" % (str(res2.get("welcome_wood")) if res2 is Dictionary else "?"))
+	Net.leave()
+	check(not Net.is_online() and world.spawner.max_active > 0, "offline again: monsters return")
+	world.queue_free()
+	await get_tree().process_frame
+	Net.player_name = "Player"
+	Net.player_records.clear()

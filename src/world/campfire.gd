@@ -106,6 +106,8 @@ func get_interact_text() -> String:
 
 
 func interact(player: Node) -> void:
+	if Net.client_blocked("Cooking at a campfire (use the crafting screen, G)"):
+		return
 	var inv: Inventory = player.get("inventory")
 	if inv == null:
 		return

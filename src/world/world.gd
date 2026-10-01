@@ -78,6 +78,8 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
 	if instance == self:
 		instance = null
+	if Net.is_online():
+		Net.leave()
 	Audio.clear_ambience()
 	Audio.set_cave_reverb(false)
 
@@ -147,6 +149,17 @@ func _ready() -> void:
 		player.from_save(save.get("player", {}))
 		building.from_save(save.get("world", {}).get("buildings", []))
 		blueprints.from_save(save.get("world", {}).get("blueprint_sites", []))
+	if Net.is_client():
+		_new_world = false
+		Net.client.setup_world(self)
+	player.model.anim_event.connect(func(ev: String, args: Array) -> void:
+		if Net.is_server():
+			Net.server.broadcast_local_anim(ev, args))
+	player.equipment.changed.connect(func() -> void:
+		if Net.is_server():
+			Net.server.broadcast_local_anim("look", [String(player.equipment.weapon_type()), player.equipment.offhand() != null]))
+	Net.mode_changed.connect(_apply_online_rules)
+	_apply_online_rules()
 
 	chunk_manager.layer = layer
 	player.frozen = true
@@ -195,6 +208,48 @@ func _connect_feedback() -> void:
 			VFX.motes(self, player.global_position + Vector3(0, 1.0, 0), Color(0.5, 1.0, 0.6), 20, 0.6))
 
 
+## Multiplayer (Milestone 11): monsters, raids and rare events are paused in
+## shared sessions until combat is synchronised (NOT IMPLEMENTED yet).
+var _offline_max_enemies := -1
+
+
+func _apply_online_rules() -> void:
+	if not is_inside_tree():
+		return
+	if Net.is_online():
+		if _offline_max_enemies < 0:
+			_offline_max_enemies = spawner.max_active
+		spawner.max_active = 0
+		spawner.despawn_all()
+		raids.process_mode = Node.PROCESS_MODE_DISABLED
+		events.process_mode = Node.PROCESS_MODE_DISABLED
+	elif _offline_max_enemies >= 0:
+		spawner.max_active = _offline_max_enemies
+		_offline_max_enemies = -1
+		raids.process_mode = Node.PROCESS_MODE_INHERIT
+		events.process_mode = Node.PROCESS_MODE_INHERIT
+
+
+## A guest's world: nothing is simulated or saved locally that the host owns.
+func make_guest() -> void:
+	_apply_online_rules()
+	blueprints.process_mode = Node.PROCESS_MODE_DISABLED
+
+
+## Placed objects (campfires...) from save entries or the server.
+func load_placed(list: Array) -> void:
+	for entry in list:
+		var path: String = entry.get("scene", "")
+		if path == "" or not ResourceLoader.exists(path):
+			continue
+		var node := (load(path) as PackedScene).instantiate() as Node3D
+		placed_root.add_child(node)
+		node.global_position = _array_to_vec(entry.get("position", [0, 0, 0]))
+		node.rotation.y = float(entry.get("rotation_y", 0.0))
+		if entry.has("data") and node.has_method("load_data"):
+			node.load_data(entry.data)
+
+
 ## The world is a 27.7 km square (TerrainGenerator.WORLD_LIMIT_M): the edge
 ## ocean ends in an invisible wall.
 func _keep_in_world() -> void:
@@ -220,10 +275,16 @@ func _on_area_ready() -> void:
 	player.velocity = Vector3.ZERO
 	player.temperature.snap_to_ambient()
 	player.frozen = false
+	if Net.dedicated:
+		# Headless server: the "player" is only the streaming focus.
+		player.frozen = true
+		player.visible = false
+		player.health.invulnerable = true
 	hud.set_loading(false)
 	_update_biome()
 	events.refresh_craters()
 	if _first_ready:
+		Net.on_world_loaded()
 		_first_ready = false
 		if _new_world:
 			Events.toast.emit("A new world awaits. Seed %d" % GameState.world_seed, Color(0.8, 1.0, 0.7))
@@ -306,6 +367,8 @@ func travel_to_layer(target_layer: int, at: Vector3) -> void:
 		return  # already travelling / still loading
 	is_ready = false
 	player.frozen = true
+	if Net.is_client():
+		Net.client.mark_teleport()
 	player.set_lock_target(null)
 	spawner.despawn_all()
 	for e in get_tree().get_nodes_in_group(&"enemies"):
@@ -341,6 +404,8 @@ func travel_to_layer(target_layer: int, at: Vector3) -> void:
 ## Enters a dungeon from its entrance on the surface.
 func enter_dungeon(poi: PoiInfo) -> bool:
 	if dungeon or not is_ready or layer != TerrainGenerator.Layer.SURFACE:
+		return false
+	if Net.client_blocked("Dungeons"):
 		return false
 	var left := exploration.dungeon_cleared_left(poi)
 	if left > 0.0:
@@ -420,6 +485,8 @@ func _apply_layer_environment() -> void:
 
 
 func _on_player_respawned() -> void:
+	if Net.is_client():
+		Net.client.mark_teleport()
 	if dungeon:
 		exit_dungeon(player.spawn_point)
 		Events.toast.emit("You were carried out of the dungeon...", Color(1, 0.7, 0.5))
@@ -531,6 +598,8 @@ func spawn_pickup(item_id: StringName, count: int, pos: Vector3, auto_collect: b
 	if layer == TerrainGenerator.Layer.SURFACE:
 		ground = maxf(ground, TerrainGenerator.WATER_Y - 1.0)
 	p.setup(item_id, count, pos, ground, auto_collect)
+	if Net.is_server():
+		Net.server.register_pickup(p)
 	return p
 
 
@@ -545,6 +614,8 @@ func place_object(scene: PackedScene, pos: Vector3) -> Node3D:
 	var node := scene.instantiate() as Node3D
 	placed_root.add_child(node)
 	node.global_position = Vector3(pos.x, ground, pos.z)
+	if Net.is_server():
+		Net.server.broadcast_placed({"scene": scene.resource_path, "position": _vec_to_array(node.global_position), "rotation_y": 0.0})
 	return node
 
 
@@ -597,7 +668,16 @@ func to_save() -> Dictionary:
 		"day": day_night.day,
 		"hour": day_night.hour,
 		"placed": placed,
+		"net_players": _net_records(),
 	}
+
+
+## Guests' characters (multiplayer), kept with the host's world.
+func _net_records() -> Dictionary:
+	if Net.is_server():
+		for ps in Net.server.peers.values():
+			Net.player_records[ps.name] = ps.record()
+	return Net.player_records.duplicate(true)
 
 
 func from_save(data: Dictionary) -> void:
@@ -608,16 +688,8 @@ func from_save(data: Dictionary) -> void:
 	events.from_save(data.get("events", {}))
 	day_night.day = int(data.get("day", 1))
 	day_night.hour = float(data.get("hour", day_night.start_hour))
-	for entry in data.get("placed", []):
-		var path: String = entry.get("scene", "")
-		if path == "" or not ResourceLoader.exists(path):
-			continue
-		var node := (load(path) as PackedScene).instantiate() as Node3D
-		placed_root.add_child(node)
-		node.global_position = _array_to_vec(entry.get("position", [0, 0, 0]))
-		node.rotation.y = float(entry.get("rotation_y", 0.0))
-		if entry.has("data") and node.has_method("load_data"):
-			node.load_data(entry.data)
+	load_placed(data.get("placed", []))
+	Net.player_records = (data.get("net_players", {}) as Dictionary).duplicate(true)
 
 
 static func _vec_to_array(v: Vector3) -> Array:

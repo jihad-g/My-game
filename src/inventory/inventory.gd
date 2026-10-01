@@ -12,6 +12,11 @@ const HOTBAR_SIZE := 8
 
 var capacity: int
 var slots: Array = []
+## Multiplayer guest (Milestone 11): the server owns this inventory. Local
+## changes are refused; from_array() applies the server's snapshots, and slot
+## moves go to `remote_mover` (a request to the server).
+var remote := false
+var remote_mover: Callable
 
 
 func _init(p_capacity: int = 24) -> void:
@@ -26,7 +31,7 @@ static func max_stack_of(id: StringName) -> int:
 
 ## Adds items, filling existing stacks first. Returns the amount that did NOT fit.
 func add_item(id: StringName, count: int) -> int:
-	if count <= 0 or not ItemDB.has_item(id):
+	if remote or count <= 0 or not ItemDB.has_item(id):
 		return count
 	var max_stack := max_stack_of(id)
 	var remaining := count
@@ -52,7 +57,7 @@ func add_item(id: StringName, count: int) -> int:
 
 ## Removes `count` items of `id` from anywhere. All-or-nothing.
 func remove_item(id: StringName, count: int) -> bool:
-	if count_of(id) < count:
+	if remote or count_of(id) < count:
 		return false
 	var remaining := count
 	# Take from the last stacks first so the hotbar keeps its items longest.
@@ -73,7 +78,7 @@ func remove_item(id: StringName, count: int) -> bool:
 ## Removes up to `count` from one slot. Returns the amount removed.
 func remove_from_slot(index: int, count: int) -> int:
 	var s = get_slot(index)
-	if s == null:
+	if s == null or remote:
 		return 0
 	var take := mini(count, s.count)
 	s.count -= take
@@ -101,6 +106,10 @@ func get_slot(index: int):
 func move_slot(from: int, to: int) -> void:
 	if from == to or from < 0 or to < 0 or from >= capacity or to >= capacity:
 		return
+	if remote:
+		if remote_mover.is_valid():
+			remote_mover.call(from, to)
+		return
 	var a = slots[from]
 	var b = slots[to]
 	if a != null and b != null and a.id == b.id:
@@ -125,6 +134,8 @@ func free_slot_count() -> int:
 
 
 func clear() -> void:
+	if remote:
+		return
 	for i in capacity:
 		slots[i] = null
 	changed.emit()

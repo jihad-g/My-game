@@ -21,4 +21,6 @@ func get_interact_text() -> String:
 
 
 func interact(_player: Node) -> void:
+	if Net.client_blocked("Village requests"):
+		return
 	Events.open_requests.emit(site)

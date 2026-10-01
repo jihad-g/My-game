@@ -23,6 +23,9 @@ var _class_info := Label.new()
 
 
 var _settings := SettingsPanel.new()
+var _mp_name := LineEdit.new()
+var _mp_host := CheckBox.new()
+var _mp_address := LineEdit.new()
 
 
 func _ready() -> void:
@@ -45,6 +48,26 @@ func _handle_command_line() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--class="):
 			cls = StringName(arg.substr(8).to_lower())
+			_selected_class = cls
+		elif arg.begins_with("--name="):
+			_mp_name.text = arg.substr(7)
+		elif arg == "--host" or arg.begins_with("--host="):
+			Net.host_on_load = arg.substr(7).to_int() if arg.begins_with("--host=") else NetProtocol.DEFAULT_PORT
+		elif arg == "--server" or arg.begins_with("--server="):
+			Net.host_on_load = arg.substr(9).to_int() if arg.begins_with("--server=") else NetProtocol.DEFAULT_PORT
+			Net.dedicated_on_load = true
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--connect="):
+			join_game(arg.substr(10))
+			return
+	if Net.dedicated_on_load and not ("--seed=" in " ".join(OS.get_cmdline_user_args()) or "--world=" in " ".join(OS.get_cmdline_user_args())):
+		# Dedicated server without a world argument: play (or create) the world "server".
+		if SaveManager.world_exists("server") and SaveManager.load_world("server"):
+			_start_game()
+		else:
+			SaveManager.create_world("server", randi(), cls)
+			_start_game()
+		return
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--seed="):
 			SaveManager.start_transient(GameState.seed_from_string(arg.substr(7)), cls)
@@ -151,6 +174,32 @@ func _build() -> void:
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.add_theme_constant_override(&"separation", 8)
 	scroll.add_child(_list)
+
+	# Multiplayer (Milestone 11)
+	var mp_panel := PanelContainer.new()
+	mp_panel.custom_minimum_size = Vector2(340, 0)
+	cols.add_child(mp_panel)
+	var mv := VBoxContainer.new()
+	mv.add_theme_constant_override(&"separation", 8)
+	mp_panel.add_child(mv)
+	mv.add_child(_header("Multiplayer"))
+	mv.add_child(_small("Your name"))
+	_mp_name.text = Net.player_name
+	_mp_name.max_length = 16
+	mv.add_child(_mp_name)
+	_mp_host.text = "Host the world I play (port %d)" % NetProtocol.DEFAULT_PORT
+	mv.add_child(_mp_host)
+	mv.add_child(_small("Friends join with your IP address. Guests use the class picked on the left."))
+	mv.add_child(_small("Join a game: address (IP or IP:port)"))
+	_mp_address.placeholder_text = "127.0.0.1"
+	mv.add_child(_mp_address)
+	var join := Button.new()
+	join.text = "Join"
+	join.pressed.connect(func() -> void:
+		var a := _mp_address.text.strip_edges()
+		join_game(a if a != "" else "127.0.0.1"))
+	mv.add_child(join)
+	mv.add_child(_small("Co-op foundation: building, gathering and crafting\nare shared; monsters are paused in shared games."))
 
 	var bottom := HBoxContainer.new()
 	bottom.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -268,4 +317,31 @@ func _refresh_list() -> void:
 
 
 func _start_game() -> void:
+	Net.player_name = NetProtocol.clean_name(_mp_name.text) if _mp_name.text != "" else Net.player_name
+	Net.player_class = _selected_class
+	if _mp_host.button_pressed and Net.host_on_load < 0:
+		Net.host_on_load = NetProtocol.DEFAULT_PORT
 	get_tree().change_scene_to_file(GAME_SCENE)
+
+
+## Connects to a host; the world loads once the host welcomes us.
+func join_game(address: String) -> void:
+	var host := address
+	var port := NetProtocol.DEFAULT_PORT
+	if address.contains(":"):
+		host = address.get_slice(":", 0)
+		port = address.get_slice(":", 1).to_int()
+	Net.player_name = NetProtocol.clean_name(_mp_name.text) if _mp_name.text != "" else Net.player_name
+	Net.player_class = _selected_class
+	_status.text = "Connecting to %s:%d..." % [host, port]
+	for c in Net.welcomed.get_connections():
+		Net.welcomed.disconnect(c.callable)
+	for c in Net.join_failed.get_connections():
+		Net.join_failed.disconnect(c.callable)
+	Net.welcomed.connect(func(data: Dictionary) -> void:
+		SaveManager.start_transient(GameState.parse_seed(data.get("seed", "0")), StringName(String(data.get("class", "knight"))))
+		get_tree().change_scene_to_file(GAME_SCENE), CONNECT_ONE_SHOT)
+	Net.join_failed.connect(func(reason: String) -> void: _status.text = "Couldn't join: %s" % reason, CONNECT_ONE_SHOT)
+	var err := Net.join(host, port)
+	if err != OK:
+		_status.text = "Couldn't connect (%s)" % error_string(err)

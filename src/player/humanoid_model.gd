@@ -12,6 +12,9 @@ extends Node3D
 ## swing trails and a `footstep` signal on every foot contact.
 
 signal footstep(left: bool)
+## Animation started (multiplayer replicates these): "attack" [anim, windup,
+## active, recovery], "dodge" [duration], "cast" [duration], "death", "respawn".
+signal anim_event(ev: String, args: Array)
 
 @export var skin_color := Color(0.96, 0.78, 0.62)
 @export var hair_color := Color(0.42, 0.26, 0.14)
@@ -466,6 +469,7 @@ func play_attack(anim: StringName, windup: float, active: float, recovery: float
 		&"overhead":
 			ready_pose = Vector3(-3.0, 0.1, -0.2)
 			strike_pose = Vector3(-0.6, 0.0, 0.2)
+	anim_event.emit("attack", [String(anim), windup, active, recovery])
 	_attack_tween = create_tween()
 	_attack_tween.tween_method(_set_attack_pose, Vector3(_attack_arm.x, _attack_arm.y, _attack_torso), ready_pose, windup).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_attack_tween.tween_callback(func() -> void: _set_trail(true))
@@ -488,6 +492,7 @@ func cancel_attack() -> void:
 
 
 func play_dodge(duration: float) -> void:
+	anim_event.emit("dodge", [duration])
 	if _dodge_tween:
 		_dodge_tween.kill()
 	_root.rotation.x = 0.0
@@ -509,6 +514,7 @@ func play_stagger() -> void:
 
 
 func play_death() -> void:
+	anim_event.emit("death", [])
 	cancel_attack()
 	var tw := create_tween()
 	# Knees buckle, then the body topples over.
@@ -541,6 +547,7 @@ func play_land(strength: float) -> void:
 
 ## Both hands raised forward for `duration` seconds (spells).
 func play_cast(duration: float = 0.5) -> void:
+	anim_event.emit("cast", [duration])
 	_cast_len = maxf(duration, 0.2)
 	_cast_t = _cast_len
 

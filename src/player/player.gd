@@ -363,6 +363,8 @@ func set_lantern(on: bool) -> void:
 
 func _get_move_input() -> Vector3:
 	var raw := Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
+	if World.instance and World.instance.hud and World.instance.hud.mp_hud.is_typing():
+		raw = Vector2.ZERO  # typing in the chat
 	if raw == Vector2.ZERO or camera_rig == null:
 		return Vector3(raw.x, 0, raw.y)
 	var dir := camera_rig.get_right_flat() * raw.x - camera_rig.get_forward_flat() * raw.y
@@ -781,6 +783,8 @@ func _try_interact() -> void:
 ## Adds items to the inventory; overflow is dropped on the ground.
 ## Returns how many could not be stored.
 func give_item(id: StringName, count: int) -> int:
+	if inventory.remote:
+		return count  # multiplayer guest: only the server hands out items
 	var left := inventory.add_item(id, count)
 	var added := count - left
 	if added > 0:
@@ -797,6 +801,8 @@ func discover_from(id: StringName) -> void:
 
 ## Like give_item, but whatever doesn't fit is dropped at your feet (crafting, refunds).
 func give_or_drop(id: StringName, count: int) -> void:
+	if inventory.remote:
+		return
 	var left := give_item(id, count)
 	if left > 0 and World.instance:
 		World.instance.spawn_pickup(id, left, global_position + _facing * 1.2 + Vector3(0, 1.0, 0), false)
@@ -818,9 +824,11 @@ func use_slot(index: int) -> void:
 		equip_from_slot(index)
 	elif item.is_consumable():
 		_consume(item)
-		inventory.remove_from_slot(index, 1)
+		_take_one(index)
 	elif item.is_placeable():
-		if _place(item):
+		if inventory.remote:
+			Net.client.request("place_object", [index, _place_target()])
+		elif _place(item):
 			inventory.remove_from_slot(index, 1)
 	else:
 		Events.toast.emit("%s can't be used directly" % item.display_name, Color(0.85, 0.85, 0.85))
@@ -850,6 +858,12 @@ func equip_from_slot(index: int) -> bool:
 	var s = inventory.get_slot(index)
 	if s == null:
 		return false
+	if inventory.remote:
+		Net.client.request("equip", [index], func(ok: bool, _m: String, _e: Dictionary) -> void:
+			var it: ItemData = ItemDB.get_item(s.id)
+			if ok and it:
+				Events.toast.emit("Equipped %s" % it.display_name, it.rarity_color()))
+		return true
 	var item: ItemData = ItemDB.get_item(s.id)
 	var err := Equipment.check_requirements(item, character.level)
 	if err != "":
@@ -870,6 +884,9 @@ func unequip_slot(slot: int) -> bool:
 	var id := equipment.get_item_id(slot)
 	if id == &"":
 		return false
+	if inventory.remote:
+		Net.client.request("unequip", [slot])
+		return true
 	if inventory.free_slot_count() == 0:
 		Events.toast.emit("Inventory full", Color(1, 0.6, 0.5))
 		return false
@@ -912,7 +929,7 @@ func read_recipe_book(index: int) -> void:
 	if learned == 0:
 		Events.toast.emit("You already know everything in %s" % item.display_name, Color(0.85, 0.85, 0.85))
 		return
-	inventory.remove_from_slot(index, 1)
+	_take_one(index)
 
 
 ## Learns the spell in a tome (consumed). You can learn any spell; casting
@@ -928,7 +945,7 @@ func read_spell_tome(index: int) -> bool:
 	if not spells.learn(sp.id):
 		Events.toast.emit("You already know %s" % sp.display_name, Color(0.85, 0.85, 0.85))
 		return false
-	inventory.remove_from_slot(index, 1)
+	_take_one(index)
 	var mc := character.skill_level(Skill.MANA_CONTROL)
 	var note := "" if mc >= sp.required_mana_control else " (needs Mana Control %d to cast)" % sp.required_mana_control
 	Events.toast.emit("Learned spell: %s%s. Spellbook: L" % [sp.display_name, note], Color(0.75, 0.6, 1.0))
@@ -974,17 +991,32 @@ func _consume(item: ItemData) -> void:
 func _place(item: ItemData) -> bool:
 	if World.instance == null:
 		return false
+	return World.instance.place_object(item.placeable_scene, _place_target()) != null
+
+
+func _place_target() -> Vector3:
 	var target := global_position + _facing * 1.6
-	if camera_rig:
+	if camera_rig and camera_rig.is_inside_tree() and DisplayServer.get_name() != "headless":
 		var aim := camera_rig.get_mouse_world_point(global_position.y)
 		if aim.distance_to(global_position) <= 4.0:
 			target = aim
-	return World.instance.place_object(item.placeable_scene, target) != null
+	return target
+
+
+## Uses up one item from a slot (a request to the server for multiplayer guests).
+func _take_one(index: int) -> void:
+	if inventory.remote:
+		Net.client.request("use", [index])
+	else:
+		inventory.remove_from_slot(index, 1)
 
 
 func drop_slot(index: int, count: int) -> void:
 	var s = inventory.get_slot(index)
 	if s == null or World.instance == null:
+		return
+	if inventory.remote:
+		Net.client.request("drop", [index, count])
 		return
 	var id: StringName = s.id
 	var n := inventory.remove_from_slot(index, count)

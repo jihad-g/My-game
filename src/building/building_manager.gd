@@ -188,7 +188,12 @@ func place(data: BuildPieceData, cell: Vector2i, slot: String, rot: int, player:
 	if pay and player:
 		for item in data.cost:
 			player.inventory.remove_item(item, int(data.cost[item]))
-	return _spawn(data, cell, slot, rot, world.layer)
+	var piece := _spawn(data, cell, slot, rot, world.layer)
+	if player:
+		piece.set_meta(&"owner", Net.player_name)
+	if Net.is_server():
+		Net.server.broadcast_build("add", NetServer.piece_entry(piece))
+	return piece
 
 
 func _spawn(data: BuildPieceData, cell: Vector2i, slot: String, rot: int, layer: int) -> BuildPiece:
@@ -244,6 +249,8 @@ func remove(piece: BuildPiece, player: Player) -> bool:
 			if n > 0:
 				player.give_or_drop(item, n)
 	pieces.erase(key(piece.cell, piece.slot, piece.layer))
+	if Net.is_server():
+		Net.server.broadcast_build("remove", NetServer.piece_entry(piece))
 	piece.queue_free()
 	Events.building_changed.emit()
 	return true
@@ -275,6 +282,8 @@ func destroy(piece: BuildPiece) -> void:
 				world.spawn_pickup(st.id, int(st.count), piece.global_position + Vector3(randf_range(-0.6, 0.6), 1.0, randf_range(-0.6, 0.6)), false)
 	VFX.burst(piece.get_parent(), piece.global_position + Vector3(0, 1.0, 0), 1.8, Color(0.55, 0.45, 0.35, 0.8), 0.35)
 	pieces.erase(key(piece.cell, piece.slot, piece.layer))
+	if Net.is_server():
+		Net.server.broadcast_build("remove", NetServer.piece_entry(piece))
 	Events.toast.emit("Your %s was destroyed!" % piece.data.display_name, Color(1, 0.5, 0.4))
 	piece.queue_free()
 	Events.building_changed.emit()
@@ -352,7 +361,7 @@ func to_save() -> Array:
 	for k in pieces:
 		var p: BuildPiece = pieces[k]
 		out.append({"id": String(p.data.id), "x": p.cell.x, "z": p.cell.y, "slot": p.slot, "rot": p.rot,
-			"layer": p.layer, "data": p.save_data()})
+			"layer": p.layer, "data": p.save_data(), "owner": String(p.get_meta(&"owner", ""))})
 	return out
 
 
@@ -363,4 +372,6 @@ func from_save(list: Array) -> void:
 			continue
 		var piece := _spawn(data, Vector2i(int(e.x), int(e.z)), String(e.slot), int(e.get("rot", 0)), int(e.get("layer", 0)))
 		piece.load_data(e.get("data", {}))
+		if String(e.get("owner", "")) != "":
+			piece.set_meta(&"owner", String(e.owner))
 	refresh_layer()

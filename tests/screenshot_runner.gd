@@ -31,6 +31,10 @@ func _ready() -> void:
 		await _advanced_showcase()
 		get_tree().quit()
 		return
+	if "--only=multiplayer" in OS.get_cmdline_user_args():
+		await _multiplayer_showcase()
+		get_tree().quit()
+		return
 	if "--only=polish" in OS.get_cmdline_user_args():
 		await _polish_showcase()
 		get_tree().quit()
@@ -1132,3 +1136,39 @@ func _polish_showcase() -> void:
 	await _sec(0.5)
 	await _shot("94_low_health_cast")
 	p.health.current = p.health.max_health
+
+
+## Milestone 11 showcase: a host with a guest (headless second process) in the same world.
+func _multiplayer_showcase() -> void:
+	SaveManager.start_transient(31337, &"knight")
+	Net.player_name = "Hosty"
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	world.hud._help.visible = false
+	world.day_night.hour = 11.0
+	var port := 24700 + randi() % 200
+	Net.host(port)
+	var pid := OS.create_process(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"),
+		"res://tests/net_client_runner.tscn", "--", "--connect=127.0.0.1:%d" % port, "--out=user://net_shot.json"])
+	while Net.server.peers.is_empty() or not Net.server.peers.values()[0].ready:
+		await get_tree().process_frame
+	var ps = Net.server.peers.values()[0]
+	Net.server.give(ps, &"wood", 20)
+	world.camera_rig._target_distance = 12.0
+	world.camera_rig._target_pitch = 40.0
+	var hcell := Vector2i(floori(world.player.global_position.x) - 2, floori(world.player.global_position.z) + 2)
+	world.building.place(BuildingManager.get_piece_data(&"wood_floor"), hcell, "floor", 0, world.player, false)
+	world.building.place(BuildingManager.get_piece_data(&"wood_wall"), hcell, "edge_n", 0, world.player, false)
+	await _sec(5.0)
+	await _shot("95_coop_guest")
+	Net.say("Welcome to the Shardlands!")
+	await _sec(5.0)
+	world.hud.mp_hud._input.visible = true
+	await _sec(1.0)
+	await _shot("96_coop_chat")
+	world.hud.mp_hud._input.visible = false
+	while OS.is_process_running(pid):
+		await get_tree().process_frame
+	Net.leave()

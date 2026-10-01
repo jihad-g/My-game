@@ -12,6 +12,8 @@ var item_id: StringName
 var count: int = 1
 ## Loot drops fly to the player; items the player dropped must be picked up with F.
 var auto_collect: bool = true
+## Multiplayer id (0 = local only). The server owns networked pickups.
+var net_id := 0
 var _age := 0.0
 var _velocity := Vector3.ZERO
 var _ground_y := 0.0
@@ -44,6 +46,9 @@ func _ready() -> void:
 func setup(p_item_id: StringName, p_count: int, pos: Vector3, ground_y: float, p_auto_collect: bool = true) -> void:
 	item_id = p_item_id
 	auto_collect = p_auto_collect
+	net_id = 0
+	if has_meta(&"requested"):
+		remove_meta(&"requested")
 	count = p_count
 	_age = 0.0
 	_ground_y = ground_y
@@ -66,8 +71,13 @@ func get_interact_text() -> String:
 func _physics_process(delta: float) -> void:
 	_age += delta
 	if _age > LIFETIME:
-		NodePool.release_or_free(self)
-		return
+		if net_id != 0 and Net.is_client():
+			_age = 0.0  # the server decides when it disappears
+		else:
+			if net_id != 0 and Net.is_server():
+				Net.server.pickup_gone(net_id)
+			NodePool.release_or_free(self)
+			return
 	# Toss arc, then rest on the ground.
 	var rest_y := _ground_y + 0.35
 	if _velocity != Vector3.ZERO:
@@ -98,9 +108,18 @@ func interact(player: Node) -> void:
 
 
 func collect(player: Node) -> void:
+	if Net.is_client():
+		if net_id != 0:
+			Net.client.pickup(self)
+		return
 	var left: int = player.give_item(item_id, count)
 	if left <= 0:
+		if net_id != 0 and Net.is_server():
+			Net.server.pickup_gone(net_id)
 		NodePool.release_or_free(self)
 	else:
+		if left != count and net_id != 0 and Net.is_server():
+			count = left
+			Net.server.pickup_count_changed(self)
 		count = left
 		_age = -2.0  # inventory full: wait before trying again

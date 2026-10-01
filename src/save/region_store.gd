@@ -270,3 +270,26 @@ func import_inline(props: Dictionary, deaths: Dictionary) -> int:
 		mark_death(String(k), float(deaths[k]))
 		n += 1
 	return n
+
+
+# --- Multiplayer (Milestone 11) ----------------------------------------------------------
+
+## One region's data for sending to a guest: {"props": {chunk: {index: t}}, "deaths": {key: t}}.
+func export_region(key: Vector3i) -> Dictionary:
+	var r := _region(key)
+	return {"props": (r.props as Dictionary).duplicate(true), "deaths": (r.deaths as Dictionary).duplicate()}
+
+
+## Replaces one region with the server's copy (guests).
+func import_region(key: Vector3i, props: Dictionary, deaths: Dictionary) -> void:
+	var r := _region(key, true)
+	r.props.clear()
+	for c in props:
+		if c is Vector2i and props[c] is Dictionary:
+			var entries := {}
+			for idx in props[c]:
+				entries[int(idx)] = float(props[c][idx])
+			r.props[c] = entries
+	r.deaths.clear()
+	for k in deaths:
+		r.deaths[String(k)] = float(deaths[k])

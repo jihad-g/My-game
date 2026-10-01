@@ -301,15 +301,28 @@ func get_interact_text() -> String:
 func interact(player: Node) -> void:
 	match data.behavior:
 		BuildPieceData.Behavior.DOOR:
+			if Net.is_client():
+				Net.client.toggle_door(self)
+				return
 			set_open(not is_open)
+			if Net.is_server():
+				Net.server.broadcast_build("state", NetServer.piece_entry(self))
 		BuildPieceData.Behavior.CHEST:
+			if Net.client_blocked("Chests"):
+				return
 			Events.open_container.emit(self)
 		BuildPieceData.Behavior.BED:
+			if Net.client_blocked("Sleeping"):
+				return
 			if World.instance:
 				World.instance.use_bed(self, player)
 		BuildPieceData.Behavior.FARM:
+			if Net.client_blocked("Farming"):
+				return
 			farm_interact(player)
 		BuildPieceData.Behavior.BELL:
+			if Net.client_blocked("The alarm bell"):
+				return
 			if World.instance and World.instance.raids:
 				World.instance.raids.ring_bell(self)
 		BuildPieceData.Behavior.CLAIM:

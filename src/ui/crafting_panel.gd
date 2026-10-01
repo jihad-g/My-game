@@ -270,6 +270,11 @@ func craft_selected(times: int) -> int:
 	if _selected == null or player == null:
 		return 0
 	_update_nearby()
+	if Net.is_client():
+		if Crafting.check(player, _selected, _nearby, 1) != "":
+			return 0
+		Net.client.craft(_selected, times, player.character.skill_level(Skill.CRAFTING))
+		return 0
 	var made := Crafting.craft(player, _selected, _nearby, times)
 	if made > 0:
 		var item: ItemData = ItemDB.get_item(_selected.result_item)

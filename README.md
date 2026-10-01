@@ -5,15 +5,18 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 10 — Art & Polish** (generated sound effects, music and ambience; a sky with sun,
-> moon phases, stars and clouds; weather with rain, thunderstorms, snow, fog and sandstorms; fireflies,
-> leaves and other environmental effects; swaying foliage and animated water; richer procedural
-> animation; particle VFX and weapon trails; pixel-art item icons; a settings screen) on top of
-> Milestones 1–9 (world generation, RPG, building & crafting, living world, exploration, advanced
-> gameplay, blueprints, the 3-million-chunk world). See [`docs/TODO.md`](docs/TODO.md) for the honest
-> status of every system and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
+> Status: **Milestone 11 — Multiplayer Foundation** (co-op for up to 8 players: listen or dedicated
+> server, join by IP, player synchronisation with interpolation, server-authoritative inventories,
+> world changes and building, the same world generated on every machine from the seed and verified by
+> checksum, chat, saved guest characters) on top of Milestones 1–10. See [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
+> [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
+> [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
 ![Village](docs/screenshots/village_overview.png)
+
+| **Co-op: a guest in your world** | **Chat & who's online** | |
+|---|---|---|
+| ![Guest](docs/screenshots/coop_guest.png) | ![Chat](docs/screenshots/coop_chat.png) | |
 
 | **Dawn** | **Dusk** | **Fireflies at night** |
 |---|---|---|
@@ -136,6 +139,7 @@ and when you quit through the pause menu or close the window.
 | Respawn after death | R |
 | Help overlay / debug overlay | F1 / F3 |
 | **Debug:** cycle the weather | F2 |
+| Chat (multiplayer) | Enter |
 | **Debug:** air temperature −10 / +10 °C | F6 / F7 |
 | **Debug:** spawn a Thornback Boar in front of you | F8 |
 | **Debug:** skip 2 hours | F9 |
@@ -359,6 +363,18 @@ and when you quit through the pause menu or close the window.
     on the main menu): volumes, fullscreen, V-Sync, render scale, shadows, horizon terrain, particle
     options, screen shake. Saved to `user://settings.cfg`.
 
+63. **Multiplayer (host)** – on the main menu type your name, tick **Host the world I play**, then
+    create or load a world. Friends on your network join with your IP (over the internet, forward UDP
+    port 24565). The top bar shows who's online; **Enter** opens the chat.
+64. **Multiplayer (join)** – type the host's address (`192.168.1.20` or `host:port`) and press **Join**:
+    you load the same world from the seed (a checksum makes sure it's identical), appear next to the host
+    and see each other move, swing, swim and cast. Chop trees, gather, craft, build, drop and pick up items:
+    the host's server checks each action and everyone sees the result. You can't remove other players'
+    buildings. Monsters pause while a session is online (combat sync comes later).
+65. **Dedicated server** – `godot --headless --path . -- --server --world=<id>` (or `--seed=N`; without
+    either it plays the world "server"). Guests' characters are saved with the world and come back when
+    they rejoin with the same name. Command-line join: `godot --path . -- --connect=127.0.0.1 --name=Ann --class=wizard`.
+
 ## Run the automated tests
 
 ```bash
@@ -367,7 +383,7 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
 
-The suite (906 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (958 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -413,6 +429,12 @@ generation of the corner chunks, 1,500 random columns and 24 random full chunks 
 world, horizon tiles (coverage, cut-out, cached re-meshing), region files (round trip, lazy
 loading, eviction, deleting empty regions, corrupt files, v1 migration, save/load), the data
 cache on returning, and a 1.8 km journey at 70 m/s with bounded chunks, nodes, cache and objects.
+Multiplayer tests check packet encoding and validation, name cleaning, world checksums, the read-only
+guest inventory, puppet interpolation and region transfer, and run a **real session in two processes**
+(host + headless guest over localhost): joining, identical terrain, puppets moving both ways, items from
+the server, gathering, building with server-side costs and ownership, drop and pick up, the host's
+building and harvesting reaching the guest, time sync, speed-cheat correction, chat, saved guest
+characters and rejoining a dedicated server.
 Art & polish tests check that every sound named in the code exists, music and ambience loops, the music
 director, rate limiting and bus volumes, an icon for every item (with outline and the right drawing),
 weather rules per climate (snow in the cold, sandstorms in deserts, more rain where it is wet), shaders and
@@ -434,6 +456,7 @@ godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=adv
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=blueprint # blueprints and construction
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=massive  # horizon, far reaches, world edge
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=polish   # sky, weather, effects, icons, settings
+godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=multiplayer # host + headless guest
 python3 tools/gen_audio.py        # regenerate all sound effects, ambience and music (needs ffmpeg)
 godot --headless --path . res://tools/world_survey.tscn -- --seed=20250101  # whole-world survey -> docs/WORLD_SURVEY.md
 python3 tools/build_designer.py   # rebuild the web designer after changing build pieces or built-in blueprints
@@ -456,6 +479,7 @@ src/
   world/                 Terrain generator, chunks & streaming, biomes, props, caves, spawner, day/night
   world/gen/             WorldGenSettings (all generation parameters + biome list)
   save/                  SaveManager (world list, save/load, backups), RegionStore (compressed region files)
+  net/                   Multiplayer: Net autoload, NetServer, NetClient, RemotePlayer, NetProtocol
 assets/audio/            Generated sound effects, ambience loops and music (tools/gen_audio.py)
 assets/shaders/          Sky, foliage (wind sway) and water shaders
   rpg/                   Classes, skills, progression, character stats, equipment, abilities

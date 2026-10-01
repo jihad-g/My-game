@@ -20,6 +20,8 @@ var _last_anchor := Vector2i(1 << 30, 0)
 
 
 func begin(bp: Blueprint) -> void:
+	if Net.client_blocked("Blueprints"):
+		return
 	var w := manager.world
 	if w.player.is_dead or w.player.frozen or w.dungeon != null:
 		return
