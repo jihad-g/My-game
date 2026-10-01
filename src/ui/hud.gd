@@ -84,6 +84,11 @@ var _loading := ColorRect.new()
 var _loading_label := Label.new()
 var _death := ColorRect.new()
 var _pause := ColorRect.new()
+var _pause_box: Control
+var _settings := SettingsPanel.new()
+## Red edge glow when hurt / low on health (Milestone 10).
+var _vignette := ColorRect.new()
+var _vignette_hit := 0.0
 
 
 func _ready() -> void:
@@ -93,6 +98,7 @@ func _ready() -> void:
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.theme = UITheme.build()
 	add_child(_root)
+	_build_vignette()
 	_build_status()
 	_build_hotbar()
 	_build_inventory()
@@ -158,6 +164,8 @@ func _ready() -> void:
 	Events.target_changed.connect(_on_target_changed)
 	Events.player_died.connect(func() -> void: _death.visible = true)
 	Events.player_respawned.connect(func() -> void: _death.visible = false)
+	for panel in [_inv_panel, _map, _character, _crafting, _chest, _dialogue, _trade, _requests, _reputation, _spellbook, _blueprints, _settings]:
+		UIFx.attach(panel)
 
 
 func bind(p_player: Player, p_world: World) -> void:
@@ -650,6 +658,16 @@ func _build_overlays() -> void:
 	resume.text = "Resume"
 	resume.pressed.connect(func() -> void: set_paused(false))
 	pv.add_child(resume)
+	var settings_btn := Button.new()
+	settings_btn.text = "Settings"
+	settings_btn.pressed.connect(func() -> void:
+		_settings.visible = true
+		_pause_box.visible = false)
+	pv.add_child(settings_btn)
+	_pause_box = pv
+	_settings.visible = false
+	_settings.closed.connect(func() -> void: _pause_box.visible = true)
+	_pause.add_child(_settings)
 	_save_button = Button.new()
 	_save_button.text = "Save world"
 	_save_button.pressed.connect(func() -> void:
@@ -680,6 +698,38 @@ func _centered_box(parent: Control) -> VBoxContainer:
 
 
 # --- Runtime -----------------------------------------------------------------------
+
+## Low health pulses the screen edges red; taking a hit flashes them.
+func _update_vignette(delta: float) -> void:
+	_vignette_hit = maxf(0.0, _vignette_hit - delta * 2.5)
+	var low := clampf(1.0 - player.health.get_ratio() / 0.3, 0.0, 1.0) if not player.is_dead else 0.0
+	var pulse := low * (0.55 + 0.45 * sin(Time.get_ticks_msec() / 1000.0 * 5.0))
+	var a := clampf(maxf(pulse * 0.8, _vignette_hit), 0.0, 1.0)
+	(_vignette.material as ShaderMaterial).set_shader_parameter(&"strength", a)
+	_vignette.visible = a > 0.01
+
+
+func _build_vignette() -> void:
+	var sh := Shader.new()
+	sh.code = """shader_type canvas_item;
+uniform float strength = 0.0;
+void fragment() {
+	vec2 d = UV - vec2(0.5);
+	float v = smoothstep(0.35, 0.75, length(d * vec2(1.0, 0.8)) * 1.25);
+	COLOR = vec4(0.7, 0.02, 0.02, v * strength * 0.75);
+}"""
+	var m := ShaderMaterial.new()
+	m.shader = sh
+	_vignette.material = m
+	_vignette.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vignette.visible = false
+	_root.add_child(_vignette)
+	_root.move_child(_vignette, 0)
+	Events.damage_dealt.connect(func(_p: Vector3, amount: float, _c: bool, to_player: bool, _t: String) -> void:
+		if to_player and amount > 0.0 and player:
+			_vignette_hit = clampf(amount / maxf(1.0, player.health.max_health) * 4.0, 0.25, 0.8))
+
 
 func set_loading(on: bool, text: String = "") -> void:
 	_loading.visible = on
@@ -780,7 +830,13 @@ func _process(_delta: float) -> void:
 		return
 	_update_temperature()
 	if world and world.day_night:
-		_clock.text = world.day_night.time_string()
+		var extra := ""
+		if world.weather and world.layer == TerrainGenerator.Layer.SURFACE and world.dungeon == null:
+			extra = "\n%s" % world.weather.kind_name()
+			if world.day_night.is_night():
+				extra += " · %s" % world.day_night.moon_phase_name()
+		_clock.text = world.day_night.time_string() + extra
+	_update_vignette(_delta)
 	if _target and is_instance_valid(_target):
 		_target_bar.value = _target.health.get_ratio() * 100.0
 		_target_panel.visible = not _target.is_dead and _target.is_visible_in_tree()

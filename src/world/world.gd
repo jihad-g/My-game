@@ -60,6 +60,10 @@ var raids: RaidManager
 var events: WorldEvents
 ## Blueprints: construction sites and the placement preview (Milestone 8).
 var blueprints: BlueprintManager
+## Rain, storms, snow, fog, sandstorms (Milestone 10).
+var weather: WeatherSystem
+## Fireflies, leaves, mist... plus music and ambience beds (Milestone 10).
+var ambient: AmbientEffects
 var _autosave_left := AUTOSAVE_INTERVAL
 var _biome_check_left := 0.0
 var _first_ready := true
@@ -74,6 +78,8 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
 	if instance == self:
 		instance = null
+	Audio.clear_ambience()
+	Audio.set_cave_reverb(false)
 
 
 func _ready() -> void:
@@ -106,6 +112,15 @@ func _ready() -> void:
 	blueprints.name = "Blueprints"
 	blueprints.world = self
 	add_child(blueprints)
+	weather = WeatherSystem.new()
+	weather.name = "Weather"
+	weather.world = self
+	add_child(weather)
+	ambient = AmbientEffects.new()
+	ambient.name = "AmbientEffects"
+	ambient.world = self
+	add_child(ambient)
+	_connect_feedback()
 	props = PropLibrary.new()
 	chunk_manager.setup(generator, props)
 	spawner.generator = generator
@@ -140,6 +155,7 @@ func _ready() -> void:
 	chunk_manager.focus = player
 	hud.bind(player, self)
 	hud.set_loading(true, "Generating world...\nSeed: %d" % GameState.world_seed)
+	Settings.apply_to_world(self)
 	_apply_layer_environment()
 
 
@@ -157,6 +173,26 @@ func _process(delta: float) -> void:
 		_autosave_left -= delta
 		if _autosave_left <= 0.0:
 			save_now(false)
+
+
+## Impact particles for hits and celebrations (Milestone 10).
+func _connect_feedback() -> void:
+	Events.damage_dealt.connect(func(pos: Vector3, amount: float, crit: bool, to_player: bool, tag: String) -> void:
+		if not is_inside_tree():
+			return
+		if tag == "Parry!" or tag == "Blocked":
+			VFX.sparks(self, pos - Vector3(0, 1.0, 0), Color(1.0, 0.9, 0.5), 14 if tag == "Parry!" else 7)
+		elif amount > 0.0:
+			VFX.sparks(self, pos - Vector3(0, 0.8, 0), Color(1.0, 0.75, 0.3) if crit else Color(1.0, 0.95, 0.85), 10 if crit else 5)
+			if not to_player and amount >= 8.0:
+				VFX.debris(self, pos - Vector3(0, 0.9, 0), Color(0.75, 0.15, 0.12), 4, 3.0))
+	Events.level_up.connect(func(_l: int) -> void:
+		if is_inside_tree() and player:
+			VFX.motes(self, player.global_position + Vector3(0, 1.0, 0), Color(1.0, 0.85, 0.35), 30, 0.8)
+			VFX.ring(self, player.global_position, 3.0, Color(1.0, 0.85, 0.35, 0.8), 0.6))
+	Events.ability_used.connect(func(id: StringName) -> void:
+		if is_inside_tree() and player and String(id).contains("heal"):
+			VFX.motes(self, player.global_position + Vector3(0, 1.0, 0), Color(0.5, 1.0, 0.6), 20, 0.6))
 
 
 ## The world is a 27.7 km square (TerrainGenerator.WORLD_LIMIT_M): the edge
@@ -211,6 +247,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"debug_temp_up"):
 		debug_temperature_offset += 10.0
 		Events.toast.emit("Debug: air temperature offset %+d°C" % roundi(debug_temperature_offset), Color(1, 0.7, 0.5))
+	elif event.is_action_pressed(&"debug_weather"):
+		var k := (weather.kind + 1) % WeatherSystem.KIND_NAMES.size()
+		weather.force(k, 1.0)
+		Events.toast.emit("Debug: weather %s (F2 cycles)" % WeatherSystem.KIND_NAMES[k], Color(0.7, 0.85, 1.0))
 	elif event.is_action_pressed(&"debug_spawn_enemy"):
 		debug_spawn_enemy()
 	elif event.is_action_pressed(&"debug_time_skip"):
@@ -419,6 +459,8 @@ func get_air_temperature(pos: Vector3) -> float:
 	t -= maxf(0.0, pos.y - 2.0) * worldgen.altitude_lapse
 	if is_in_water(pos):
 		t -= 5.0  # wet and chilled while wading or swimming
+	if weather:
+		t += weather.temperature_offset()
 	return t + debug_temperature_offset
 
 

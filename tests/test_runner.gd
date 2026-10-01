@@ -70,6 +70,13 @@ func _ready() -> void:
 	_run(&"test_m9_region_store")
 	await _run_async(&"test_m9_save_regions")
 	await _run_async(&"test_m9_streaming")
+	_run(&"test_m10_audio")
+	_run(&"test_m10_icons")
+	_run(&"test_m10_weather_rules")
+	_run(&"test_m10_visual_assets")
+	_run(&"test_m10_settings")
+	await _run_async(&"test_m10_animation")
+	await _run_async(&"test_m10_world_polish")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -3974,5 +3981,342 @@ func test_m9_streaming() -> void:
 	p.global_position = Vector3(TerrainGenerator.WORLD_LIMIT_M + 400.0, 5.0, 200.0)
 	await _frames(3)
 	check(p.global_position.x < TerrainGenerator.WORLD_LIMIT_M, "player kept inside the world (x %.0f)" % p.global_position.x)
+	world.queue_free()
+	await get_tree().process_frame
+
+
+# --- Milestone 10: art & polish ---------------------------------------------------------
+
+func test_m10_audio() -> void:
+	for b in Audio.BUSES:
+		check(AudioServer.get_bus_index(b) >= 0, "audio bus %s exists" % b)
+	# Every sound the code asks for by name exists.
+	var missing := PackedStringArray()
+	var names := {}
+	var re := RegEx.create_from_string("Audio\\.play(?:_at|_ui)?\\(&\"([a-z_0-9]+)\"")
+	var re2 := RegEx.create_from_string("\\[\"[a-z_]+\", &\"([a-z_0-9]+)\"\\]")
+	for dir in ["res://src"]:
+		for path in _all_files(dir, ".gd"):
+			var text := FileAccess.get_file_as_string(path)
+			for m in re.search_all(text):
+				names[m.get_string(1)] = path
+			if path.ends_with("audio.gd"):
+				for m in re2.search_all(text):
+					names[m.get_string(1)] = path
+				for m in RegEx.create_from_string("play(?:_at|_ui)?\\(&\"([a-z_0-9]+)\"").search_all(text):
+					names[m.get_string(1)] = path
+	for n in names:
+		if not Audio.has_sound(StringName(n)):
+			missing.append("%s (%s)" % [n, names[n].get_file()])
+	for surf in ["grass", "stone", "sand", "snow", "wood"]:
+		if not Audio.has_sound(StringName("step_" + surf)):
+			missing.append("step_" + surf)
+	check(names.size() >= 30 and missing.is_empty(), "all %d sounds referenced in code exist %s" % [names.size(), missing])
+	for t in [&"menu", &"explore_day", &"explore_night", &"town", &"combat", &"dungeon", &"boss"]:
+		var st = load(Audio.MUSIC_DIR + String(t) + ".ogg")
+		check(st is AudioStreamOggVorbis and (st as AudioStream).get_length() > 40.0, "music track %s (%.0f s)" % [t, st.get_length() if st else 0.0])
+	for l in [&"wind", &"wind_strong", &"rain", &"rain_heavy", &"birds", &"crickets", &"cave", &"sea", &"fire", &"town"]:
+		check(load(Audio.AMB_DIR + String(l) + ".ogg") is AudioStreamOggVorbis, "ambience loop %s" % l)
+	check(Audio.pick_music({"boss": true, "combat": true}) == &"boss" and Audio.pick_music({"combat": true, "town": true}) == &"combat"
+		and Audio.pick_music({"town": true, "night": true}) == &"town" and Audio.pick_music({"night": true}) == &"explore_night"
+		and Audio.pick_music({}) == &"explore_day" and Audio.pick_music({"underground": true}) == &"dungeon", "music follows the situation")
+	check(Audio.ability_sound(&"firebolt") == &"fire" and Audio.ability_sound(&"frost_nova") == &"frost" and Audio.ability_sound(&"healing_light") == &"heal"
+		and Audio.ability_sound(&"something") == &"cast", "spells pick a matching sound")
+	var before := Audio.played
+	check(Audio.play(&"pickup", -80.0, 0.0, &"SFX", 1000), "a sound plays")
+	check(not Audio.play(&"pickup", -80.0, 0.0, &"SFX", 1000) and Audio.played == before + 1, "rapid repeats are rate-limited")
+	check(not Audio.play(&"no_such_sound"), "unknown sounds are ignored")
+	var sfx := AudioServer.get_bus_index(&"SFX")
+	Audio.set_volume(&"SFX", 0.5)
+	check(is_equal_approx(AudioServer.get_bus_volume_db(sfx), linear_to_db(0.5 * Audio.BUS_MIX[&"SFX"])), "bus volume follows the setting")
+	Audio.set_volume(&"SFX", 0.0)
+	check(AudioServer.is_bus_mute(sfx), "zero volume mutes")
+	Audio.set_volume(&"SFX", 1.0)
+
+
+func _all_files(dir: String, ext: String) -> PackedStringArray:
+	var out := PackedStringArray()
+	for f in DirAccess.get_files_at(dir):
+		if f.ends_with(ext):
+			out.append(dir + "/" + f)
+	for d in DirAccess.get_directories_at(dir):
+		out.append_array(_all_files(dir + "/" + d, ext))
+	return out
+
+
+func test_m10_icons() -> void:
+	var shapes := {}
+	var bad := PackedStringArray()
+	var count := 0
+	for f in DirAccess.get_files_at("res://data/items"):
+		if not f.ends_with(".tres"):
+			continue
+		var item: ItemData = ItemDB.get_item(StringName(f.get_basename()))
+		if item == null:
+			continue
+		count += 1
+		var img := ItemIcons.render(item)
+		var opaque := 0
+		var outline := 0
+		var dark := item.icon_color.darkened(0.75)
+		for y in ItemIcons.SIZE:
+			for x in ItemIcons.SIZE:
+				var c := img.get_pixel(x, y)
+				if c.a > 0.5:
+					opaque += 1
+					if absf(c.r - dark.r) + absf(c.g - dark.g) + absf(c.b - dark.b) < 0.03:
+						outline += 1
+		if opaque < 60 or opaque > 900 or outline < 20:
+			bad.append("%s(%d/%d)" % [item.id, opaque, outline])
+		shapes[ItemIcons.shape_of(item)] = true
+	check(count >= 130 and bad.is_empty(), "every item (%d) gets a drawn, outlined icon %s" % [count, bad])
+	check(shapes.size() >= 40, "icons use many different drawings (%d)" % shapes.size())
+	var expect := {&"copper_pickaxe": &"pickaxe", &"glowcap": &"mushroom", &"carrot_seeds": &"seeds", &"moonpetal_pendant": &"amulet",
+		&"iron_ingot": &"ingot", &"healing_draught": &"potion", &"scroll_shadowfang": &"scroll", &"tome_blink": &"book",
+		&"wooden_buckler": &"shield", &"stoneskin_elixir": &"potion", &"tusk_charm": &"amulet", &"plank": &"plank", &"wood": &"log"}
+	var wrong := PackedStringArray()
+	for id in expect:
+		if ItemIcons.shape_of(ItemDB.get_item(id)) != expect[id]:
+			wrong.append(String(id))
+	check(wrong.is_empty(), "items map to the right drawing %s" % wrong)
+	var it := ItemDB.get_item(&"iron_sword")
+	check(ItemIcons.get_icon(it) == ItemIcons.get_icon(it), "icons are cached")
+
+
+func test_m10_weather_rules() -> void:
+	var w := WeatherSystem.new()
+	var a := w.roll(1234.0, 0.5, 0.6, &"verdant_meadow")
+	var b := w.roll(1234.0 + 10.0, 0.5, 0.6, &"verdant_meadow")
+	check(a == b, "same weather spell, same weather")
+	var counts := {"temperate_wet": {}, "temperate_dry": {}, "cold": {}, "desert": {}}
+	for i in 600:
+		var t := i * WeatherSystem.SPELL_SECONDS
+		for k in counts:
+			var r: Dictionary
+			match k:
+				"temperate_wet":
+					r = w.roll(t, 0.5, 0.85, &"emerald_jungle")
+				"temperate_dry":
+					r = w.roll(t, 0.5, 0.15, &"verdant_meadow")
+				"cold":
+					r = w.roll(t, 0.15, 0.5, &"snowy_tundra")
+				"desert":
+					r = w.roll(t, 0.8, 0.1, &"sunscorch_desert")
+			counts[k][r.kind] = int(counts[k].get(r.kind, 0)) + 1
+	var wet_rain: int = int(counts.temperate_wet.get(WeatherSystem.Kind.RAIN, 0)) + int(counts.temperate_wet.get(WeatherSystem.Kind.STORM, 0))
+	var dry_rain: int = int(counts.temperate_dry.get(WeatherSystem.Kind.RAIN, 0)) + int(counts.temperate_dry.get(WeatherSystem.Kind.STORM, 0))
+	check(wet_rain > dry_rain * 1.5 and dry_rain > 0, "wet lands get more rain (%d vs %d of 600)" % [wet_rain, dry_rain])
+	check(not counts.cold.has(WeatherSystem.Kind.RAIN) and not counts.cold.has(WeatherSystem.Kind.STORM) and int(counts.cold.get(WeatherSystem.Kind.SNOW, 0)) > 30,
+		"it snows instead of raining in the cold (%d snow)" % int(counts.cold.get(WeatherSystem.Kind.SNOW, 0)))
+	check(not counts.desert.has(WeatherSystem.Kind.RAIN) and int(counts.desert.get(WeatherSystem.Kind.SANDSTORM, 0)) > 10,
+		"deserts get sandstorms, not rain (%d)" % int(counts.desert.get(WeatherSystem.Kind.SANDSTORM, 0)))
+	check(int(counts.temperate_dry.get(WeatherSystem.Kind.CLEAR, 0)) > 200, "clear skies are the most common")
+	w.kind = WeatherSystem.Kind.STORM
+	w.intensity = 1.0
+	check(w.temperature_offset() < -3.0 and w.is_precipitating(), "storms are cold and wet")
+	w.kind = WeatherSystem.Kind.SANDSTORM
+	check(w.temperature_offset() > 0.0 and not w.is_precipitating(), "sandstorms are hot and dry")
+	w.free()
+
+
+func test_m10_visual_assets() -> void:
+	var lib := PropLibrary.new()
+	check(lib.get_mesh(&"tree_oak").surface_get_material(0) is ShaderMaterial, "trees use the swaying foliage shader")
+	var mat := lib.get_mesh(&"tree_oak").surface_get_material(0) as ShaderMaterial
+	check(mat.get_shader_parameter(&"fade_near") == true, "trees still fade near the camera")
+	check(lib.get_mesh(&"grass_tuft").surface_get_material(0) is ShaderMaterial, "grass sways")
+	check(not (lib.get_mesh(&"rock").surface_get_material(0) is ShaderMaterial), "rocks don't sway")
+	check(Materials.water() is ShaderMaterial, "water is the animated shader")
+	for sh in ["sky", "foliage", "water"]:
+		check(load("res://assets/shaders/%s.gdshader" % sh) is Shader, "%s shader loads" % sh)
+	# Terrain AO: some top faces get darker corners next to higher columns.
+	var gen := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var data := gen.generate_chunk(Vector2i(3, 2), 0)
+	var shaded := 0
+	for q in range(0, data.vertices.size(), 4):
+		if data.normals[q] != Vector3.UP:
+			continue
+		var c0 := data.colors[q]
+		for k in range(1, 4):
+			if not data.colors[q + k].is_equal_approx(c0):
+				shaded += 1
+				break
+	check(shaded > 5, "terrain corners are shaded by neighbours (%d faces)" % shaded)
+	check(data.indices.size() % 3 == 0 and data.collision_faces.size() == data.indices.size(), "AO faces still build valid collision")
+
+
+func test_m10_settings() -> void:
+	var saved_path := Settings.path
+	var saved := Settings.values.duplicate()
+	Settings.path = "user://test_settings.cfg"
+	Settings.set_value("music_volume", 0.3)
+	Settings.set_value("screen_shake", false)
+	check(is_equal_approx(Audio.get_volume(&"Music"), 0.3), "music volume applies")
+	Settings.values = Settings.DEFAULTS.duplicate()
+	Settings.load_settings()
+	check(is_equal_approx(float(Settings.get_value("music_volume")), 0.3) and Settings.get_value("screen_shake") == false, "settings saved and loaded")
+	Settings.reset_defaults()
+	check(is_equal_approx(float(Settings.get_value("music_volume")), 1.0), "reset to defaults")
+	var panel := SettingsPanel.new()
+	add_child(panel)
+	var controls := 0
+	for n in panel.find_children("*", "", true, false):
+		if n.has_meta(&"key"):
+			controls += 1
+	check(controls >= 13, "settings screen has every option (%d)" % controls)
+	panel.queue_free()
+	DirAccess.remove_absolute("user://test_settings.cfg")
+	Settings.path = saved_path
+	Settings.values = saved
+	Settings.apply()
+
+
+func test_m10_animation() -> void:
+	var m := HumanoidModel.new()
+	add_child(m)
+	await get_tree().process_frame
+	var steps := [0]
+	m.footstep.connect(func(_l: bool) -> void: steps[0] += 1)
+	for i in 120:
+		m.set_locomotion(1.0, 1.0 / 60.0)
+		m._process(1.0 / 60.0)
+	check(steps[0] >= 5, "running makes footsteps (%d in 2 s)" % steps[0])
+	check(absf(m._shin_l.rotation.x) > 0.05 or absf(m._shin_r.rotation.x) > 0.05, "knees bend while running")
+	check(m._torso.rotation.x > 0.05, "leans into the run")
+	m.set_locomotion(0.0, 1.0)
+	m.set_air_state(true, false)
+	for i in 20:
+		m._process(1.0 / 60.0)
+	check(m._arm_l.rotation.x < -1.0 and m._shin_l.rotation.x > 0.4, "jump pose: arms up, knee tucked")
+	m.set_air_state(false, true)
+	for i in 40:
+		m._process(1.0 / 60.0)
+	check(m._root.rotation.x > 0.8, "swimming lies flat in the water")
+	m.set_air_state(false, false)
+	for i in 60:
+		m._process(1.0 / 60.0)
+	check(absf(m._root.rotation.x) < 0.2, "stands up again on land")
+	m.play_cast(0.5)
+	for i in 10:
+		m._process(1.0 / 60.0)
+	check(m._arm_r.rotation.x < -1.0, "casting raises the hands")
+	m.set_weapon(&"sword", false)
+	m.play_attack(&"slash", 0.05, 0.25, 0.1)
+	var trail_on := false
+	for i in 30:
+		await get_tree().create_timer(0.02).timeout
+		if m._trail != null and m._trail.active:
+			trail_on = true
+			break
+	check(trail_on, "sword swings leave a trail")
+	await get_tree().create_timer(0.4).timeout
+	check(m._trail == null or not m._trail.active, "trail stops after the swing")
+	m.queue_free()
+	# Particles: one-shot voxel debris cleans itself up.
+	var holder := Node3D.new()
+	add_child(holder)
+	VFX.debris(holder, Vector3.ZERO, Color.BROWN, 6)
+	VFX.dust(holder, Vector3.ZERO)
+	check(holder.get_child_count() == 2, "debris and dust spawn particles")
+	await get_tree().create_timer(1.3).timeout
+	check(holder.get_child_count() == 0, "finished particles free themselves")
+	VFX.enabled = false
+	VFX.sparks(holder, Vector3.ZERO)
+	check(holder.get_child_count() == 0, "particles can be switched off")
+	VFX.enabled = true
+	holder.queue_free()
+
+
+func test_m10_world_polish() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world: World = await _boot_world()
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	var env := world.day_night.environment.environment
+	check(env.sky != null and env.sky.sky_material is ShaderMaterial and env.background_mode == Environment.BG_SKY, "sky shader in use")
+	# Day and night.
+	world.day_night.hour = 12.0
+	world.day_night.advance_hours(0.0)
+	var noon := world.day_night.sun.light_energy
+	check(world.day_night.sun.global_transform.basis.z.y > 0.5, "noon light comes from high up")
+	world.day_night.hour = 0.5
+	world.day_night.advance_hours(0.0)
+	check(world.day_night.sun.light_energy < noon * 0.5 and world.day_night.is_night(), "night is darker (moonlight)")
+	check(world.day_night.sun.global_transform.basis.z.y >= sin(deg_to_rad(DayNightCycle.MIN_LIGHT_ELEVATION)) - 0.01, "moonlight never comes from below")
+	var phases := {}
+	for d in 8:
+		world.day_night.day = d + 1
+		phases[world.day_night.moon_phase_name()] = true
+	check(phases.size() >= 6, "the moon goes through its phases (%d)" % phases.size())
+	world.day_night.hour = 12.0
+	# Weather in the running game.
+	var wthr := world.weather
+	wthr.force(WeatherSystem.Kind.CLEAR)
+	await _frames(3)
+	var air_clear := world.get_air_temperature(p.global_position)
+	var fog_clear := env.fog_depth_end
+	wthr.force(WeatherSystem.Kind.RAIN)
+	await _frames(3)
+	check(wthr._rain.emitting and wthr._rain.amount_ratio > 0.5, "rain falls around the player")
+	check(world.get_air_temperature(p.global_position) < air_clear - 1.0, "rain cools the air")
+	await get_tree().create_timer(1.3).timeout
+	if not (world.building and world.building.is_sheltered(p.global_position)):
+		check(p.status.has(&"wet"), "standing in the rain makes you wet")
+	check(float(Audio._amb_target.get(&"rain", 0.0)) > 0.3, "rain ambience plays")
+	wthr.force(WeatherSystem.Kind.STORM)
+	await _frames(2)
+	var strikes := wthr.lightning_strikes
+	wthr.strike()
+	await _frames(1)
+	check(wthr.lightning_strikes == strikes + 1 and world.day_night.weather_flash > 0.3, "lightning flashes")
+	wthr.force(WeatherSystem.Kind.FOG)
+	await _frames(3)
+	check(env.fog_depth_end < fog_clear * 0.5, "fog closes in (%.0f m)" % env.fog_depth_end)
+	wthr.force(WeatherSystem.Kind.SNOW)
+	await _frames(2)
+	check(wthr._snow.emitting and not wthr._rain.emitting, "snow replaces rain")
+	wthr.force(-1)
+	await _frames(2)
+	# Ambient effects follow biome and time.
+	world.day_night.hour = 23.0
+	world.day_night.advance_hours(0.0)
+	world.current_biome = world.generator.biomes[world.generator.biomes.map(func(b: BiomeData) -> StringName: return b.id).find(&"whispering_forest")]
+	wthr.force(WeatherSystem.Kind.CLEAR)
+	var t := world.ambient.targets()
+	check(t[&"fireflies"] > 0.5 and t[&"leaves"] > 0.3 and t[&"pollen"] == 0.0, "forest nights have fireflies and leaves")
+	world.day_night.hour = 12.0
+	world.day_night.advance_hours(0.0)
+	check(world.ambient.targets()[&"fireflies"] == 0.0, "no fireflies by day")
+	# Music director.
+	world.ambient._update_sound()
+	check(Audio.music_track in [&"explore_day", &"town"], "daytime exploring music (%s)" % Audio.music_track)
+	var boar := _spawn_boar(world, Vector3(4, 0, 0))
+	boar.target = p
+	world.ambient._update_sound()
+	check(Audio.music_track == &"combat", "combat music when an enemy targets you")
+	boar.queue_free()
+	# Footstep surface and landing.
+	check(p.footstep_surface() in ["grass", "stone", "sand", "snow", "wood"], "footstep surface (%s)" % p.footstep_surface())
+	p.global_position += Vector3(0, 8, 0)
+	var landed := false
+	for i in 120:
+		await get_tree().physics_frame
+		if p._fall_speed > 6.0:
+			landed = true
+		if landed and p.is_on_floor():
+			break
+	check(landed and p._fall_speed == 0.0, "a fall is tracked and resets on landing")
+	# Settings reach the world.
+	Settings.values["shadows"] = 0
+	Settings.values["weather_particles"] = false
+	Settings.apply_to_world(world)
+	check(not world.day_night.sun.shadow_enabled and not wthr.particles_enabled, "graphics settings apply to the world")
+	Settings.values["shadows"] = 2
+	Settings.values["weather_particles"] = true
+	Settings.apply_to_world(world)
+	# HUD shows weather; icons show in slots.
+	await _frames(2)
+	check(world.hud._clock.text.contains("\n"), "clock shows the weather")
 	world.queue_free()
 	await get_tree().process_frame

@@ -13,6 +13,8 @@ var on_impact: Callable  ## optional func(position: Vector3), called on any impa
 ## Homing (Arcane Missiles): steer toward this target at `turn_rate` radians/s.
 var homing_target: Node3D
 var turn_rate := 6.0
+## Played where the projectile starts (arrows, turret bolts); "" = silent (spells have their own cast sound).
+var launch_sound: StringName = &""
 ## What the projectile can hit (enemy projectiles use PLAYER instead of ENEMY).
 var mask := Layers.TERRAIN | Layers.ENEMY | Layers.PROP | Layers.BUILDING
 
@@ -22,6 +24,8 @@ var _shape := SphereShape3D.new()
 
 func _ready() -> void:
 	_shape.radius = 0.3
+	if launch_sound != &"":
+		(func() -> void: Audio.play_at(launch_sound, global_position, -4.0)).call_deferred()
 	var b := BlockMesh.new()
 	b.box(Vector3.ZERO, Vector3(0.35, 0.35, 0.35), color)
 	b.box(Vector3.ZERO, Vector3(0.22, 0.22, 0.6), color.lightened(0.4))

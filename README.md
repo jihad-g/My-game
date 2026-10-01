@@ -5,14 +5,23 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 9 — Massive World** (a 3,003,289-chunk world with an edge ocean, aggressive
-> streaming with a data cache and prefetch, horizon LOD out to 512 m, compressed region files for
-> world changes, background generation, a world survey and large-world tests) on top of the
-> prototype, world generation (M2), RPG (M3), building & crafting (M4), the living world (M5),
-> exploration (M6), advanced gameplay (M7) and blueprints (M8). See [`docs/TODO.md`](docs/TODO.md)
-> for the honest status of every system and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
+> Status: **Milestone 10 — Art & Polish** (generated sound effects, music and ambience; a sky with sun,
+> moon phases, stars and clouds; weather with rain, thunderstorms, snow, fog and sandstorms; fireflies,
+> leaves and other environmental effects; swaying foliage and animated water; richer procedural
+> animation; particle VFX and weapon trails; pixel-art item icons; a settings screen) on top of
+> Milestones 1–9 (world generation, RPG, building & crafting, living world, exploration, advanced
+> gameplay, blueprints, the 3-million-chunk world). See [`docs/TODO.md`](docs/TODO.md) for the honest
+> status of every system and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
 ![Village](docs/screenshots/village_overview.png)
+
+| **Dawn** | **Dusk** | **Fireflies at night** |
+|---|---|---|
+| ![Dawn](docs/screenshots/sky_dawn.png) | ![Dusk](docs/screenshots/sky_dusk.png) | ![Night](docs/screenshots/night_fireflies.png) |
+| **Thunderstorm** | **Fog** | **Sandstorm** |
+| ![Storm](docs/screenshots/weather_storm.png) | ![Fog](docs/screenshots/weather_fog.png) | ![Sand](docs/screenshots/weather_sandstorm.png) |
+| **Pixel-art item icons** | **Settings** | **Swing trail + sparks** |
+| ![Icons](docs/screenshots/inventory_icons.png) | ![Settings](docs/screenshots/settings.png) | ![Trail](docs/screenshots/swing_trail.png) |
 
 | **Horizon terrain (512 m)** | **From a mountain top** | **12.5 km from spawn** |
 |---|---|---|
@@ -126,6 +135,7 @@ and when you quit through the pause menu or close the window.
 | Pause | Esc |
 | Respawn after death | R |
 | Help overlay / debug overlay | F1 / F3 |
+| **Debug:** cycle the weather | F2 |
 | **Debug:** air temperature −10 / +10 °C | F6 / F7 |
 | **Debug:** spawn a Thornback Boar in front of you | F8 |
 | **Debug:** skip 2 hours | F9 |
@@ -331,6 +341,24 @@ and when you quit through the pause menu or close the window.
     samples the whole world (biomes, land/sea, every village, kingdom and POI) and benchmarks
     generation into [`docs/WORLD_SURVEY.md`](docs/WORLD_SURVEY.md).
 
+58. **Listen** – every action has a sound (swings, blocks, parries, hits, footsteps that change on
+    grass/stone/sand/snow/wood floors, chopping, mining, eating, spells by element, chests, crafting), the
+    music follows you (day, night, town, combat, dungeons, bosses) and the ambience changes with the place
+    (birds, crickets, wind, sea, caves, town bustle, rain). Volumes are in **Settings**.
+59. **Sky & weather** – watch a full day: sunrise, dusk colours, stars and the moon (its phase changes
+    over 8 days; the clock shows it). Weather comes and goes on its own (rain, thunderstorms with
+    lightning, snow in the cold, fog, desert sandstorms); press **F2** to cycle it. Standing in the rain
+    makes you **Wet**; a roof keeps you dry and rain stops on roofs.
+60. **Environment** – forest and meadow nights have fireflies, forests shed leaves, meadows have pollen,
+    deserts blow dust, crystal glades sparkle, swamps are misty. Trees and grass sway with the wind (more in
+    storms); water ripples and glints.
+61. **Animation & VFX** – run (lean, knees, footstep dust), jump off a ledge (arms up, landing squash and
+    dust), swim (strokes), cast a spell (hands raised), swing (weapon trail, sparks), chop and mine (wood
+    and stone chips), drop below 30% health (red pulsing vignette).
+62. **Icons & UI** – every item has a pixel-art icon; panels pop in with a sound; **Esc → Settings** (also
+    on the main menu): volumes, fullscreen, V-Sync, render scale, shadows, horizon terrain, particle
+    options, screen shake. Saved to `user://settings.cfg`.
+
 ## Run the automated tests
 
 ```bash
@@ -339,7 +367,7 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
 
-The suite (820 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (906 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -385,6 +413,12 @@ generation of the corner chunks, 1,500 random columns and 24 random full chunks 
 world, horizon tiles (coverage, cut-out, cached re-meshing), region files (round trip, lazy
 loading, eviction, deleting empty regions, corrupt files, v1 migration, save/load), the data
 cache on returning, and a 1.8 km journey at 70 m/s with bounded chunks, nodes, cache and objects.
+Art & polish tests check that every sound named in the code exists, music and ambience loops, the music
+director, rate limiting and bus volumes, an icon for every item (with outline and the right drawing),
+weather rules per climate (snow in the cold, sandstorms in deserts, more rain where it is wet), shaders and
+terrain AO, settings save/load/apply, animation states (footsteps, knees, jump, swim, cast, trails),
+self-cleaning particles, and in the running game: sky, sun and moon, moon phases, rain (particles, colder
+air, Wet, ambience), lightning, fog, snow, fireflies by night, combat music, landing and graphics settings.
 
 Balance tables are generated from the code: `godot --headless --path . -s tools/gen_rpg_tables.gd`
 → [`docs/XP_TABLE.md`](docs/XP_TABLE.md), [`docs/CLASSES_AND_SKILLS.md`](docs/CLASSES_AND_SKILLS.md).
@@ -399,6 +433,8 @@ godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=exp
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=advanced # raids, elites, bosses, spells, events
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=blueprint # blueprints and construction
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=massive  # horizon, far reaches, world edge
+godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=polish   # sky, weather, effects, icons, settings
+python3 tools/gen_audio.py        # regenerate all sound effects, ambience and music (needs ffmpeg)
 godot --headless --path . res://tools/world_survey.tscn -- --seed=20250101  # whole-world survey -> docs/WORLD_SURVEY.md
 python3 tools/build_designer.py   # rebuild the web designer after changing build pieces or built-in blueprints
 tools/make_video.sh /tmp/video     # scripted gameplay video (needs ffmpeg)
@@ -420,6 +456,8 @@ src/
   world/                 Terrain generator, chunks & streaming, biomes, props, caves, spawner, day/night
   world/gen/             WorldGenSettings (all generation parameters + biome list)
   save/                  SaveManager (world list, save/load, backups), RegionStore (compressed region files)
+assets/audio/            Generated sound effects, ambience loops and music (tools/gen_audio.py)
+assets/shaders/          Sky, foliage (wind sway) and water shaders
   rpg/                   Classes, skills, progression, character stats, equipment, abilities
   inventory/             ItemData resource, Inventory
   crafting/              Recipes, recipe book, crafting rules

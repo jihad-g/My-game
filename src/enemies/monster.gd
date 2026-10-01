@@ -1171,6 +1171,7 @@ func _do_support() -> void:
 
 func _fire(tgt: Node3D, spread: float) -> void:
 	var p := Projectile.new()
+	p.launch_sound = &"bow"
 	var origin := global_position + Vector3(0, 1.3 * mdata.model_scale, 0) + get_facing() * 0.6
 	var aim := tgt.global_position + Vector3(0, 1.0, 0)
 	var pv: Vector3 = tgt.get("velocity") if tgt.get("velocity") != null else Vector3.ZERO

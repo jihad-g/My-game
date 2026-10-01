@@ -86,7 +86,7 @@ func update_focus(center: Vector2i, layer: int, hole_r: int) -> void:
 	_center = center
 	_hole_r = hole_r
 	_active = layer == TerrainGenerator.Layer.SURFACE and generator != null
-	visible = _active
+	visible = _active and not get_meta(&"hidden_by_settings", false)
 	if not _active:
 		for t: Vector2i in _tiles.keys():
 			_release(t)

@@ -599,6 +599,7 @@ func try_cast(slot: int) -> bool:
 	if not has_method(fn) or not call(fn, a):
 		return false
 	player.mana.try_spend(effective_cost(a))
+	player.model.play_cast(0.45)
 	cooldowns[a.id] = a.cooldown * Skill.cooldown_mult(player.character.skill_level(Skill.MANA_CONTROL))
 	cooldowns_changed.emit()
 	Events.ability_used.emit(a.id)

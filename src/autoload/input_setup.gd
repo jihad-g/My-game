@@ -37,6 +37,7 @@ const KEY_BINDINGS := {
 	&"respawn": [KEY_R],
 	&"toggle_help": [KEY_F1],
 	&"toggle_debug": [KEY_F3],
+	&"debug_weather": [KEY_F2],
 	&"debug_temp_down": [KEY_F6],
 	&"debug_temp_up": [KEY_F7],
 	&"debug_spawn_enemy": [KEY_F8],

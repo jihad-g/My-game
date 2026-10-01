@@ -240,6 +240,7 @@ func _turret_update(delta: float) -> void:
 		return
 	_turret_cd = data.turret_interval
 	var p := Projectile.new()
+	p.launch_sound = &"bow"
 	var aim := best.global_position + Vector3(0, 1.0, 0)
 	var dir := (aim - origin).normalized()
 	p.velocity = dir * 26.0

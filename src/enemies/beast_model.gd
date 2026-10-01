@@ -83,8 +83,14 @@ func set_locomotion(speed_ratio: float, delta: float) -> void:
 		_orbit.rotation.y += delta * 2.5
 		_body.position.y = 1.3 + sin(_phase * 0.6) * 0.15
 		return
+	var m := minf(_move, 1.0)
 	for i in _legs.size():
-		_legs[i].rotation.y = sin(_phase + i * 1.3) * 0.5 * minf(_move, 1.0)
+		_legs[i].rotation.y = sin(_phase + i * 1.3) * 0.5 * m
+		# Lift each leg on its forward swing (Milestone 10).
+		var side := -1.0 if _legs[i].position.x < 0.0 else 1.0
+		_legs[i].rotation.z = maxf(0.0, sin(_phase + i * 1.3 + 1.57)) * 0.35 * m * side
+	_body.rotation.z = sin(_phase) * 0.04 * m
+	_body.scale = Vector3(1.0, 1.0 + sin(_phase * 0.25) * 0.03 * (1.0 - m), 1.0)
 
 
 func play_attack(_anim: StringName, windup: float, active: float, recovery: float) -> void:

@@ -32,6 +32,8 @@ var _target_pitch: float
 var _pan_offset := Vector3.ZERO
 var _dragging := false
 var _shake := 0.0
+## Screen shake on/off (Settings).
+var shake_enabled := true
 
 
 func _ready() -> void:
@@ -59,6 +61,8 @@ func snap_to_target() -> void:
 
 
 func add_shake(strength: float) -> void:
+	if not shake_enabled:
+		return
 	_shake = clampf(maxf(_shake, strength), 0.0, 1.0)
 
 

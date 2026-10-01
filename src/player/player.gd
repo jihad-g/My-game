@@ -103,6 +103,9 @@ var _want_heavy := false
 var _in_water := false
 ## True while in water too deep to stand in.
 var is_swimming := false
+## Fastest fall speed of the current jump/fall (landing effects).
+var _fall_speed := 0.0
+var _moving_fast := false
 var _lantern: OmniLight3D
 var _dash_dir := Vector3.ZERO
 var _dash_speed := 0.0
@@ -116,6 +119,7 @@ var _pull_left := 0.0
 
 func _ready() -> void:
 	add_to_group(&"player")
+	model.footstep.connect(_on_footstep)
 	combat.player = self
 	abilities.player = self
 	character.equipment = equipment
@@ -246,10 +250,72 @@ func _physics_process(delta: float) -> void:
 	_update_interact_target()
 	var planar_speed := Vector2(velocity.x, velocity.z).length()
 	model.set_locomotion(planar_speed / walk_speed * 0.8, delta)
+	_update_air(planar_speed)
 
 	# Safety net: fell through the world (e.g. terrain not yet loaded).
 	if velocity.y < -30.0:
 		_rescue_to_surface()
+
+
+## Jump/fall pose, and a landing squash + dust + thud after a real fall.
+func _update_air(planar_speed: float) -> void:
+	var airborne := not is_on_floor() and not is_swimming and state != State.DODGING
+	model.set_air_state(airborne and _fall_speed > 2.5, is_swimming)
+	if airborne:
+		_fall_speed = maxf(_fall_speed, -velocity.y)
+		return
+	if _fall_speed > 6.0 and not is_swimming:
+		var s := clampf((_fall_speed - 6.0) / 10.0, 0.2, 1.0)
+		model.play_land(s)
+		VFX.dust(get_parent(), global_position, _dust_color(), int(4 + s * 8))
+		Audio.play(StringName("step_" + footstep_surface()), -2.0, 0.05)
+	_fall_speed = 0.0
+	_moving_fast = planar_speed > walk_speed * 1.15
+
+
+## What the ground under the player sounds like.
+func footstep_surface() -> String:
+	var w := World.instance
+	if w == null:
+		return "grass"
+	if w.dungeon or w.layer == TerrainGenerator.Layer.UNDERGROUND:
+		return "stone"
+	var p := global_position
+	if w.building and w.building.pieces.has(BuildingManager.key(Vector2i(floori(p.x), floori(p.z)), "floor", w.layer)):
+		return "wood"
+	var b: StringName = w.current_biome.id if w.current_biome else &""
+	match b:
+		&"sunscorch_desert", &"sandy_beach":
+			return "sand"
+		&"snowy_tundra", &"frostpine_taiga":
+			return "snow"
+		&"stonecrown_mountains":
+			return "snow" if p.y > 26.0 else "stone"
+	if w.living and w.living.current:
+		return "stone"  # town streets
+	return "grass"
+
+
+func _dust_color() -> Color:
+	match footstep_surface():
+		"sand":
+			return Color(0.9, 0.78, 0.55, 0.8)
+		"snow":
+			return Color(1, 1, 1, 0.9)
+		"stone":
+			return Color(0.6, 0.6, 0.62, 0.7)
+	return Color(0.6, 0.5, 0.35, 0.7)
+
+
+func _on_footstep(_left: bool) -> void:
+	if is_dead or is_swimming:
+		return
+	if _in_water:
+		Audio.play_at(&"swim", global_position, -16.0, 0.15, 20.0, 150)
+		return
+	Audio.play_at(StringName("step_" + footstep_surface()), global_position, -9.0 if _moving_fast else -13.0, 0.12, 22.0, 120)
+	if _moving_fast:
+		VFX.dust(get_parent(), global_position, _dust_color(), 2)
 
 
 func _update_water() -> void:
@@ -262,6 +328,8 @@ func _update_water() -> void:
 	if is_swimming and not was_swimming:
 		is_blocking = false
 		model.set_blocking(false)
+		Audio.play_at(&"splash", global_position, -4.0)
+		VFX.splash(get_parent(), global_position + Vector3(0, 0.6, 0), 18)
 
 
 func _move_swimming(input: Vector3, delta: float) -> void:
@@ -395,6 +463,7 @@ func _start_dodge(input: Vector3) -> void:
 	_dodge_dir = input.normalized() if input != Vector3.ZERO else _facing
 	face_direction(_dodge_dir, true)
 	model.play_dodge(dodge_duration)
+	Audio.play(&"dodge", -7.0)
 	# Roll through enemies.
 	collision_mask &= ~Layers.ENEMY
 
@@ -478,6 +547,7 @@ func receive_hit(info: DamageInfo) -> void:
 		if _block_time <= character.parry_window:
 			Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, false, "Parry!")
 			Events.camera_shake.emit(0.3)
+			Audio.play(&"parry", -2.0, 0.02)
 			if info.source and info.source.has_method("on_parried"):
 				info.source.on_parried()
 			return
@@ -489,6 +559,7 @@ func receive_hit(info: DamageInfo) -> void:
 			info.knockback *= 0.4
 			info.poise_damage *= 0.3
 			info.tag = "Blocked"
+			Audio.play(&"block", -3.0)
 		else:
 			stamina.consume(stamina.current, false)
 			info.tag = "Guard broken"
@@ -896,6 +967,7 @@ func _consume(item: ItemData) -> void:
 		if item.buff_id == &"starlight":
 			mana.refill()
 	var potion := item.mana_restore > 0.0 or item.buff_id != &"" or item.hunger_restore <= 0.0
+	Audio.play(&"drink" if potion else &"eat", -4.0)
 	Events.toast.emit("%s %s" % ["Drank" if potion else "Ate", item.display_name], Color(0.7, 1, 0.6))
 
 

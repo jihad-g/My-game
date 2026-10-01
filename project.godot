@@ -8,7 +8,7 @@ config_version=5
 
 config/name="Shardlands"
 config/description="Stylized blocky open-world survival RPG (prototype)."
-config/version="0.9.0"
+config/version="0.10.0"
 run/main_scene="res://scenes/menu/main_menu.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
@@ -20,6 +20,8 @@ Events="*res://src/autoload/events.gd"
 GameState="*res://src/autoload/game_state.gd"
 ItemDB="*res://src/autoload/item_db.gd"
 SaveManager="*res://src/save/save_manager.gd"
+Audio="*res://src/autoload/audio.gd"
+Settings="*res://src/autoload/settings.gd"
 
 [display]
 
@@ -47,3 +49,18 @@ common/physics_ticks_per_second=60
 
 anti_aliasing/quality/msaa_3d=2
 lights_and_shadows/directional_shadow/size=4096
+
+[shader_globals]
+
+wind_strength={
+"type": "float",
+"value": 0.3
+}
+wind_dir={
+"type": "vec2",
+"value": Vector2(1, 0.3)
+}
+rain_amount={
+"type": "float",
+"value": 0.0
+}

@@ -22,10 +22,18 @@ var _class_buttons: Dictionary = {}
 var _class_info := Label.new()
 
 
+var _settings := SettingsPanel.new()
+
+
 func _ready() -> void:
 	theme = UITheme.build()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	Audio.set_music(&"menu")
+	Audio.clear_ambience()
 	_build()
+	_settings.visible = false
+	add_child(_settings)
+	UIFx.attach(_settings)
 	_refresh_list()
 	if not _cmdline_handled:
 		_cmdline_handled = true
@@ -154,6 +162,10 @@ func _build() -> void:
 		DirAccess.make_dir_recursive_absolute(SaveManager.worlds_dir)
 		OS.shell_open(ProjectSettings.globalize_path(SaveManager.worlds_dir)))
 	bottom.add_child(folder)
+	var settings_btn := Button.new()
+	settings_btn.text = "Settings"
+	settings_btn.pressed.connect(func() -> void: _settings.visible = true)
+	bottom.add_child(settings_btn)
 	var quit := Button.new()
 	quit.text = "Quit"
 	quit.pressed.connect(func() -> void: get_tree().quit())

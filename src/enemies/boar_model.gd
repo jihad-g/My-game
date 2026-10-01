@@ -161,3 +161,8 @@ func _process(delta: float) -> void:
 		_root.position.x = 0.0
 		if _root.rotation.z == 0.0:
 			_root.position.y = absf(sin(_phase)) * 0.05 * minf(_move, 1.0)
+			# Idle: breathing and sniffing about; running: head bobs with the gait.
+			var idle := 1.0 - clampf(_move * 3.0, 0.0, 1.0)
+			_root.scale = Vector3(1.0, 1.0 + sin(_t * 2.6) * 0.025 * idle, 1.0)
+			_head.rotation.y = sin(_t * 0.7) * sin(_t * 0.23) * 0.35 * idle
+			_head.rotation.x = sin(_phase * 2.0) * 0.08 * minf(_move, 1.0) + sin(_t * 5.0) * 0.04 * idle

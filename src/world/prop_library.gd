@@ -22,6 +22,15 @@ func _init() -> void:
 				_props[res.id] = res
 
 
+## Wind sway per mesh (bend in metres per metre² of height; Milestone 10).
+const SWAY := {
+	&"tree_oak": 0.0035, &"tree_pine": 0.0025, &"tree_snowy_pine": 0.0025, &"tree_palm": 0.004,
+	&"tree_jungle": 0.003, &"tree_swamp": 0.003, &"grass_tuft": 0.3, &"flowers": 0.25, &"reeds": 0.15,
+	&"berry_bush": 0.03, &"frostberry_bush": 0.03, &"dead_bush": 0.02, &"sunbloom": 0.06, &"moonpetal": 0.06,
+	&"starlight_orchid": 0.06, &"frost_lotus": 0.04, &"emberroot": 0.04,
+}
+
+
 func get_prop(id: StringName) -> PropData:
 	return _props.get(id)
 
@@ -37,8 +46,11 @@ func get_mesh(id: StringName) -> Mesh:
 			var b := BlockMesh.new()
 			call(fn, b)
 			mesh = b.commit()
+			var sway: float = SWAY.get(data.mesh_builder, 0.0)
 			if data.glow:
 				mesh.surface_set_material(0, Materials.vertex_color_emissive())
+			elif sway > 0.0:
+				mesh.surface_set_material(0, Materials.foliage(sway, data.fade_near_camera))
 			elif data.fade_near_camera:
 				mesh.surface_set_material(0, Materials.vertex_color_occluder())
 		else:

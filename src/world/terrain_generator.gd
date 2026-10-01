@@ -524,9 +524,15 @@ func _build_surface(data: ChunkData, n: int, w: int, ox: int, oz: int) -> void:
 			var wx := ox + i * step
 			var wz := oz + j * step
 			var top := _top_color(biome, h, wx, wz, surface)
-			_quad(data.vertices, data.normals, data.colors, data.indices,
-				Vector3(x0, y, z0), Vector3(x1, y, z0), Vector3(x1, y, z1), Vector3(x0, y, z1),
-				Vector3.UP, top)
+			# Baked ambient occlusion: a corner darkens for each higher neighbour
+			# touching it (the voxel-game look; Milestone 10).
+			var hw := data.heights[k - 1] > h
+			var he := data.heights[k + 1] > h
+			var hn := data.heights[k - w] > h
+			var hs := data.heights[k + w] > h
+			_quad_ao(data, Vector3(x0, y, z0), Vector3(x1, y, z0), Vector3(x1, y, z1), Vector3(x0, y, z1), top,
+				_ao(hw, hn, data.heights[k - w - 1] > h), _ao(he, hn, data.heights[k - w + 1] > h),
+				_ao(he, hs, data.heights[k + w + 1] > h), _ao(hw, hs, data.heights[k + w - 1] > h))
 			# Side walls where the neighbour is lower; always on chunk borders (skirt).
 			# (Each side is skipped cheaply when the neighbour isn't lower.)
 			_side(data, biome, h, data.heights[k + 1], i == n - 1,
@@ -607,6 +613,33 @@ func _side_color(biome: BiomeData, h: int, surface: bool) -> Color:
 	if h <= SEA_LEVEL + 1:
 		return biome.shore_color * 0.85
 	return biome.side_color
+
+
+## Corner light factor from its two side neighbours and the diagonal one.
+static func _ao(side_a: bool, side_b: bool, corner: bool) -> float:
+	if side_a and side_b:
+		return 0.66
+	return 1.0 - 0.12 * (int(side_a) + int(side_b) + int(corner))
+
+
+## Upward quad with a darkened colour per corner (AO). The diagonal is chosen
+## so the shading interpolates without the "flipped quad" artefact.
+static func _quad_ao(data: ChunkData, a: Vector3, b: Vector3, c: Vector3, d: Vector3, color: Color,
+		ao_a: float, ao_b: float, ao_c: float, ao_d: float) -> void:
+	var base := data.vertices.size()
+	data.vertices.push_back(a)
+	data.vertices.push_back(b)
+	data.vertices.push_back(c)
+	data.vertices.push_back(d)
+	for ao in [ao_a, ao_b, ao_c, ao_d]:
+		data.normals.push_back(Vector3.UP)
+		data.colors.push_back(Color(color.r * ao, color.g * ao, color.b * ao))
+	var idx := data.indices
+	# Same winding as _quad() for an upward face: (a,b,c)+(a,c,d), or split along b-d.
+	if ao_a + ao_c >= ao_b + ao_d:
+		idx.append_array(PackedInt32Array([base, base + 1, base + 2, base, base + 2, base + 3]))
+	else:
+		idx.append_array(PackedInt32Array([base + 1, base + 2, base + 3, base + 1, base + 3, base]))
 
 
 static func _quad(verts: PackedVector3Array, norms: PackedVector3Array, cols: PackedColorArray,

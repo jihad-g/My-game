@@ -31,6 +31,10 @@ func _ready() -> void:
 		await _advanced_showcase()
 		get_tree().quit()
 		return
+	if "--only=polish" in OS.get_cmdline_user_args():
+		await _polish_showcase()
+		get_tree().quit()
+		return
 	if "--only=massive" in OS.get_cmdline_user_args():
 		await _massive_showcase()
 		get_tree().quit()
@@ -1043,3 +1047,88 @@ func _massive_showcase() -> void:
 	world.hud._debug.visible = true
 	await _sec(2.0)
 	await _shot("74_streaming_debug")
+
+
+## Milestone 10 showcase: sky through the day, weather, biome effects, animation, VFX, UI.
+func _polish_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	world.hud._help.visible = false
+	var g := world.generator
+	var cam := world.camera_rig
+	var forest := _find_biome(g, p.global_position, &"whispering_forest")
+	await _teleport(world, forest)
+	cam._target_distance = 26.0
+	cam._target_pitch = 32.0
+	for spec in [["80_dawn", 6.4], ["81_noon", 12.5], ["82_dusk", 18.3], ["83_night_fireflies", 22.5]]:
+		world.day_night.hour = spec[1]
+		world.weather.force(WeatherSystem.Kind.CLEAR)
+		await _sec(2.5)
+		await _shot(spec[0])
+	world.day_night.hour = 11.0
+	for spec in [["84_rain", WeatherSystem.Kind.RAIN], ["85_storm", WeatherSystem.Kind.STORM], ["86_fog", WeatherSystem.Kind.FOG]]:
+		world.weather.force(spec[1])
+		await _sec(3.0)
+		if spec[1] == WeatherSystem.Kind.STORM:
+			world.weather.strike()
+			await _sec(0.15)
+		await _shot(spec[0])
+	await _teleport(world, _find_biome(g, p.global_position, &"snowy_tundra"))
+	world.weather.force(WeatherSystem.Kind.SNOW)
+	await _sec(3.0)
+	await _shot("87_snow")
+	await _teleport(world, _find_biome(g, p.global_position, &"sunscorch_desert"))
+	world.weather.force(WeatherSystem.Kind.SANDSTORM)
+	await _sec(3.0)
+	await _shot("88_sandstorm")
+	await _teleport(world, _find_biome(g, p.global_position, &"murk_swamp"))
+	world.weather.force(WeatherSystem.Kind.CLEAR)
+	world.day_night.hour = 20.5
+	await _sec(3.0)
+	await _shot("89_swamp_mist")
+	world.day_night.hour = 10.0
+	await _teleport(world, _find_biome(g, p.global_position, &"crystal_glade"))
+	await _sec(3.0)
+	await _shot("90_crystal_sparkles")
+	# UI: icons, settings, combat feel.
+	await _teleport(world, forest)
+	world.weather.force(WeatherSystem.Kind.CLEAR)
+	for id in [&"iron_sword", &"copper_pickaxe", &"healing_draught", &"bread", &"iron_ingot", &"moonpetal", &"tome_blink",
+			&"chainmail", &"crystal_ring", &"raw_meat", &"gemstone", &"wood", &"plank", &"scroll_shadowfang"]:
+		p.inventory.add_item(id, 3 if id in [&"bread", &"iron_ingot", &"wood", &"plank"] else 1)
+	cam._target_distance = 16.0
+	cam._target_pitch = 45.0
+	world.hud._toggle_inventory()
+	await _sec(1.5)
+	await _shot("91_inventory_icons")
+	world.hud._toggle_inventory()
+	world.hud.set_paused(true)
+	world.hud._settings.visible = true
+	world.hud._pause_box.visible = false
+	await _sec(1.0)
+	await _shot("92_settings")
+	world.hud._settings.visible = false
+	world.hud._pause_box.visible = true
+	world.hud.set_paused(false)
+	cam._target_distance = 9.0
+	cam._target_pitch = 35.0
+	await _sec(1.0)
+	p.model.set_weapon(&"sword", false)
+	p.model.play_attack(&"slash", 0.08, 0.3, 0.2)
+	await _sec(0.2)
+	VFX.sparks(world, p.global_position + Vector3(0.8, 1.2, 0.8), Color(1.0, 0.8, 0.4), 16)
+	await _shot("93_swing_trail")
+	await _sec(1.0)
+	p.health.invulnerable = false
+	p.health.current = p.health.max_health * 0.12
+	p.model.play_cast(1.5)
+	VFX.motes(world, p.global_position + Vector3(0, 1, 0), Color(0.5, 1.0, 0.6), 24, 0.7)
+	await _sec(0.5)
+	await _shot("94_low_health_cast")
+	p.health.current = p.health.max_health

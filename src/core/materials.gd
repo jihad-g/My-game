@@ -35,6 +35,31 @@ static func set_camera_fade(camera_distance: float) -> void:
 	var m := vertex_color_occluder()
 	m.distance_fade_min_distance = camera_distance * 0.45
 	m.distance_fade_max_distance = camera_distance * 0.72
+	for key in _cache:
+		var f = _cache[key]
+		if f is ShaderMaterial and String(key).begins_with("foliage_fade"):
+			f.set_shader_parameter(&"fade_min", camera_distance * 0.45)
+			f.set_shader_parameter(&"fade_max", camera_distance * 0.72)
+
+
+## Global shader parameters shared by foliage and water (WeatherSystem drives
+## them) are declared in project.godot [shader_globals]; nothing to create here.
+static func ensure_globals() -> void:
+	pass
+
+
+## Vertex-coloured foliage that sways in the wind (Milestone 10). `sway` is the
+## bend per metre² of height; `fade_near` adds the camera dither of occluders.
+static func foliage(sway: float, fade_near: bool) -> ShaderMaterial:
+	var key := StringName("foliage%s_%d" % ["_fade" if fade_near else "", roundi(sway * 1000.0)])
+	if not _cache.has(key):
+		ensure_globals()
+		var m := ShaderMaterial.new()
+		m.shader = load("res://assets/shaders/foliage.gdshader")
+		m.set_shader_parameter(&"sway", sway)
+		m.set_shader_parameter(&"fade_near", fade_near)
+		_cache[key] = m
+	return _cache[key]
 
 
 ## Same as vertex_color() but glowing (flames, magic, eyes).
@@ -48,14 +73,12 @@ static func vertex_color_emissive() -> StandardMaterial3D:
 	return _cache[&"vertex_color_emissive"]
 
 
-static func water() -> StandardMaterial3D:
+## Animated stylized water (assets/shaders/water.gdshader, Milestone 10).
+static func water() -> Material:
 	if not _cache.has(&"water"):
-		var m := StandardMaterial3D.new()
-		m.albedo_color = Color(0.25, 0.62, 0.95, 0.62)
-		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		m.roughness = 0.15
-		m.metallic_specular = 0.8
-		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		ensure_globals()
+		var m := ShaderMaterial.new()
+		m.shader = load("res://assets/shaders/water.gdshader")
 		_cache[&"water"] = m
 	return _cache[&"water"]
 

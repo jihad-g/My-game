@@ -6,6 +6,12 @@ extends Node3D
 ##
 ## The public API (set_locomotion, play_attack, play_dodge, set_blocking, flash)
 ## is what a future skeletal/AnimationTree model must also provide.
+##
+## Milestone 10: knees and elbows, idle breathing and glances, running lean,
+## jump/fall, swimming strokes, landing squash, spell-casting pose, weapon
+## swing trails and a `footstep` signal on every foot contact.
+
+signal footstep(left: bool)
 
 @export var skin_color := Color(0.96, 0.78, 0.62)
 @export var hair_color := Color(0.42, 0.26, 0.14)
@@ -21,7 +27,23 @@ var _arm_l: Node3D
 var _arm_r: Node3D
 var _leg_l: Node3D
 var _leg_r: Node3D
+var _shin_l: Node3D
+var _shin_r: Node3D
+var _fore_l: Node3D
+var _fore_r: Node3D
 var _weapon: Node3D
+var _tip: Node3D
+var _trail: WeaponTrail
+var _time := 0.0
+var _airborne := false
+var _swimming := false
+var _swim_blend := 0.0
+var _air_blend := 0.0
+var _cast_t := 0.0
+var _cast_len := 0.0
+var _last_step_sign := 0.0
+var _look := 0.0
+var _was_swimming := false
 var _parts: Array[MeshInstance3D] = []
 
 var _walk_phase := 0.0
@@ -163,13 +185,17 @@ func _build() -> void:
 	_parts.clear()
 	_root = Node3D.new()
 	add_child(_root)
-	# Legs (pivot at hip)
+	# Legs: hip -> thigh, knee -> shin + boot.
 	_leg_l = _pivot(_root, Vector3(-0.14, 0.72, 0))
-	_part(_leg_l, Vector3(0, -0.3, 0), Vector3(0.22, 0.5, 0.24), pants_color)
-	_part(_leg_l, Vector3(0, -0.63, 0.03), Vector3(0.24, 0.18, 0.3), boot_color)
+	_part(_leg_l, Vector3(0, -0.17, 0), Vector3(0.22, 0.36, 0.24), pants_color)
+	_shin_l = _pivot(_leg_l, Vector3(0, -0.34, 0))
+	_part(_shin_l, Vector3(0, -0.12, 0), Vector3(0.21, 0.26, 0.23), pants_color * 0.95)
+	_part(_shin_l, Vector3(0, -0.29, 0.03), Vector3(0.24, 0.18, 0.3), boot_color)
 	_leg_r = _pivot(_root, Vector3(0.14, 0.72, 0))
-	_part(_leg_r, Vector3(0, -0.3, 0), Vector3(0.22, 0.5, 0.24), pants_color)
-	_part(_leg_r, Vector3(0, -0.63, 0.03), Vector3(0.24, 0.18, 0.3), boot_color)
+	_part(_leg_r, Vector3(0, -0.17, 0), Vector3(0.22, 0.36, 0.24), pants_color)
+	_shin_r = _pivot(_leg_r, Vector3(0, -0.34, 0))
+	_part(_shin_r, Vector3(0, -0.12, 0), Vector3(0.21, 0.26, 0.23), pants_color * 0.95)
+	_part(_shin_r, Vector3(0, -0.29, 0.03), Vector3(0.24, 0.18, 0.3), boot_color)
 	# Torso
 	_torso = _pivot(_root, Vector3(0, 0.72, 0))
 	_part(_torso, Vector3(0, 0.3, 0), Vector3(0.56, 0.6, 0.32), shirt_color)
@@ -181,16 +207,20 @@ func _build() -> void:
 	_part(_head, Vector3(0, 0.33, -0.2), Vector3(0.5, 0.3, 0.1), hair_color)
 	_part(_head, Vector3(-0.1, 0.26, 0.225), Vector3(0.07, 0.09, 0.02), Color(0.1, 0.1, 0.15))  # eyes
 	_part(_head, Vector3(0.1, 0.26, 0.225), Vector3(0.07, 0.09, 0.02), Color(0.1, 0.1, 0.15))
-	# Arms (pivot at shoulder)
+	# Arms: shoulder -> upper arm, elbow -> forearm + hand.
 	_arm_l = _pivot(_torso, Vector3(-0.36, 0.54, 0))
-	_part(_arm_l, Vector3(0, -0.22, 0), Vector3(0.18, 0.46, 0.2), shirt_color * 0.92)
-	_part(_arm_l, Vector3(0, -0.5, 0), Vector3(0.16, 0.14, 0.16), skin_color)
+	_part(_arm_l, Vector3(0, -0.13, 0), Vector3(0.18, 0.28, 0.2), shirt_color * 0.92)
+	_fore_l = _pivot(_arm_l, Vector3(0, -0.26, 0))
+	_part(_fore_l, Vector3(0, -0.09, 0), Vector3(0.17, 0.2, 0.19), shirt_color * 0.88)
+	_part(_fore_l, Vector3(0, -0.24, 0), Vector3(0.16, 0.14, 0.16), skin_color)
 	_arm_r = _pivot(_torso, Vector3(0.36, 0.54, 0))
-	_part(_arm_r, Vector3(0, -0.22, 0), Vector3(0.18, 0.46, 0.2), shirt_color * 0.92)
-	_part(_arm_r, Vector3(0, -0.5, 0), Vector3(0.16, 0.14, 0.16), skin_color)
+	_part(_arm_r, Vector3(0, -0.13, 0), Vector3(0.18, 0.28, 0.2), shirt_color * 0.92)
+	_fore_r = _pivot(_arm_r, Vector3(0, -0.26, 0))
+	_part(_fore_r, Vector3(0, -0.09, 0), Vector3(0.17, 0.2, 0.19), shirt_color * 0.88)
+	_part(_fore_r, Vector3(0, -0.24, 0), Vector3(0.16, 0.14, 0.16), skin_color)
 	_build_class_gear()
-	_weapon = _pivot(_arm_r, Vector3(0, -0.52, 0.05))
-	_shield = _pivot(_arm_l, Vector3(-0.1, -0.35, 0.08))
+	_weapon = _pivot(_fore_r, Vector3(0, -0.26, 0.05))
+	_shield = _pivot(_fore_l, Vector3(-0.1, -0.09, 0.08))
 	_build_weapon()
 	if _ghost:
 		set_ghost(true)
@@ -325,7 +355,8 @@ func _build_class_gear() -> void:
 func _build_weapon() -> void:
 	for holder in [_weapon, _shield]:
 		for c in holder.get_children():
-			_parts.erase(c as MeshInstance3D)
+			if c is MeshInstance3D:
+				_parts.erase(c as MeshInstance3D)
 			c.free()
 	var wood := Color(0.42, 0.28, 0.16)
 	var steel := weapon_color
@@ -365,6 +396,11 @@ func _build_weapon() -> void:
 			_part(_weapon, Vector3(0, 0, 1.36), Vector3(0.08, 0.04, 0.24), steel)
 		_:
 			_part(_weapon, Vector3(0, 0, 0.5), Vector3(0.1, 0.1, 0.8), steel)
+	# Trail anchor at the business end of the weapon.
+	const TIPS := {&"sword": 0.95, &"axe": 0.8, &"dagger": 0.52, &"staff": 1.2, &"hammer": 0.6, &"hoe": 0.95, &"spear": 1.45, &"bow": 0.3}
+	_tip = Node3D.new()
+	_tip.position = Vector3(0, 0, float(TIPS.get(_weapon_type, 0.4)))
+	_weapon.add_child(_tip)
 	if _has_shield:
 		_part(_shield, Vector3(-0.05, 0, 0.1), Vector3(0.08, 0.55, 0.45), Color(0.5, 0.32, 0.18))
 		_part(_shield, Vector3(-0.1, 0, 0.1), Vector3(0.04, 0.2, 0.2), _accent)
@@ -432,7 +468,9 @@ func play_attack(anim: StringName, windup: float, active: float, recovery: float
 			strike_pose = Vector3(-0.6, 0.0, 0.2)
 	_attack_tween = create_tween()
 	_attack_tween.tween_method(_set_attack_pose, Vector3(_attack_arm.x, _attack_arm.y, _attack_torso), ready_pose, windup).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_attack_tween.tween_callback(func() -> void: _set_trail(true))
 	_attack_tween.tween_method(_set_attack_pose, ready_pose, strike_pose, maxf(active, 0.05)).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
+	_attack_tween.tween_callback(func() -> void: _set_trail(false))
 	_attack_tween.tween_method(_set_attack_pose, strike_pose, Vector3.ZERO, recovery).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
 
 
@@ -444,6 +482,7 @@ func _set_attack_pose(v: Vector3) -> void:
 func cancel_attack() -> void:
 	if _attack_tween:
 		_attack_tween.kill()
+	_set_trail(false)
 	_attack_arm = Vector2.ZERO
 	_attack_torso = 0.0
 
@@ -472,39 +511,124 @@ func play_stagger() -> void:
 func play_death() -> void:
 	cancel_attack()
 	var tw := create_tween()
-	tw.tween_property(_root, "rotation:z", PI * 0.5, 0.5).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(_root, "position:y", 0.25, 0.5)
+	# Knees buckle, then the body topples over.
+	tw.tween_property(_root, "position:y", -0.12, 0.18).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_root, "rotation:z", PI * 0.5, 0.45).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(_root, "position:y", 0.25, 0.45)
 
 
 func reset_pose() -> void:
 	cancel_attack()
 	_root.rotation = Vector3.ZERO
 	_root.position = Vector3.ZERO
+	_root.scale = Vector3.ONE
 	_torso.rotation = Vector3.ZERO
 
 
+## Jumping/falling and swimming poses (the player calls this every frame).
+func set_air_state(airborne: bool, swimming: bool) -> void:
+	_airborne = airborne
+	_swimming = swimming
+
+
+## Squash on landing (strength 0..1 from the fall speed).
+func play_land(strength: float) -> void:
+	var s := clampf(strength, 0.0, 1.0)
+	var tw := create_tween()
+	tw.tween_property(_root, "scale", Vector3(1.0 + 0.12 * s, 1.0 - 0.18 * s, 1.0 + 0.12 * s), 0.06)
+	tw.tween_property(_root, "scale", Vector3.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Both hands raised forward for `duration` seconds (spells).
+func play_cast(duration: float = 0.5) -> void:
+	_cast_len = maxf(duration, 0.2)
+	_cast_t = _cast_len
+
+
+func _set_trail(on: bool) -> void:
+	if _tip == null or _weapon_type in [&"unarmed", &"bow"]:
+		return
+	if _trail == null or not is_instance_valid(_trail):
+		_trail = WeaponTrail.new()
+		add_child(_trail)
+	_trail.base = _weapon
+	_trail.tip = _tip
+	_trail.color = _accent.lightened(0.3) if _weapon_type == &"staff" else Color(1, 1, 1)
+	_trail.active = on
+
+
 func _process(delta: float) -> void:
+	_time += delta
 	if _flash_time > 0.0:
 		_flash_time -= delta
 		if _flash_time <= 0.0:
 			for p in _parts:
 				p.material_overlay = null
-	var swing := sin(_walk_phase) * 0.9 * minf(_move_amount, 1.0)
-	_leg_l.rotation.x = swing
-	_leg_r.rotation.x = -swing
-	var bob := absf(sin(_walk_phase)) * 0.06 * minf(_move_amount, 1.0)
-	_torso.position.y = 0.72 + bob
+	var m := minf(_move_amount, 1.0)
+	_swim_blend = move_toward(_swim_blend, 1.0 if _swimming else 0.0, delta * 4.0)
+	_air_blend = move_toward(_air_blend, 1.0 if _airborne and not _swimming else 0.0, delta * 8.0)
+	var swing := sin(_walk_phase) * 0.9 * m
+	# Footsteps: one per half cycle while moving on the ground.
+	var sgn := signf(sin(_walk_phase))
+	if m > 0.2 and sgn != _last_step_sign and _air_blend < 0.5 and _swim_blend < 0.5:
+		footstep.emit(sgn > 0.0)
+	_last_step_sign = sgn
+	# Legs with knees: the shin folds back while the leg swings forward.
+	var knee_l := (0.08 + maxf(0.0, -cos(_walk_phase)) * 1.0) * m
+	var knee_r := (0.08 + maxf(0.0, cos(_walk_phase)) * 1.0) * m
+	_leg_l.rotation.x = lerpf(swing, -0.6, _air_blend)
+	_leg_r.rotation.x = lerpf(-swing, 0.35, _air_blend)
+	_shin_l.rotation.x = lerpf(knee_l, 0.9, _air_blend)
+	_shin_r.rotation.x = lerpf(knee_r, 0.25, _air_blend)
+	# Body: bob and lean into the run, breathe when idle.
+	var bob := absf(sin(_walk_phase)) * 0.06 * m
+	var breathe := sin(_time * 2.1) * 0.012 * (1.0 - m)
+	_torso.position.y = 0.72 + bob + breathe
+	_torso.rotation.x = 0.14 * m * minf(_move_amount, 1.4) + 0.05 * _air_blend
 	_torso.rotation.y = _attack_torso
 	_torso.rotation.z = 0.0
-	_arm_l.rotation.x = -swing * 0.8
+	# Idle: an occasional glance around.
+	_look = lerpf(_look, sin(_time * 0.37) * sin(_time * 0.11) * 0.5 * (1.0 - m), 1.0 - exp(-3.0 * delta))
+	_head.rotation.y = _look
+	_head.rotation.x = -sin(_time * 2.1) * 0.02 * (1.0 - m)
+	_arm_l.rotation.x = lerpf(-swing * 0.8, -2.4, _air_blend)
 	_arm_l.rotation.y = 0.0
+	_arm_l.rotation.z = lerpf(-0.04 - absf(breathe) * 2.0, -0.5, _air_blend)
+	_fore_l.rotation.x = -0.25 - 0.35 * m
+	_fore_r.rotation.x = -0.25 - 0.35 * m
 	if _blocking:
 		_arm_l.rotation = Vector3(-1.4, 0.6, 0.0)
 		_arm_r.rotation = Vector3(-1.2, -0.9, 0.0)
+		_fore_l.rotation.x = -0.3
+		_fore_r.rotation.x = -0.2
 		_weapon.rotation = Vector3(0.0, -1.2, 0.0)
 	elif _attack_arm != Vector2.ZERO:
 		_arm_r.rotation = Vector3(_attack_arm.x, _attack_arm.y, 0.0)
+		_fore_r.rotation.x = -0.1
 		_weapon.rotation = Vector3.ZERO
 	else:
-		_arm_r.rotation = Vector3(swing * 0.8 - 0.25, 0.0, 0.0)
-		_weapon.rotation = Vector3(-0.9, 0.0, 0.0)
+		_arm_r.rotation = Vector3(lerpf(swing * 0.8 - 0.25, -2.4, _air_blend), 0.0, lerpf(0.04, 0.5, _air_blend))
+		_weapon.rotation = Vector3(-0.9 + 0.25, 0.0, 0.0)
+	# Casting: both hands forward and up, a little shake of power.
+	if _cast_t > 0.0:
+		_cast_t -= delta
+		var c := clampf(minf(_cast_t, _cast_len - _cast_t) / 0.12, 0.0, 1.0)
+		var shake := sin(_time * 40.0) * 0.04
+		_arm_l.rotation = _arm_l.rotation.lerp(Vector3(-1.5 + shake, 0.35, 0.0), c)
+		_arm_r.rotation = _arm_r.rotation.lerp(Vector3(-1.5 - shake, -0.35, 0.0), c)
+		_fore_l.rotation.x = lerpf(_fore_l.rotation.x, -0.5, c)
+		_fore_r.rotation.x = lerpf(_fore_r.rotation.x, -0.5, c)
+	# Swimming: body flat, crawl strokes, flutter kicks.
+	var free_root := _dodge_tween == null or not _dodge_tween.is_running()
+	if free_root and (_swim_blend > 0.0 or _was_swimming):
+		_root.rotation.x = 1.15 * _swim_blend
+		_root.position.y = 0.55 * _swim_blend
+	_was_swimming = _swim_blend > 0.0
+	if _swim_blend > 0.0:
+		var st := _time * 5.0
+		_arm_l.rotation = _arm_l.rotation.lerp(Vector3(fposmod(st, TAU) - PI, 0.0, -0.2), _swim_blend)
+		_arm_r.rotation = _arm_r.rotation.lerp(Vector3(fposmod(st + PI, TAU) - PI, 0.0, 0.2), _swim_blend)
+		_leg_l.rotation.x = lerpf(_leg_l.rotation.x, sin(st * 2.0) * 0.4, _swim_blend)
+		_leg_r.rotation.x = lerpf(_leg_r.rotation.x, -sin(st * 2.0) * 0.4, _swim_blend)
+		_shin_l.rotation.x = lerpf(_shin_l.rotation.x, 0.15, _swim_blend)
+		_shin_r.rotation.x = lerpf(_shin_r.rotation.x, 0.15, _swim_blend)

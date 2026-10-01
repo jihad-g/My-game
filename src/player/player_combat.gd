@@ -107,6 +107,7 @@ func _start(kind: StringName) -> void:
 	player.face_direction(attack_direction, true)
 	var speed := _speed_mult()
 	player.model.play_attack(attack.animation, attack.windup / speed, attack.active / speed, attack.recovery / speed)
+	Audio.play(&"swing_heavy" if attack.windup > 0.35 else &"swing", -5.0)
 	attack_started.emit(attack)
 
 

@@ -128,6 +128,11 @@ func _blast() -> void:
 			VFX.burst(parent, global_position + Vector3(0, 0.6, 0), radius * 0.8, Color(color.r, color.g, color.b, 0.7), 0.3)
 	if radius >= 2.5:
 		Events.camera_shake.emit(0.25)
+	if style == &"spikes":
+		Audio.play_at(&"rock_break", global_position, -2.0)
+	else:
+		Audio.play_at(&"explosion" if radius >= 2.5 else &"fire", global_position, clampf(radius - 4.0, -8.0, 3.0), 0.1, 70.0)
+		VFX.debris(get_parent(), global_position + Vector3(0, 0.3, 0), color, int(clampf(radius * 4.0, 6.0, 24.0)), 6.0)
 	_hit_all(1.0)
 	if on_blast.is_valid():
 		on_blast.call(global_position)

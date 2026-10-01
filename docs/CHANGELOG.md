@@ -2,6 +2,34 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.10.0] — Milestone 10: Art & Polish
+
+### Added
+- **Audio** (`Audio` autoload, `tools/gen_audio.py`): 71 synthesized sound effects, 10 ambience loops and
+  7 music tracks (all generated, no samples); Music/SFX/Ambience/UI buses; positional sound pool with pitch
+  variation and rate limits; cave reverb; music director (menu, day, night, town, combat, dungeon, boss);
+  ambience mixer; sounds for combat, footsteps (grass/stone/sand/snow/wood), harvesting, magic by element,
+  eating/drinking, crafting, chests, raids, bosses, thunder and every UI button.
+- **Sky & day/night**: sky shader (sun, moon with 8-day phases, stars, clouds), sun/moon arcs, dawn and dusk
+  colours, moonlight by phase.
+- **Weather** (`WeatherSystem`): clear, cloudy, rain, thunderstorms with lightning and thunder, snow, fog,
+  sandstorms; deterministic per 5-minute spell, shaped by the local climate; particles with roof collision;
+  dimmer light, fog, colder air, Wet status; F2 debug key.
+- **Environmental effects** (`AmbientEffects`): fireflies, leaves, pollen, dust, crystal sparkles, swamp
+  mist, drifting snow, cave motes; foliage wind-sway shader; animated water shader.
+- **Animation**: knees/elbows, idle breathing and glances, run lean, jump/fall, landing squash, swimming,
+  casting, death; boar and crawler idle/gait polish; footstep events.
+- **VFX**: weapon trails (`WeaponTrail`), voxel debris/dust/sparks/splash/motes particles (`VFX`).
+- **UI**: pixel-art item icons (`ItemIcons`), panel pop-in with sounds (`UIFx`), low-health vignette, weather
+  and moon phase on the clock, settings screen (`SettingsPanel`, `Settings` autoload, `user://settings.cfg`).
+- Terrain: baked per-corner ambient occlusion.
+- Tests: audio coverage of every referenced sound, icons, weather rules, shaders and AO, settings,
+  animation states, particles, weather/sky/ambient/music in the running game. Screenshot runner `--only=polish`.
+
+### Changed
+- Water and foliage use shaders (global shader parameters `wind_strength`, `wind_dir`, `rain_amount`).
+- Surface fog is driven by weather; the sun light follows a real arc and is clamped above 18°.
+
 ## [0.9.0] — Milestone 9: Massive World
 
 ### Added

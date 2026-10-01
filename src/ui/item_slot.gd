@@ -1,12 +1,13 @@
 class_name ItemSlot
 extends Button
-## One inventory/hotbar slot. Placeholder icon = coloured tile + glyph.
+## One inventory/hotbar slot: pixel-art item icon (ItemIcons), stack count,
+## rarity-coloured border and a tooltip.
 
 signal slot_clicked(index: int, button: MouseButton)
 
 var index: int = -1
 var _icon := Panel.new()
-var _glyph := Label.new()
+var _glyph := TextureRect.new()
 var _count := Label.new()
 var _key := Label.new()
 var _style := StyleBoxFlat.new()
@@ -36,9 +37,13 @@ func _init(p_index: int = -1, key_hint: String = "") -> void:
 	add_child(_icon)
 
 	_glyph.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_glyph.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_glyph.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_glyph.add_theme_font_size_override(&"font_size", 20)
+	_glyph.offset_left = 5
+	_glyph.offset_top = 5
+	_glyph.offset_right = -5
+	_glyph.offset_bottom = -5
+	_glyph.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_glyph.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_glyph.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_glyph)
 
@@ -64,16 +69,18 @@ func set_stack(stack, selected: bool) -> void:
 	var item: ItemData = ItemDB.get_item(stack.id) if stack != null else null
 	if item == null:
 		_icon.visible = false
-		_glyph.text = ""
+		_glyph.texture = null
 		_count.text = ""
 		tooltip_text = ""
 		_style.border_color = UITheme.GOLD if selected else Color(0.4, 0.36, 0.3)
 	else:
+		# Soft rarity glow behind the icon.
 		_icon.visible = true
-		_icon_style.bg_color = item.icon_color
-		_icon_style.border_color = item.icon_color.darkened(0.4)
-		_icon_style.set_border_width_all(2)
-		_glyph.text = item.icon_glyph
+		var rc := item.rarity_color()
+		_icon_style.bg_color = Color(rc.r, rc.g, rc.b, 0.12 if item.rarity <= ItemData.Rarity.COMMON else 0.22)
+		_icon_style.border_color = Color(0, 0, 0, 0)
+		_icon_style.set_border_width_all(0)
+		_glyph.texture = ItemIcons.get_icon(item)
 		_count.text = str(stack.count) if stack.count > 1 else ""
 		_style.border_color = UITheme.GOLD if selected else item.rarity_color().darkened(0.25)
 		var lines := PackedStringArray([item.display_name, "%s · %s" % [item.rarity_name(), item.category_name()]])

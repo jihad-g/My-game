@@ -31,7 +31,11 @@ func receive_hit(info: DamageInfo) -> void:
 		power += tier
 	hits_left -= power
 	chunk.pulse_prop(prop_index)
+	var axe := data.tool_kind != &"pickaxe"
+	Audio.play_at(&"chop" if axe else &"mine", global_position + Vector3(0, 1, 0), -3.0)
+	VFX.debris(get_parent(), global_position + Vector3(0, 0.9, 0), data_color(), 6 if axe else 8)
 	if hits_left <= 0:
+		Audio.play_at(&"tree_fall" if axe and data.collision_height > 2.0 else &"rock_break", global_position, -2.0)
 		chunk.harvest_prop(prop_index, null)
 
 
@@ -43,6 +47,14 @@ func get_interact_text() -> String:
 	return "%s %s" % [data.interact_text, data.display_name]
 
 
+## Debris colour for hit effects (wood for trees, stone for rocks).
+func data_color() -> Color:
+	if data.tool_kind == &"pickaxe":
+		return Color(0.55, 0.55, 0.58)
+	return Color(0.55, 0.38, 0.22)
+
+
 func interact(player: Node) -> void:
 	if is_interactable() and is_instance_valid(chunk):
+		Audio.play(&"gather", -6.0)
 		chunk.harvest_prop(prop_index, player)
