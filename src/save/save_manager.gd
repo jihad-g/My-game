@@ -3,7 +3,10 @@ extends Node
 ##
 ## Layout on disk (user:// = the OS app-data folder, see README):
 ##   user://worlds/<world_id>/world.json   metadata: name, seed, versions, times
-##   user://worlds/<world_id>/save.json    game state: world changes, player, placed objects
+##   user://worlds/<world_id>/save.json    game state: player, placed objects, discoveries
+##   user://worlds/<world_id>/regions/      per-chunk world changes (felled trees, mined
+##                                          ores, killed spawn slots) in compressed
+##                                          32x32-chunk region files (RegionStore)
 ##
 ## Only *changes* to the procedural world are saved (felled trees, mined ores,
 ## killed spawn slots, placed objects...). Terrain is regenerated from the seed,
@@ -14,7 +17,9 @@ extends Node
 
 signal world_saved(world_id: String)
 
-const SAVE_VERSION := 1
+## 2 = per-chunk changes moved from save.json into region files (Milestone 9).
+const SAVE_VERSION := 2
+const REGIONS_DIR := "regions"
 const META_FILE := "world.json"
 const SAVE_FILE := "save.json"
 
@@ -70,7 +75,7 @@ func create_world(world_name: String, seed_value: int, class_id: StringName = Cl
 		"seed": str(seed_value),
 		"class": String(class_id),
 		"save_version": SAVE_VERSION,
-		"generator_version": 2,
+		"generator_version": 3,
 		"game_version": ProjectSettings.get_setting("application/config/version", "0"),
 		"created": now,
 		"last_played": now,
@@ -81,6 +86,7 @@ func create_world(world_name: String, seed_value: int, class_id: StringName = Cl
 	pending = {}
 	new_character_class = class_id
 	GameState.reset(seed_value)
+	GameState.set_region_directory(regions_path(id))
 	_session_start_msec = Time.get_ticks_msec()
 	return id
 
@@ -96,6 +102,7 @@ func load_world(id: String) -> bool:
 	current_world_id = id
 	new_character_class = StringName(meta.get("class", ClassRegistry.DEFAULT_CLASS))
 	GameState.reset(GameState.parse_seed(meta.get("seed", GameState.DEFAULT_SEED)))
+	GameState.set_region_directory(regions_path(id))
 	pending = {}
 	var save = _read_json_with_backup(_save_path(id))
 	if save is Dictionary:
@@ -120,6 +127,9 @@ func start_transient(seed_value: int, class_id: StringName = ClassRegistry.DEFAU
 func save_world(world: World) -> bool:
 	if not is_persistent() or world == null:
 		return false
+	# Region files first: save.json never refers to changes that aren't on disk.
+	if not GameState.regions.flush():
+		return false
 	var data := {
 		"save_version": SAVE_VERSION,
 		"saved_at": Time.get_unix_time_from_system(),
@@ -141,14 +151,28 @@ func save_world(world: World) -> bool:
 
 func delete_world(id: String) -> bool:
 	var path := "%s/%s" % [worlds_dir, id]
+	if not DirAccess.dir_exists_absolute(path):
+		return false
+	if id == current_world_id:
+		current_world_id = ""
+		GameState.set_region_directory("")
+	return _remove_tree(path)
+
+
+func _remove_tree(path: String) -> bool:
 	var dir := DirAccess.open(path)
 	if dir == null:
 		return false
+	for sub in dir.get_directories():
+		_remove_tree("%s/%s" % [path, sub])
 	for f in dir.get_files():
 		dir.remove(f)
-	if id == current_world_id:
-		current_world_id = ""
 	return DirAccess.remove_absolute(path) == OK
+
+
+## Folder of a world's region files.
+func regions_path(id: String) -> String:
+	return "%s/%s/%s" % [worlds_dir, id, REGIONS_DIR]
 
 
 # --- Helpers ----------------------------------------------------------------------------
@@ -179,7 +203,8 @@ func _unique_id(world_name: String) -> String:
 ## Upgrades older save dictionaries to the current format.
 func _migrate(save: Dictionary) -> Dictionary:
 	var v := int(save.get("save_version", 1))
-	# v1 is the first format; future versions add steps here.
+	# v1 -> v2: removed_props / enemy_deaths inside game_state are imported into
+	# the region store by GameState.from_dict and written out on the next save.
 	if v > SAVE_VERSION:
 		push_warning("SaveManager: save is from a newer game version (%d)" % v)
 	return save

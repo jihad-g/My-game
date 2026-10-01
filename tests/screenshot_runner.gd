@@ -31,6 +31,10 @@ func _ready() -> void:
 		await _advanced_showcase()
 		get_tree().quit()
 		return
+	if "--only=massive" in OS.get_cmdline_user_args():
+		await _massive_showcase()
+		get_tree().quit()
+		return
 	if "--only=explore" in OS.get_cmdline_user_args():
 		await _explore_showcase()
 		get_tree().quit()
@@ -993,3 +997,49 @@ func _blueprint_showcase() -> void:
 	await _shot("94_blueprints_built")
 	world.queue_free()
 	await _wait(5)
+
+
+## Milestone 9 showcase: horizon terrain, streaming stats, the far reaches of the world.
+func _massive_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	world.hud._help.visible = false
+	world.day_night.hour = 10.0
+	var spots := [["70_horizon_spawn", p.global_position]]
+	# A mountain top with a view, and a spot far out towards the world's edge.
+	var gen := world.generator
+	var best := Vector2i.ZERO
+	var best_h := -999
+	for k in 400:
+		var c := Vector2i(roundi(cos(k * 0.37) * k * 6.0), roundi(sin(k * 0.37) * k * 6.0))
+		var h := gen.get_height_blocks(c.x, c.y)
+		if h > best_h and h < 90:
+			best_h = h
+			best = c
+	spots.append(["71_horizon_mountain", Vector3(best.x + 0.5, 0, best.y + 0.5)])
+	var edge := float(TerrainGenerator.WORLD_EDGE_START_M) - 300.0
+	var land := gen.find_spawn_column(Vector2i(int(edge), int(edge)), [], 1500)
+	spots.append(["72_far_reaches", Vector3(land.x + 0.5, 0, land.y + 0.5)])
+	spots.append(["73_world_edge", Vector3(TerrainGenerator.WORLD_EDGE_START_M + 420.0, 0, land.y + 0.5)])
+	for spot in spots:
+		await _teleport(world, spot[1])
+		var frames := 0
+		while world.chunk_manager.far.pending_count() > 0 and frames < 3000:
+			await get_tree().process_frame
+			frames += 1
+		world.camera_rig._target_distance = 42.0
+		world.camera_rig._target_pitch = 25.0
+		world.camera_rig._target_yaw = 90.0 if spot[0] == "73_world_edge" else 45.0
+		await _sec(3.0)
+		await _shot(spot[0])
+	world.camera_rig._target_pitch = 52.0
+	world.camera_rig._target_distance = 24.0
+	world.hud._debug.visible = true
+	await _sec(2.0)
+	await _shot("74_streaming_debug")

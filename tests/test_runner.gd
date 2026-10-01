@@ -64,6 +64,12 @@ func _ready() -> void:
 	await _run_async(&"test_m7_events")
 	_run(&"test_m8_blueprint_format")
 	await _run_async(&"test_m8_construction")
+	_run(&"test_m9_world_bounds")
+	_run(&"test_m9_world_sampling")
+	_run(&"test_m9_far_terrain")
+	_run(&"test_m9_region_store")
+	await _run_async(&"test_m9_save_regions")
+	await _run_async(&"test_m9_streaming")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -3671,3 +3677,302 @@ func test_m8_construction() -> void:
 	SaveManager.delete_world(wid)
 	SaveManager.worlds_dir = saved_dir
 	SaveManager.start_transient(GameState.DEFAULT_SEED)
+
+
+# --- Milestone 9: massive world ---------------------------------------------------------
+
+func test_m9_world_bounds() -> void:
+	check(TerrainGenerator.WORLD_CHUNK_COUNT == 3003289, "world has 1733 x 1733 = 3,003,289 chunks")
+	check(TerrainGenerator.WORLD_CHUNK_COUNT >= 3000000, "world reaches the 3-million-chunk target")
+	check(TerrainGenerator.is_chunk_in_world(Vector2i(866, -866)) and not TerrainGenerator.is_chunk_in_world(Vector2i(867, 0)),
+		"chunk bounds are +-866")
+	var c := TerrainGenerator.clamp_to_world(Vector3(20000, 5, -30000))
+	check(c.x < TerrainGenerator.WORLD_LIMIT_M and c.z > -TerrainGenerator.WORLD_LIMIT_M and c.y == 5.0, "positions clamp to the world square")
+	var gen := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	# Past WORLD_EDGE_END_M everything is deep ocean.
+	var dry := 0
+	for k in 240:
+		var a := TAU * k / 240.0
+		var r := TerrainGenerator.WORLD_EDGE_END_M + 50 + (k % 7) * 40
+		var x := roundi(clampf(cos(a) * r * 1.5, -r, r))
+		var z := roundi(clampf(sin(a) * r * 1.5, -r, r))
+		var smp := gen.sample_column(x, z)
+		if TerrainGenerator.unpack_height(smp) >= TerrainGenerator.SEA_LEVEL or gen.biomes[TerrainGenerator.unpack_biome(smp)].role != BiomeData.Role.OCEAN:
+			dry += 1
+	check(dry == 0, "the world edge is ocean all around (%d dry columns)" % dry)
+	# Generation is deterministic in the far corners (fresh generator, other order).
+	var gen2 := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var corners := [Vector2i(866, 866), Vector2i(-866, -866), Vector2i(866, -866), Vector2i(-866, 866), Vector2i(0, 866), Vector2i(-700, 650)]
+	var same := true
+	for cc: Vector2i in corners:
+		var d1 := gen.generate_chunk(cc, 0)
+		var d2 := gen2.generate_chunk(cc, 0)
+		same = same and d1.heights == d2.heights and d1.vertices == d2.vertices and d1.colors == d2.colors and d1.props.size() == d2.props.size()
+	check(same, "corner chunks generate identically")
+	# Float precision at the far reaches: 1 mm steps still resolve.
+	var far := float(TerrainGenerator.WORLD_LIMIT_M)
+	var v := Vector3(far, 0, far) + Vector3(0.001, 0, 0.001)
+	check(v.x != far, "float positions resolve 1 mm at %d m" % int(far))
+
+
+func test_m9_world_sampling() -> void:
+	var gen := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 909
+	var land := 0
+	var seen := {}
+	var bad := 0
+	var n := 1500
+	var inner := TerrainGenerator.WORLD_EDGE_START_M / TerrainGenerator.CHUNK_SIZE
+	for i in n:
+		var c := Vector2i(rng.randi_range(-inner, inner), rng.randi_range(-inner, inner))
+		var smp := gen.sample_column(c.x * 16 + 8, c.y * 16 + 8)
+		var h := TerrainGenerator.unpack_height(smp)
+		var b := TerrainGenerator.unpack_biome(smp)
+		if h < -80 or h > 220 or b < 0 or b >= gen.biomes.size():
+			bad += 1
+		if h >= TerrainGenerator.SEA_LEVEL:
+			land += 1
+		seen[b] = true
+	check(bad == 0, "random columns across the world are sane (%d bad)" % bad)
+	var lf := float(land) / n
+	check(lf > 0.2 and lf < 0.9, "land/sea mix across the world (%.0f%% land)" % (lf * 100.0))
+	check(seen.size() >= 9, "most biomes appear across the world (%d)" % seen.size())
+	var ok := true
+	var t0 := Time.get_ticks_usec()
+	for i in 24:
+		var c := Vector2i(rng.randi_range(-866, 866), rng.randi_range(-866, 866))
+		var d := gen.generate_chunk(c, 0)
+		if d.vertices.is_empty() or d.indices.size() % 3 != 0 or d.collision_faces.size() != d.indices.size():
+			ok = false
+		for vtx in d.vertices:
+			if not vtx.is_finite():
+				ok = false
+				break
+	check(ok, "random LOD0 chunks anywhere build valid meshes (%.1f ms each)" % ((Time.get_ticks_usec() - t0) / 24000.0))
+
+
+func test_m9_far_terrain() -> void:
+	var gen := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var ft := FarTerrain.new()
+	ft.setup(gen)
+	var t := Vector2i(3, -2)
+	var open := ft.build_tile(t, Vector2i(9999, 9999), 8)
+	check(not open.holed, "tile far from the player has no hole")
+	var tops := 0
+	var verts: PackedVector3Array = open.terrain[Mesh.ARRAY_VERTEX]
+	var norms: PackedVector3Array = open.terrain[Mesh.ARRAY_NORMAL]
+	for i in range(0, norms.size(), 4):
+		if norms[i] == Vector3.UP and verts[i].y > TerrainGenerator.WATER_Y + 0.01:
+			tops += 1
+	var water := (open.water[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() / 4
+	check(tops + water >= FarTerrain.CELLS * FarTerrain.CELLS - 4, "full tile covers every cell (%d land + %d water)" % [tops, water])
+	var hts: PackedInt32Array = open.heights
+	var k := 3 * FarTerrain.W + 5
+	var wx := t.x * FarTerrain.TILE_SIZE + 4 * FarTerrain.STEP + FarTerrain.STEP / 2
+	var wz := t.y * FarTerrain.TILE_SIZE + 2 * FarTerrain.STEP + FarTerrain.STEP / 2
+	check(hts[k] == gen.get_height_blocks(wx, wz), "far tile heights follow the real terrain")
+	var center_chunk := Vector2i(t.x * 4 + 1, t.y * 4 + 1)
+	var cut := ft.build_tile(t, center_chunk, 1)
+	check(cut.holed and (cut.terrain[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() < verts.size(), "cells under near chunks are cut out")
+	var cached := ft.build_tile(t, Vector2i(9999, 9999), 8, [open.heights, open.biomes])
+	check(cached.terrain[Mesh.ARRAY_VERTEX] == open.terrain[Mesh.ARRAY_VERTEX], "re-meshing from cached heights is identical")
+	var dr := FarTerrain.tile_distance_range(Vector2i(0, 0), Vector2i(0, 0))
+	check(dr.x == 0.0 and is_equal_approx(dr.y, Vector2(3, 3).length()), "tile distance range")
+	ft.free()
+
+
+func test_m9_region_store() -> void:
+	var dir := "user://test_regions"
+	_rm_tree(dir)
+	var rs := RegionStore.new()
+	rs.directory = dir
+	rs.mark_prop(Vector2i(1, 1), 0, 5, 10.0)
+	rs.mark_prop(Vector2i(-40, 70), 0, 9, 11.0)  # region (-2, 2)
+	rs.mark_prop(Vector2i(1, 1), 1, 5, 12.0)  # underground
+	rs.mark_death("33,-1:4:0", 20.0)
+	rs.mark_death("poi_7_3:g0", 21.0)
+	check(RegionStore.region_of(Vector2i(-40, 70), 0) == Vector3i(-2, 2, 0), "negative chunks map to the right region")
+	check(RegionStore.region_of_slot("poi_7_3:g0") == RegionStore.MISC, "non-chunk slot keys use the misc region")
+	check(rs.dirty_count() == 5, "changes mark regions dirty (%d)" % rs.dirty_count())
+	check(rs.flush() and rs.file_count() == 5 and rs.dirty_count() == 0, "flush writes one compressed file per region (%d)" % rs.file_count())
+	var rs2 := RegionStore.new()
+	rs2.directory = dir
+	check(rs2.loaded_count() == 0, "a fresh store loads nothing up front")
+	check(is_equal_approx(rs2.prop_time(Vector2i(-40, 70), 0, 9), 11.0) and is_equal_approx(rs2.prop_time(Vector2i(1, 1), 1, 5), 12.0)
+		and rs2.prop_time(Vector2i(1, 1), 0, 6) < 0.0, "props read back from region files")
+	check(is_equal_approx(rs2.death_time("33,-1:4:0"), 20.0) and is_equal_approx(rs2.death_time("poi_7_3:g0"), 21.0), "spawn slots read back")
+	check(rs2.loaded_count() == 5, "only touched regions are loaded (%d)" % rs2.loaded_count())
+	rs2.erase_prop(Vector2i(-40, 70), 0, 9)
+	rs2.flush()
+	check(rs2.file_count() == 4 and not FileAccess.file_exists(rs2.file_path(Vector3i(-2, 2, 0))), "emptied regions delete their file")
+	# Bounded memory: dirty regions stay until flushed, clean ones are evicted.
+	var rs3 := RegionStore.new()
+	rs3.directory = dir
+	rs3.max_loaded = 4
+	for i in 30:
+		rs3.mark_prop(Vector2i(i * 32, 500), 0, i, 1.0)
+	check(rs3.loaded_count() == 30, "unsaved regions are never dropped")
+	rs3.flush()
+	check(rs3.loaded_count() <= 4, "clean regions evicted after a flush (%d)" % rs3.loaded_count())
+	for i in 60:
+		rs3.prop_time(Vector2i(i * 32, -900), 0, 1)
+	check(rs3.loaded_count() <= 4 + 16, "reading many regions stays bounded (%d)" % rs3.loaded_count())
+	check(is_equal_approx(rs3.prop_time(Vector2i(29 * 32, 500), 0, 29), 1.0), "evicted regions reload from disk")
+	var f := FileAccess.open(rs3.file_path(RegionStore.region_of(Vector2i(0, 500), 0)), FileAccess.READ)
+	check(f != null and f.get_length() < 400, "region files are small (%d bytes)" % (f.get_length() if f else -1))
+	f = null
+	# Corrupt files are ignored, not fatal.
+	var bad := FileAccess.open(rs3.file_path(Vector3i(50, 50, 0)), FileAccess.WRITE)
+	bad.store_string("not a region")
+	bad.close()
+	check(rs3.prop_time(Vector2i(50 * 32, 50 * 32), 0, 1) < 0.0, "corrupt region file reads as empty")
+	# Memory-only stores don't grow from reads.
+	var mem := RegionStore.new()
+	for i in 50:
+		mem.prop_time(Vector2i(i * 40, 0), 0, 1)
+	check(mem.loaded_count() == 0, "memory-only store doesn't grow from reads")
+	var inline := RegionStore.new()
+	check(inline.import_inline({"3,4,0": {"17": 5.0}, "-9,2": {"1": 6.0}}, {"1,1:0:0": 7.0}) == 3, "legacy dictionaries import")
+	check(is_equal_approx(inline.prop_time(Vector2i(-9, 2), 0, 1), 6.0) and is_equal_approx(inline.death_time("1,1:0:0"), 7.0), "imported data queryable")
+	var back := inline.to_inline()
+	check((back.removed_props as Dictionary).has("3,4,0") and (back.enemy_deaths as Dictionary).has("1,1:0:0"), "inline form round trips")
+	_rm_tree(dir)
+
+
+func _rm_tree(path: String) -> void:
+	var d := DirAccess.open(path)
+	if d == null:
+		return
+	for sub in d.get_directories():
+		_rm_tree(path + "/" + sub)
+	for f in d.get_files():
+		d.remove(f)
+	DirAccess.remove_absolute(path)
+
+
+func test_m9_save_regions() -> void:
+	var saved_dir := SaveManager.worlds_dir
+	SaveManager.worlds_dir = "user://test_worlds_m9"
+	for w in SaveManager.list_worlds():
+		SaveManager.delete_world(w.id)
+	var id := SaveManager.create_world("Region World", 77001)
+	var world: World = await _boot_world()
+	check(world.is_ready, "persistent world boots")
+	GameState.mark_prop_removed(Vector2i(500, -300), 42)
+	GameState.mark_prop_removed(Vector2i(2, 3), 7, 1)
+	GameState.mark_enemy_killed("500,-300:2:1")
+	check(SaveManager.save_world(world), "save with region files")
+	var rdir := SaveManager.regions_path(id)
+	check(DirAccess.dir_exists_absolute(rdir) and GameState.regions.file_count() >= 2, "region files written (%d)" % GameState.regions.file_count())
+	var save_text := FileAccess.get_file_as_string("%s/%s/save.json" % [SaveManager.worlds_dir, id])
+	check(not save_text.contains("removed_props") and save_text.contains("\"regions\""), "save.json no longer carries per-chunk changes")
+	world.queue_free()
+	await get_tree().process_frame
+	check(SaveManager.load_world(id), "load world")
+	check(GameState.regions.loaded_count() == 0, "regions load lazily")
+	check(GameState.is_prop_removed(Vector2i(500, -300), 42, 0.0) and GameState.is_prop_removed(Vector2i(2, 3), 7, 0.0, 1),
+		"removed props survive save/load")
+	check(not GameState.can_spawn_slot("500,-300:2:1", 99999.0), "killed slot survives save/load")
+	# Legacy (v1) save: changes inline in save.json are migrated to region files.
+	var legacy_id := SaveManager.create_world("Legacy World", 77002)
+	var v1 := {"save_version": 1, "game_state": {"world_seed": "77002", "world_time": 50.0,
+		"removed_props": {"10,-4,0": {"3": 40.0}}, "enemy_deaths": {"10,-4:1:0": 45.0}}}
+	var f := FileAccess.open("%s/%s/save.json" % [SaveManager.worlds_dir, legacy_id], FileAccess.WRITE)
+	f.store_string(JSON.stringify(v1))
+	f.close()
+	check(SaveManager.load_world(legacy_id), "v1 save loads")
+	check(GameState.is_prop_removed(Vector2i(10, -4), 3, 0.0) and not GameState.can_spawn_slot("10,-4:1:0", 99999.0), "v1 changes imported")
+	SaveManager.pending = {}
+	world = await _boot_world()
+	check(SaveManager.save_world(world), "migrated save written")
+	check(FileAccess.file_exists(GameState.regions.file_path(RegionStore.region_of(Vector2i(10, -4), 0))), "v1 changes now in a region file")
+	world.queue_free()
+	await get_tree().process_frame
+	check(SaveManager.delete_world(legacy_id) and not DirAccess.dir_exists_absolute("%s/%s" % [SaveManager.worlds_dir, legacy_id]),
+		"delete_world removes region folders too")
+	SaveManager.delete_world(id)
+	SaveManager.worlds_dir = saved_dir
+	SaveManager.start_transient(GameState.DEFAULT_SEED)
+
+
+func test_m9_streaming() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world: World = await _boot_world()
+	var cm := world.chunk_manager
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	var frames := 0
+	while (cm.pending_count() > 0 or cm.far.pending_count() > 0) and frames < 4000:
+		await get_tree().process_frame
+		frames += 1
+	var s := cm.get_debug_stats()
+	print("   stats: %s" % str(s))
+	check(s.far_tiles >= 100, "horizon tiles around the player (%d)" % s.far_tiles)
+	check(s.lod2 > 0 and s.threads >= 2, "LOD rings + worker threads")
+	check(world.camera_rig.camera.far >= 600.0, "camera sees out to the horizon")
+	# Cache: leave and come back -> the chunks come from memory.
+	var home := p.global_position
+	var hits0: int = s.cache_hits
+	p.frozen = true
+	p.global_position = home + Vector3(600, 0, 0)
+	await get_tree().process_frame
+	while not cm.is_near_area_ready() and frames < 8000:
+		await get_tree().process_frame
+		frames += 1
+	p.global_position = home
+	await get_tree().process_frame
+	var back_frames := 0
+	while not cm.is_near_area_ready() and back_frames < 2000:
+		await get_tree().process_frame
+		back_frames += 1
+	var hits := int(cm.get_debug_stats().cache_hits) - hits0
+	check(hits >= 30, "returning reuses cached chunk data (%d hits, %d frames)" % [hits, back_frames])
+	# Long fast journey: memory and node counts stay bounded, prefetch runs ahead.
+	var objects0 := Performance.get_monitor(Performance.OBJECT_COUNT)
+	var max_loaded := 0
+	var max_children := 0
+	var max_cache := 0.0
+	var max_far := 0
+	var speed := 70.0
+	var dist := 0.0
+	var dir := Vector3(1, 0, 0.35).normalized()
+	var last := Time.get_ticks_msec()
+	while dist < 1800.0:
+		await get_tree().process_frame
+		var dt := minf(0.05, (Time.get_ticks_msec() - last) / 1000.0)
+		last = Time.get_ticks_msec()
+		dist += speed * dt
+		var pos := home + dir * dist
+		pos.y = world.get_ground_height(pos) + 1.0
+		p.global_position = pos
+		var st := cm.get_debug_stats()
+		max_loaded = maxi(max_loaded, st.loaded)
+		max_children = maxi(max_children, cm.get_child_count())
+		max_cache = maxf(max_cache, st.cache_mb)
+		max_far = maxi(max_far, st.far_tiles)
+	var s2 := cm.get_debug_stats()
+	print("   after journey: %s" % str(s2))
+	check(cm.focus_velocity().length() > 20.0, "travel speed tracked (%.0f m/s)" % cm.focus_velocity().length())
+	check(s2.prefetched > 0, "prefetch generated chunks ahead (%d)" % s2.prefetched)
+	check(max_loaded <= 360, "loaded chunks bounded during travel (max %d)" % max_loaded)
+	check(max_children <= 420, "chunk nodes bounded by the pool (max %d)" % max_children)
+	check(max_cache <= cm.cache_budget_mb * 1.05, "data cache within its budget (max %.1f MB)" % max_cache)
+	check(max_far <= 260, "far tiles bounded (max %d)" % max_far)
+	check(s2.evicted > 0 or s2.cache_mb < cm.cache_budget_mb, "cache evicts old data")
+	check(s2.prewarms >= 2, "towns/POIs prewarmed ahead of travel (%d)" % s2.prewarms)
+	frames = 0
+	while not cm.is_near_area_ready() and frames < 3000:
+		await get_tree().process_frame
+		frames += 1
+	check(cm.is_near_area_ready(), "area ready after the journey")
+	var growth := Performance.get_monitor(Performance.OBJECT_COUNT) - objects0
+	check(growth < 6000, "object count stays bounded (+%d)" % growth)
+	# The edge of the world stops the player.
+	p.frozen = false
+	p.global_position = Vector3(TerrainGenerator.WORLD_LIMIT_M + 400.0, 5.0, 200.0)
+	await _frames(3)
+	check(p.global_position.x < TerrainGenerator.WORLD_LIMIT_M, "player kept inside the world (x %.0f)" % p.global_position.x)
+	world.queue_free()
+	await get_tree().process_frame

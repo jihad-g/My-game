@@ -3,18 +3,16 @@ extends Node
 ##
 ## Only *modifications* to the procedural world are stored (removed props, killed
 ## spawn slots). Everything else is regenerated deterministically from the seed.
-## All containers are plain dictionaries so a future save system can serialize
-## them directly (see to_dict / from_dict).
+## Per-chunk changes live in a RegionStore (region files next to save.json,
+## Milestone 9); the rest is plain dictionaries serialized by to_dict / from_dict.
 
 const DEFAULT_SEED := 20250101
 
 var world_seed: int = DEFAULT_SEED
 ## Total simulated game time in seconds since the world was created.
 var world_time: float = 0.0
-## Vector3i(chunk.x, chunk.y, layer) -> { prop_index:int -> world_time when removed }
-var removed_props: Dictionary = {}
-## Spawn slot key (String) -> world_time when the occupant was killed.
-var enemy_deaths: Dictionary = {}
+## Removed props and killed spawn slots, by region (see RegionStore).
+var regions := RegionStore.new()
 ## Biome id (String) -> world_time of first discovery.
 var discovered_biomes: Dictionary = {}
 ## Place key (String, e.g. "cave:x,z") -> world_time of first discovery.
@@ -53,28 +51,18 @@ static func parse_seed(v: Variant) -> int:
 
 # --- Props -----------------------------------------------------------------
 
-static func _prop_key(chunk: Vector2i, layer: int) -> Vector3i:
-	return Vector3i(chunk.x, chunk.y, layer)
-
-
 func mark_prop_removed(chunk: Vector2i, prop_index: int, layer: int = 0) -> void:
-	var key := _prop_key(chunk, layer)
-	if not removed_props.has(key):
-		removed_props[key] = {}
-	removed_props[key][prop_index] = world_time
+	regions.mark_prop(chunk, layer, prop_index, world_time)
 
 
 ## True if the prop is currently removed. Props with a regrow time come back
 ## once enough world time has passed (their record is then deleted).
 func is_prop_removed(chunk: Vector2i, prop_index: int, regrow_time: float, layer: int = 0) -> bool:
-	var key := _prop_key(chunk, layer)
-	var chunk_dict: Dictionary = removed_props.get(key, {})
-	if not chunk_dict.has(prop_index):
+	var t := regions.prop_time(chunk, layer, prop_index)
+	if t < 0.0:
 		return false
-	if regrow_time > 0.0 and world_time - float(chunk_dict[prop_index]) >= regrow_time:
-		chunk_dict.erase(prop_index)
-		if chunk_dict.is_empty():
-			removed_props.erase(key)
+	if regrow_time > 0.0 and world_time - t >= regrow_time:
+		regions.erase_prop(chunk, layer, prop_index)
 		return false
 	return true
 
@@ -99,60 +87,58 @@ func discover_biome(id: StringName) -> bool:
 
 func mark_enemy_killed(slot_key: String) -> void:
 	if slot_key != "":
-		enemy_deaths[slot_key] = world_time
+		regions.mark_death(slot_key, world_time)
 
 
 func can_spawn_slot(slot_key: String, respawn_time: float) -> bool:
-	if not enemy_deaths.has(slot_key):
+	var t := regions.death_time(slot_key)
+	if t < 0.0:
 		return true
-	if world_time - float(enemy_deaths[slot_key]) >= respawn_time:
-		enemy_deaths.erase(slot_key)
+	if world_time - t >= respawn_time:
+		regions.erase_death(slot_key)
 		return true
 	return false
 
 
-# --- Serialization (used by the future save system) ------------------------
+# --- Serialization (SaveManager) -------------------------------------------
 
+## Region files hold the per-chunk changes of saved worlds; transient worlds
+## (no region directory) keep them inline as before.
 func to_dict() -> Dictionary:
-	var props := {}
-	for key: Vector3i in removed_props:
-		props["%d,%d,%d" % [key.x, key.y, key.z]] = removed_props[key].duplicate()
-	return {
+	var d := {
 		# Seeds are 64-bit; JSON numbers are doubles, so store as text.
 		"world_seed": str(world_seed),
 		"world_time": world_time,
-		"removed_props": props,
-		"enemy_deaths": enemy_deaths.duplicate(),
 		"discovered_biomes": discovered_biomes.duplicate(),
 		"discovered_places": discovered_places.duplicate(),
 	}
+	if regions.directory == "":
+		d.merge(regions.to_inline())
+	else:
+		d["regions"] = {"format": RegionStore.FORMAT, "region_chunks": RegionStore.REGION_CHUNKS}
+	return d
 
 
+## Loads the dictionary part. Inline changes (transient worlds, or saves made
+## before Milestone 9) are imported into the region store.
 func from_dict(data: Dictionary) -> void:
 	world_seed = parse_seed(data.get("world_seed", DEFAULT_SEED))
 	world_time = float(data.get("world_time", 0.0))
-	removed_props.clear()
-	var props: Dictionary = data.get("removed_props", {})
-	for key: String in props:
-		var parts := key.split(",")
-		var layer := parts[2].to_int() if parts.size() > 2 else 0
-		var entries := {}
-		var raw: Dictionary = props[key]
-		for idx in raw:
-			entries[int(idx)] = float(raw[idx])
-		removed_props[Vector3i(parts[0].to_int(), parts[1].to_int(), layer)] = entries
-	enemy_deaths.clear()
-	var deaths: Dictionary = data.get("enemy_deaths", {})
-	for k in deaths:
-		enemy_deaths[String(k)] = float(deaths[k])
+	regions.clear_memory()
+	regions.import_inline(data.get("removed_props", {}), data.get("enemy_deaths", {}))
 	discovered_biomes = (data.get("discovered_biomes", {}) as Dictionary).duplicate()
 	discovered_places = (data.get("discovered_places", {}) as Dictionary).duplicate()
+
+
+## Points the region store at a world folder ("" = memory only).
+func set_region_directory(path: String) -> void:
+	regions.directory = path
+	regions.clear_memory()
 
 
 func reset(new_seed: int) -> void:
 	world_seed = new_seed
 	world_time = 0.0
-	removed_props.clear()
-	enemy_deaths.clear()
+	regions = RegionStore.new()
 	discovered_biomes.clear()
 	discovered_places.clear()

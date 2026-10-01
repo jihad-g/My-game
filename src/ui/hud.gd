@@ -961,7 +961,15 @@ func _update_debug() -> void:
 		var s := world.chunk_manager.get_debug_stats()
 		lines.append("Chunks %d (L0 %d / L1 %d / L2 %d)" % [s.loaded, s.lod0, s.lod1, s.lod2])
 		lines.append("Gen pending %d queued %d pooled %d" % [s.pending, s.queued, s.pooled])
-		lines.append("Generated %d (discarded %d)" % [s.generated, s.discarded])
+		lines.append("Generated %d (discarded %d) · %d worker threads" % [s.generated, s.discarded, s.threads])
+		lines.append("Cache %d chunks %.1f MB · hits %d · evicted %d" % [s.cache, s.cache_mb, s.cache_hits, s.evicted])
+		lines.append("Prefetch queued %d done %d · speed %.1f m/s" % [s.prefetch_queued, s.prefetched,
+			world.chunk_manager.focus_velocity().length()])
+		lines.append("Build %.2f ms avg (max %.1f) · far tiles %d (pending %d)" % [s.apply_ms_avg, s.apply_ms_max,
+			s.far_tiles, s.far_pending])
+		var rs := GameState.regions
+		lines.append("Regions %d loaded (%d dirty, %d files) · world %d / %d chunks" % [rs.loaded_count(), rs.dirty_count(),
+			rs.file_count(), TerrainGenerator.WORLD_RADIUS_CHUNKS, TerrainGenerator.WORLD_CHUNK_COUNT])
 		lines.append("Enemies %d · Pickups %d" % [world.spawner.active_count(), world.pickup_pool.active_count()])
 		lines.append("Air %.1f°C (debug offset %+d)" % [world.get_air_temperature(p), roundi(world.debug_temperature_offset)])
 		var climate := world.generator.get_climate(p)

@@ -105,6 +105,26 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 9 — Massive World  ✅ (Phase 7)
+
+- [x] World size: chunks −866..+866 = 1733 × 1733 = **3,003,289 chunks** (27.7 × 27.7 km); continents sink into an edge ocean from 12.8 km; the player is kept inside ±13,856 m
+- [x] Aggressive chunk streaming: worker count from the CPU (cores − 1, 2–8), main-thread build budget in milliseconds (4 ms/frame) instead of a fixed count
+- [x] Chunk data cache: LRU with a 48 MB memory budget; going back, LOD flips and layer switches reuse generated data
+- [x] Prefetch: velocity tracking, queue biased towards the direction of travel, rings around the predicted position (3 s ahead) generated with spare workers
+- [x] Horizon LOD (FarTerrain): 64 m tiles, 8 m columns, out to 512 m, terrain + water + biome colours, generated on workers, cut out under the chunk rings; fog 150 → 470 m, camera far 640 m
+- [x] World persistence: region files (32 × 32 chunks, ZSTD, lazy load, dirty flush on save, LRU eviction, atomic writes); v1 saves migrate automatically; delete_world removes region folders
+- [x] Background generation: towns and POIs within 1.5 km of where you're heading are laid out on a worker
+- [x] Optimization: terrain quad building ~30% faster (no temporary arrays, top colour computed once per column); benchmark numbers in docs/WORLD_SURVEY.md
+- [x] Very large world testing: bounds, edge ocean all around, corner-chunk determinism, 1,500 random columns + 24 random LOD0 chunks anywhere, far tiles, region store (round trip, eviction, corruption, migration), save/load with regions, a 1.8 km fast journey with bounded chunks/nodes/cache/objects, the world edge
+- [x] World survey tool (`tools/world_survey.tscn`): biomes, land/sea, heights, every settlement and POI in the world, generation benchmark → docs/WORLD_SURVEY.md
+- [x] Debug overlay (F3): cache, prefetch, speed, build ms, far tiles, regions
+- [ ] NOT IMPLEMENTED: fast travel / mounts / boats (the streaming handles 70 m/s, but nothing in the game moves that fast yet)
+- [ ] NOT IMPLEMENTED: buildings, placed objects and construction sites are still in save.json (fine for bases; would move to regions for thousands of structures)
+- [ ] NOT IMPLEMENTED: far-terrain impostors for trees, towns and POIs (the horizon shows terrain and water only)
+- [ ] NOT IMPLEMENTED: off-screen simulation (settlements, raids and farms only advance near the player)
+- [ ] Design note: POI rank grows 700 m per step, so ~95% of the world's POIs are rank S (see WORLD_SURVEY.md); rank scaling should probably stretch to the world size
+- [ ] Known limitation: the first chunk containing a new scene type (cave entrance, POI) can take ~20 ms to build once (scene load); later ones are ~1 ms
+
 ## Milestone 8 — Blueprint System  ✅ (this milestone, Phase 5)
 
 - [x] Blueprint format: versioned JSON (`shardlands-blueprint` v1) shared by the game and the web designer; pieces at grid addresses relative to an anchor; validation with warnings (unknown pieces, wrong slots, duplicates, size limit)
@@ -222,10 +242,10 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 ## Phase 7 — Large world
 
-- [~] Deterministic, borderless world addressing (verified generation at ±13 km)
-- [ ] Region files for modified chunks, compressed saves (today: one JSON file per world; fine for thousands of changes)
-- [ ] Far-distance impostors / horizon LOD, streaming tuning for fast travel
-- [ ] Floating origin (only needed beyond the ~±14 km target)
+- [x] Deterministic world of 3,003,289 chunks with bounds and an edge ocean (Milestone 9)
+- [x] Region files for modified chunks, compressed saves (Milestone 9)
+- [x] Horizon LOD, streaming tuning for fast travel (Milestone 9)
+- [ ] Floating origin (only needed beyond the ±14 km world; not needed at the current size)
 - [ ] Efficient off-screen NPC/settlement simulation
 
 ## Known issues / tech debt

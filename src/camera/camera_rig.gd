@@ -42,7 +42,7 @@ func _ready() -> void:
 	camera.name = "Camera3D"
 	camera.fov = 45.0
 	camera.near = 0.3
-	camera.far = 400.0
+	camera.far = 640.0  # far terrain reaches ~520 m (Milestone 9)
 	_pitch_node.add_child(camera)
 	camera.current = true
 	_target_distance = distance

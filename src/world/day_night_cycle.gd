@@ -24,6 +24,9 @@ var eclipse := 0.0
 const SKY_DAY := Color(0.45, 0.72, 1.0)
 const SKY_DUSK := Color(0.95, 0.55, 0.4)
 const SKY_NIGHT := Color(0.08, 0.1, 0.25)
+## Surface fog (m): the horizon terrain (FarTerrain, ~520 m) fades out before its edge.
+const FOG_BEGIN := 150.0
+const FOG_END := 470.0
 const SUN_DAY := Color(1.0, 0.96, 0.86)
 const SUN_DUSK := Color(1.0, 0.62, 0.4)
 const MOON := Color(0.55, 0.62, 1.0)
@@ -102,8 +105,8 @@ func _apply() -> void:
 		if sky_tint.a > 0.0:
 			env.ambient_light_color = env.ambient_light_color.lerp(Color(sky_tint.r, sky_tint.g, sky_tint.b), sky_tint.a * 0.5)
 		env.ambient_light_energy = lerpf(0.28, 0.55, daylight)
-		env.fog_depth_begin = 70.0
-		env.fog_depth_end = 160.0
+		env.fog_depth_begin = FOG_BEGIN
+		env.fog_depth_end = FOG_END
 
 
 func _apply_underground() -> void:

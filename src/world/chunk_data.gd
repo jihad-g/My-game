@@ -33,3 +33,10 @@ var heights := PackedInt32Array()
 var biomes := PackedByteArray()
 var min_height: int = 0
 var max_height: int = 0
+
+
+## Rough memory footprint in bytes (for the ChunkManager's data cache budget).
+func estimate_bytes() -> int:
+	return 256 + vertices.size() * 12 + normals.size() * 12 + colors.size() * 16 + indices.size() * 4 \
+		+ collision_faces.size() * 12 + water_vertices.size() * 12 + water_indices.size() * 4 \
+		+ heights.size() * 4 + biomes.size() + props.size() * 160 + spawns.size() * 96 + features.size() * 96

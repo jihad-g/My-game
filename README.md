@@ -5,13 +5,20 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 8 — Blueprint System** (blueprint file format, bill of materials, blueprint
-> screen, automatic and manual construction sites, and a web blueprint designer) on top of the
+> Status: **Milestone 9 — Massive World** (a 3,003,289-chunk world with an edge ocean, aggressive
+> streaming with a data cache and prefetch, horizon LOD out to 512 m, compressed region files for
+> world changes, background generation, a world survey and large-world tests) on top of the
 > prototype, world generation (M2), RPG (M3), building & crafting (M4), the living world (M5),
-> exploration (M6) and advanced gameplay (M7). See [`docs/TODO.md`](docs/TODO.md) for the
-> honest status of every system and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
+> exploration (M6), advanced gameplay (M7) and blueprints (M8). See [`docs/TODO.md`](docs/TODO.md)
+> for the honest status of every system and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
 ![Village](docs/screenshots/village_overview.png)
+
+| **Horizon terrain (512 m)** | **From a mountain top** | **12.5 km from spawn** |
+|---|---|---|
+| ![Horizon](docs/screenshots/horizon_spawn.png) | ![Mountain](docs/screenshots/horizon_mountain.png) | ![Far](docs/screenshots/far_reaches.png) |
+| **Where the world ends** | **Streaming stats (F3)** | |
+| ![Edge](docs/screenshots/world_edge.png) | ![Debug](docs/screenshots/streaming_debug.png) | |
 
 | **Blueprint screen (N)** | **Construction site (holograms)** | **Auto-build in progress** |
 |---|---|---|
@@ -309,6 +316,21 @@ and when you quit through the pause menu or close the window.
     1 m grid, turn the design, move its anchor, see the bill of materials and roof checks, then copy
     the JSON and import it in game (or drop the `.json` into the game's `user://blueprints` folder).
 
+53. **Horizon** – zoom out (wheel) and tilt the camera low (PgDn): beyond the streamed chunks the
+    terrain continues as coarse 64 m tiles out to ~500 m – coastlines, mountains, lakes and biome
+    colours – fading into the fog.
+54. **Fast travel stress** – press F3 and sprint (or use the debug teleport in tests): the overlay
+    shows worker threads, the chunk-data cache (MB, hits, evictions), prefetch ahead of you, average
+    build time and far tiles. Walk away and back: chunks come straight from the cache.
+55. **World persistence** – fell trees in a few places, save (Esc → "Save world", or wait for the 2-minute autosave) and look in
+    `user://worlds/<world>/regions/`: one small compressed `r.X.Z.L.dat` per 32×32-chunk region
+    you changed. Older saves are migrated automatically.
+56. **The edge of the world** – the world is 27.7 km across (3,003,289 chunks). From 12.8 km out,
+    land gives way to an endless ocean; at 13.86 km you can't go further.
+57. **World survey** – `godot --headless --path . res://tools/world_survey.tscn -- --seed=123`
+    samples the whole world (biomes, land/sea, every village, kingdom and POI) and benchmarks
+    generation into [`docs/WORLD_SURVEY.md`](docs/WORLD_SURVEY.md).
+
 ## Run the automated tests
 
 ```bash
@@ -317,7 +339,7 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
 
-The suite (756 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (820 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -358,6 +380,11 @@ blueprint library (save, no overwrite, import, delete), the web designer's catal
 with the game, and in the running game: preview, placing a site, building by hand, auto-build
 waiting for materials, chests as sources, saving and reloading a half-built site, finishing it
 piece for piece, capturing it back, rotated placement, removing a site and the blueprint screen.
+Massive-world tests check the 3,003,289-chunk bounds, an ocean all along the world edge, identical
+generation of the corner chunks, 1,500 random columns and 24 random full chunks anywhere in the
+world, horizon tiles (coverage, cut-out, cached re-meshing), region files (round trip, lazy
+loading, eviction, deleting empty regions, corrupt files, v1 migration, save/load), the data
+cache on returning, and a 1.8 km journey at 70 m/s with bounded chunks, nodes, cache and objects.
 
 Balance tables are generated from the code: `godot --headless --path . -s tools/gen_rpg_tables.gd`
 → [`docs/XP_TABLE.md`](docs/XP_TABLE.md), [`docs/CLASSES_AND_SKILLS.md`](docs/CLASSES_AND_SKILLS.md).
@@ -371,6 +398,8 @@ godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=tow
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=explore # ruins, tower, temple, grove, dungeon
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=advanced # raids, elites, bosses, spells, events
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=blueprint # blueprints and construction
+godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=massive  # horizon, far reaches, world edge
+godot --headless --path . res://tools/world_survey.tscn -- --seed=20250101  # whole-world survey -> docs/WORLD_SURVEY.md
 python3 tools/build_designer.py   # rebuild the web designer after changing build pieces or built-in blueprints
 tools/make_video.sh /tmp/video     # scripted gameplay video (needs ffmpeg)
 ```
@@ -390,7 +419,7 @@ src/
   enemies/               Enemy base class, boar, data-driven Monster AI, elites, combat director, boss ward pylons
   world/                 Terrain generator, chunks & streaming, biomes, props, caves, spawner, day/night
   world/gen/             WorldGenSettings (all generation parameters + biome list)
-  save/                  SaveManager (world list, save/load, backups)
+  save/                  SaveManager (world list, save/load, backups), RegionStore (compressed region files)
   rpg/                   Classes, skills, progression, character stats, equipment, abilities
   inventory/             ItemData resource, Inventory
   crafting/              Recipes, recipe book, crafting rules

@@ -2,6 +2,35 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.9.0] — Milestone 9: Massive World
+
+### Added
+- **World bounds**: chunks −866..+866 on both axes = **3,003,289 chunks** (27.7 × 27.7 km).
+  Continents sink into an edge ocean from 12.8 km; the player is kept inside ±13,856 m.
+- **Horizon LOD** (`FarTerrain`): 64 m super-tiles with 8 m columns out to 512 m (terrain, water,
+  ice and biome colours), sampled and meshed on workers, cached height grids, cut out under the
+  chunk rings. Fog 150 → 470 m, camera far plane 640 m.
+- **Streaming** (`ChunkManager`): worker count from the CPU, 4 ms/frame build budget, LRU
+  chunk-data cache with a 48 MB budget, velocity tracking and prefetch of the rings around where
+  the player is heading, queue biased towards the direction of travel.
+- **Background generation**: settlements and POIs within 1.5 km of the predicted position are laid
+  out on a worker (`TerrainGenerator.prewarm`).
+- **Region files** (`RegionStore`): removed props and killed spawn slots are stored in ZSTD
+  region files of 32 × 32 chunks under `user://worlds/<id>/regions/`, loaded lazily, flushed on
+  save, evicted LRU. Save version 2; version 1 saves migrate on load.
+- **World survey** (`tools/world_survey.tscn` → `docs/WORLD_SURVEY.md`): whole-world biome/height
+  statistics, every settlement and POI, generation benchmark.
+- Debug overlay (F3): cache, prefetch, speed, build time, far tiles, regions.
+- Tests: large-world bounds and determinism, random world sampling, far tiles, region store,
+  save/load with regions and migration, a fast 1.8 km journey with bounded memory.
+  Screenshot runner `--only=massive`.
+
+### Changed
+- Terrain mesh building is ~30% faster (no temporary arrays, one colour per column).
+- `generator_version` 3 (terrain differs only beyond 12.8 km, where the edge ocean begins).
+- `GameState.removed_props` / `enemy_deaths` replaced by `GameState.regions`.
+- `delete_world` also removes region folders.
+
 ## [0.8.0] — Milestone 8: Blueprint System
 
 ### Added

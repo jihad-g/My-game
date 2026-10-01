@@ -59,16 +59,40 @@ World (world.gd)                 wires systems, world services (temperature, pic
   if its own column belongs to that biome, so vegetation follows biome borders exactly.
   Prop index = `rule_uid(biome, rule) * 4096 + cell` → stable ids for persistence (append
   new biomes/rules at the end of lists to keep old saves valid). Lily pads use `on_water`.
-- `ChunkManager`: LOD rings (default 3/6/9 chunks), worker-thread generation (max 4 in
-  flight), main-thread apply budget (3/frame), chunk pool, stale-result discarding
-  (including results for the previous layer after `set_layer()`).
+- `ChunkManager` (streaming, reworked in Milestone 9):
+  - LOD rings (default 3/6/9 chunks) around the focus; worker-thread generation with
+    `OS.get_processor_count() - 1` tasks in flight (2–8).
+  - **Time-budgeted apply**: generated data is turned into nodes within `apply_budget_ms`
+    (4 ms) per frame, at least one chunk per frame, at most `max_applies_per_frame`.
+  - **Data cache**: every generated `ChunkData` is kept in an LRU cache keyed by
+    (coord, LOD, layer) with a memory budget (`cache_budget_mb`, 48 MB, sizes from
+    `ChunkData.estimate_bytes()`); data of loaded chunks is never evicted. Returning to an area,
+    LOD changes back and forth, and layer switches reuse it instead of regenerating.
+  - **Prefetch**: the focus velocity is tracked (teleports reset it); the work queue is sorted
+    by distance to a point nudged towards where the focus is heading, and with spare workers the
+    rings around the *predicted* centre (3 s ahead) are generated into the cache.
+  - **Background pre-warming**: `TerrainGenerator.prewarm()` lays out settlements and POIs
+    within 1.5 km of where the focus is heading on a worker, so chunk tasks don't stall on them.
+  - Chunk pool, stale-result discarding (including results for the previous layer after
+    `set_layer()`).
+- `FarTerrain` (horizon LOD, Milestone 9): 64 m super-tiles (4×4 chunks) with one 8 m column per
+  cell, out to 32 chunks (512 m). Heights are sampled and meshed on workers (terrain + water,
+  no collision/props/shadows); height grids are cached so moving only re-meshes tiles along the
+  edge of the "hole" left for the chunk rings (cells within r_max − 1 chunks are cut out; tiles
+  sit 1 m lower so the outermost chunk ring always wins where they overlap). Surface fog runs
+  150 → 470 m; the camera's far plane is 640 m.
 - `Chunk`: terrain mesh, concave collision (LOD0), water, one MultiMesh per prop type,
   `PropBody` proxies for harvest/gather (LOD0), feature scenes (`CavePassage`).
-- Large world: there is no world border; ±14 km at the 3M-chunk target is fine for floats.
+- **World size**: chunks −866..+866 on both axes = 1733² = **3,003,289 chunks** (27.7 km square,
+  `TerrainGenerator.WORLD_*`). From 12.8 km (max of |x|, |z|) continents sink into an edge ocean;
+  `World` keeps the player within ±13,856 m. float32 still resolves 1 mm there, so there is no
+  floating origin. `tools/world_survey.tscn` samples the whole world and benchmarks generation
+  ([`WORLD_SURVEY.md`](WORLD_SURVEY.md)).
 
 ## Save system (`SaveManager` autoload)
 
-- `user://worlds/<id>/world.json` (metadata) and `save.json` (state), written via a
+- `user://worlds/<id>/world.json` (metadata), `save.json` (state) and `regions/` (per-chunk
+  changes, see below). JSON files are written via a
   `.tmp` file; the previous save is kept as `.bak` and used if the main file is corrupt.
 - `save.json` = `{save_version, game_state: GameState.to_dict(), player: Player.to_save(),
   world: World.to_save()}`. `World.to_save()` stores layer, day/time and every node under
@@ -79,11 +103,21 @@ World (world.gd)                 wires systems, world services (temperature, pic
 - Flow: menu → `create_world()` / `load_world()` / `start_transient()` → main scene →
   `World._ready()` consumes `SaveManager.pending`.
 
-## Persistence model (`GameState`)
+## Persistence model (`GameState` + `RegionStore`)
 
-`world_seed`, `world_time`, `removed_props[Vector3i(chunk.x, chunk.y, layer)][prop_index]
-= time` (with optional regrow time per prop type), `enemy_deaths[slot_key] = time`
-(respawn time per enemy type), `discovered_biomes[id] = time`.
+`world_seed`, `world_time`, `discovered_biomes[id] = time`, `discovered_places[key] = time`
+live in `save.json`. Per-chunk changes live in a `RegionStore` (Milestone 9):
+
+- removed props: chunk → prop index → time removed (optional regrow time per prop type),
+  per layer; killed spawn slots: slot key → time (respawn time per enemy type).
+- Regions of 32×32 chunks, one ZSTD-compressed `var_to_bytes` file each:
+  `user://worlds/<id>/regions/r.<rx>.<rz>.<layer>.dat` (POI guardian slots: `misc.dat`).
+- Lazy loading on first query, dirty tracking, `flush()` on every save (before `save.json`,
+  atomic `.tmp` + rename, empty regions delete their file), LRU eviction of clean regions
+  (`max_loaded` 64) so memory stays bounded however far the player travels.
+- Transient worlds keep everything in memory (and inline in `to_dict()`); save version 1 files
+  (changes inline in `save.json`) are imported on load and written to region files on the
+  next save (save version 2).
 
 ## Combat
 

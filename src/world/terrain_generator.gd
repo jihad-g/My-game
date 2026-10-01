@@ -19,8 +19,11 @@ extends RefCounted
 ##   - A chunk is CHUNK_SIZE x CHUNK_SIZE columns.
 ##   - World column (wx, wz) belongs to chunk floor(wx / CHUNK_SIZE).
 ##
-## There is no world border. At the ~3,000,000 chunk target the world spans
-## roughly +-14,000 m from the origin, within float precision limits.
+## World size (Milestone 9): chunks -WORLD_RADIUS_CHUNKS..+WORLD_RADIUS_CHUNKS
+## on both axes = 1733 x 1733 = 3,003,289 chunks (~27.7 x 27.7 km). Beyond
+## WORLD_EDGE_START_M the continents sink into an endless ocean, and the player
+## cannot pass WORLD_LIMIT_M. At +-13.9 km float32 positions are still precise
+## to ~1 mm, so no floating origin is needed at this size.
 
 enum Layer { SURFACE = 0, UNDERGROUND = 1 }
 
@@ -38,6 +41,15 @@ const CAVE_WALL_HEIGHT := 5
 const ENTRANCE_CLEARANCE := 2.5
 
 const _HEIGHT_BIAS := 1024
+
+const WORLD_RADIUS_CHUNKS := 866
+## Chunks in the world: (2 * 866 + 1)^2.
+const WORLD_CHUNK_COUNT := (2 * WORLD_RADIUS_CHUNKS + 1) * (2 * WORLD_RADIUS_CHUNKS + 1)
+## Players are kept within +-WORLD_LIMIT_M on both axes (the last chunk's edge).
+const WORLD_LIMIT_M := WORLD_RADIUS_CHUNKS * CHUNK_SIZE
+## Land fades into the edge ocean between these distances (max of |x|, |z|).
+const WORLD_EDGE_START_M := 12800
+const WORLD_EDGE_END_M := 13500
 
 var world_seed: int
 var settings: WorldGenSettings
@@ -146,6 +158,17 @@ static func column_to_chunk(wx: int, wz: int) -> Vector2i:
 	return Vector2i(floori(float(wx) / CHUNK_SIZE), floori(float(wz) / CHUNK_SIZE))
 
 
+## True for chunks inside the world (see WORLD_RADIUS_CHUNKS).
+static func is_chunk_in_world(c: Vector2i) -> bool:
+	return absi(c.x) <= WORLD_RADIUS_CHUNKS and absi(c.y) <= WORLD_RADIUS_CHUNKS
+
+
+## Clamps a position to the playable world square (y unchanged).
+static func clamp_to_world(pos: Vector3) -> Vector3:
+	var lim := float(WORLD_LIMIT_M) - 1.0
+	return Vector3(clampf(pos.x, -lim, lim), pos.y, clampf(pos.z, -lim, lim))
+
+
 static func layer_of_height(y: float) -> int:
 	return Layer.UNDERGROUND if y < CAVE_FLOOR * BLOCK_HEIGHT * 0.5 else Layer.SURFACE
 
@@ -215,6 +238,12 @@ func _sample_raw(wx: int, wz: int) -> int:
 	var x := float(wx)
 	var z := float(wz)
 	var c := _continent.get_noise_2d(x, z)
+	# World edge: continents sink into the surrounding ocean.
+	var edge := 0.0
+	var e := maxf(absf(x), absf(z))
+	if e > WORLD_EDGE_START_M:
+		edge = _ss(WORLD_EDGE_START_M, WORLD_EDGE_END_M, e)
+		c = lerpf(c, -1.0, edge)
 	var land := _ss(s.coast_start, s.coast_end, c)
 	var h := lerpf(s.ocean_depth, s.land_base, land) + maxf(c - s.coast_end, 0.0) * s.continent_amplitude
 
@@ -222,7 +251,7 @@ func _sample_raw(wx: int, wz: int) -> int:
 	if land < 1.0:
 		var isl := _island.get_noise_2d(x, z)
 		if isl > s.island_threshold:
-			var it := _ss(s.island_threshold, s.island_threshold + 0.15, isl) * (1.0 - land)
+			var it := _ss(s.island_threshold, s.island_threshold + 0.15, isl) * (1.0 - land) * (1.0 - edge)
 			h = lerpf(h, 3.0 + (isl - s.island_threshold) * 30.0, it)
 			land = maxf(land, it)
 
@@ -264,6 +293,8 @@ func _sample_raw(wx: int, wz: int) -> int:
 				h = minf(h, -5.0)
 
 	h += detail * s.detail_amplitude
+	if edge > 0.0:
+		h = lerpf(h, s.ocean_depth, edge)
 	var hb := floori(h)
 	# Small-scale jitter so biome borders wiggle instead of following the
 	# (locally almost straight) climate contours.
@@ -389,6 +420,29 @@ func get_cave_height_blocks(wx: int, wz: int, entrances: Array[Vector2i]) -> int
 	return CAVE_FLOOR + CAVE_WALL_HEIGHT + v
 
 
+# --- Background pre-warming (Milestone 9) ----------------------------------------
+
+## Computes (and caches) the settlements and points of interest within
+## `radius_m` of a column, so chunk generation later finds them ready instead of
+## stalling a chunk task on a town layout. Thread-safe; run it on a worker.
+## Returns how many regions/cells were visited.
+func prewarm(center: Vector2i, radius_m: int) -> int:
+	var n := 0
+	var r0 := Settlements.region_of(center.x - radius_m, center.y - radius_m)
+	var r1 := Settlements.region_of(center.x + radius_m, center.y + radius_m)
+	for rz in range(r0.y, r1.y + 1):
+		for rx in range(r0.x, r1.x + 1):
+			settlements.get_region(Vector2i(rx, rz))
+			n += 1
+	var c0 := Exploration.cell_of(center.x - radius_m, center.y - radius_m)
+	var c1 := Exploration.cell_of(center.x + radius_m, center.y + radius_m)
+	for cz in range(c0.y, c1.y + 1):
+		for cx in range(c0.x, c1.x + 1):
+			pois.get_cell(Vector2i(cx, cz))
+			n += 1
+	return n
+
+
 # --- Chunk generation (thread-safe: reads only immutable state) --------------
 
 func generate_chunk(coord: Vector2i, lod: int, layer: int = Layer.SURFACE) -> ChunkData:
@@ -474,14 +528,15 @@ func _build_surface(data: ChunkData, n: int, w: int, ox: int, oz: int) -> void:
 				Vector3(x0, y, z0), Vector3(x1, y, z0), Vector3(x1, y, z1), Vector3(x0, y, z1),
 				Vector3.UP, top)
 			# Side walls where the neighbour is lower; always on chunk borders (skirt).
+			# (Each side is skipped cheaply when the neighbour isn't lower.)
 			_side(data, biome, h, data.heights[k + 1], i == n - 1,
-				Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3.RIGHT, wx, wz, surface)
+				Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3.RIGHT, top, surface)
 			_side(data, biome, h, data.heights[k - 1], i == 0,
-				Vector3(x0, 0, z1), Vector3(x0, 0, z0), Vector3.LEFT, wx, wz, surface)
+				Vector3(x0, 0, z1), Vector3(x0, 0, z0), Vector3.LEFT, top, surface)
 			_side(data, biome, h, data.heights[k + w], j == n - 1,
-				Vector3(x1, 0, z1), Vector3(x0, 0, z1), Vector3.BACK, wx, wz, surface)
+				Vector3(x1, 0, z1), Vector3(x0, 0, z1), Vector3.BACK, top, surface)
 			_side(data, biome, h, data.heights[k - w], j == 0,
-				Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3.FORWARD, wx, wz, surface)
+				Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3.FORWARD, top, surface)
 			if surface and h < SEA_LEVEL:
 				if biome.frozen_water:
 					# Walkable ice sheet: part of the terrain mesh (and collision).
@@ -498,7 +553,7 @@ func _build_surface(data: ChunkData, n: int, w: int, ox: int, oz: int) -> void:
 
 
 func _side(data: ChunkData, biome: BiomeData, h: int, nh: int, border: bool,
-		a: Vector3, b: Vector3, normal: Vector3, wx: int, wz: int, surface: bool) -> void:
+		a: Vector3, b: Vector3, normal: Vector3, top: Color, surface: bool) -> void:
 	var bottom := nh
 	if border:
 		bottom = mini(nh, h) - SKIRT_BLOCKS
@@ -508,7 +563,7 @@ func _side(data: ChunkData, biome: BiomeData, h: int, nh: int, border: bool,
 	var top_y := h * bh
 	var shade := 0.72 if normal.z != 0.0 else 0.8
 	# Top band: one block of "grass edge" (or rock/sand), rest dirt/stone below.
-	var edge_col := _top_color(biome, h, wx, wz, surface) * shade
+	var edge_col := top * shade
 	var body_col := _side_color(biome, h, surface) * shade
 	var band_bottom := maxi(bottom, h - 1)
 	_quad(data.vertices, data.normals, data.colors, data.indices,
@@ -556,11 +611,29 @@ func _side_color(biome: BiomeData, h: int, surface: bool) -> Color:
 
 static func _quad(verts: PackedVector3Array, norms: PackedVector3Array, cols: PackedColorArray,
 		idx: PackedInt32Array, a: Vector3, b: Vector3, c: Vector3, d: Vector3, normal: Vector3, color: Color) -> void:
+	# push_back is much cheaper than append_array([...]) (no temporary Array).
 	var base := verts.size()
-	verts.append_array([a, b, c, d])
-	norms.append_array([normal, normal, normal, normal])
-	cols.append_array([color, color, color, color])
-	BlockMesh.append_quad_indices(idx, base, a, b, c, normal)
+	verts.push_back(a)
+	verts.push_back(b)
+	verts.push_back(c)
+	verts.push_back(d)
+	for _k in 4:
+		norms.push_back(normal)
+		cols.push_back(color)
+	if (b - a).cross(c - a).dot(normal) > 0.0:
+		idx.push_back(base)
+		idx.push_back(base + 2)
+		idx.push_back(base + 1)
+		idx.push_back(base)
+		idx.push_back(base + 3)
+		idx.push_back(base + 2)
+	else:
+		idx.push_back(base)
+		idx.push_back(base + 1)
+		idx.push_back(base + 2)
+		idx.push_back(base)
+		idx.push_back(base + 2)
+		idx.push_back(base + 3)
 
 
 func _build_collision(data: ChunkData) -> void:

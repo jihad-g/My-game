@@ -64,6 +64,7 @@ var _autosave_left := AUTOSAVE_INTERVAL
 var _biome_check_left := 0.0
 var _first_ready := true
 var _new_world := true
+var _edge_toast_msec := -100000
 
 
 func _enter_tree() -> void:
@@ -147,6 +148,7 @@ func _process(delta: float) -> void:
 		_on_area_ready()
 	if not is_ready:
 		return
+	_keep_in_world()
 	_biome_check_left -= delta
 	if _biome_check_left <= 0.0:
 		_biome_check_left = BIOME_CHECK_INTERVAL
@@ -155,6 +157,18 @@ func _process(delta: float) -> void:
 		_autosave_left -= delta
 		if _autosave_left <= 0.0:
 			save_now(false)
+
+
+## The world is a 27.7 km square (TerrainGenerator.WORLD_LIMIT_M): the edge
+## ocean ends in an invisible wall.
+func _keep_in_world() -> void:
+	var p := player.global_position
+	var c := TerrainGenerator.clamp_to_world(p)
+	if c.x != p.x or c.z != p.z:
+		player.global_position = c
+		if Time.get_ticks_msec() - _edge_toast_msec > 8000:
+			_edge_toast_msec = Time.get_ticks_msec()
+			Events.toast.emit("The endless sea stretches on. This is the edge of the world.", Color(0.6, 0.8, 1.0))
 
 
 func _on_area_ready() -> void:
