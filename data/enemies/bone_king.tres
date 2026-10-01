@@ -56,3 +56,6 @@ slam_damage = 30.0
 slam_radius = 4.5
 summon = ExtResource("4_summon")
 summon_count = 2
+phases = [{"at": 0.66, "moves": [&"cleave", &"spikes", &"summon", &"charge", &"slam"], "text": "The Bone King calls the bones of the earth!", "hazard": &""}, {"at": 0.33, "moves": [&"spikes", &"nova", &"shield", &"cleave", &"summon"], "text": "The Bone King raises a ward of souls!", "hazard": &"falling_rocks"}]
+spike_status = [&"bleed", 5.0, {"dps": 3.0}]
+shield_pylons = 3

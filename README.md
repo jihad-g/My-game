@@ -5,15 +5,24 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 6 — Exploration** (dungeons ranked E→S, ruins, wizard towers, temples, hidden
-> groves, bosses, rare resources, magical plants and potions, legendary recipes) on top of the
-> prototype, world generation (M2), RPG (M3), building & crafting (M4) and the living world (M5). See [`docs/TODO.md`](docs/TODO.md) for the
+> Status: **Milestone 7 — Advanced Gameplay** (raids on your base and on towns, settlement defense,
+> smarter enemies, elite affixes, multi-phase bosses, advanced magic, status effects and rare world
+> events) on top of the prototype, world generation (M2), RPG (M3), building & crafting (M4), the
+> living world (M5) and exploration (M6). See [`docs/TODO.md`](docs/TODO.md) for the
 > honest status of every system and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
 ![Village](docs/screenshots/village_overview.png)
 
-| **Dungeon entrance (Rank E)** | **Inside a dungeon** | **Boss: The Elder Thornmaw** |
+| **Raid on your base** | **Bandits besiege the walls** | **Defending a village** |
 |---|---|---|
+| ![Raid](docs/screenshots/raid_attack.png) | ![Siege](docs/screenshots/raid_siege.png) | ![Town raid](docs/screenshots/town_raid.png) |
+| **Elites & champions** | **Boss ward + pylons** | **Bone spikes** |
+| ![Elites](docs/screenshots/elites.png) | ![Ward](docs/screenshots/boss_ward.png) | ![Spikes](docs/screenshots/boss_spikes.png) |
+| **Sun beam** | **Blizzard + Meteor** | **Storm Call + Arcane Missiles** |
+| ![Beam](docs/screenshots/boss_beam.png) | ![Blizzard](docs/screenshots/spells_blizzard_meteor.png) | ![Storm](docs/screenshots/spells_storm_missiles.png) |
+| **Spellbook (L)** | **Blood Moon** | **Meteor + Starborn Colossus** |
+| ![Spellbook](docs/screenshots/spellbook.png) | ![Blood moon](docs/screenshots/blood_moon.png) | ![Meteor](docs/screenshots/meteor_colossus.png) |
+| **Dungeon entrance (Rank E)** | **Inside a dungeon** | **Boss: The Elder Thornmaw** |
 | ![Entrance](docs/screenshots/dungeon_entrance.png) | ![Dungeon](docs/screenshots/dungeon_start.png) | ![Boss](docs/screenshots/dungeon_boss.png) |
 | **Temple & its guardian** | **Wizard tower** | **Hidden grove** |
 | ![Temple](docs/screenshots/poi_temple.png) | ![Tower](docs/screenshots/poi_tower.png) | ![Grove](docs/screenshots/poi_grove.png) |
@@ -93,6 +102,9 @@ and when you quit through the pause menu or close the window.
 | Crafting screen | G |
 | Build mode on / off | B |
 | Build mode: place / deconstruct / rotate | Left mouse / Right mouse / R |
+| Build mode: repair piece under cursor / repair everything nearby | U / Shift+U |
+| Cast spell slot 1 / 2 | Y / H |
+| Spellbook (learned spells, slot assignment, combos) | L |
 | Open doors & chests, sleep in beds | F |
 | Talk to townsfolk, read notice boards, plant & harvest crops | F |
 | Reputation screen | J |
@@ -105,6 +117,8 @@ and when you quit through the pause menu or close the window.
 | **Debug:** spawn a Thornback Boar in front of you | F8 |
 | **Debug:** skip 2 hours | F9 |
 | **Debug:** get a sample of every gear tier / gain a level | F10 / F11 |
+| **Debug:** start a raid (your base, else the nearest town) / end it | F4 |
+| **Debug:** start the next rare world event | F12 |
 
 ## Things to try (manual test script)
 
@@ -229,6 +243,47 @@ and when you quit through the pause menu or close the window.
     Royal Bone, Void Shards, Thorn Hearts and Sunstones for the 7 **legendary** items (each
     taught by a Legendary Recipe scroll; they need Crafting 90).
 
+39. **Status effects** – monsters (and your spells) inflict burning, poison, bleeding, chill/freeze,
+    shock, weakness, slow and silence; chips under your bars show them. Standing in water makes
+    you **wet**: fire can't burn you, but lightning hurts 50% more and a chill freezes you. Fiber
+    bandages (by hand) now also stop bleeding; antidotes, purifying draughts and Troll's Brew at the
+    Alchemy Table. Defense 50 (Iron Skin) shortens harmful effects by 30%.
+40. **Smarter enemies** – packs alert each other and surround you: only two swing at once while the
+    rest circle for an opening. Bandits sidestep your swings and flee when badly hurt; cultists and
+    hexers heal their allies, tower wardens shield them. Enemies steer around walls and hop ledges.
+41. **Elites** – glowing rings mark elites ("Vampiric Skeleton Warrior"), champions have two affixes:
+    vampiric, frenzied, molten (explodes on death), glacial, shielded, thorned, blinking,
+    juggernaut (unstoppable), venomous. More health, extra loot.
+42. **Bosses** – every boss now has phases (at 66% and 33%): it roars (briefly invulnerable), learns
+    new moves and the arena turns hostile (falling rocks, fire rain, poison pools, frost shards).
+    Watch for bone/thorn **spikes** chasing you, **novas** (get out of the big circle), **beams**
+    that sweep toward you, **meteor rain**, **teleports** behind you, **pulls** and **roars**.
+    The Bone King, Temple Guardian and colossi raise **wards**: destroy the glowing pylons to break
+    them (they're exposed afterwards). Break a boss's poise for a "Broken!" window.
+43. **Advanced magic** – read **spell tomes** (wizard towers, dungeons, elites, treasure goblins, or
+    craft some at the Arcane Altar): Blink, Healing Light, Miasma, Arcane Barrier, Arcane Missiles,
+    Blizzard, Meteor, Storm Call. Cast with **Y/H**, manage them in the spellbook (**L**). Any class
+    can learn them, but each needs a Mana Control level and power grows with spell power. Combos:
+    Shatter (fire on frozen), Conducted (lightning on wet), Deep Freeze (chill twice), Combustion
+    (fire into a Miasma cloud).
+44. **Raids on your base** – once your claim holds 8+ pieces, bandits may attack at night while you're
+    near: a warning with a countdown (an **Alarm Bell** adds 45 s; ring it to start at once), then
+    2–4 waves from one side. Cutthroats, archers, hexers, **brutes** (smash walls) and **bombers**
+    (fire bombs) break what's in their way. Build **Log Palisades**, **Reinforced Doors**, **Arrow
+    Towers** and spike traps; repair damage in build mode with **U**. Win for raid spoils and XP;
+    abandon the fight and the survivors loot your chests. Strong raids are led by **Grimtusk the
+    Warlord**. Press **F4** to test a raid right away.
+45. **Defending towns** – a rider sometimes warns that a nearby town will be attacked in a few hours
+    (it's marked on the map). Be there: villagers hide indoors, guards fight (they can be knocked
+    down, never killed). Saving the town earns reputation, coins and XP. If you don't come, the
+    guards may hold — or the town is plundered for two days (prices +25%).
+46. **Rare events** (**F12** to try them): **Blood Moon** (red night, the dead walk, +50% XP, more
+    elites, your base will be raided), **Meteor Shower** (a meteor crashes nearby: mine star metal,
+    sometimes guarded by the **Starborn Colossus** world boss), **Aurora** (cold biomes: double mana
+    regen, stronger spells), **Treasure Goblin** (catch it within 45 s for gold, gems and tomes),
+    **Eclipse** (darkness at noon, undead roam). Star metal makes the Starmetal Amulet, the
+    Starfall Blade and the Tome of Meteor.
+
 ## Run the automated tests
 
 ```bash
@@ -237,7 +292,7 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
 
-The suite (562 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (713 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -265,7 +320,13 @@ layouts per kind, dungeon plans for every rank (all rooms connected), rank-gated
 the running game: melee, archers, poison, rank scaling, a boss fight (boss bar, enrage, summons),
 potions, ruins chests and hidden vaults, tower tomes, temple guardian → chest → blessing, hidden
 groves, and a full dungeon run (floor, map, save position, secret wall, traps, descending,
-sealed arena, boss, portal, exit, cooldown, death, save/load).
+sealed arena, boss, portal, exit, cooldown, death, save/load). Advanced-gameplay tests check
+status effects and every elemental interaction, cures, Iron Skin, attack tokens and circling,
+pack alerts, fleeing, dodging, healers, steering, elite affixes (shield, juggernaut, vampiric,
+molten), boss phases, spikes, wards and pylons, beams, teleports, pulls, roars, poise breaks and
+bombs, all 8 spells and their combos, tomes and the spellbook, a full base raid (warning,
+waves, siege, arrow towers, spoils, plunder, destruction, repair), a town defense (hiding
+villagers, downed guards, rewards, plunder prices, rolled outcomes) and every rare event.
 
 Balance tables are generated from the code: `godot --headless --path . -s tools/gen_rpg_tables.gd`
 → [`docs/XP_TABLE.md`](docs/XP_TABLE.md), [`docs/CLASSES_AND_SKILLS.md`](docs/CLASSES_AND_SKILLS.md).
@@ -277,6 +338,7 @@ godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=build   # base / build / crafting
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=town    # villages, kingdom, trade
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=explore # ruins, tower, temple, grove, dungeon
+godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=advanced # raids, elites, bosses, spells, events
 tools/make_video.sh /tmp/video     # scripted gameplay video (needs ffmpeg)
 ```
 
@@ -289,10 +351,10 @@ src/
   autoload/              Global singletons: InputSetup, Events (signal bus), GameState, ItemDB
   core/                  Shared utilities: hashing, pooling, block-mesh builder, materials, layers
   components/            Reusable node components: Health, Stamina, Hunger, Temperature, StatBlock
-  combat/                AttackData resource, melee hit queries
+  combat/                AttackData, hit queries, status effects, projectiles, ground hazards, VFX
   camera/                Tactical camera rig
   player/                Player controller, combat, blocky humanoid model
-  enemies/               Enemy base class, Thornback Boar AI + model, enemy/loot data
+  enemies/               Enemy base class, boar, data-driven Monster AI, elites, combat director, boss ward pylons
   world/                 Terrain generator, chunks & streaming, biomes, props, caves, spawner, day/night
   world/gen/             WorldGenSettings (all generation parameters + biome list)
   save/                  SaveManager (world list, save/load, backups)
@@ -302,7 +364,9 @@ src/
   building/              Build pieces, grid building manager, build mode, piece meshes
   living/                Settlements (generation, layouts, sites), NPCs, economy, reputation, requests, farming, gossip
   exploration/           Points of interest, POI sites, dungeons (plans, instances, traps, doors), loot tables, chests
-  ui/                    HUD, theme, slots, temperature gauge
+  raids/                 RaidManager: base raids, town raids, plunder
+  events/                WorldEvents (blood moon, meteors, aurora, goblins, eclipse), meteor craters
+  ui/                    HUD, theme, slots, temperature gauge, map, panels (character, crafting, trade, spellbook...)
 data/                    Data-driven content (.tres): items, attacks, movesets, abilities, classes, enemies, props, biomes, worldgen
 tests/                   Automated test suite + screenshot runner
 docs/                    TODO, CHANGELOG, architecture notes

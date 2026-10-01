@@ -52,6 +52,9 @@ var _dialogue := DialoguePanel.new()
 var _trade := TradePanel.new()
 var _requests := RequestsPanel.new()
 var _reputation := ReputationPanel.new()
+var _spellbook := SpellbookPanel.new()
+## Raid / world event banner (Milestone 7).
+var _event_label := Label.new()
 var _coins_label := Label.new()
 var _boss_panel := PanelContainer.new()
 var _boss_name := Label.new()
@@ -67,6 +70,9 @@ var _rage_row: HBoxContainer
 var _rage_bar: ProgressBar
 var _rage_label: Label
 var _buff_label := Label.new()
+## Player status effects as coloured chips (Milestone 7).
+var _status_row := HFlowContainer.new()
+var _status_refresh := 0.0
 var _ability_buttons: Array[Button] = []
 var _ability_cd: Array[Label] = []
 var _banner := Label.new()
@@ -103,6 +109,7 @@ func _ready() -> void:
 	_root.add_child(_trade)
 	_root.add_child(_requests)
 	_root.add_child(_reputation)
+	_root.add_child(_spellbook)
 	_dialogue.trade_requested.connect(func(n: NPC) -> void:
 		_dialogue.close()
 		_trade.open(n))
@@ -112,6 +119,11 @@ func _ready() -> void:
 	Events.open_requests.connect(func(site: Node) -> void: _requests.open(site))
 	Events.coins_changed.connect(func(_c: int) -> void: _refresh_coins())
 	_build_boss_bar()
+	Events.raid_wave.connect(func(_t: String, w: int, n: int) -> void: show_banner("Raid wave %d / %d" % [w, n]))
+	Events.raid_ended.connect(func(_t: String, won: bool) -> void: show_banner("Raid repelled!" if won else "The raiders got away..."))
+	Events.world_event_started.connect(func(id: StringName) -> void:
+		if id != &"treasure_goblin":
+			show_banner(WorldEvents.NAMES.get(id, String(id))))
 	Events.boss_started.connect(func(b: Node) -> void:
 		_boss = b as Enemy
 		_boss_name.text = _boss.display_name()
@@ -162,6 +174,7 @@ func bind(p_player: Player, p_world: World) -> void:
 	_bind_rpg()
 	_crafting.bind(player)
 	_chest.bind(player)
+	_spellbook.bind(player)
 	_refresh_coins()
 	if world.build_mode:
 		_palette.bind(player, world.build_mode)
@@ -269,6 +282,10 @@ func _build_status() -> void:
 	_buff_label.add_theme_font_size_override(&"font_size", 12)
 	_buff_label.add_theme_color_override(&"font_color", Color(0.7, 0.9, 1.0))
 	box.add_child(_buff_label)
+	_status_row.custom_minimum_size.x = 290
+	_status_row.add_theme_constant_override(&"h_separation", 4)
+	_status_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(_status_row)
 
 
 func _build_hotbar() -> void:
@@ -376,7 +393,11 @@ func _build_ability_bar() -> void:
 	holder.offset_bottom = -104
 	holder.add_theme_constant_override(&"separation", 8)
 	_root.add_child(holder)
-	for i in 4:
+	for i in 6:
+		if i == 4:
+			var gap := Control.new()
+			gap.custom_minimum_size.x = 14
+			holder.add_child(gap)
 		var b := Button.new()
 		b.custom_minimum_size = Vector2(54, 54)
 		b.focus_mode = Control.FOCUS_NONE
@@ -384,9 +405,12 @@ func _build_ability_bar() -> void:
 		var idx := i
 		b.pressed.connect(func() -> void:
 			if player:
-				player.abilities.try_use(idx))
+				if idx < 4:
+					player.abilities.try_use(idx)
+				else:
+					player.abilities.try_cast(idx - 4))
 		var key := Label.new()
-		key.text = ["Z", "X", "C", "T"][i]
+		key.text = ["Z", "X", "C", "T", "Y", "H"][i]
 		key.position = Vector2(4, 1)
 		key.add_theme_font_size_override(&"font_size", 11)
 		key.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -427,7 +451,18 @@ func _on_xp_changed(xp: int, needed: int, level: int) -> void:
 	_xp_label.text = "%d / %d" % [xp, needed] if needed > 0 else "MAX"
 
 
+## Big centred announcement that fades out.
+func show_banner(text: String, color: Color = UITheme.GOLD) -> void:
+	_banner.text = text
+	_banner.add_theme_color_override(&"font_color", color)
+	_banner.modulate.a = 1.0
+	var tw := _banner.create_tween()
+	tw.tween_interval(2.0)
+	tw.tween_property(_banner, "modulate:a", 0.0, 1.0)
+
+
 func _on_level_up(level: int) -> void:
+	_banner.add_theme_color_override(&"font_color", UITheme.GOLD)
 	var pts := player.character.unspent_points
 	_banner.text = "Level %d!\n%d skill point%s to spend (K)" % [level, pts, "" if pts == 1 else "s"]
 	var tw := _banner.create_tween()
@@ -468,6 +503,24 @@ func _refresh_abilities() -> void:
 			_ability_cd[i].text = ""
 		else:
 			_ability_cd[i].text = "Lv%d" % a.unlock_level if i < 3 else "MC"
+	# Spell slots (Milestone 7)
+	for k in SpellBook.SLOTS:
+		var b := _ability_buttons[4 + k]
+		var sp := player.spells.get_slot(k)
+		if sp == null:
+			b.text = "+"
+			b.modulate = Color(0.55, 0.5, 0.65)
+			b.tooltip_text = "Spell slot %s: empty\nLearn spells from tomes. Spellbook: L" % ["Y", "H"][k]
+			_ability_cd[4 + k].text = ""
+			continue
+		b.text = sp.icon_glyph
+		var why := player.abilities.spell_block_reason(sp)
+		var castable := why == "" or why == "Not enough mana"
+		b.modulate = sp.icon_color.lerp(Color.WHITE, 0.35) if castable else Color(0.4, 0.4, 0.45)
+		b.tooltip_text = "%s\n%s\nCost: %d mana · Cooldown %ss · Mana Control %d" % [sp.display_name, sp.description,
+			roundi(player.abilities.effective_cost(sp)), sp.cooldown, sp.required_mana_control]
+		var cd := player.abilities.cooldown_left(sp)
+		_ability_cd[4 + k].text = "%.1f" % cd if cd >= 0.05 else ("" if castable else "MC")
 
 
 func _build_prompt_and_toasts() -> void:
@@ -512,6 +565,14 @@ func _build_corner_info() -> void:
 	_land_label.add_theme_color_override(&"font_color", Color(0.6, 0.85, 1.0))
 	_land_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	v.add_child(_land_label)
+	# Raids and rare events (Milestone 7).
+	_event_label.add_theme_font_size_override(&"font_size", 15)
+	_event_label.add_theme_color_override(&"font_color", Color(1, 0.6, 0.45))
+	_event_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_event_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_event_label.custom_minimum_size.x = 300
+	_event_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	v.add_child(_event_label)
 	_debug.add_theme_font_size_override(&"font_size", 12)
 	_debug.add_theme_color_override(&"font_color", Color(0.8, 0.9, 1.0))
 	_debug.visible = false
@@ -534,7 +595,8 @@ func _build_help() -> void:
 		"1-8 use hotbar item (eat / place campfire)",
 		"Q/E or MMB-drag rotate · Wheel zoom · PgUp/PgDn tilt",
 		"Z/X/C class abilities · T temperature shield · K character",
-		"G crafting · B build mode (LMB place, RMB remove, R rotate)",
+		"Y/H cast spells · L spellbook",
+		"G crafting · B build mode (LMB place, RMB remove, R rotate, U repair)",
 		"F talk to townsfolk / read notice boards · J reputation",
 		"Arrows pan camera · V recenter · M map · F5 save",
 		"F3 debug · F1 hide help",
@@ -650,6 +712,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_requests.close()
 		elif _reputation.visible:
 			_reputation.visible = false
+		elif _spellbook.visible:
+			_spellbook.visible = false
 		elif _chest.visible:
 			_chest.close()
 		elif _crafting.visible:
@@ -671,6 +735,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"reputation"):
 		if not _loading.visible:
 			_reputation.toggle()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"spellbook"):
+		if not _loading.visible:
+			_spellbook.toggle()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"crafting"):
 		if not _loading.visible:
@@ -709,6 +777,17 @@ func _process(_delta: float) -> void:
 		_update_debug()
 	_refresh_abilities()
 	_update_buffs()
+	_status_refresh -= _delta
+	if _status_refresh <= 0.0:
+		_status_refresh = 0.2
+		_update_status_chips()
+		if world and world.raids and world.events:
+			var parts := PackedStringArray()
+			for t in [world.raids.status_text(), world.events.status_text()]:
+				if t != "":
+					parts.append(t)
+			_event_label.text = "\n".join(parts)
+			_event_label.visible = not parts.is_empty()
 	_update_land()
 	_update_boss_bar()
 
@@ -735,7 +814,8 @@ func _build_boss_bar() -> void:
 func _update_boss_bar() -> void:
 	if _boss == null:
 		return
-	if not is_instance_valid(_boss) or _boss.is_dead or not _boss.is_inside_tree():
+	if not is_instance_valid(_boss) or _boss.is_dead or not _boss.is_inside_tree() or not _boss.visible \
+			or (_boss.has_method("is_boss") and not _boss.is_boss()):
 		_boss_panel.visible = false
 		_boss = null
 		return
@@ -824,6 +904,37 @@ func _update_buffs() -> void:
 		var nice := String(id).capitalize()
 		parts.append("%s %s" % [nice, "%d:%02d" % [int(t) / 60, int(t) % 60] if t >= 60.0 else "%ds" % ceili(t)])
 	_buff_label.text = " · ".join(parts)
+
+
+## One chip per active status effect: name, stacks and seconds left.
+func _update_status_chips() -> void:
+	var fx: Dictionary = player.status.effects if player.status else {}
+	var ids: Array = fx.keys()
+	while _status_row.get_child_count() < ids.size():
+		var chip := PanelContainer.new()
+		chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var sb := StyleBoxFlat.new()
+		sb.set_corner_radius_all(4)
+		sb.content_margin_left = 6
+		sb.content_margin_right = 6
+		sb.content_margin_top = 1
+		sb.content_margin_bottom = 1
+		chip.add_theme_stylebox_override(&"panel", sb)
+		var l := Label.new()
+		l.add_theme_font_size_override(&"font_size", 12)
+		l.add_theme_color_override(&"font_color", Color(0.05, 0.05, 0.08))
+		chip.add_child(l)
+		_status_row.add_child(chip)
+	for i in _status_row.get_child_count():
+		var chip := _status_row.get_child(i) as PanelContainer
+		chip.visible = i < ids.size()
+		if not chip.visible:
+			continue
+		var id: StringName = ids[i]
+		var e: Dictionary = fx[id]
+		var st := int(e.get("stacks", 1))
+		(chip.get_theme_stylebox(&"panel") as StyleBoxFlat).bg_color = StatusEffects.color_of(id)
+		(chip.get_child(0) as Label).text = "%s%s %ds" % [StatusEffects.display_name(id), " x%d" % st if st > 1 else "", ceili(float(e.time))]
 
 
 func _update_debug() -> void:

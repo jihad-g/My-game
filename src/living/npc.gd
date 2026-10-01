@@ -8,9 +8,13 @@ extends CharacterBody3D
 ## farm rows, plaza, wandering, or home to sleep (hidden inside). NPCs are
 ## placed directly at their current activity when the settlement streams in.
 ## Guards attack monsters that come near. Talking opens the dialogue window.
+## Raids (Milestone 7): while the settlement is under attack villagers hide in
+## their homes; guards fight and can be knocked down (never killed) - they get
+## back up when the raid is over.
 
 const WALK_SPEED := 1.8
 const GUARD_RANGE := 18.0
+const GUARD_HEALTH := 140.0
 
 var site: SettlementSite
 var data: Dictionary = {}
@@ -31,6 +35,10 @@ var _anim_t := 0.0
 var _guard_target: Enemy
 var _attack_cd := 0.0
 var _far_acc := 0.0
+## Guards only: hit points during raids, and knocked down at 0.
+var hp := GUARD_HEALTH
+var downed := false
+var is_dead := false  # townsfolk never die (raiders knock guards down)
 
 
 func setup(p_site: SettlementSite, d: Dictionary) -> void:
@@ -42,7 +50,7 @@ func setup(p_site: SettlementSite, d: Dictionary) -> void:
 
 
 func _ready() -> void:
-	collision_layer = Layers.INTERACTABLE
+	collision_layer = Layers.INTERACTABLE | Layers.NPC
 	collision_mask = 0
 	var cs := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()
@@ -89,6 +97,8 @@ func is_shopkeeper() -> bool:
 
 ## Daily schedule: activity for an hour (each person is offset by up to an hour).
 func schedule(hour: float) -> StringName:
+	if site and site.under_attack and role != &"guard":
+		return &"sleep"  # hide at home until the raid is over
 	var h := fposmod(hour - (int(data.seed) % 60) / 60.0, 24.0)
 	match role:
 		&"merchant", &"royal_merchant":
@@ -240,7 +250,7 @@ func _set_path(pts: PackedVector3Array) -> void:
 func _wake() -> void:
 	asleep = false
 	visible = true
-	collision_layer = Layers.INTERACTABLE
+	collision_layer = Layers.INTERACTABLE | Layers.NPC
 
 
 func _arrived() -> void:
@@ -268,7 +278,7 @@ func _arrived() -> void:
 # --- Per frame ----------------------------------------------------------------------------
 
 func _physics_process(delta: float) -> void:
-	if World.instance == null:
+	if World.instance == null or downed:
 		return
 	var player := World.instance.player
 	var far := player == null or global_position.distance_to(player.global_position) > 70.0
@@ -400,10 +410,49 @@ func _fight(delta: float) -> void:
 			e.remove_meta(&"killed_by_npc")
 
 
+# --- Raids (Milestone 7) ------------------------------------------------------------------
+
+## Raiders only go for people who are out in the open (and guards still standing).
+func can_be_attacked() -> bool:
+	return visible and not asleep and not downed and (role == &"guard" or (site != null and site.under_attack))
+
+
+func receive_hit(info: DamageInfo) -> float:
+	if not can_be_attacked():
+		return 0.0
+	if role != &"guard":
+		# Civilians run for home instead of fighting.
+		Events.damage_dealt.emit(global_position + Vector3(0, 2.0, 0), 0.0, false, false, "Help!")
+		_update_activity(true)
+		return 0.0
+	var dealt := minf(info.amount, hp)
+	hp -= dealt
+	model.flash()
+	Events.damage_dealt.emit(global_position + Vector3(0, 2.0, 0), dealt, false, false, "Guard")
+	if info.source is Enemy and (_guard_target == null or not is_instance_valid(_guard_target)):
+		_guard_target = info.source
+	if hp <= 0.0:
+		downed = true
+		_guard_target = null
+		_path = PackedVector3Array()
+		model.play_death()
+		Events.toast.emit("Guard %s is down!" % display_name, Color(1, 0.6, 0.4))
+	return dealt
+
+
+## After a raid: guards get back up, everyone resumes their day.
+func recover() -> void:
+	hp = GUARD_HEALTH
+	if downed:
+		downed = false
+		model.reset_pose()
+	_update_activity(true)
+
+
 # --- Interaction --------------------------------------------------------------------------
 
 func is_interactable() -> bool:
-	return not asleep and visible
+	return not asleep and visible and not downed
 
 
 func get_interact_text() -> String:

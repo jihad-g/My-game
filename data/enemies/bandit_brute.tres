@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/brute_bash.tres" id="2_melee"]
+[ext_resource type="Resource" path="res://data/attacks/brute_cleave.tres" id="3_heavy"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"bandit_insignia"
+min_count = 1
+max_count = 2
+chance = 0.7
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"iron_ore"
+min_count = 1
+max_count = 3
+chance = 0.4
+
+[resource]
+script = ExtResource("1_md")
+id = &"bandit_brute"
+display_name = "Bandit Brute"
+category = 2
+level = 8
+max_health = 170.0
+walk_speed = 2.0
+run_speed = 3.6
+turn_speed = 9.0
+aggro_range = 13.0
+leash_range = 34.0
+max_poise = 90.0
+damage_multipliers = {}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 45
+respawn_time = 600.0
+style = 0
+look = &"bandit_brute"
+model_scale = 1.3
+tint = Color(0.4, 0.3, 0.22, 1)
+accent = Color(0.7, 0.2, 0.15, 1)
+melee = ExtResource("2_melee")
+heavy = ExtResource("3_heavy")
+heavy_cooldown = 5.0
+siege_mult = 3.0
+raider = true
+pack_alert = 14.0

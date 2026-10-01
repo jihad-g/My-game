@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"starfall_blade"
+result_item = &"starfall_blade"
+result_count = 1
+ingredients = {
+&"star_metal_ingot": 4,
+&"star_core": 1,
+&"mithril_ingot": 2,
+&"leather": 1
+}
+station = 2
+tier = 6
+source = 1
+discovered_by = &"star_core"
+xp = 200

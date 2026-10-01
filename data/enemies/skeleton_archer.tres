@@ -54,3 +54,4 @@ projectile_windup = 0.75
 projectile_cooldown = 2.4
 preferred_min = 6.0
 preferred_max = 11.0
+dodge_chance = 0.15

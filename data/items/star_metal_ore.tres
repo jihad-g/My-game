@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"star_metal_ore"
+display_name = "Star Metal Ore"
+description = "Still warm from its fall. Found in meteor craters."
+category = 0
+rarity = 4
+max_stack = 99
+base_value = 90
+icon_color = Color(0.55, 0.6, 0.95, 1)
+icon_glyph = "SM"

@@ -66,3 +66,5 @@ slam_radius = 4.5
 volley_count = 6
 summon = ExtResource("4_summon")
 summon_count = 3
+phases = [{"at": 0.66, "moves": [&"pull", &"spikes", &"charge", &"volley", &"summon"], "text": "The Elder Thornmaw's roots stir!", "hazard": &""}, {"at": 0.33, "moves": [&"charge", &"spikes", &"nova", &"pull", &"summon"], "text": "The grotto floods with venom!", "hazard": &"poison_pools"}]
+spike_status = [&"poison", 5.0, {"dps": 4.0}]

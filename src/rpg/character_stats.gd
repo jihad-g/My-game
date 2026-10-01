@@ -138,7 +138,8 @@ func _on_enemy_killed(enemy: Node, _id: StringName, _pos: Vector3) -> void:
 	if enemy.has_method("xp_value"):
 		xp_base = enemy.xp_value()
 		lvl = enemy.effective_level()
-	grant_xp(Progression.combat_xp(xp_base, lvl, level),
+	var mult := World.instance.events.xp_mult() if World.instance and World.instance.events else 1.0
+	grant_xp(roundi(Progression.combat_xp(xp_base, lvl, level) * mult),
 		Progression.Source.BOSS if d.category == EnemyData.Category.BOSS else Progression.Source.COMBAT)
 
 

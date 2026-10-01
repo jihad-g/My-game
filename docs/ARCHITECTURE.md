@@ -183,6 +183,32 @@ World (world.gd)                 wires systems, world services (temperature, pic
   status effects and loot. Bosses emit `Events.boss_started/boss_ended` for the HUD bar.
 - **Loot**: `LootTables` (rank-gated entries, gear bands, legendary scrolls); `LootChest`.
 
+## Advanced gameplay (Milestone 7)
+
+- **Status effects** – `StatusEffects` (src/combat) is one component used by enemies (scene
+  node) and the player (created in `Player._ready`). `apply()` handles elemental interactions
+  and immunities; `incoming()` / `outgoing_mult()` / `speed_mult()` are read by
+  `Enemy.receive_hit`, `Player.receive_hit`, `PlayerAbilities` and `Monster`.
+- **GroundHazard** (src/combat) – every telegraphed area attack: danger circle → blast (or a
+  lingering pool). Flags decide who it hurts (player / enemies / townsfolk + buildings).
+  Boss spikes and meteors, bandit bombs, elite death bursts, Miasma/Blizzard/Meteor spells.
+- **Monster AI** – `_pick_target()` (player; for raiders also NPCs and building pieces), a state
+  machine (`AI` enum) with boss specials, phases (`MonsterData.phases`), ward pylons, support
+  casting and elite affixes (`EliteAffixes`). `CombatDirector` hands out melee attack tokens
+  and circle slots; `_move_dir()` steers with feeler rays, hops and detours.
+- **Spells** – `data/spells/*.tres` are `AbilityData` with `required_mana_control`; `SpellBook`
+  (on the player, saved) holds known spells and 2 slots; `PlayerAbilities._spell_<effect>()`
+  implements them.
+- **Raids** – `RaidManager` (World child) rolls raids hourly from the world seed, runs the
+  warning → waves → result flow, spawns raiders as untracked pooled `Monster`s with
+  `set_raid(objective)`, and saves plundered/defended/pending state. Building pieces
+  (`BuildPiece`) have hit points (`BuildPieceData.get_max_health()`), `receive_hit()`,
+  repair costs; turrets and bells are piece behaviours. `NPC` guards have hit points and
+  get knocked down; `SettlementSite.under_attack` makes villagers hide.
+- **Rare events** – `WorldEvents` (World child) rolls events hourly, applies sky tints via
+  `DayNightCycle.sky_tint`/`eclipse`, spawns hordes, goblins, meteors (`MeteorCrater`) and the
+  Starborn Colossus, exposes `xp_mult()` / `spell_mult()`, and saves active events and craters.
+
 ## Survival
 
 - `StatBlock` aggregates multiplicative modifiers per source (`&"hunger"`,

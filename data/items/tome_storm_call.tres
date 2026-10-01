@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"tome_storm_call"
+display_name = "Tome: Storm Call"
+description = "Lightning strikes enemies around you 8 times over 4 s. Shocks them; wet targets take +50%. Requires Mana Control 60."
+category = 6
+rarity = 4
+max_stack = 1
+base_value = 1280
+icon_color = Color(0.75, 0.85, 1, 1)
+icon_glyph = "SC"
+teaches_spell = &"storm_call"

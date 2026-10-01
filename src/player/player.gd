@@ -57,12 +57,17 @@ enum State { NORMAL, DODGING, STAGGERED, DEAD, DASHING }
 var inventory := Inventory.new(24)
 var equipment := Equipment.new()
 var recipes := RecipeBook.new()
+## Advanced spells learned from tomes (Milestone 7).
+var spells := SpellBook.new()
 ## Money in copper (Milestone 5).
 var coins: int = 0
-## Damage-over-time and slows from monster attacks (Milestone 6):
-## id -> {time, dps}. burn/poison tick damage, chilled slows.
-var afflictions: Dictionary = {}
-var _affliction_tick := 0.0
+## Status effects (burn, poison, bleed, chill, shock, wet, buffs...): the
+## shared StatusEffects component (Milestone 7). Created in _ready().
+var status: StatusEffects
+## Active status effects: id -> {time, stacks, dps, source} (read-only view).
+var afflictions: Dictionary:
+	get:
+		return status.effects if status else {}
 var reputation := Reputation.new()
 var state: State = State.NORMAL
 var is_dead: bool = false
@@ -104,6 +109,9 @@ var _dash_speed := 0.0
 var _dash_left := 0.0
 var _dash_on_hit: Callable
 var _dash_hit: Array[Node] = []
+## Boss "pull" moves drag the player (velocity added while _pull_left > 0).
+var _pull := Vector3.ZERO
+var _pull_left := 0.0
 
 
 func _ready() -> void:
@@ -118,6 +126,14 @@ func _ready() -> void:
 	interact_area.collision_mask = Layers.INTERACTABLE | Layers.PICKUP
 	floor_snap_length = 0.6
 	floor_max_angle = deg_to_rad(50.0)
+	status = StatusEffects.new()
+	status.name = "Status"
+	status.health = health
+	add_child(status)
+	status.effect_applied.connect(_on_status_applied)
+	status.effect_expired.connect(_on_status_expired)
+	status.reaction.connect(func(text: String) -> void:
+		Events.damage_dealt.emit(global_position + Vector3(0, 2.5, 0), 0.0, false, true, text))
 
 
 # --- Input ------------------------------------------------------------------------
@@ -146,6 +162,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		abilities.try_use(2)
 	elif event.is_action_pressed(&"ability_shield"):
 		abilities.try_use(3)
+	elif event.is_action_pressed(&"spell_1"):
+		abilities.try_cast(0)
+	elif event.is_action_pressed(&"spell_2"):
+		abilities.try_cast(1)
 	else:
 		for i in InputSetup.HOTBAR_ACTIONS.size():
 			if event.is_action_pressed(InputSetup.HOTBAR_ACTIONS[i]):
@@ -160,7 +180,6 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		return
 	_dodge_cooldown_left -= delta
-	_update_afflictions(delta)
 	hunger.activity_multiplier = 1.0
 	_update_water()
 
@@ -201,7 +220,11 @@ func _physics_process(delta: float) -> void:
 	combat.physics_update(delta)
 
 	# Knockback decays quickly and stacks on top of controlled movement.
-	velocity += _knockback
+	var pull := Vector3.ZERO
+	if _pull_left > 0.0:
+		_pull_left -= delta
+		pull = _pull
+	velocity += _knockback + pull
 	if is_swimming:
 		# Buoyancy: float with the head above the surface.
 		var float_y := TerrainGenerator.WATER_Y - swim_depth
@@ -215,7 +238,7 @@ func _physics_process(delta: float) -> void:
 		# Climb out onto the bank.
 		GroundMotion.try_step_up(self, horizontal, swim_depth + 0.9)
 	move_and_slide()
-	velocity -= _knockback
+	velocity -= _knockback + pull
 	_knockback = _knockback.move_toward(Vector3.ZERO, 30.0 * delta)
 
 	_update_facing(delta)
@@ -231,6 +254,8 @@ func _physics_process(delta: float) -> void:
 func _update_water() -> void:
 	var w := World.instance
 	_in_water = w != null and w.is_in_water(global_position)
+	if _in_water and not is_dead:
+		refresh_status(&"wet", 6.0)
 	var was_swimming := is_swimming
 	is_swimming = _in_water and global_position.y < TerrainGenerator.WATER_Y - 0.6 and w.is_deep_water(global_position)
 	if is_swimming and not was_swimming:
@@ -473,6 +498,14 @@ func receive_hit(info: DamageInfo) -> void:
 		reduction = minf(reduction + 0.2, 0.85)
 	if info.damage_type != &"starvation" and info.damage_type != &"true":
 		info.amount *= (1.0 - reduction) * abilities.incoming_mult()
+		var inc := status.incoming(info.damage_type)
+		info.amount *= float(inc[0])
+		if inc[1] != "":
+			info.tag = inc[1]
+		var before := info.amount
+		info.amount = abilities.absorb(info.amount)
+		if info.amount < before and info.amount <= 0.0:
+			info.tag = "Absorbed"
 	var dealt := health.apply_damage(info)
 	if dealt > 0.0:
 		abilities.on_damage_taken(dealt)
@@ -486,40 +519,48 @@ func receive_hit(info: DamageInfo) -> void:
 		afflict(StringName(e[0]), float(e[1]), e[2] if e.size() > 2 else {})
 
 
-## Applies burn / poison (damage over time) or chilled (slow) to the player.
-func afflict(id: StringName, duration: float, params: Dictionary) -> void:
+## Applies a status effect to the player (see StatusEffects for ids).
+## Harmful effects are shortened by the Defense perk "Iron Skin".
+func afflict(id: StringName, duration: float, params: Dictionary = {}) -> bool:
 	if is_dead:
+		return false
+	status.duration_mult = Skill.status_duration_mult(character.skill_level(Skill.DEFENSE))
+	return status.apply(id, duration, params)
+
+
+## Keeps an effect going without re-announcing it (standing in water keeps you wet).
+func refresh_status(id: StringName, duration: float) -> void:
+	if status.has(id):
+		status.effects[id].time = maxf(float(status.effects[id].time), duration)
+	else:
+		afflict(id, duration)
+
+
+func _on_status_applied(id: StringName) -> void:
+	if StatusEffects.is_harmful(id) and id != &"wet":
+		Events.damage_dealt.emit(global_position + Vector3(0, 2.3, 0), 0.0, false, true, StatusEffects.display_name(id))
+	if id == &"stunned" and state == State.NORMAL:
+		_stagger(status.time_left(id))
+	_update_status_stats()
+	Events.status_changed.emit(self)
+
+
+func _on_status_expired(_id: StringName) -> void:
+	_update_status_stats()
+	Events.status_changed.emit(self)
+
+
+func _update_status_stats() -> void:
+	var m := status.speed_mult() if not status.is_stunned() else 1.0
+	stats.set_source(&"afflictions", {} if is_equal_approx(m, 1.0) else {Stats.MOVE_SPEED: m})
+
+
+## Drags the player with velocity `v` for `time` seconds (boss pull moves).
+func set_pull(v: Vector3, time: float) -> void:
+	if is_dead or state == State.DODGING:
 		return
-	var cur: Dictionary = afflictions.get(id, {"time": 0.0, "dps": 0.0})
-	cur.time = maxf(float(cur.time), duration)
-	cur.dps = maxf(float(cur.dps), float(params.get("dps", 4.0)))
-	afflictions[id] = cur
-	var names := {&"burn": "Burning", &"poison": "Poisoned", &"chilled": "Chilled"}
-	Events.damage_dealt.emit(global_position + Vector3(0, 2.3, 0), 0.0, false, true, names.get(id, String(id)))
-	_update_affliction_stats()
-
-
-func _update_afflictions(delta: float) -> void:
-	if afflictions.is_empty():
-		return
-	_affliction_tick -= delta
-	var tick := _affliction_tick <= 0.0
-	if tick:
-		_affliction_tick = 0.5
-	for id in afflictions.keys():
-		var a: Dictionary = afflictions[id]
-		a.time = float(a.time) - delta
-		if tick and id in [&"burn", &"poison"] and not is_dead:
-			var info := DamageInfo.create(float(a.dps) * 0.5, null, &"true")
-			info.tag = "Burn" if id == &"burn" else "Poison"
-			health.apply_damage(info)
-		if float(a.time) <= 0.0:
-			afflictions.erase(id)
-			_update_affliction_stats()
-
-
-func _update_affliction_stats() -> void:
-	stats.set_source(&"afflictions", {Stats.MOVE_SPEED: 0.7} if afflictions.has(&"chilled") else {})
+	_pull = v
+	_pull_left = maxf(_pull_left, time)
 
 
 func _is_in_front(info: DamageInfo) -> bool:
@@ -569,8 +610,9 @@ func respawn() -> void:
 		return
 	is_dead = false
 	state = State.NORMAL
-	afflictions.clear()
-	_update_affliction_stats()
+	status.clear()
+	_update_status_stats()
+	Events.status_changed.emit(self)
 	health.revive(0.6)
 	stamina.refill()
 	mana.refill()
@@ -698,6 +740,8 @@ func use_slot(index: int) -> void:
 		return
 	if item.is_recipe_book():
 		read_recipe_book(index)
+	elif item.is_spell_tome():
+		read_spell_tome(index)
 	elif item.is_equippable():
 		equip_from_slot(index)
 	elif item.is_consumable():
@@ -799,6 +843,27 @@ func read_recipe_book(index: int) -> void:
 	inventory.remove_from_slot(index, 1)
 
 
+## Learns the spell in a tome (consumed). You can learn any spell; casting
+## needs its Mana Control requirement.
+func read_spell_tome(index: int) -> bool:
+	var s = inventory.get_slot(index)
+	var item: ItemData = ItemDB.get_item(s.id) if s != null else null
+	if item == null or not item.is_spell_tome():
+		return false
+	var sp := SpellBook.get_spell(item.teaches_spell)
+	if sp == null:
+		return false
+	if not spells.learn(sp.id):
+		Events.toast.emit("You already know %s" % sp.display_name, Color(0.85, 0.85, 0.85))
+		return false
+	inventory.remove_from_slot(index, 1)
+	var mc := character.skill_level(Skill.MANA_CONTROL)
+	var note := "" if mc >= sp.required_mana_control else " (needs Mana Control %d to cast)" % sp.required_mana_control
+	Events.toast.emit("Learned spell: %s%s. Spellbook: L" % [sp.display_name, note], Color(0.75, 0.6, 1.0))
+	Events.spell_learned.emit(sp.id)
+	return true
+
+
 func _announce_recipe(id: StringName) -> void:
 	var r := RecipeBook.get_recipe(id)
 	var d: ItemData = ItemDB.get_item(r.result_item) if r else null
@@ -819,6 +884,12 @@ func _consume(item: ItemData) -> void:
 		temperature.add_buff(StringName("food_%s" % item.id), item.temperature_offset, item.temperature_duration)
 	if item.mana_restore > 0.0:
 		mana.restore(item.mana_restore)
+	if not item.cures.is_empty():
+		var n := status.cleanse([] if item.cures.has(&"all") else item.cures)
+		if n > 0:
+			Events.toast.emit("Cured %d effect%s" % [n, "" if n == 1 else "s"], Color(0.6, 1, 0.7))
+	if item.regen_hps > 0.0 and item.regen_duration > 0.0:
+		afflict(&"regen", item.regen_duration, {"hps": item.regen_hps})
 	if item.buff_id != &"" and item.buff_duration > 0.0:
 		abilities.add_buff(item.buff_id, item.buff_duration)
 		if item.buff_id == &"starlight":
@@ -869,6 +940,7 @@ func to_save() -> Dictionary:
 		"recipes": recipes.to_save(),
 		"coins": coins,
 		"reputation": reputation.to_save(),
+		"spells": spells.to_save(),
 	}
 
 
@@ -912,3 +984,4 @@ func from_save(data: Dictionary) -> void:
 		recipes.learn_starting()
 	coins = int(data.get("coins", World.STARTING_COINS))
 	reputation.from_save(data.get("reputation", {}))
+	spells.from_save(data.get("spells", {}))

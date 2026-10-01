@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"tome_meteor"
+display_name = "Tome: Meteor"
+description = "Call down a meteor at the cursor: huge fire damage and burn after a short delay. Shatters frozen foes. Requires Mana Control 50."
+category = 6
+rarity = 4
+max_stack = 1
+base_value = 1280
+icon_color = Color(1, 0.45, 0.15, 1)
+icon_glyph = "Me"
+teaches_spell = &"meteor"

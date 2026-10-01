@@ -16,6 +16,10 @@ var underground: bool = false
 var hour: float = 8.0
 var day: int = 1
 var _last_hour := -1
+## World events (Milestone 7): sky colour override (alpha = strength) and
+## eclipse darkness (0..1 of daylight removed).
+var sky_tint := Color(0, 0, 0, 0)
+var eclipse := 0.0
 
 const SKY_DAY := Color(0.45, 0.72, 1.0)
 const SKY_DUSK := Color(0.95, 0.55, 0.4)
@@ -72,7 +76,7 @@ func _apply() -> void:
 		return
 	if sun:
 		sun.visible = true
-	var daylight := get_daylight()
+	var daylight := get_daylight() * (1.0 - eclipse)
 	var sun_height := sin((hour - 6.0) / 24.0 * TAU)
 	if sun:
 		# Sun travels east -> west; at night the "moon" light comes from the opposite side.
@@ -84,13 +88,19 @@ func _apply() -> void:
 		var day_col := SUN_DAY.lerp(SUN_DUSK, clampf(dusk * dusk, 0.0, 1.0))
 		sun.light_color = MOON.lerp(day_col, daylight)
 		sun.light_energy = lerpf(0.22, 1.2, daylight)
+		if sky_tint.a > 0.0:
+			sun.light_color = sun.light_color.lerp(Color(sky_tint.r, sky_tint.g, sky_tint.b), sky_tint.a * 0.6)
 	if environment and environment.environment:
 		var env := environment.environment
 		var dusk_amount := clampf(1.0 - absf(sun_height) * 3.0, 0.0, 1.0)
 		var sky := SKY_NIGHT.lerp(SKY_DAY, daylight).lerp(SKY_DUSK, dusk_amount * 0.45)
+		if sky_tint.a > 0.0:
+			sky = sky.lerp(Color(sky_tint.r, sky_tint.g, sky_tint.b), sky_tint.a)
 		env.background_color = sky
 		env.fog_light_color = sky.lerp(Color.WHITE, 0.15)
 		env.ambient_light_color = Color(0.4, 0.45, 0.8).lerp(Color(0.85, 0.88, 1.0), daylight)
+		if sky_tint.a > 0.0:
+			env.ambient_light_color = env.ambient_light_color.lerp(Color(sky_tint.r, sky_tint.g, sky_tint.b), sky_tint.a * 0.5)
 		env.ambient_light_energy = lerpf(0.28, 0.55, daylight)
 		env.fog_depth_begin = 70.0
 		env.fog_depth_end = 160.0

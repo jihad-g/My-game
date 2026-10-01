@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"alarm_bell"
+display_name = "Alarm Bell"
+description = "Warns of raids on your land 45 s earlier and reveals the raiders. Ring it to call your defenses to arms."
+category = 9
+placement = 1
+behavior = 10
+cost = {
+&"plank": 4,
+&"copper_ingot": 2
+}
+mesh = &"alarm_bell"
+collision_size = Vector3(0.9, 2.2, 0.3)
+collision_center = Vector3(0, 1.1, 0)
+blocks_movement = true
+required_level = 3
+fade_near_camera = false

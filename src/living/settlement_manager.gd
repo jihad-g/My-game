@@ -80,6 +80,8 @@ func _spawn_site(s: SettlementInfo) -> void:
 	site.setup(s, self, _day())
 	add_child(site)
 	sites[s.id] = site
+	if world.raids:
+		world.raids.on_site_spawned(site)
 
 
 func _free_site(id: String) -> void:
@@ -144,7 +146,10 @@ func rep_tier(info: SettlementInfo) -> int:
 
 
 func buy_price(info: SettlementInfo, role: StringName, item_id: StringName) -> int:
-	return Economy.buy_price(info, item_id, rep_tier(info), role)
+	var p := Economy.buy_price(info, item_id, rep_tier(info), role)
+	if world.raids and world.raids.is_plundered(info.id):
+		p = ceili(p * RaidManager.PLUNDER_PRICE)  # raiders emptied the stores
+	return p
 
 
 func sell_price(info: SettlementInfo, role: StringName, item_id: StringName) -> int:

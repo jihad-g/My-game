@@ -23,6 +23,10 @@ func _ready() -> void:
 		await _shot("20_main_menu")
 		get_tree().quit()
 		return
+	if "--only=advanced" in OS.get_cmdline_user_args():
+		await _advanced_showcase()
+		get_tree().quit()
+		return
 	if "--only=explore" in OS.get_cmdline_user_args():
 		await _explore_showcase()
 		get_tree().quit()
@@ -581,5 +585,339 @@ func _explore_showcase() -> void:
 			await _wait(60)
 			await _shot("%02d_dungeon_boss" % n)
 			n += 1
+	world.queue_free()
+	await _wait(5)
+
+
+func _place(world: World, id: StringName, cell: Vector2i, slot: String = "", rot: int = 0) -> BuildPiece:
+	var data := BuildingManager.get_piece_data(id)
+	if slot == "":
+		slot = BuildingManager.slot_kind(data)
+		if slot == "edge":
+			slot = "edge_n"
+	var why := world.building.check_place(data, cell, slot, world.player, false)
+	if why != "":
+		print("place %s at %s: %s" % [id, cell, why])
+		return null
+	return world.building.place(data, cell, slot, rot, world.player, false)
+
+
+func _monster(world: World, id: StringName, pos: Vector3) -> Monster:
+	pos.y = world.get_ground_height(pos) + 0.3
+	return world.spawner.spawn_enemy(load("res://scenes/enemies/monster.tscn"), pos, "", load("res://data/enemies/%s.tres" % id)) as Monster
+
+
+func _clear_monsters(world: World) -> void:
+	for e in get_tree().get_nodes_in_group(&"enemies"):
+		if e is Enemy and e.visible:
+			NodePool.release_or_free(e)
+	for g in get_tree().get_nodes_in_group(&"ward_pylons"):
+		g.queue_free()
+
+
+func _sec(t: float) -> void:
+	await get_tree().create_timer(t).timeout
+
+
+## A dry, flat spot (size x size m) near `origin`.
+func _dry_center(world: World, origin: Vector3, size: float = 30.0) -> Vector3:
+	var best := origin
+	var best_score := INF
+	for r in range(0, 260, 12):
+		for k in maxi(1, r / 6):
+			var a := TAU * k / maxi(1, r / 6)
+			var c := origin + Vector3(cos(a), 0, sin(a)) * r
+			var lo := INF
+			var hi := -INF
+			var wet := false
+			for x in range(-int(size / 2), int(size / 2) + 1, 5):
+				for z in range(-int(size / 2), int(size / 2) + 1, 5):
+					var h := world.get_ground_height(c + Vector3(x, 0, z))
+					lo = minf(lo, h)
+					hi = maxf(hi, h)
+					wet = wet or h < TerrainGenerator.WATER_Y + 0.6
+			var score := (hi - lo) * 5.0 + r * 0.02
+			if not wet and score < best_score:
+				best_score = score
+				best = c
+		if best_score < 2.0:
+			break
+	return best
+
+
+## Direction that is "up" on screen (away from the camera), flattened.
+func _screen_up(world: World) -> Vector3:
+	var z := world.camera_rig.camera.global_transform.basis.z
+	var f := Vector3(-z.x, 0, -z.z)
+	return f.normalized() if f.length() > 0.01 else Vector3(0, 0, -1)
+
+
+## Milestone 7 showcase: raids, elites, boss mechanics, spells, status effects, rare events.
+func _advanced_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"wizard")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	world.spawner.despawn_all()
+	world.hud._help.visible = false
+	world.day_night.hour = 17.0
+	world.day_night.advance_hours(0.0)
+	for i in 14:
+		p.character.grant_xp(p.character.xp_needed(), Progression.Source.OTHER)
+	p.character.skills[Skill.MANA_CONTROL] = 70
+	p.character.recalculate()
+	p.mana.max_mana = 600.0
+	p.mana.refill()
+	world.spawner.max_active = 60
+	var meadow := _find_biome(world.generator, p.global_position, &"verdant_meadow")
+	await _teleport(world, _dry_center(world, meadow if meadow != Vector3.INF else p.global_position))
+	var home := p.global_position
+	world.day_night.hour = 11.0
+	world.day_night.advance_hours(0.0)
+	# --- Base raid -------------------------------------------------------------------------
+	var c := Vector2i(floori(p.global_position.x), floori(p.global_position.z))
+	_place(world, &"claim_totem", c + Vector2i(0, 1))
+	for dx in range(-3, 4):
+		_place(world, &"palisade_wall" if dx % 2 == 0 else &"wood_wall", c + Vector2i(dx, -3), "edge_n")
+		_place(world, &"wood_wall", c + Vector2i(dx, 4), "edge_n")
+	for dz in range(-3, 4):
+		if dz != 0:
+			_place(world, &"stone_wall", c + Vector2i(-3, dz), "edge_w")
+			_place(world, &"wood_wall", c + Vector2i(4, dz), "edge_w")
+	_place(world, &"reinforced_door", c + Vector2i(-3, 0), "edge_w")
+	_place(world, &"wood_door", c + Vector2i(4, 0), "edge_w")
+	_place(world, &"arrow_tower", c + Vector2i(2, -2))
+	_place(world, &"arrow_tower", c + Vector2i(-2, 2))
+	_place(world, &"alarm_bell", c + Vector2i(2, 2))
+	_place(world, &"storage_chest", c + Vector2i(-1, -2))
+	_place(world, &"torch", c + Vector2i(1, 1))
+	_place(world, &"bed", c + Vector2i(-2, -1))
+	var base := world.raids.find_player_base()
+	print("showcase base: ", base)
+	if not base.is_empty():
+		world.raids.start_base_raid(base, &"bandits")
+		await _wait(10)
+		await _shot("70_raid_warning")
+		world.raids.raid.t = 0.0
+		world.camera_rig._target_distance = 26.0
+		world.camera_rig._target_pitch = 58.0
+		var dir: float = world.raids.raid.dir
+		p.global_position = base.center + Vector3(cos(dir), 0, sin(dir)) * 6.0 + Vector3(0, 0.3, 0)
+		p.face_direction(Vector3(cos(dir), 0, sin(dir)), true)
+		await _sec(9.0)
+		await _shot("71_raid_attack")
+		for m in world.raids.alive_raiders():
+			if m.global_position.distance_to(p.global_position) < 14.0:
+				p.set_lock_target(m)
+				break
+		await _sec(4.0)
+		await _shot("72_raid_siege")
+		p.set_lock_target(null)
+		world.raids._finish(true)
+	_clear_monsters(world)
+	await _wait(10)
+	# --- Elites ----------------------------------------------------------------------------
+	world.day_night.hour = 13.0
+	world.day_night.advance_hours(0.0)
+	await _teleport(world, _dry_center(world, home + Vector3(45, 0, 0), 24.0))
+	var fwd := _screen_up(world)
+	var affix_sets := [[&"molten", &"frenzied"], [&"glacial"], [&"vampiric"], [&"shielded", &"juggernaut"]]
+	var ids := [&"bandit_brute", &"skeleton_warrior", &"bandit_thug", &"arcane_sentinel"]
+	var first: Monster = null
+	for k in 4:
+		var m := _monster(world, ids[k], p.global_position + fwd.rotated(Vector3.UP, -0.9 + k * 0.6) * 5.0)
+		if m:
+			m.configure(2.0, 1.0, 4, 1.0)
+			m.make_elite(affix_sets[k])
+			m.stagger(30.0)
+			m.face_toward(p.global_position - m.global_position)
+			if first == null:
+				first = m
+	p.face_direction(fwd, true)
+	if first:
+		p.set_lock_target(first)
+	world.camera_rig._target_distance = 15.0
+	world.camera_rig._target_pitch = 52.0
+	await _wait(90)
+	await _shot("73_elites")
+	p.set_lock_target(null)
+	_clear_monsters(world)
+	# --- Boss: ward pylons ---------------------------------------------------------------
+	var boss := _monster(world, &"bone_king", p.global_position + fwd * 6.0)
+	if boss:
+		boss.configure(3.0, 1.0, 6, 1.0)
+		boss._alert(p)
+		await _wait(40)
+		boss.health.current = boss.health.max_health * 0.3
+		await _wait(120)
+		boss._set_ai(Monster.AI.CHASE)
+		boss._raise_ward()
+		boss.stagger(6.0)
+		world.camera_rig._target_distance = 22.0
+		await _wait(60)
+		await _shot("74_boss_ward")
+		boss._clear_pylons()
+		boss._start_special(&"spikes", 4.0, p)
+		await _wait(40)
+		await _shot("75_boss_spikes")
+	_clear_monsters(world)
+	await _wait(20)
+	var guardian := _monster(world, &"temple_guardian", p.global_position + fwd * 7.0)
+	if guardian:
+		guardian.configure(3.0, 0.5, 6, 1.0)
+		guardian._alert(p)
+		await _wait(60)
+		guardian._start_beam(p)
+		await _sec(1.3)
+		await _shot("76_boss_beam")
+	_clear_monsters(world)
+	await _wait(20)
+	# --- Spells & status effects ---------------------------------------------------------
+	var targets := []
+	for k in 5:
+		var side := fwd.cross(Vector3.UP)
+		var m := _monster(world, &"skeleton_warrior" if k % 2 == 0 else &"thorn_crawler", p.global_position + fwd * (6.5 + (k % 2) * 1.5) + side * (-3.0 + k * 1.5))
+		if m:
+			m.configure(30.0, 0.2, 0, 1.0)
+			m.stagger(60.0)
+			targets.append(m)
+	for id in SpellBook.all():
+		p.spells.learn(id)
+	p.face_direction(fwd, true)
+	p.set_lock_target(targets[2] if targets.size() > 2 else null)
+	world.camera_rig._target_distance = 17.0
+	p.spells.assign(0, &"blizzard")
+	p.abilities.try_cast(0)
+	await _sec(1.0)
+	p.set_lock_target(targets[0] if targets.size() > 0 else null)
+	p.spells.assign(1, &"meteor")
+	p.abilities.cooldowns.clear()
+	p.abilities.try_cast(1)
+	p.afflict(&"bleed", 30.0, {"dps": 0.1})
+	p.afflict(&"shocked", 30.0)
+	p.afflict(&"weakened", 30.0)
+	await _sec(0.75)
+	await _shot("77_spells_blizzard_meteor")
+	await _sec(3.0)
+	p.abilities.cooldowns.clear()
+	p.spells.assign(0, &"storm_call")
+	p.abilities.try_cast(0)
+	await _sec(0.8)
+	p.abilities.cooldowns.clear()
+	p.spells.assign(0, &"arcane_missiles")
+	p.abilities.try_cast(0)
+	await _sec(0.35)
+	await _shot("78_spells_storm_missiles")
+	await _sec(2.0)
+	p.abilities.cooldowns.clear()
+	p.spells.assign(0, &"poison_cloud")
+	p.abilities.try_cast(0)
+	p.abilities.cooldowns.clear()
+	p.spells.assign(1, &"arcane_barrier")
+	p.abilities.try_cast(1)
+	await _sec(1.0)
+	await _shot("79_spells_miasma_barrier")
+	p.set_lock_target(null)
+	p.spells.assign(0, &"meteor")
+	p.spells.assign(1, &"blink")
+	world.hud._spellbook.toggle()
+	await _wait(10)
+	await _shot("80_spellbook")
+	world.hud._spellbook.toggle()
+	p.status.clear()
+	_clear_monsters(world)
+	await _wait(20)
+	# --- Rare events ----------------------------------------------------------------------
+	world.day_night.hour = 21.2
+	world.day_night.advance_hours(0.0)
+	world.events.start(&"blood_moon")
+	for k in 6:
+		var a := -1.2 + k * 0.5
+		var m := _monster(world, [&"skeleton_warrior", &"skeleton_archer", &"thorn_crawler"][k % 3], p.global_position + fwd.rotated(Vector3.UP, a) * (7.0 + (k % 2) * 2.0))
+		if m:
+			m.set_meta(&"event", &"horde")
+			if k == 2:
+				m.make_elite([&"glacial"])
+			m._alert(p)
+	world.camera_rig._target_distance = 22.0
+	await _sec(1.5)
+	await _shot("81_blood_moon")
+	world.events.stop(&"blood_moon")
+	_clear_monsters(world)
+	world.day_night.hour = 19.6
+	world.day_night.advance_hours(0.0)
+	world.events.start(&"meteor_shower")
+	var crater := world.events.drop_meteor(p.global_position + fwd * 8.0)
+	world.events.spawn_colossus(crater.global_position + fwd.cross(Vector3.UP) * 4.0)
+	world.camera_rig._target_distance = 24.0
+	await _sec(2.0)
+	await _shot("82_meteor_colossus")
+	world.events.stop(&"meteor_shower")
+	_clear_monsters(world)
+	var snow := _find_biome(world.generator, p.global_position, &"snowy_tundra")
+	if snow != Vector3.INF:
+		await _teleport(world, _dry_center(world, snow, 24.0))
+		world.events.start(&"aurora")
+		world.day_night.hour = 22.5
+		world.day_night.advance_hours(0.0)
+		world.camera_rig._target_distance = 30.0
+		world.camera_rig._target_pitch = 32.0
+		await _sec(1.5)
+		await _shot("83_aurora")
+		world.camera_rig._target_pitch = 55.0
+		world.events.stop(&"aurora")
+	world.day_night.hour = 11.0
+	world.day_night.advance_hours(0.0)
+	await _teleport(world, _dry_center(world, home, 24.0))
+	world.events.start(&"treasure_goblin")
+	var gob: Monster = world.events._goblin
+	if gob:
+		gob.global_position = p.global_position + _screen_up(world) * 5.0 + Vector3(0, 0.4, 0)
+		gob._alert(p)
+		p.set_lock_target(gob)
+		world.camera_rig._target_distance = 16.0
+		await _sec(0.9)
+		await _shot("84_treasure_goblin")
+		p.set_lock_target(null)
+		world.events.stop(&"treasure_goblin")
+	# --- Town defense -----------------------------------------------------------------------
+	var town: SettlementInfo = null
+	for st in world.generator.settlements.near(Vector3.ZERO, 3000.0):
+		if not st.is_kingdom():
+			town = st
+			break
+	if town:
+		await _teleport(world, town.world_center() + Vector3(0.5, 0.4, -1.5))
+		world.living.update_now(true)
+		world.living.finish_sites()
+		await _wait(30)
+		world.raids.start_town_raid(town, 2)
+		world.raids.raid.t = 0.0
+		await _wait(60)
+		var raiders := world.raids.alive_raiders()
+		if not raiders.is_empty():
+			var to: Vector3 = (raiders[0] as Node3D).global_position - town.world_center()
+			to.y = 0.0
+			var spot := town.world_center() + to.normalized() * (town.radius - 4.0)
+			spot.y = world.get_ground_height(spot) + 0.4
+			p.global_position = spot
+			world.camera_rig.snap_to_target()
+		world.camera_rig._target_distance = 30.0
+		world.camera_rig._target_pitch = 55.0
+		await _sec(9.0)
+		var best: Node3D = null
+		for m in world.raids.alive_raiders():
+			if best == null or (m as Node3D).global_position.distance_to(town.world_center()) < best.global_position.distance_to(town.world_center()):
+				best = m
+		if best:
+			p.global_position = best.global_position + Vector3(2.0, 0.5, 2.0)
+			p.set_lock_target(best)
+		await _sec(2.0)
+		await _shot("85_town_raid")
+		world.raids._finish(true)
 	world.queue_free()
 	await _wait(5)

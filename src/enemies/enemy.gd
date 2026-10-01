@@ -33,6 +33,7 @@ var _death_time := 0.0
 var _desired_velocity := Vector3.ZERO
 var _rng := RandomNumberGenerator.new()
 var _taunt_left := 0.0
+var _env_check := 0.0
 
 
 func _ready() -> void:
@@ -44,6 +45,8 @@ func _ready() -> void:
 	health.damaged.connect(_on_damaged)
 	status.health = health
 	status.effect_applied.connect(_on_status_applied)
+	status.reaction.connect(func(text: String) -> void:
+		Events.damage_dealt.emit(global_position + Vector3(0, 2.6, 0), 0.0, false, false, text))
 	Events.target_changed.connect(_on_target_changed)
 	_apply_data()
 
@@ -132,7 +135,20 @@ func _physics_process(delta: float) -> void:
 			NodePool.release_or_free(self)
 		return
 
+	# No terrain collision here yet (chunk still generating): wait instead of falling through.
+	var w := World.instance
+	if w and w.dungeon == null and not w.chunk_manager.is_collision_ready_at(global_position):
+		velocity = Vector3.ZERO
+		return
 	_taunt_left -= delta
+	_env_check -= delta
+	if _env_check <= 0.0:
+		_env_check = 0.5
+		if World.instance and World.instance.dungeon == null and World.instance.is_in_water(global_position):
+			if status.has(&"wet"):
+				status.effects[&"wet"].time = maxf(float(status.effects[&"wet"].time), 4.0)
+			else:
+				status.apply(&"wet", 4.0)
 	if _stagger_left > 0.0 or status.is_stunned():
 		_stagger_left -= delta
 		_desired_velocity = Vector3.ZERO
@@ -189,6 +205,11 @@ func receive_hit(info: DamageInfo) -> float:
 		info.amount *= 2.0
 		info.tag = "Shatter!"
 		status.remove(&"frozen")
+	var inc := status.incoming(info.damage_type)
+	info.amount *= float(inc[0])
+	if inc[1] != "":
+		info.tag = inc[1]
+	info.amount = _modify_incoming(info)
 	var dealt := health.apply_damage(info)
 	if dealt <= 0.0 and not is_dead:
 		Events.damage_dealt.emit(info.hit_position, 0.0, false, false, "Immune")
@@ -232,12 +253,14 @@ func lose_target(source: Node3D) -> void:
 		_on_lost_target()
 
 
+## Hook for subclasses (elite shields, boss phases): returns the final amount.
+func _modify_incoming(info: DamageInfo) -> float:
+	return info.amount
+
+
 func _on_status_applied(id: StringName) -> void:
-	var color := {&"burn": Color(1, 0.5, 0.2), &"poison": Color(0.5, 0.9, 0.3), &"frozen": Color(0.6, 0.9, 1.0),
-		&"stunned": Color(1, 1, 0.5), &"chilled": Color(0.7, 0.9, 1.0)}
-	if id in color:
-		Events.damage_dealt.emit(global_position + Vector3(0, 2.2, 0), 0.0, false, false,
-			{&"burn": "Burning", &"poison": "Poisoned", &"frozen": "Frozen", &"stunned": "Stunned", &"chilled": "Chilled"}[id])
+	if id != &"taunted" and id != &"wet":
+		Events.damage_dealt.emit(global_position + Vector3(0, 2.2, 0), 0.0, false, false, StatusEffects.display_name(id))
 	if id == &"stunned":
 		stagger(status.time_left(id))
 

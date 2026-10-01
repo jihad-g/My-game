@@ -1,0 +1,75 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/warlord_swipe.tres" id="2_melee"]
+[ext_resource type="Resource" path="res://data/attacks/warlord_cleave.tres" id="3_heavy"]
+[ext_resource type="Resource" path="res://data/enemies/bandit_thug.tres" id="4_summon"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"warlords_cleaver"
+min_count = 1
+max_count = 1
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"bandit_insignia"
+min_count = 3
+max_count = 6
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"gold_nugget"
+min_count = 1
+max_count = 3
+chance = 1.0
+
+[resource]
+script = ExtResource("1_md")
+id = &"bandit_warlord"
+display_name = "Bandit Warlord"
+category = 7
+level = 14
+max_health = 1100.0
+walk_speed = 2.4
+run_speed = 4.8
+turn_speed = 9.0
+aggro_range = 20.0
+leash_range = 34.0
+max_poise = 260.0
+damage_multipliers = {}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2")]
+xp_reward = 550
+respawn_time = 600.0
+style = 3
+look = &"warlord"
+model_scale = 1.5
+tint = Color(0.45, 0.15, 0.12, 1)
+accent = Color(0.85, 0.2, 0.15, 1)
+melee = ExtResource("2_melee")
+heavy = ExtResource("3_heavy")
+heavy_cooldown = 5.0
+projectile_damage = 16.0
+projectile_type = &"fire"
+projectile_speed = 12.0
+projectile_color = Color(0.3, 0.25, 0.2, 1)
+projectile_windup = 0.6
+projectile_cooldown = 3.0
+preferred_min = 0.0
+preferred_max = 12.0
+projectile_status = [&"burn", 3.0, {"dps": 4.0}]
+boss_title = "Grimtusk the Warlord"
+boss_moves = [&"roar", &"cleave", &"charge", &"bomb", &"summon"]
+slam_damage = 28.0
+slam_radius = 4.5
+summon = ExtResource("4_summon")
+summon_count = 2
+phases = [{"at": 0.6, "moves": [&"roar", &"charge", &"bomb", &"cleave", &"summon", &"slam"], "text": "Grimtusk bellows: Burn it all down!", "hazard": &"fire_rain"}, {"at": 0.3, "moves": [&"charge", &"cleave", &"roar", &"bomb", &"slam"], "text": "Grimtusk goes berserk!", "hazard": &"fire_rain"}]
+siege_mult = 3.0
+raider = true
+can_be_elite = false

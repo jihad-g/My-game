@@ -80,6 +80,23 @@ static func lines(npc: NPC, manager: SettlementManager) -> Array[String]:
 		if p.is_hidden() and not GameState.discovered_places.has("poi:%s" % p.id):
 			out.append("My grandmother swore there's a hidden grove somewhere to the %s, where starlight orchids grow." % direction(here, p.world_center()))
 			break
+	# Raids and rare events (Milestone 7).
+	var w := manager.world
+	if w.raids:
+		if w.raids.pending_town.get("id", "") == s.id:
+			out.append("Bandits are gathering to attack us! Please - we need every sword we can get.")
+		elif w.raids.is_plundered(s.id):
+			out.append("Bandits raided us. The stores are empty - prices stay steep until the carts come back.")
+		elif w.raids.defended.has(s.id):
+			out.append("You drove off the raiders! %s won't forget it." % s.name)
+	if w.events:
+		if w.events.is_active(&"blood_moon"):
+			out.append("The moon is red tonight. Stay behind walls - the dead are walking.")
+		else:
+			var lore := ["My grandfather said when the moon turns red, the dead walk. Build walls, and keep a bell.",
+				"Saw a little green fellow with a sack of gold running through the fields. Fast as a hare!",
+				"Folk say stars that fall from the sky are made of metal no smith has ever worked."]
+			out.append(lore[int(npc.data.seed) % lore.size()])
 	# Caves nearby.
 	var gen := manager.world.generator
 	var caves := gen.get_cave_entrances_near(s.center.x - 400, s.center.y - 400, s.center.x + 400, s.center.y + 400)

@@ -54,6 +54,10 @@ var living: SettlementManager
 var exploration: ExplorationManager
 ## The dungeon floor the player is in (null on the surface/caves).
 var dungeon: DungeonInstance
+## Base and settlement raids (Milestone 7).
+var raids: RaidManager
+## Blood moons, meteor showers, auroras, treasure goblins, eclipses (Milestone 7).
+var events: WorldEvents
 var _autosave_left := AUTOSAVE_INTERVAL
 var _biome_check_left := 0.0
 var _first_ready := true
@@ -87,6 +91,14 @@ func _ready() -> void:
 	exploration.name = "Exploration"
 	exploration.world = self
 	add_child(exploration)
+	raids = RaidManager.new()
+	raids.name = "Raids"
+	raids.world = self
+	add_child(raids)
+	events = WorldEvents.new()
+	events.name = "WorldEvents"
+	events.world = self
+	add_child(events)
 	props = PropLibrary.new()
 	chunk_manager.setup(generator, props)
 	spawner.generator = generator
@@ -153,6 +165,7 @@ func _on_area_ready() -> void:
 	player.frozen = false
 	hud.set_loading(false)
 	_update_biome()
+	events.refresh_craters()
 	if _first_ready:
 		_first_ready = false
 		if _new_world:
@@ -189,6 +202,39 @@ func _unhandled_input(event: InputEvent) -> void:
 			player.give_item(id, 1)
 	elif event.is_action_pressed(&"debug_give_xp"):
 		player.character.grant_xp(player.character.xp_needed(), Progression.Source.OTHER)
+	elif event.is_action_pressed(&"debug_raid"):
+		debug_raid()
+	elif event.is_action_pressed(&"debug_event"):
+		debug_next_event()
+
+
+## Debug (F4): raid your base if you have one, else the nearest settlement (or end the raid).
+func debug_raid() -> void:
+	if raids.is_active():
+		raids._finish(true)
+		return
+	var base := raids.find_player_base()
+	if not base.is_empty():
+		raids.start_base_raid(base, &"bandits")
+		raids.raid.t = 8.0
+		return
+	var near := generator.settlements.near(player.global_position, 400.0)
+	if near.is_empty():
+		Events.toast.emit("Debug: no base (claim + %d pieces) or settlement near for a raid" % RaidManager.BASE_MIN_PIECES, Color(1, 0.8, 0.6))
+		return
+	raids.start_town_raid(near[0], raids.tier_for_level(player.character.level))
+
+
+## Debug (F12): start the next rare world event.
+func debug_next_event() -> void:
+	for id in WorldEvents.IDS:
+		if not events.is_active(id):
+			if events.start(id):
+				if id == &"meteor_shower":
+					events.drop_meteor()
+				return
+	for id in events.active.keys():
+		events.stop(id)
 
 
 # --- Layers (surface / underground) ---------------------------------------------------
@@ -222,6 +268,7 @@ func travel_to_layer(target_layer: int, at: Vector3) -> void:
 	_apply_layer_environment()
 	building.refresh_layer()
 	build_mode.set_active(false)
+	events.refresh_craters()
 	layer_changed.emit(layer)
 
 
@@ -273,6 +320,7 @@ func _load_dungeon_floor(poi: PoiInfo, floor_index: int, ret: Vector3) -> void:
 	player.velocity = Vector3.ZERO
 	camera_rig.snap_to_target()
 	_apply_layer_environment()
+	events.refresh_craters()
 	Events.dungeon_entered.emit(poi.id, floor_index)
 
 
@@ -296,6 +344,7 @@ func exit_dungeon(to: Vector3 = Vector3.INF) -> void:
 	camera_rig.snap_to_target()
 	hud.set_loading(true, "Returning to the surface...")
 	_apply_layer_environment()
+	events.refresh_craters()
 	Events.dungeon_left.emit(poi.id, cleared)
 
 
@@ -475,6 +524,8 @@ func to_save() -> Dictionary:
 		"buildings": building.to_save(),
 		"living": living.to_save(),
 		"exploration": exploration.to_save(),
+		"raids": raids.to_save(),
+		"events": events.to_save(),
 		"layer": layer,
 		"day": day_night.day,
 		"hour": day_night.hour,
@@ -486,6 +537,8 @@ func from_save(data: Dictionary) -> void:
 	layer = int(data.get("layer", TerrainGenerator.Layer.SURFACE))
 	living.from_save(data.get("living", {}))
 	exploration.from_save(data.get("exploration", {}))
+	raids.from_save(data.get("raids", {}))
+	events.from_save(data.get("events", {}))
 	day_night.day = int(data.get("day", 1))
 	day_night.hour = float(data.get("hour", day_night.start_hour))
 	for entry in data.get("placed", []):

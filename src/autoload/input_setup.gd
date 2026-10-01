@@ -54,6 +54,12 @@ const KEY_BINDINGS := {
 	&"build_rotate": [KEY_R],
 	&"world_map": [KEY_M],
 	&"reputation": [KEY_J],
+	&"build_repair": [KEY_U],
+	&"spell_1": [KEY_Y],
+	&"spell_2": [KEY_H],
+	&"spellbook": [KEY_L],
+	&"debug_raid": [KEY_F4],
+	&"debug_event": [KEY_F12],
 }
 
 const MOUSE_BINDINGS := {

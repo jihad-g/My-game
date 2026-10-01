@@ -5,6 +5,9 @@ class_name LootTables
 
 const SCROLLS := [&"scroll_sunforged_blade", &"scroll_staff_of_the_archmage", &"scroll_shadowfang",
 	&"scroll_titans_greataxe", &"scroll_aegis_of_dawn", &"scroll_mithril_plate", &"scroll_crown_of_stars"]
+## Spell tomes (Milestone 7), roughly by power: a "tome" chance rolls one of these.
+const TOMES := [&"tome_blink", &"tome_healing_light", &"tome_poison_cloud", &"tome_arcane_barrier",
+	&"tome_arcane_missiles", &"tome_blizzard", &"tome_meteor", &"tome_storm_call"]
 ## Gear by rank band (a random piece is rolled when a table says "gear").
 const GEAR := [
 	[&"copper_sword", &"copper_dagger", &"leather_gloves", &"fur_cap", &"wooden_buckler", &"copper_ring"],
@@ -20,7 +23,7 @@ const TABLES := {
 	&"vault": {"coins": 45, "gear": 0.6, "scroll": [0.0, 0.0, 0.0, 0.05, 0.15, 0.25], "items": [
 		[&"iron_ingot", 2, 4, 0.6, 0], [&"healing_draught", 1, 2, 0.5, 0], [&"mithril_ingot", 1, 2, 0.35, 2],
 		[&"crystal_shard", 1, 2, 0.4, 1], [&"void_shard", 1, 1, 0.1, 4]]},
-	&"tower": {"coins": 25, "gear": 0.2, "items": [
+	&"tower": {"coins": 25, "gear": 0.2, "tome": [0.2, 0.25, 0.3, 0.35, 0.4, 0.45], "items": [
 		[&"arcane_dust", 2, 4, 0.8, 0], [&"wisp_essence", 1, 2, 0.5, 0], [&"crystal_shard", 1, 2, 0.4, 0],
 		[&"mana_tonic", 1, 2, 0.5, 0], [&"arcane_codex", 1, 1, 0.12, 1], [&"void_shard", 1, 1, 0.1, 4]]},
 	&"temple": {"coins": 80, "gear": 0.6, "scroll_guaranteed": true, "items": [
@@ -30,12 +33,25 @@ const TABLES := {
 		[&"healing_draught", 1, 2, 0.5, 0], [&"mana_tonic", 1, 1, 0.3, 0], [&"iron_ore", 2, 4, 0.4, 0],
 		[&"coal", 2, 4, 0.4, 0], [&"crystal_shard", 1, 2, 0.3, 1], [&"mithril_ore", 1, 3, 0.4, 2],
 		[&"elixir_of_might", 1, 1, 0.15, 2], [&"void_shard", 1, 1, 0.1, 4]]},
-	&"dungeon_boss": {"coins": 150, "gear": 1.0, "scroll": [0.0, 0.0, 0.02, 0.08, 0.35, 0.6], "items": [
+	&"dungeon_boss": {"coins": 150, "gear": 1.0, "scroll": [0.0, 0.0, 0.02, 0.08, 0.35, 0.6], "tome": [0.15, 0.2, 0.25, 0.3, 0.4, 0.5], "items": [
 		[&"healing_draught", 2, 3, 0.8, 0], [&"mithril_ingot", 2, 4, 0.6, 2], [&"elixir_of_starlight", 1, 1, 0.3, 3],
 		[&"stoneskin_elixir", 1, 1, 0.4, 1], [&"elixir_of_might", 1, 1, 0.4, 1]]},
-	&"secret": {"coins": 60, "gear": 0.6, "scroll": [0.0, 0.0, 0.0, 0.1, 0.15, 0.2], "items": [
+	&"secret": {"coins": 60, "gear": 0.6, "scroll": [0.0, 0.0, 0.0, 0.1, 0.15, 0.2], "tome": [0.25, 0.25, 0.3, 0.3, 0.35, 0.4], "items": [
 		[&"elixir_of_might", 1, 1, 0.4, 0], [&"stoneskin_elixir", 1, 1, 0.4, 0], [&"mithril_ingot", 1, 2, 0.5, 2],
 		[&"starlight_orchid", 1, 1, 0.2, 3]]},
+	# --- Milestone 7 ---
+	&"elite": {"coins": 20, "gear": 0.3, "tome": [0.03, 0.04, 0.05, 0.06, 0.08, 0.1], "items": [
+		[&"healing_draught", 1, 1, 0.35, 0], [&"bandage", 1, 2, 0.3, 0], [&"antidote", 1, 1, 0.2, 0],
+		[&"crystal_shard", 1, 2, 0.25, 1], [&"mithril_ore", 1, 2, 0.3, 2], [&"gold_nugget", 1, 1, 0.15, 2],
+		[&"void_shard", 1, 1, 0.08, 4]]},
+	&"treasure_goblin": {"coins": 120, "gear": 0.5, "tome": [0.25, 0.25, 0.3, 0.3, 0.35, 0.4], "items": [
+		[&"gold_nugget", 1, 3, 1.0, 0], [&"gemstone", 1, 1, 0.5, 0], [&"elixir_of_might", 1, 1, 0.25, 0],
+		[&"purifying_draught", 1, 1, 0.3, 0], [&"elixir_of_starlight", 1, 1, 0.1, 2]]},
+	&"raid_spoils": {"coins": 40, "gear": 0.35, "tome": [0.04, 0.05, 0.06, 0.08, 0.1, 0.12], "items": [
+		[&"bandit_insignia", 1, 3, 0.8, 0], [&"iron_ingot", 1, 3, 0.5, 0], [&"healing_draught", 1, 2, 0.5, 0],
+		[&"bandage", 2, 4, 0.5, 0], [&"gold_nugget", 1, 1, 0.2, 1], [&"mithril_ingot", 1, 1, 0.2, 3]]},
+	&"meteor": {"coins": 0, "gear": 0.0, "items": [
+		[&"star_metal_ore", 2, 4, 1.0, 0], [&"crystal_shard", 1, 2, 0.5, 0], [&"gemstone", 1, 1, 0.15, 0]]},
 }
 
 
@@ -52,6 +68,11 @@ static func roll(table: StringName, rank: int, rng: RandomNumberGenerator, first
 	if rng.randf() < float(t.get("gear", 0.0)):
 		var band: Array = GEAR[mini(rank, GEAR.size() - 1)]
 		_add(out, band[rng.randi() % band.size()], 1)
+	var tc: Array = t.get("tome", [])
+	if not tc.is_empty() and rng.randf() < float(tc[clampi(rank, 0, 5)]):
+		# Low ranks find the simpler tomes; every rank step unlocks one more.
+		var top := mini(TOMES.size(), 3 + rank)
+		_add(out, TOMES[rng.randi() % top], 1)
 	var sc: Array = t.get("scroll", [])
 	if (t.get("scroll_guaranteed", false) and first_open) or (not sc.is_empty() and rng.randf() < float(sc[clampi(rank, 0, 5)])):
 		_add(out, SCROLLS[rng.randi() % SCROLLS.size()], 1)

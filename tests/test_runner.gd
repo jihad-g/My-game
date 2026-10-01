@@ -54,6 +54,14 @@ func _ready() -> void:
 	await _run_async(&"test_m6_combat")
 	await _run_async(&"test_m6_pois_ingame")
 	await _run_async(&"test_m6_dungeon")
+	_run(&"test_m7_data")
+	await _run_async(&"test_m7_status")
+	await _run_async(&"test_m7_ai_elites")
+	await _run_async(&"test_m7_bosses")
+	await _run_async(&"test_m7_magic")
+	await _run_async(&"test_m7_base_raid")
+	await _run_async(&"test_m7_town_raid")
+	await _run_async(&"test_m7_events")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -2598,3 +2606,810 @@ func test_m6_dungeon() -> void:
 	SaveManager.delete_world(id)
 	SaveManager.worlds_dir = saved_dir
 	SaveManager.start_transient(GameState.DEFAULT_SEED)
+
+
+# --- Milestone 7: advanced gameplay ---------------------------------------------------------
+
+func test_m7_data() -> void:
+	const MOVES := [&"cleave", &"slam", &"volley", &"charge", &"summon", &"spikes", &"nova", &"beam", &"meteor_rain",
+		&"teleport", &"shield", &"pull", &"roar", &"bomb"]
+	for id in [&"bone_king", &"arcane_colossus", &"elder_thornmaw", &"temple_guardian", &"bandit_warlord", &"starborn_colossus"]:
+		var md := load("res://data/enemies/%s.tres" % id) as MonsterData
+		var ok := md != null and md.phases.size() >= 2
+		if ok:
+			for ph in md.phases:
+				ok = ok and float(ph.at) > 0.0 and float(ph.at) < 1.0 and not (ph.moves as Array).is_empty()
+				for mv in ph.moves:
+					ok = ok and MOVES.has(StringName(mv))
+		check(ok, "boss %s has %d phases with valid moves" % [id, md.phases.size() if md else 0])
+	for id in [&"bandit_thug", &"bandit_archer", &"bandit_brute", &"bandit_hexer", &"bandit_bomber"]:
+		var md := load("res://data/enemies/%s.tres" % id) as MonsterData
+		check(md and md.raider and md.category == EnemyData.Category.BANDIT, "%s is a bandit raider" % md.display_name)
+	check((load("res://data/enemies/bandit_brute.tres") as MonsterData).siege_mult >= 2.0
+		and (load("res://data/enemies/bandit_bomber.tres") as MonsterData).projectile_explode_radius > 0.0, "brutes and bombers are siege specialists")
+	check((load("res://data/enemies/bandit_hexer.tres") as MonsterData).support == &"heal"
+		and (load("res://data/enemies/grotto_cultist.tres") as MonsterData).support == &"heal"
+		and (load("res://data/enemies/tower_warden.tres") as MonsterData).support == &"ward", "support casters heal or ward allies")
+	check((load("res://data/enemies/treasure_goblin.tres") as MonsterData).flee_below >= 1.0, "treasure goblins always run")
+	# Spells and tomes
+	var spells := SpellBook.all()
+	var tomes_ok := true
+	for id in spells:
+		var tome: ItemData = ItemDB.get_item(StringName("tome_%s" % id))
+		var sp: AbilityData = spells[id]
+		tomes_ok = tomes_ok and tome != null and tome.is_spell_tome() and tome.teaches_spell == id and sp.required_mana_control > 0 \
+			and sp.cost > 0 and sp.cooldown > 0 and PlayerAbilities.new().has_method("_spell_%s" % sp.effect)
+	check(spells.size() == 8 and tomes_ok, "8 advanced spells, each with a tome and an implementation")
+	var droppable := true
+	for id in spells:
+		droppable = droppable and LootTables.TOMES.has(StringName("tome_%s" % id))
+	check(droppable, "every spell tome can drop from loot tables")
+	var ids := SpellBook.sorted_ids()
+	check(SpellBook.get_spell(ids[0]).required_mana_control <= SpellBook.get_spell(ids[ids.size() - 1]).required_mana_control, "spells sort by Mana Control requirement")
+	# Cures
+	var bandage: ItemData = ItemDB.get_item(&"bandage")
+	var antidote: ItemData = ItemDB.get_item(&"antidote")
+	var purify: ItemData = ItemDB.get_item(&"purifying_draught")
+	check(bandage.cures.has(&"bleed") and bandage.health_restore > 0 and antidote.cures.has(&"poison") and purify.cures.has(&"all"),
+		"bandages stop bleeding, antidotes cure poison, purifying draughts cure everything")
+	check(RecipeBook.get_recipe(&"bandage") != null and RecipeBook.get_recipe(&"bandage").source == RecipeData.Source.STARTING, "bandages are a starting recipe")
+	# Defenses
+	check(BuildingManager.get_piece_data(&"wood_wall").get_max_health() == 200.0 and BuildingManager.get_piece_data(&"stone_wall").get_max_health() == 500.0
+		and BuildingManager.get_piece_data(&"palisade_wall").get_max_health() == 700.0 and BuildingManager.get_piece_data(&"reinforced_door").get_max_health() == 1200.0,
+		"building hit points: wood 200, stone 500, palisade 700, reinforced door 1200")
+	var tower := BuildingManager.get_piece_data(&"arrow_tower")
+	check(tower.behavior == BuildPieceData.Behavior.TURRET and tower.turret_damage > 0 and BuildingManager.get_piece_data(&"alarm_bell").behavior == BuildPieceData.Behavior.BELL,
+		"arrow towers and alarm bells exist")
+	for id in [&"arrow_tower", &"alarm_bell", &"palisade_wall", &"reinforced_door"]:
+		check(BuildMeshes.get_mesh(BuildingManager.get_piece_data(id).mesh).get_aabb().size.y > 1.0, "%s has a mesh" % id)
+	# Elite affixes
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var two := EliteAffixes.roll(rng, 2)
+	check(two.size() == 2 and two[0] != two[1] and EliteAffixes.AFFIXES.size() == 9, "elite affixes roll distinct (9 kinds)")
+	check(not EliteAffixes.roll(rng, 9, true).has(&"thorned"), "ranged elites never get melee-only affixes")
+	check(EliteAffixes.chance(5) > EliteAffixes.chance(0), "higher ranks spawn more elites")
+	# Loot tables
+	var got := {}
+	for k in 200:
+		var r := LootTables.roll(&"treasure_goblin", 5, rng)
+		for id in r.items:
+			got[id] = true
+	var tome_found := false
+	for id in got:
+		tome_found = tome_found or String(id).begins_with("tome_")
+	check(got.has(&"gold_nugget") and tome_found, "treasure goblins carry gold and sometimes spell tomes")
+	check(not LootTables.roll(&"meteor", 0, rng).items.is_empty() and LootTables.roll(&"meteor", 0, rng).items.has(&"star_metal_ore"), "meteors hold star metal")
+	check(LootTables.roll(&"raid_spoils", 2, rng).coins > 0 and LootTables.TABLES.has(&"elite"), "raid spoils and elite loot tables")
+	check(RecipeBook.get_recipe(&"star_metal_ingot") != null and RecipeBook.get_recipe(&"starfall_blade") != null and RecipeBook.get_recipe(&"tome_meteor") != null,
+		"star metal can be smelted into gear and the Meteor tome")
+
+
+func test_m7_status() -> void:
+	var holder := Node.new()
+	add_child(holder)
+	var hc := HealthComponent.new()
+	hc.max_health = 200.0
+	holder.add_child(hc)
+	var se := StatusEffects.new()
+	se.health = hc
+	holder.add_child(se)
+	await _frames(1)
+	var reactions: Array[String] = []
+	se.reaction.connect(func(t: String) -> void: reactions.append(t))
+	se.apply(&"burn", 4.0, {"dps": 5.0})
+	se.apply(&"wet", 4.0)
+	check(not se.has(&"burn") and se.has(&"wet") and reactions.has("Doused"), "getting wet puts out burning")
+	check(not se.apply(&"burn", 4.0, {"dps": 5.0}) and not se.has(&"wet") and reactions.has("Steam"), "fire on a wet target only makes steam (and dries it)")
+	se.clear()
+	se.apply(&"chilled", 3.0)
+	se.apply(&"chilled", 3.0)
+	check(se.has(&"frozen") and not se.has(&"chilled") and reactions.has("Deep Freeze"), "chilling a chilled target freezes it (Deep Freeze)")
+	se.clear()
+	se.apply(&"wet", 3.0)
+	se.apply(&"chilled", 3.0)
+	check(se.has(&"frozen"), "chilling a wet target freezes it")
+	se.apply(&"wet", 3.0)
+	check(is_equal_approx(float(se.incoming(&"lightning")[0]), 1.5) and se.incoming(&"lightning")[1] == "Conducted", "lightning is conducted by wet targets (x1.5)")
+	se.clear()
+	se.apply(&"shocked", 3.0)
+	check(is_equal_approx(float(se.incoming(&"physical")[0]), 1.2), "shocked targets take 20% more damage")
+	se.apply(&"weakened", 3.0)
+	check(is_equal_approx(se.outgoing_mult(), 0.75), "weakened targets deal 25% less")
+	se.apply(&"slowed", 3.0)
+	se.apply(&"haste", 3.0)
+	check(is_equal_approx(se.speed_mult(), 0.7 * 1.25), "slow and haste stack on movement speed")
+	for i in 7:
+		se.apply(&"bleed", 5.0, {"dps": 1.0})
+	check(se.stacks(&"bleed") == 5, "bleeding stacks up to 5")
+	se.apply(&"regen", 5.0, {"hps": 4.0})
+	check(se.cleanse() >= 4 and se.has(&"regen") and se.has(&"haste") and se.effects.size() == 2, "cleansing removes every harmful effect and keeps buffs")
+	se.immune = Array([&"stunned"], TYPE_STRING_NAME, &"", null)
+	check(not se.apply(&"stunned", 2.0) and not se.is_stunned(), "immunities block effects")
+	se.duration_mult = 0.7
+	se.apply(&"poison", 10.0, {"dps": 2.0})
+	check(is_equal_approx(se.time_left(&"poison"), 7.0) and is_equal_approx(se.time_left(&"regen"), 5.0), "Iron Skin shortens harmful effects only")
+	hc.current = 100.0
+	se.clear()
+	se.apply(&"regen", 3.0, {"hps": 5.0})
+	await get_tree().create_timer(1.2).timeout
+	check(hc.current > 100.0, "regeneration heals over time")
+	holder.queue_free()
+	# The player uses the same component.
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	_clear_enemies(world)
+	p.afflict(&"bleed", 6.0, {"dps": 2.0})
+	check(p.afflictions.has(&"bleed") and p.status.has(&"bleed"), "players can bleed")
+	p.health.current = p.health.max_health * 0.5
+	await _frames(15)
+	check(world.hud._status_row.get_child_count() >= 1 and world.hud._status_row.get_child(0).visible
+		and (world.hud._status_row.get_child(0).get_child(0) as Label).text.begins_with("Bleeding"), "the HUD shows status chips")
+	p.inventory.add_item(&"bandage", 1)
+	for i in p.inventory.capacity:
+		var st = p.inventory.get_slot(i)
+		if st != null and st.id == &"bandage":
+			p.use_slot(i)
+			break
+	check(not p.status.has(&"bleed") and p.health.current > p.health.max_health * 0.5, "a bandage stops the bleeding and heals")
+	p.afflict(&"chilled", 5.0)
+	check(p.stats.get_mult(Stats.MOVE_SPEED) < 0.9, "chill slows the player")
+	p.status.clear()
+	p._update_status_stats()
+	p.character.skills[Skill.DEFENSE] = 50
+	p.afflict(&"poison", 10.0, {"dps": 1.0})
+	check(p.status.time_left(&"poison") <= 7.01, "Defense 50 (Iron Skin) shortens harmful effects by 30%")
+	p.status.clear()
+	p.afflict(&"silenced", 3.0)
+	check(not p.abilities.try_use(0), "silenced players can't use abilities")
+	p.status.clear()
+	p.afflict(&"shocked", 3.0)
+	p.health.reset_full()
+	var hp0 := p.health.current
+	var hit := DamageInfo.create(20.0, null, &"physical")
+	p.receive_hit(hit)
+	var shocked_loss := hp0 - p.health.current
+	p.status.clear()
+	p.health.reset_full()
+	p.receive_hit(DamageInfo.create(20.0, null, &"physical"))
+	check(shocked_loss > hp0 - p.health.current + 0.5, "shocked players take more damage")
+	p.status.clear()
+	world.queue_free()
+	await _frames(5)
+
+
+func _monsters_in_ai(ms: Array, ai: int) -> int:
+	var n := 0
+	for m in ms:
+		if is_instance_valid(m) and not m.is_dead and m.ai == ai:
+			n += 1
+	return n
+
+
+func test_m7_ai_elites() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	CombatDirector.clear()
+	# Attack tokens: a pack surrounds you, at most two swing at once.
+	var pack: Array = []
+	for k in 5:
+		var a := TAU * k / 5.0
+		pack.append(_spawn_monster(world, &"skeleton_warrior", Vector3(cos(a), 0, sin(a)) * 4.0))
+	for m in pack:
+		m._alert(p)
+	var max_att := 0
+	var attacked := false
+	var circled := false
+	for f in 420:
+		await get_tree().physics_frame
+		var att := _monsters_in_ai(pack, Monster.AI.ATTACK)
+		max_att = maxi(max_att, att)
+		attacked = attacked or att > 0
+		if CombatDirector.attackers_of(p) >= CombatDirector.MAX_MELEE:
+			for m in pack:
+				if m.ai == Monster.AI.CHASE and m.global_position.distance_to(p.global_position) < CombatDirector.RING + 2.5:
+					circled = true
+	check(attacked and max_att <= CombatDirector.MAX_MELEE, "a pack of 5 never has more than %d attackers at once (max %d)" % [CombatDirector.MAX_MELEE, max_att])
+	check(circled, "waiting monsters circle the target")
+	for m in pack:
+		_kill(m, world)
+	await _frames(3)
+	# Pack alert
+	var off := _clear_offset(world, 13.0)
+	var a1 := _spawn_monster(world, &"skeleton_warrior", off)
+	var a2 := _spawn_monster(world, &"skeleton_warrior", off + off.normalized().cross(Vector3.UP) * 3.0)
+	a1._set_ai(Monster.AI.IDLE, 99.0)
+	a2._set_ai(Monster.AI.IDLE, 99.0)
+	a1._alert(p)
+	check(a2.ai == Monster.AI.ALERT and a2.target == p, "alerting one monster alerts its pack")
+	_kill(a1, world)
+	_kill(a2, world)
+	# Fleeing
+	var thug := _spawn_monster(world, &"bandit_thug", _clear_offset(world, 4.0))
+	thug._alert(p)
+	await _frames(40)
+	thug.health.current = thug.health.max_health * 0.1
+	var fled := false
+	for f in 120:
+		await get_tree().physics_frame
+		fled = fled or thug.ai == Monster.AI.FLEE
+	check(fled, "badly hurt bandits run away")
+	_kill(thug, world)
+	# Dodging
+	var duelist := _spawn_monster(world, &"bandit_thug", _clear_offset(world, 2.5))
+	duelist.mdata = duelist.mdata.duplicate()
+	duelist.mdata.dodge_chance = 1.0
+	duelist.mdata.flee_below = 0.0
+	duelist._alert(p)
+	var dodged := false
+	for f in 400:
+		if not p.combat.is_attacking():
+			p.face_direction(duelist.global_position - p.global_position, true)
+			p.combat.request(&"light")
+		await get_tree().physics_frame
+		dodged = dodged or duelist.ai == Monster.AI.DODGE
+	check(dodged, "nimble enemies sidestep your swings")
+	_kill(duelist, world)
+	# Support: a cultist heals a wounded ally.
+	var hurt := _spawn_monster(world, &"skeleton_warrior", _clear_offset(world, 6.0))
+	var healer := _spawn_monster(world, &"grotto_cultist", _clear_offset(world, 8.0))
+	hurt.health.current = hurt.health.max_health * 0.3
+	hurt.stagger(30.0)
+	var hp_hurt := hurt.health.current
+	healer._alert(p)
+	var healed := false
+	for f in 600:
+		await get_tree().physics_frame
+		if hurt.health.current > hp_hurt + 1.0:
+			healed = true
+			break
+	check(healed, "support casters heal wounded allies")
+	_kill(hurt, world)
+	_kill(healer, world)
+	# Steering: a wall straight ahead makes the monster turn.
+	var stee := _spawn_monster(world, &"skeleton_warrior", _clear_offset(world, 3.0))
+	await _frames(3)
+	var wall := StaticBody3D.new()
+	wall.collision_layer = Layers.BUILDING
+	var cs := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(0.4, 3.0, 2.2)
+	cs.shape = box
+	wall.add_child(cs)
+	world.add_child(wall)
+	var fwd := Vector3(1, 0, 0)
+	wall.global_position = stee.global_position + fwd * 1.2 + Vector3(0, 1.5, 0)
+	await _frames(2)
+	check(absf(stee._choose_heading(fwd)) > 0.1, "monsters steer around walls in their way")
+	wall.queue_free()
+	_kill(stee, world)
+	# Elites
+	var el := _spawn_monster(world, &"skeleton_warrior", _clear_offset(world, 5.0))
+	var base_hp := el.health.max_health
+	el.make_elite([&"shielded"])
+	check(el.is_elite() and el.display_name().begins_with("Shielded") and el.health.max_health > base_hp * 2.0 and el.barrier > 0.0,
+		"elites: name prefix, x2.2 health and their affix (%s)" % el.display_name())
+	var hp_el := el.health.current
+	el.receive_hit(DamageInfo.create(10.0, p, &"physical"))
+	check(is_equal_approx(el.health.current, hp_el) and el.barrier < el.barrier_max, "the elite's shield absorbs damage first")
+	var champ := _spawn_monster(world, &"skeleton_warrior", _clear_offset(world, 6.0))
+	champ.make_elite([&"juggernaut", &"vampiric"])
+	check(champ.display_name().ends_with("(Champion)") and champ.status.immune.has(&"stunned"), "champions have two affixes; juggernauts can't be stunned")
+	champ.apply_status(&"stunned", 3.0, {})
+	check(not champ.status.is_stunned(), "stuns don't stick to juggernauts")
+	champ.health.current = champ.health.max_health * 0.5
+	var hp_c := champ.health.current
+	p.health.invulnerable = false
+	p.health.max_health = 5000.0
+	p.health.reset_full()
+	champ._hit_target(p, champ.mdata.melee, 1.0)
+	check(champ.health.current > hp_c, "vampiric elites heal when they hit")
+	var molten := _spawn_monster(world, &"skeleton_warrior", _clear_offset(world, 7.0))
+	molten.make_elite([&"molten"])
+	var mpos := molten.global_position
+	var coins0 := p.coins
+	_kill(molten, world)
+	await _frames(2)
+	var eruption := false
+	for c in molten.get_parent().get_children():
+		eruption = eruption or (c is GroundHazard and c.global_position.distance_to(mpos) < 1.0 and c.damage_type == &"fire")
+	check(eruption, "molten elites erupt when they die")
+	_kill(el, world)
+	_kill(champ, world)
+	await _frames(5)
+	check(p.coins > coins0, "elites drop extra loot (coins from the elite table)")
+	p.health.invulnerable = true
+	world.queue_free()
+	await _frames(5)
+
+
+func test_m7_bosses() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	p.health.invulnerable = false
+	p.health.max_health = 20000.0
+	p.health.reset_full()
+	var off := _clear_offset(world, 6.0)
+	var boss := _spawn_monster(world, &"bone_king", off)
+	boss._alert(p)
+	await _frames(40)
+	# Phase 2
+	boss.health.current = boss.health.max_health * 0.6
+	await _frames(3)
+	check(boss.phase == 1 and boss.ai == Monster.AI.PHASE and boss._moves().has(&"spikes"), "at 66% the Bone King enters phase 2 with new moves")
+	check(boss.receive_hit(DamageInfo.create(50.0, p, &"physical")) == 0.0, "bosses are invulnerable while changing phase")
+	await _frames(110)
+	# Spikes
+	var hp0 := p.health.current
+	boss._start_special(&"spikes", 3.0, p)
+	var bled := false
+	for f in 240:
+		await get_tree().physics_frame
+		bled = bled or p.status.has(&"bleed")
+	check(p.health.current < hp0 and bled, "bone spikes erupt under the player and cause bleeding")
+	# Ward
+	boss._raise_ward()
+	var pylons := get_tree().get_nodes_in_group(&"ward_pylons")
+	check(boss.warded and pylons.size() == 3, "the ward is powered by 3 pylons")
+	check(boss.receive_hit(DamageInfo.create(80.0, p, &"physical")) == 0.0, "warded bosses take no damage")
+	for py in pylons:
+		py.receive_hit(DamageInfo.create(9999.0, p, &"physical"))
+	await _frames(2)
+	check(not boss.warded and boss.ai == Monster.AI.RECOVER and boss.exposed, "destroying every pylon breaks the ward and exposes the boss")
+	await _frames(200)
+	# Beam (Temple Guardian)
+	var guardian := _spawn_monster(world, &"temple_guardian", -off)
+	guardian._alert(p)
+	await _frames(40)
+	hp0 = p.health.current
+	guardian._start_beam(p)
+	await _frames(150)
+	check(p.health.current < hp0 and guardian._beam_node == null or p.health.current < hp0, "sun beams burn whoever stands in them")
+	_kill(guardian, world)
+	# Teleport
+	var b2 := boss
+	b2._set_ai(Monster.AI.CHASE)
+	b2.global_position = p.global_position + off * 1.5
+	b2._start_special(&"teleport", 9.0, p)
+	await _frames(40)
+	var to_boss := b2.global_position - p.global_position
+	check(to_boss.length() < 5.0, "teleporting bosses reappear right next to you (%.1f m)" % to_boss.length())
+	await _frames(120)
+	# Pull
+	b2._set_ai(Monster.AI.CHASE)
+	b2.global_position = p.global_position + off.normalized() * 9.0
+	await _frames(2)
+	var d0 := b2.global_position.distance_to(p.global_position)
+	b2._set_ai(Monster.AI.PULL, 1.0)
+	await _frames(40)
+	check(b2.global_position.distance_to(p.global_position) < d0 - 1.0, "pull moves drag the player in")
+	await _frames(120)
+	# Roar
+	b2._set_ai(Monster.AI.CHASE)
+	b2.global_position = p.global_position + off.normalized() * 3.0
+	p.status.clear()
+	b2._set_ai(Monster.AI.ROAR, 0.1)
+	await _frames(15)
+	check(p.status.has(&"weakened"), "a roar knocks back, stuns and weakens")
+	p.status.clear()
+	# Poise break
+	await _frames(60)
+	b2._set_ai(Monster.AI.CHASE)
+	b2.poise = 1.0
+	b2.receive_hit(DamageInfo.create(1.0, p, &"physical"))
+	var info := DamageInfo.create(1.0, p, &"physical")
+	info.poise_damage = 500.0
+	b2.poise = 1.0
+	b2.receive_hit(info)
+	check(b2.ai == Monster.AI.RECOVER and b2.ai_time > 1.5 and b2.exposed, "breaking a boss's poise leaves it Broken and exposed")
+	_kill(b2, world)
+	await _frames(5)
+	# Bandit warlord: bombs and phases
+	var warlord := _spawn_monster(world, &"bandit_warlord", off)
+	warlord._alert(p)
+	await _frames(40)
+	check(warlord.display_name() == "Grimtusk the Warlord" and warlord.mdata.phases.size() == 2, "Grimtusk the Warlord leads big raids")
+	hp0 = p.health.current
+	warlord._start_special(&"bomb", 5.0, p)
+	await _frames(150)
+	check(p.health.current < hp0, "the warlord's fire bombs land where you stand")
+	_kill(warlord, world)
+	world.queue_free()
+	await _frames(5)
+
+
+func _learn_and_slot(p: Player, id: StringName) -> AbilityData:
+	p.spells.learn(id)
+	p.spells.assign(0, id)
+	p.abilities.cooldowns.clear()
+	p.mana.current = p.mana.max_mana
+	return SpellBook.get_spell(id)
+
+
+func test_m7_magic() -> void:
+	var world: World = await _boot_class(&"wizard")
+	var p := world.player
+	var ch := p.character
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	p.health.invulnerable = true
+	# Tomes
+	p.inventory.add_item(&"tome_blink", 1)
+	p.inventory.add_item(&"tome_meteor", 1)
+	for id in [&"tome_blink", &"tome_meteor"]:
+		for i in p.inventory.capacity:
+			var st = p.inventory.get_slot(i)
+			if st != null and st.id == id:
+				p.use_slot(i)
+				break
+	check(p.spells.knows(&"blink") and p.spells.knows(&"meteor") and p.spells.slots == [&"blink", &"meteor"]
+		and p.inventory.count_of(&"tome_blink") == 0, "reading tomes teaches spells and fills the spell slots")
+	p.inventory.add_item(&"tome_blink", 1)
+	for i in p.inventory.capacity:
+		var st = p.inventory.get_slot(i)
+		if st != null and st.id == &"tome_blink":
+			p.use_slot(i)
+	check(p.inventory.count_of(&"tome_blink") == 1, "a tome you already know isn't used up")
+	p.spells.assign(0, &"meteor")
+	check(p.spells.slots == [&"meteor", &"blink"], "assigning a spell to the other slot swaps them")
+	# Requirements
+	ch.skills[Skill.MANA_CONTROL] = 5
+	ch.recalculate()
+	check(p.abilities.spell_block_reason(SpellBook.get_spell(&"meteor")).contains("Mana Control"), "low Mana Control can't cast Meteor")
+	check(not p.abilities.try_cast(0), "casting fails without the requirement")
+	ch.skills[Skill.MANA_CONTROL] = 80
+	ch.recalculate()
+	p.mana.max_mana = 1000.0
+	p.mana.current = 1000.0
+	# Targets: crawlers held in place (thorn crawlers aren't immune to anything we use).
+	var off := _clear_offset(world, 7.0)
+	p.face_direction(off, true)
+	var target := _spawn_monster(world, &"thorn_crawler", off)
+	target.configure(30.0, 1.0, 0, 1.0)
+	target.stagger(120.0)
+	await _frames(3)
+	p.set_lock_target(target)
+	# Blink
+	var a := _learn_and_slot(p, &"blink")
+	var pos0 := p.global_position
+	p.set_lock_target(null)
+	p.face_direction(-off, true)
+	check(p.abilities.try_cast(0) and p.global_position.distance_to(pos0) > 2.0, "Blink teleports you (%.1f m)" % p.global_position.distance_to(pos0))
+	p.set_lock_target(target)
+	check(p.abilities.cooldown_left(a) > 0.0 and p.mana.current < 1000.0, "casting costs mana and starts a cooldown")
+	p.global_position = pos0
+	p.face_direction(off, true)
+	await _frames(5)
+	# Healing Light
+	p.health.invulnerable = false
+	p.health.current = p.health.max_health * 0.4
+	p.afflict(&"burn", 8.0, {"dps": 1.0})
+	var hp0 := p.health.current
+	_learn_and_slot(p, &"healing_light")
+	check(p.abilities.try_cast(0) and p.health.current > hp0 + 10.0 and not p.status.has(&"burn") and p.status.has(&"regen"),
+		"Healing Light heals, cures and regenerates")
+	p.health.invulnerable = true
+	# Miasma + Combustion
+	_learn_and_slot(p, &"poison_cloud")
+	var thp := target.health.current
+	check(p.abilities.try_cast(0), "Miasma cast")
+	await _frames(80)
+	check(target.status.has(&"poison") and target.health.current < thp, "Miasma poisons enemies inside it")
+	var clouds := get_tree().get_nodes_in_group(&"poison_clouds")
+	check(clouds.size() == 1 and p.abilities.ignite_clouds(target.global_position, 1.0, 40.0) == 1, "fire ignites the cloud: Combustion!")
+	await _frames(3)
+	check(get_tree().get_nodes_in_group(&"poison_clouds").is_empty(), "the ignited cloud is consumed")
+	# Blizzard -> Deep Freeze
+	target.status.clear()
+	target.stagger(120.0)
+	_learn_and_slot(p, &"blizzard")
+	check(p.abilities.try_cast(0), "Blizzard cast")
+	var froze := false
+	for f in 240:
+		await get_tree().physics_frame
+		froze = froze or target.status.has(&"frozen")
+	check(froze, "Blizzard chills twice and freezes (Deep Freeze)")
+	# Meteor
+	target.status.clear()
+	target.stagger(120.0)
+	_learn_and_slot(p, &"meteor")
+	thp = target.health.current
+	check(p.abilities.try_cast(0), "Meteor cast")
+	await _frames(100)
+	check(target.health.current < thp - 20.0 and target.status.has(&"burn"), "the meteor lands: heavy fire damage and burning")
+	# Arcane Missiles
+	target.health.reset_full()
+	thp = target.health.current
+	_learn_and_slot(p, &"arcane_missiles")
+	check(p.abilities.try_cast(0), "Arcane Missiles cast")
+	await _frames(120)
+	check(target.health.current < thp, "homing missiles hit")
+	# Storm Call
+	target.health.reset_full()
+	target.status.clear()
+	target.stagger(120.0)
+	thp = target.health.current
+	_learn_and_slot(p, &"storm_call")
+	check(p.abilities.try_cast(0), "Storm Call cast")
+	await _frames(150)
+	check(target.health.current < thp and target.status.has(&"shocked"), "lightning strikes shock enemies")
+	# Arcane Barrier
+	_learn_and_slot(p, &"arcane_barrier")
+	p.health.invulnerable = false
+	p.health.reset_full()
+	check(p.abilities.try_cast(0) and p.abilities.barrier > 0.0, "Arcane Barrier raised (%d)" % roundi(p.abilities.barrier))
+	var hpb := p.health.current
+	p.receive_hit(DamageInfo.create(20.0, null, &"physical"))
+	check(is_equal_approx(p.health.current, hpb), "the barrier absorbs hits")
+	p.health.invulnerable = true
+	# Silence
+	p.afflict(&"silenced", 5.0)
+	p.abilities.cooldowns.clear()
+	check(not p.abilities.try_cast(0), "silenced: no spells")
+	p.status.clear()
+	# Save / load of the spellbook
+	var saved := p.spells.to_save()
+	var book := SpellBook.new()
+	book.from_save(saved)
+	check(book.known.size() == p.spells.known.size() and book.slots == p.spells.slots, "the spellbook is saved")
+	# Spellbook panel
+	world.hud._spellbook.toggle()
+	await _frames(3)
+	check(world.hud._spellbook.visible and world.hud._spellbook._list.get_child_count() == 8, "the spellbook (L) lists all 8 spells")
+	world.hud._spellbook.toggle()
+	_kill(target, world)
+	world.queue_free()
+	await _frames(5)
+
+
+## Builds a small base (claim + walls + chest + defenses) around the player.
+func _build_base(world: World) -> Dictionary:
+	var p := world.player
+	for i in 9:
+		p.character.grant_xp(p.character.xp_needed(), Progression.Source.OTHER)
+	var claim := _place_near(world, &"claim_flag", 1, false, 3)
+	var pieces := []
+	for id in [&"wood_wall", &"wood_wall", &"wood_wall", &"palisade_wall", &"storage_chest", &"arrow_tower", &"alarm_bell", &"wood_wall", &"stone_wall"]:
+		var bp := _place_near(world, id, 2, false, 6)
+		if bp:
+			pieces.append(bp)
+	return {"claim": claim, "pieces": pieces}
+
+
+func test_m7_base_raid() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	var b := _build_base(world)
+	check(b.claim != null and b.pieces.size() >= 8, "built a base (%d pieces)" % b.pieces.size())
+	var base := world.raids.find_player_base()
+	check(not base.is_empty() and int(base.pieces) >= RaidManager.BASE_MIN_PIECES, "the claim counts as a base worth raiding")
+	check(world.raids.has_bell(base.center, base.radius), "the alarm bell is part of the base")
+	var warned := [false]
+	var ended := [null]
+	Events.raid_warning.connect(func(_t: String, _pos: Vector3, _s: float) -> void: warned[0] = true)
+	Events.raid_ended.connect(func(_t: String, won: bool) -> void: ended[0] = won)
+	world.raids.start_base_raid(base, &"bandits")
+	check(warned[0] and world.raids.raid.phase == "warning" and is_equal_approx(float(world.raids.raid.t), RaidManager.BASE_WARNING + RaidManager.BELL_BONUS),
+		"raids are announced (with the bell: %ds warning)" % roundi(float(world.raids.raid.t)))
+	check(world.raids.status_text().begins_with("RAID"), "the HUD shows the raid countdown")
+	world.raids.raid.t = 0.2
+	# Stand off to the side so the raiders go for the buildings.
+	var c: Vector3 = base.center
+	var dir: float = world.raids.raid.dir
+	p.global_position = c + Vector3(cos(dir + PI * 0.5), 0, sin(dir + PI * 0.5)) * 24.0
+	p.global_position.y = world.get_ground_height(p.global_position) + 0.3
+	await _frames(20)
+	var raiders := world.raids.alive_raiders()
+	check(world.raids.raid.phase == "fight" and raiders.size() >= 3, "wave 1: %d raiders" % raiders.size())
+	var obj_ok := true
+	for m in raiders:
+		obj_ok = obj_ok and m.objective.distance_to(c) < 0.1 and m.get_meta(&"raid", "") == world.raids.raid.id
+	check(obj_ok, "raiders march on the base")
+	var damaged := [false]
+	Events.building_damaged.connect(func(_pc: Node, _d: bool) -> void: damaged[0] = true)
+	var turret_hit := false
+	for f in 2400:
+		await get_tree().physics_frame
+		for m in world.raids.alive_raiders():
+			turret_hit = turret_hit or m.health.current < m.health.max_health
+		if damaged[0] and turret_hit:
+			break
+	check(damaged[0], "raiders damage your buildings")
+	check(turret_hit, "arrow towers shoot raiders")
+	var coins0 := p.coins
+	for k in 12:
+		for m in world.raids.alive_raiders():
+			_kill(m, world)
+		await _frames(4)
+		if not world.raids.is_active():
+			break
+	check(ended[0] == true and not world.raids.is_active(), "every wave beaten: raid repelled")
+	await _frames(5)
+	check(p.coins > coins0, "raid spoils (coins) awarded")
+	# Losing: the survivors plunder your chests.
+	var chest: BuildPiece = null
+	for bp in b.pieces:
+		if is_instance_valid(bp) and bp.storage:
+			chest = bp
+	chest.storage.add_item(&"iron_ingot", 5)
+	chest.storage.add_item(&"plank", 20)
+	var stacks0 := chest.storage.capacity - chest.storage.free_slot_count()
+	world.raids.start_base_raid(base, &"bandits")
+	world.raids.raid.t = 0.0
+	await _frames(5)
+	world.raids._finish(false)
+	check(ended[0] == false and chest.storage.capacity - chest.storage.free_slot_count() < stacks0 and world.raids.alive_raiders().is_empty(),
+		"if you abandon a raid the raiders steal from your chests and leave")
+	# Damage, destruction, repair
+	var wall: BuildPiece = null
+	for bp in b.pieces:
+		if is_instance_valid(bp) and bp.data.id == &"wood_wall":
+			wall = bp
+	var raider := _spawn_monster(world, &"bandit_brute", Vector3(30, 0, 0))
+	check(wall.receive_hit(DamageInfo.create(30.0, p, &"physical")) == 0.0, "you can't damage your own buildings")
+	wall.receive_hit(DamageInfo.create(120.0, raider, &"physical"))
+	check(wall.is_damaged() and wall.health == wall.max_health() - 120.0, "pieces have hit points")
+	p.global_position = wall.global_position + Vector3(1.5, 0.3, 1.5)
+	check(world.building.repair(wall, p) != "", "repairs need materials")
+	p.inventory.add_item(&"wood", 10)
+	check(world.building.repair(wall, p) == "" and not wall.is_damaged(), "repairing restores the piece (cost %s)" % str(wall.repair_cost()))
+	var key := BuildingManager.key(wall.cell, wall.slot, wall.layer)
+	wall.receive_hit(DamageInfo.create(9999.0, raider, &"physical"))
+	await _frames(2)
+	check(not world.building.pieces.has(key), "destroyed pieces are gone")
+	_kill(raider, world)
+	world.queue_free()
+	await _frames(5)
+
+
+func test_m7_town_raid() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	var s := _nearest(world, false)
+	await _go_to_town(world, s)
+	var site: SettlementSite = world.living.sites.get(s.id)
+	check(site != null and not site.npcs.is_empty(), "standing in %s" % s.name)
+	var guard: NPC = site.npc_by_role(&"guard")
+	var villager: NPC = null
+	for n in site.npcs:
+		if n.role in [&"villager", &"farmer", &"merchant"]:
+			villager = n
+	var rep0 := p.reputation.get_points(s.id)
+	var coins0 := p.coins
+	world.raids.start_town_raid(s, 0)
+	check(site.under_attack and world.raids.raid.kind == "town", "%s is under attack" % s.name)
+	check(villager == null or villager.schedule(12.0) == &"sleep", "villagers hide at home during a raid")
+	check(guard == null or guard.can_be_attacked(), "guards stand and fight")
+	world.raids.raid.t = 0.1
+	await _frames(10)
+	var raiders := world.raids.alive_raiders()
+	check(raiders.size() >= 3 and raiders[0].objective.distance_to(s.world_center()) < 0.5, "raiders march on the town (%d)" % raiders.size())
+	if guard:
+		guard.receive_hit(DamageInfo.create(9999.0, raiders[0], &"physical"))
+		check(guard.downed and not guard.can_be_attacked(), "guards can be knocked down (never killed)")
+	for k in 12:
+		for m in world.raids.alive_raiders():
+			_kill(m, world)
+		await _frames(4)
+		if not world.raids.is_active():
+			break
+	check(not world.raids.is_active() and not site.under_attack, "the town is saved")
+	check(p.reputation.get_points(s.id) > rep0 + 5.0 and p.coins > coins0, "defending a town earns reputation and a reward")
+	check(guard == null or not guard.downed, "downed guards get back up")
+	check(world.raids.defended.has(s.id), "the town remembers")
+	# Plundered settlements charge more.
+	var price0 := world.living.buy_price(s, &"merchant", &"healing_draught")
+	world.raids.plundered[s.id] = world.day_night.day + 2
+	var price1 := world.living.buy_price(s, &"merchant", &"healing_draught")
+	check(world.raids.is_plundered(s.id) and price1 > price0, "plundered towns charge more (%d -> %d)" % [price0, price1])
+	# Announced raids on far towns resolve without you.
+	var far: SettlementInfo = null
+	for o in world.generator.settlements.near(p.global_position, 3000.0):
+		if o.distance_to(p.global_position) > 400.0:
+			far = o
+			break
+	if far:
+		world.raids.announce_town_raid(far, 1.0)
+		check(world.raids.pending_town.id == far.id and world.raids.status_text().contains("attacked"), "a rider warns of the attack on %s" % far.name)
+		world.raids.pending_town.at = GameState.world_time
+		await _frames(3)
+		check(world.raids.pending_town.is_empty() and world.raids.raided.has(far.id), "without you the town's guards decide the outcome")
+	# Save / load
+	var saved := world.raids.to_save()
+	var rm := RaidManager.new()
+	rm.world = world
+	rm.from_save(saved)
+	check(rm.is_plundered(s.id) and rm.defended.has(s.id), "raid outcomes are saved")
+	rm.free()
+	world.queue_free()
+	await _frames(5)
+
+
+func test_m7_events() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	var ev := world.events
+	# Blood moon
+	check(ev.start(&"blood_moon") and ev.is_active(&"blood_moon") and world.day_night.sky_tint.a > 0.3, "the blood moon turns the sky red")
+	check(is_equal_approx(ev.xp_mult(), 1.5) and ev.elite_bonus() > 0.0, "blood moon: +50% XP and more elites")
+	var horde := 0
+	for k in 12:
+		ev._spawn_horde()
+		horde = 0
+		for e in get_tree().get_nodes_in_group(&"enemies"):
+			if e.get_meta(&"event", &"") == &"horde" and not e.is_dead:
+				horde += 1
+		if horde >= 2:
+			break
+	check(horde >= 2, "the dead walk (%d)" % horde)
+	var xp_got := [0]
+	Events.xp_gained.connect(func(n: int, _s: int) -> void: xp_got[0] = n)
+	var sk := _spawn_monster(world, &"skeleton_warrior", _clear_offset(world, 4.0))
+	var expected := Progression.combat_xp(sk.xp_value(), sk.effective_level(), p.character.level)
+	_kill(sk, world)
+	check(xp_got[0] == roundi(expected * 1.5), "kills give 50% more XP (%d vs %d)" % [xp_got[0], expected])
+	ev.stop(&"blood_moon")
+	check(not ev.is_active(&"blood_moon") and world.day_night.sky_tint.a == 0.0, "the blood moon ends")
+	# Aurora
+	ev.start(&"aurora")
+	check(float(p.stats.get_source(&"aurora").get(Stats.MANA_REGEN, 1.0)) >= 2.0 and is_equal_approx(ev.spell_mult(), 1.15), "aurora: double mana regen, +15% spell damage")
+	ev.stop(&"aurora")
+	check(p.stats.get_source(&"aurora").is_empty(), "the aurora fades")
+	# Eclipse
+	ev.start(&"eclipse")
+	check(world.day_night.eclipse > 0.5, "an eclipse darkens the day")
+	ev.stop(&"eclipse")
+	# Meteor
+	var at := p.global_position + _clear_offset(world, 6.0)
+	var crater := ev.drop_meteor(at)
+	check(crater != null and ev.craters.has(crater.crater_id) and crater.is_in_group(&"meteor_craters"), "a meteor crashes and leaves a crater")
+	p.inventory.add_item(&"stone_pickaxe", 1)
+	crater.interact(p)
+	p.global_position = crater.global_position + Vector3(1.0, 0.3, 0.0)
+	await _frames(90)
+	check(crater.is_mined and not ev.craters.has(crater.crater_id) and p.inventory.count_of(&"star_metal_ore") > 0, "mining the meteor gives star metal")
+	var colossus := ev.spawn_colossus(at)
+	check(colossus != null and colossus.is_boss() and colossus.ai == Monster.AI.DORMANT and colossus.mdata.phases.size() == 2,
+		"a Starborn Colossus may guard the crater")
+	_kill(colossus, world)
+	# Treasure goblin
+	var coins0 := p.coins
+	check(ev.start(&"treasure_goblin") and ev._goblin != null, "a treasure goblin appears")
+	var g := ev._goblin
+	g._alert(p)
+	var d0 := g.global_position.distance_to(p.global_position)
+	var ran := false
+	for f in 200:
+		await get_tree().physics_frame
+		ran = ran or g.ai == Monster.AI.FLEE
+	check(ran and g.global_position.distance_to(p.global_position) > d0, "it runs away from you")
+	_kill(g, world)
+	await _frames(5)
+	check(p.coins > coins0 and not ev.is_active(&"treasure_goblin"), "catching it pays well")
+	# Save / load
+	ev.start(&"blood_moon")
+	ev.craters["meteor:1,2"] = [1.0, 5.0, 2.0]
+	var saved := ev.to_save()
+	ev.stop(&"blood_moon")
+	ev.craters.clear()
+	ev.from_save(saved)
+	check(ev.is_active(&"blood_moon") and ev.craters.has("meteor:1,2"), "active events and craters are saved")
+	ev.stop(&"blood_moon")
+	ev.craters.clear()
+	ev.refresh_craters()
+	world.queue_free()
+	await _frames(5)

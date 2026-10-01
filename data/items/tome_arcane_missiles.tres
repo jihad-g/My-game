@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"tome_arcane_missiles"
+display_name = "Tome: Arcane Missiles"
+description = "Five homing missiles that seek out enemies near the cursor. Requires Mana Control 30."
+category = 6
+rarity = 3
+max_stack = 1
+base_value = 720
+icon_color = Color(0.8, 0.5, 1, 1)
+icon_glyph = "AM"
+teaches_spell = &"arcane_missiles"

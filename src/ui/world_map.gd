@@ -231,8 +231,34 @@ func _draw_marker() -> void:
 			for k in 3:
 				_marker.draw_rect(Rect2(q + Vector2(-r + k * r * 0.8, -r - 6), Vector2(4, 6)), Color(1.0, 0.85, 0.3))
 		var label := st.name if known else st.name + " ?"
+		var lcol := Color.WHITE
+		if world.raids:
+			if world.raids.is_plundered(st.id):
+				label += " (plundered)"
+				lcol = Color(1, 0.6, 0.5)
+			if world.raids.pending_town.get("id", "") == st.id or (world.raids.raid.get("target", "") == st.id):
+				label += " - UNDER THREAT"
+				lcol = Color(1, 0.4, 0.3)
+				_marker.draw_arc(q, r + 8.0, 0, TAU, 24, Color(1, 0.3, 0.2), 3.0)
 		_marker.draw_string_outline(font, q + Vector2(r + 4, 5), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, 4, Color(0, 0, 0, 0.8))
-		_marker.draw_string(font, q + Vector2(r + 4, 5), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
+		_marker.draw_string(font, q + Vector2(r + 4, 5), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, lcol)
+	# Milestone 7: meteor craters and raiders.
+	if world.layer == TerrainGenerator.Layer.SURFACE and world.events:
+		for id in world.events.craters:
+			var a: Array = world.events.craters[id]
+			var rel_c := (Vector3(float(a[0]), 0, float(a[2])) - Vector3(_center.x, 0, _center.z)) / (SIZE_PX * METRES_PER_PX)
+			var q := sz * 0.5 + Vector2(rel_c.x, rel_c.z) * sz
+			if q.x < 0 or q.y < 0 or q.x > sz.x or q.y > sz.y:
+				continue
+			_marker.draw_circle(q, 7.0, Color(0.55, 0.6, 1.0))
+			_marker.draw_arc(q, 7.0, 0, TAU, 16, Color.WHITE, 2.0)
+			_marker.draw_string_outline(font, q + Vector2(10, 5), "Meteor", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 3, Color.BLACK)
+			_marker.draw_string(font, q + Vector2(10, 5), "Meteor", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.8, 0.85, 1.0))
+	if world.raids and world.raids.is_active():
+		for m in world.raids.alive_raiders():
+			var rel_m: Vector3 = ((m as Node3D).global_position - _center) / (SIZE_PX * METRES_PER_PX)
+			var q := sz * 0.5 + Vector2(rel_m.x, rel_m.z) * sz
+			_marker.draw_circle(q, 3.5, Color(1, 0.25, 0.2))
 	var rel := (world.player.global_position - _center) / (SIZE_PX * METRES_PER_PX)
 	var p := sz * 0.5 + Vector2(rel.x, rel.z) * sz
 	var f := world.player.get_facing()

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"tome_arcane_barrier"
+display_name = "Tome: Arcane Barrier"
+description = "A barrier that absorbs damage (scales with spell power) for 12 s. Requires Mana Control 25."
+category = 6
+rarity = 3
+max_stack = 1
+base_value = 720
+icon_color = Color(0.5, 0.7, 1, 1)
+icon_glyph = "AB"
+teaches_spell = &"arcane_barrier"

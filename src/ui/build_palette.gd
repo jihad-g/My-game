@@ -43,7 +43,7 @@ func _ready() -> void:
 	_list.add_theme_constant_override(&"separation", 2)
 	scroll.add_child(_list)
 	var hint := Label.new()
-	hint.text = "LMB place · RMB deconstruct · R rotate · B / Esc exit\nDeconstructing refunds 100% on your land, 50% elsewhere"
+	hint.text = "LMB place · RMB deconstruct · R rotate · U repair (Shift+U: all nearby) · B / Esc exit\nDeconstructing refunds 100% on your land, 50% elsewhere"
 	hint.add_theme_font_size_override(&"font_size", 11)
 	hint.add_theme_color_override(&"font_color", UITheme.TEXT_DIM)
 	v.add_child(hint)

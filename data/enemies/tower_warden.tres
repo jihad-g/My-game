@@ -68,3 +68,6 @@ projectile_cooldown = 1.5
 preferred_min = 6.0
 preferred_max = 11.0
 projectile_status = [&"chilled", 2.0, {}]
+support = &"ward"
+support_power = 40.0
+support_cooldown = 9.0

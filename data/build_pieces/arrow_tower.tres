@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"arrow_tower"
+display_name = "Arrow Tower"
+description = "Shoots arrows at enemies within 16 m. Needs no ammunition."
+category = 9
+placement = 1
+behavior = 9
+cost = {
+&"plank": 8,
+&"iron_ingot": 2,
+&"flint": 4,
+&"rope": 1
+}
+mesh = &"arrow_tower"
+collision_size = Vector3(1, 2.9, 1)
+collision_center = Vector3(0, 1.45, 0)
+blocks_movement = true
+required_level = 6
+turret_damage = 16.0
+turret_range = 16.0
+turret_interval = 1.6
+fade_near_camera = false

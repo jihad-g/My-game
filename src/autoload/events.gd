@@ -52,3 +52,18 @@ signal boss_ended(boss: Node)
 signal poi_discovered(poi_id: String)
 signal dungeon_entered(dungeon_id: String, floor: int)
 signal dungeon_left(dungeon_id: String, cleared: bool)
+
+# --- Milestone 7: advanced gameplay ---
+## The player's status effects changed (HUD icons).
+signal status_changed(who: Node)
+signal spell_learned(spell_id: StringName)
+## A raid was announced / started / ended. `target` is "base" or a settlement id.
+signal raid_warning(target: String, position: Vector3, seconds: float)
+signal raid_started(target: String)
+signal raid_wave(target: String, wave: int, waves: int)
+signal raid_ended(target: String, won: bool)
+## A rare world event began or ended (blood_moon, meteor_shower, aurora, treasure_goblin, eclipse).
+signal world_event_started(event_id: StringName)
+signal world_event_ended(event_id: StringName)
+## A building piece was damaged or destroyed by enemies.
+signal building_damaged(piece: Node, destroyed: bool)

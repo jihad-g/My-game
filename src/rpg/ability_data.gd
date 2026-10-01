@@ -21,6 +21,8 @@ enum CostType { NONE, MANA, STAMINA, RAGE }
 @export var duration: float = 0.0
 ## Generic extra tuning value (meaning documented per effect).
 @export var power: float = 0.0
+## Advanced spells (Milestone 7): Mana Control skill needed to cast it.
+@export var required_mana_control: int = 0
 @export var icon_color: Color = Color.WHITE
 @export var icon_glyph: String = "?"
 

@@ -54,6 +54,11 @@ const BUFF_TEXT := {&"might": "+20% damage", &"stoneskin": "-20% damage taken",
 @export var mana_restore: float = 0.0
 @export var buff_id: StringName
 @export var buff_duration: float = 0.0
+## Status effects removed on use (Milestone 7): e.g. [&"poison", &"bleed"]; [&"all"] cures every harmful effect.
+@export var cures: Array[StringName] = []
+## Healing over time (the "regen" status): health per second for regen_duration seconds.
+@export var regen_hps: float = 0.0
+@export var regen_duration: float = 0.0
 
 @export_group("Equipment")
 @export var equip_slot: EquipSlot = EquipSlot.NONE
@@ -73,6 +78,10 @@ const BUFF_TEXT := {&"might": "+20% damage", &"stoneskin": "-20% damage taken",
 ## Recipe ids learned when this item is used (books, scrolls).
 @export var teaches_recipes: Array = []
 
+@export_group("Spell tome")
+## Advanced spell learned when this item is used (Milestone 7, see SpellBook).
+@export var teaches_spell: StringName
+
 @export_group("Placeable")
 ## Scene spawned in the world when the item is used/placed.
 @export var placeable_scene: PackedScene
@@ -84,6 +93,10 @@ func is_tool() -> bool:
 
 func is_recipe_book() -> bool:
 	return not teaches_recipes.is_empty()
+
+
+func is_spell_tome() -> bool:
+	return teaches_spell != &""
 
 
 func is_equippable() -> bool:
@@ -124,6 +137,12 @@ func effect_lines() -> PackedStringArray:
 		lines.append("Restores %d mana" % roundi(mana_restore))
 	if buff_id != &"" and buff_duration > 0.0:
 		lines.append("%s for %d min" % [BUFF_TEXT.get(buff_id, String(buff_id).capitalize()), roundi(buff_duration / 60.0)])
+	if regen_hps > 0.0 and regen_duration > 0.0:
+		lines.append("Heals %d health per second for %ds" % [roundi(regen_hps), roundi(regen_duration)])
+	if not cures.is_empty():
+		lines.append("Cures %s" % ("all harmful effects" if cures.has(&"all") else ", ".join(cures.map(func(c: StringName) -> String: return StatusEffects.display_name(c).to_lower()))))
+	if teaches_spell != &"":
+		lines.append("Use to learn a spell")
 	if is_tool():
 		lines.append("%s tier %d (used automatically when harvesting)" % [String(tool_kind).capitalize(), tool_tier])
 	if is_recipe_book():

@@ -1,0 +1,76 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/starborn_smash.tres" id="2_melee"]
+[ext_resource type="Resource" path="res://data/attacks/starborn_crush.tres" id="3_heavy"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"star_core"
+min_count = 1
+max_count = 1
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"star_metal_ore"
+min_count = 3
+max_count = 6
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"gemstone"
+min_count = 1
+max_count = 2
+chance = 0.6
+
+[resource]
+script = ExtResource("1_md")
+id = &"starborn_colossus"
+display_name = "Starborn Colossus"
+category = 7
+level = 18
+max_health = 1700.0
+walk_speed = 1.9
+run_speed = 3.8
+turn_speed = 9.0
+aggro_range = 22.0
+leash_range = 34.0
+max_poise = 320.0
+damage_multipliers = {
+&"poison": 0.0,
+&"lightning": 0.8
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2")]
+xp_reward = 900
+respawn_time = 600.0
+style = 3
+look = &"starborn"
+model_scale = 2.3
+tint = Color(0.35, 0.38, 0.6, 1)
+accent = Color(0.75, 0.8, 1, 1)
+melee = ExtResource("2_melee")
+heavy = ExtResource("3_heavy")
+heavy_cooldown = 5.5
+projectile_damage = 16.0
+projectile_type = &"arcane"
+projectile_speed = 13.0
+projectile_color = Color(0.75, 0.8, 1, 1)
+projectile_windup = 0.6
+projectile_cooldown = 3.0
+preferred_min = 0.0
+preferred_max = 14.0
+projectile_status = [&"shocked", 3.0, {}]
+boss_title = "The Starborn Colossus"
+boss_moves = [&"meteor_rain", &"slam", &"beam", &"cleave", &"nova"]
+slam_damage = 34.0
+slam_radius = 5.0
+phases = [{"at": 0.66, "moves": [&"beam", &"meteor_rain", &"shield", &"nova", &"cleave"], "text": "The Colossus draws power from the stars!", "hazard": &"falling_rocks"}, {"at": 0.33, "moves": [&"nova", &"meteor_rain", &"teleport", &"beam", &"shield", &"cleave"], "text": "The sky itself begins to fall!", "hazard": &"fire_rain"}]
+can_be_elite = false
+nova_radius = 8.0
+beam_damage = 10.0
+shield_pylons = 4

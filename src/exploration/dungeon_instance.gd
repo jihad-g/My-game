@@ -195,12 +195,14 @@ func _monster(data_id: StringName, local: Vector3, elite: bool) -> Monster:
 	if m == null:
 		return null
 	var r := poi.rank
-	var e := 1.8 if elite else 1.0
-	m.configure(PoiLayout.RANK_POWER[r] * e, PoiLayout.RANK_DAMAGE[r] * (1.2 if elite else 1.0), PoiLayout.RANK_LEVELS[r] + (3 if elite else 0),
-		PoiLayout.RANK_XP[r] * (2.0 if elite else 1.0))
+	m.configure(PoiLayout.RANK_POWER[r], PoiLayout.RANK_DAMAGE[r], PoiLayout.RANK_LEVELS[r], PoiLayout.RANK_XP[r])
 	m.leash_mult = 2.0
-	if elite:
-		m.set_meta(&"elite", true)
+	# Elite rooms always hold an elite; any other monster may roll one (Milestone 7 affixes).
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%s:%d:%s" % [poi.id, floor_index, local])
+	if data.can_be_elite and data.style != MonsterData.Style.BOSS and (elite or rng.randf() < EliteAffixes.chance(r)):
+		var count := 2 if elite and r >= 3 else 1
+		m.make_elite(EliteAffixes.roll(rng, count, data.style != MonsterData.Style.MELEE))
 	monsters.append(m)
 	return m
 

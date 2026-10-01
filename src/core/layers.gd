@@ -9,3 +9,5 @@ const PICKUP := 16
 const INTERACTABLE := 32
 ## Player-built structures (walls, fences, furniture...).
 const BUILDING := 64
+## Townsfolk (Milestone 7): raiders' projectiles and blasts can hit them.
+const NPC := 128

@@ -20,6 +20,9 @@ var cooldowns: Dictionary = {}
 var buffs: Dictionary = {}
 var rage: float = 0.0
 var _rage_idle := 0.0
+## Arcane Barrier hit points (absorbs damage while the buff lasts).
+var barrier: float = 0.0
+var _barrier_fx: MeshInstance3D
 
 
 func class_abilities() -> Array:
@@ -79,6 +82,9 @@ func try_use(slot: int) -> bool:
 		Events.toast.emit("%s: %s" % [a.display_name, lock_reason(a)], Color(1, 0.8, 0.5))
 		return false
 	if cooldown_left(a) > 0.0:
+		return false
+	if player.status.is_silenced():
+		Events.toast.emit("You are silenced!", Color(0.85, 0.6, 1.0))
 		return false
 	if player.state != Player.State.NORMAL or player.is_swimming:
 		return false
@@ -171,6 +177,11 @@ func remove_buff(id: StringName) -> void:
 
 func _on_buff_ended(id: StringName) -> void:
 	match id:
+		&"arcane_barrier":
+			barrier = 0.0
+			if _barrier_fx and is_instance_valid(_barrier_fx):
+				_barrier_fx.queue_free()
+			_barrier_fx = null
 		&"stealth":
 			player.model.set_ghost(false)
 		&"temperature_shield":
@@ -206,7 +217,7 @@ func outgoing_mult() -> float:
 		m *= 1.15
 	if has_buff(&"blessing"):
 		m *= 1.1
-	return m
+	return m * player.status.outgoing_mult()
 
 
 ## Multiplier on incoming damage from buffs.
@@ -297,7 +308,9 @@ func _spell_damage(a: AbilityData) -> float:
 	var mc := player.character.skill_level(Skill.MANA_CONTROL)
 	if mc >= 75 and player.mana.current > player.mana.max_mana * 0.5:
 		m *= 1.15
-	return a.damage * m * player.stats.get_mult(Stats.ATTACK_DAMAGE)
+	if World.instance and World.instance.events:
+		m *= World.instance.events.spell_mult()  # aurora
+	return a.damage * m * player.stats.get_mult(Stats.ATTACK_DAMAGE) * player.status.outgoing_mult()
 
 
 func _spell_hit(target: Node, a: AbilityData, amount: float, tag: String = "") -> float:
@@ -432,6 +445,7 @@ func _ability_firebolt(a: AbilityData) -> bool:
 	p.lifetime = a.range / 22.0
 	p.exclude = [player.get_rid()]
 	var amount := _spell_damage(a)
+	p.on_impact = func(pos: Vector3) -> void: ignite_clouds(pos, 1.0, amount * 2.5)
 	p.info_builder = func(target: Node) -> DamageInfo:
 		var info := DamageInfo.create(amount, player, &"fire")
 		info.direction = dir
@@ -470,8 +484,12 @@ func _ability_chain_lightning(a: AbilityData) -> bool:
 			break
 		hit.append(current)
 		points.append(current.global_position + Vector3(0, 1.0, 0))
-		var wet := World.instance != null and World.instance.is_in_water(current.global_position)
-		_spell_hit(current, a, amount * (1.5 if wet else 1.0), "Conducted" if wet else "")
+		# Targets standing in water are wet: lightning is conducted (x1.5, see StatusEffects).
+		if World.instance != null and World.instance.is_in_water(current.global_position) and current.has_method("apply_status"):
+			current.apply_status(&"wet", 4.0, {})
+		_spell_hit(current, a, amount)
+		if current.has_method("apply_status"):
+			current.apply_status(&"shocked", 3.0, {})
 		amount *= 0.8
 		var next: Node3D = null
 		var best := a.radius
@@ -541,6 +559,271 @@ func _ability_temperature_shield(a: AbilityData) -> bool:
 	player.character.recalculate()
 	VFX.ring(player.get_parent(), player.global_position, 2.5, Color(0.5, 0.8, 1.0, 0.6), 0.5)
 	Events.toast.emit("Temperature Shield active (%d min)" % roundi(a.duration / 60.0), Color(0.6, 0.85, 1.0))
+	return true
+
+
+# --- Advanced spells (Milestone 7) -------------------------------------------------------
+# Learned from tomes (SpellBook), cast from the two spell slots (Y / H). Any
+# class may cast them if its Mana Control skill is high enough; damage scales
+# with spell power, so Wizards hit hardest. Elemental combos (see
+# StatusEffects): Shatter (fire on frozen x2), Conducted (lightning on wet
+# x1.5), Deep Freeze (chill on chilled/wet -> frozen) and Combustion (fire
+# into a Miasma cloud explodes).
+
+## Why a spell can't be cast right now ("" = it can).
+func spell_block_reason(a: AbilityData) -> String:
+	var mc := player.character.skill_level(Skill.MANA_CONTROL)
+	if mc < a.required_mana_control:
+		return "%s needs Mana Control %d (you have %d)" % [a.display_name, a.required_mana_control, mc]
+	if player.status.is_silenced():
+		return "You are silenced!"
+	if not player.mana.has(effective_cost(a)):
+		return "Not enough mana"
+	return ""
+
+
+func try_cast(slot: int) -> bool:
+	var a := player.spells.get_slot(slot)
+	if a == null:
+		Events.toast.emit("Spell slot %d is empty. Learn spells from tomes (spellbook: L)" % (slot + 1), Color(0.85, 0.8, 1.0))
+		return false
+	if player.is_dead or player.frozen or cooldown_left(a) > 0.0:
+		return false
+	if player.state != Player.State.NORMAL or player.is_swimming:
+		return false
+	var why := spell_block_reason(a)
+	if why != "":
+		Events.toast.emit(why, Color(1, 0.8, 0.5))
+		return false
+	var fn := "_spell_%s" % a.effect
+	if not has_method(fn) or not call(fn, a):
+		return false
+	player.mana.try_spend(effective_cost(a))
+	cooldowns[a.id] = a.cooldown * Skill.cooldown_mult(player.character.skill_level(Skill.MANA_CONTROL))
+	cooldowns_changed.emit()
+	Events.ability_used.emit(a.id)
+	return true
+
+
+## Absorbs damage with the Arcane Barrier. Returns what gets through.
+func absorb(amount: float) -> float:
+	if barrier <= 0.0 or not has_buff(&"arcane_barrier"):
+		return amount
+	var taken := minf(barrier, amount)
+	barrier -= taken
+	if barrier <= 0.0:
+		remove_buff(&"arcane_barrier")
+		Events.damage_dealt.emit(player.global_position + Vector3(0, 2.4, 0), 0.0, false, true, "Barrier broken")
+	return amount - taken
+
+
+## Fire blasts ignite Miasma clouds they touch (Combustion).
+func ignite_clouds(pos: Vector3, blast_radius: float, power: float) -> int:
+	var n := 0
+	for c in get_tree().get_nodes_in_group(&"poison_clouds"):
+		if c is GroundHazard and (c as GroundHazard).ignite(pos, blast_radius, power):
+			n += 1
+	return n
+
+
+## Where a targeted spell lands: lock target, aimed enemy, else the cursor (clamped to range).
+func cast_point(max_range: float) -> Vector3:
+	var tgt := _aim_target(max_range)
+	var p := player.global_position
+	var pt: Vector3
+	if tgt:
+		pt = tgt.global_position
+	elif player.camera_rig and player.camera_rig.is_inside_tree() and not DisplayServer.get_name() == "headless":
+		pt = player.camera_rig.get_mouse_world_point(p.y)
+	else:
+		pt = p + player.get_aim_direction() * max_range * 0.6
+	var flat := Vector3(pt.x - p.x, 0, pt.z - p.z)
+	if flat.length() > max_range:
+		flat = flat.normalized() * max_range
+	pt = p + flat
+	if World.instance:
+		pt.y = World.instance.get_ground_height(pt)
+	return pt
+
+
+func _player_hazard(pos: Vector3, a: AbilityData, radius: float, delay: float, dmg: float) -> GroundHazard:
+	var h := GroundHazard.spawn(player.get_parent(), pos, radius, delay, dmg, a.damage_type, player)
+	h.hurts_player = false
+	h.hurts_enemies = true
+	h.color = a.icon_color
+	h.knockback = 2.0
+	h.poise_damage = 10.0
+	return h
+
+
+## Blink: teleport toward the cursor (stops at walls); 0.3 s invulnerable.
+func _spell_blink(a: AbilityData) -> bool:
+	var from := player.global_position
+	var dir := player.get_aim_direction()
+	var dest := from + dir * a.range
+	var q := PhysicsRayQueryParameters3D.create(from + Vector3(0, 1.0, 0), dest + Vector3(0, 1.0, 0), Layers.TERRAIN | Layers.BUILDING | Layers.PROP)
+	q.exclude = [player.get_rid()]
+	var hit := _space().intersect_ray(q)
+	if not hit.is_empty():
+		dest = Vector3(hit.position.x, from.y, hit.position.z) - dir * 0.7
+	if World.instance:
+		var g := World.instance.get_ground_height(dest)
+		if g > from.y + 2.5:
+			return false
+		dest.y = g + 0.2
+	VFX.burst(player.get_parent(), from + Vector3(0, 1, 0), 1.3, Color(0.75, 0.55, 1.0, 0.7))
+	player.global_position = dest
+	player.health.invulnerable = true
+	get_tree().create_timer(a.duration, false).timeout.connect(func() -> void:
+		if player.state != Player.State.DODGING:
+			player.health.invulnerable = false)
+	VFX.burst(player.get_parent(), dest + Vector3(0, 1, 0), 1.3, Color(0.75, 0.55, 1.0, 0.7))
+	return true
+
+
+## Healing Light: heal power% of max health, cure everything harmful, regenerate.
+func _spell_healing_light(a: AbilityData) -> bool:
+	var hp := player.health.max_health
+	player.health.heal(hp * a.power / 100.0)
+	var n := player.status.cleanse()
+	player.afflict(&"regen", a.duration, {"hps": hp * 0.02})
+	VFX.ring(player.get_parent(), player.global_position, 2.5, Color(1.0, 0.95, 0.55, 0.8), 0.5)
+	VFX.burst(player.get_parent(), player.global_position + Vector3(0, 1.2, 0), 1.6, Color(1.0, 0.95, 0.6, 0.6))
+	if n > 0:
+		Events.damage_dealt.emit(player.global_position + Vector3(0, 2.4, 0), 0.0, false, true, "Cleansed")
+	return true
+
+
+## Miasma: poison cloud at the target point. Fire ignites it (Combustion).
+func _spell_poison_cloud(a: AbilityData) -> bool:
+	var h := _player_hazard(cast_point(a.range), a, a.radius, 0.2, _spell_damage(a))
+	h.linger = a.duration
+	h.linger_tick = 1.0
+	h.linger_mult = 1.0
+	h.knockback = 0.0
+	h.poise_damage = 0.0
+	h.status_effect = [&"poison", 3.0, {"dps": _spell_damage(a) * 0.4, "source": player}]
+	h.tag = "Miasma"
+	return true
+
+
+## Arcane Barrier: absorbs power x spell power damage for `duration` seconds.
+func _spell_arcane_barrier(a: AbilityData) -> bool:
+	barrier = a.power * player.character.spell_mult
+	add_buff(&"arcane_barrier", a.duration)
+	if _barrier_fx == null or not is_instance_valid(_barrier_fx):
+		_barrier_fx = MeshInstance3D.new()
+		var sm := SphereMesh.new()
+		sm.radius = 1.0
+		sm.height = 2.0
+		sm.radial_segments = 16
+		sm.rings = 8
+		_barrier_fx.mesh = sm
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.5, 0.7, 1.0, 0.18)
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		_barrier_fx.material_override = mat
+		_barrier_fx.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_barrier_fx.position.y = 1.0
+		player.add_child(_barrier_fx)
+	VFX.ring(player.get_parent(), player.global_position, 2.0, Color(0.5, 0.7, 1.0, 0.8), 0.4)
+	return true
+
+
+## Arcane Missiles: `power` homing missiles spread over the enemies near the target point.
+func _spell_arcane_missiles(a: AbilityData) -> bool:
+	var center := cast_point(a.range)
+	var targets: Array[Node3D] = []
+	for e in get_tree().get_nodes_in_group(&"enemies"):
+		var n := e as Node3D
+		if n and n.is_visible_in_tree() and not n.get("is_dead") and n.global_position.distance_to(center) < 7.0 \
+				and n.global_position.distance_to(player.global_position) < a.range + 4.0:
+			targets.append(n)
+	if targets.is_empty():
+		Events.toast.emit("No target in range", Color(1, 0.8, 0.5))
+		return false
+	targets.sort_custom(func(x: Node3D, y: Node3D) -> bool: return x.global_position.distance_to(center) < y.global_position.distance_to(center))
+	var amount := _spell_damage(a)
+	player.model.play_attack(&"thrust", 0.05, 0.1, 0.3)
+	for k in int(a.power):
+		var tgt: Node3D = targets[k % targets.size()]
+		get_tree().create_timer(0.02 + k * 0.12, false).timeout.connect(func() -> void:
+			if player.is_dead or not is_instance_valid(tgt):
+				return
+			var p := Projectile.new()
+			var spread := (k - (a.power - 1) * 0.5) * 0.35
+			var dir := (tgt.global_position - player.global_position).normalized().rotated(Vector3.UP, spread)
+			dir.y = 0.25
+			p.velocity = dir.normalized() * 16.0
+			p.lifetime = 2.2
+			p.homing_target = tgt
+			p.turn_rate = 7.0
+			p.color = a.icon_color
+			p.exclude = [player.get_rid()]
+			p.info_builder = func(_t: Node) -> DamageInfo:
+				var info := DamageInfo.create(amount, player, &"arcane")
+				info.knockback = dir * 1.0
+				info.poise_damage = 6.0
+				return info
+			player.get_parent().add_child(p)
+			p.global_position = player.global_position + Vector3(0, 1.4, 0) + Vector3(dir.x, 0, dir.z) * 0.6)
+	return true
+
+
+## Blizzard: frost storm at the target point. Each tick chills; chilling twice freezes.
+func _spell_blizzard(a: AbilityData) -> bool:
+	var h := _player_hazard(cast_point(a.range), a, a.radius, 0.3, _spell_damage(a))
+	h.linger = a.duration
+	h.linger_tick = 0.5
+	h.linger_mult = 1.0
+	h.knockback = 0.0
+	h.poise_damage = 4.0
+	h.style = &"storm"
+	h.status_effect = [&"chilled", 1.6, {}]
+	h.tag = "Blizzard"
+	return true
+
+
+## Meteor: after `duration` s a meteor hits the target point (fire + burn). Ignites Miasma.
+func _spell_meteor(a: AbilityData) -> bool:
+	var dmg := _spell_damage(a)
+	var h := _player_hazard(cast_point(a.range), a, a.radius, a.duration, dmg)
+	h.style = &"meteor"
+	h.knockback = 8.0
+	h.poise_damage = 60.0
+	h.status_effect = [&"burn", 4.0, {"dps": a.power * player.character.spell_mult, "source": player}]
+	h.tag = "Meteor"
+	h.on_blast = func(pos: Vector3) -> void: ignite_clouds(pos, a.radius, dmg * 0.6)
+	player.model.play_attack(&"overhead", 0.2, 0.1, 0.4)
+	return true
+
+
+## Storm Call: `power` lightning strikes over `duration` s on enemies within `radius`. Shocks.
+func _spell_storm_call(a: AbilityData) -> bool:
+	var amount := _spell_damage(a)
+	var strikes := int(a.power)
+	VFX.ring(player.get_parent(), player.global_position, a.radius, Color(0.75, 0.85, 1.0, 0.5), 0.6)
+	for k in strikes:
+		get_tree().create_timer(0.15 + k * a.duration / strikes, false).timeout.connect(func() -> void:
+			if player.is_dead:
+				return
+			var pool: Array[Node3D] = []
+			for e in get_tree().get_nodes_in_group(&"enemies"):
+				var n := e as Node3D
+				if n and n.is_visible_in_tree() and not n.get("is_dead") and n.global_position.distance_to(player.global_position) <= a.radius:
+					pool.append(n)
+			if pool.is_empty():
+				return
+			var t: Node3D = pool[randi() % pool.size()]
+			var top := t.global_position + Vector3(randf_range(-1, 1), 14.0, randf_range(-1, 1))
+			VFX.bolt(player.get_parent(), PackedVector3Array([top, t.global_position + Vector3(0, 1.0, 0)]), Color(0.8, 0.85, 1.0, 1.0), 0.25)
+			if World.instance and World.instance.is_in_water(t.global_position) and t.has_method("apply_status"):
+				t.apply_status(&"wet", 4.0, {})
+			_spell_hit(t, a, amount, "Lightning")
+			if t.has_method("apply_status"):
+				t.apply_status(&"shocked", 3.0, {}))
 	return true
 
 

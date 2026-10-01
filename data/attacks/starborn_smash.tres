@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"starborn_smash"
+display_name = "Star Smash"
+damage = 26
+windup = 0.8
+active = 0.15
+recovery = 0.6
+cancel_ratio = 0.0
+reach = 3.4
+arc_degrees = 120
+knockback = 7
+poise_damage = 35
+lunge_speed = 1.0
+move_multiplier = 0.0
+animation = &"overhead"
+camera_shake = 0.25

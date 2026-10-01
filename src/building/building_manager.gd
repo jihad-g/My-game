@@ -249,6 +249,61 @@ func remove(piece: BuildPiece, player: Player) -> bool:
 	return true
 
 
+## Pieces (active layer) whose centre is within `r` metres of `pos` (flat distance).
+func pieces_near(pos: Vector3, r: float) -> Array:
+	var out := []
+	var r2 := r * r
+	var l := world.layer if world else 0
+	for k in pieces:
+		var p: BuildPiece = pieces[k]
+		if p.layer != l or not is_instance_valid(p) or p.is_queued_for_deletion() or p.health <= 0.0:
+			continue
+		if Vector2(p.global_position.x - pos.x, p.global_position.z - pos.z).length_squared() <= r2 \
+				and absf(p.global_position.y - pos.y) < 6.0:
+			out.append(p)
+	return out
+
+
+## A piece broke (raiders): no refund, but a chest spills its contents.
+func destroy(piece: BuildPiece) -> void:
+	if piece == null or not is_instance_valid(piece) or piece.is_queued_for_deletion():
+		return
+	if piece.storage and world:
+		for i in piece.storage.capacity:
+			var st = piece.storage.get_slot(i)
+			if st != null:
+				world.spawn_pickup(st.id, int(st.count), piece.global_position + Vector3(randf_range(-0.6, 0.6), 1.0, randf_range(-0.6, 0.6)), false)
+	VFX.burst(piece.get_parent(), piece.global_position + Vector3(0, 1.0, 0), 1.8, Color(0.55, 0.45, 0.35, 0.8), 0.35)
+	pieces.erase(key(piece.cell, piece.slot, piece.layer))
+	Events.toast.emit("Your %s was destroyed!" % piece.data.display_name, Color(1, 0.5, 0.4))
+	piece.queue_free()
+	Events.building_changed.emit()
+
+
+## Repairs a damaged piece to full health, paying the materials. Returns "" or why not.
+func repair(piece: BuildPiece, player: Player) -> String:
+	if piece == null or not piece.is_damaged():
+		return "Nothing to repair"
+	var cost := piece.repair_cost()
+	for item in cost:
+		if player.inventory.count_of(item) < int(cost[item]):
+			var d: ItemData = ItemDB.get_item(item)
+			return "Repair needs %d %s" % [int(cost[item]), d.display_name if d else String(item)]
+	for item in cost:
+		player.inventory.remove_item(item, int(cost[item]))
+	piece.repair_full()
+	return ""
+
+
+## Repairs every damaged piece you can afford within `r` metres. Returns how many.
+func repair_all_near(pos: Vector3, r: float, player: Player) -> int:
+	var n := 0
+	for p in pieces_near(pos, r):
+		if p.is_damaged() and repair(p, player) == "":
+			n += 1
+	return n
+
+
 # --- Land & shelter ----------------------------------------------------------------------
 
 func is_claimed(pos: Vector3) -> bool:

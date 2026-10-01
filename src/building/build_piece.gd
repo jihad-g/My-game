@@ -3,7 +3,9 @@ extends StaticBody3D
 ## A placed building piece. Behaviour depends on BuildPieceData.behavior:
 ## doors open/close, chests store items, beds set respawn and let you sleep,
 ## spikes hurt enemies, stations enable crafting, torches light and warm,
-## claims protect land.
+## claims protect land. Milestone 7: pieces have hit points (raiders damage
+## and destroy them, the player repairs them in build mode), arrow towers
+## shoot enemies and alarm bells give early raid warnings.
 
 var data: BuildPieceData
 ## Grid address: cell, slot ("floor", "object", "roof", "edge_n", "edge_w"), rotation (0-3), layer.
@@ -26,14 +28,21 @@ var _leaf: Node3D
 var _spike_area: Area3D
 var _spike_tick := 0.0
 var _light: OmniLight3D
+## Current hit points (set to the maximum in setup()).
+var health := 0.0
+var _damage_step := 0
+var _turret_cd := 0.0
+var _shake: Tween
 
 
 func setup(p_data: BuildPieceData) -> void:
 	data = p_data
+	health = data.get_max_health()
+	add_to_group(&"build_pieces")
 	name = "%s_%d_%d_%s" % [data.id, cell.x, cell.y, slot]
 	collision_layer = Layers.BUILDING
 	if data.behavior in [BuildPieceData.Behavior.DOOR, BuildPieceData.Behavior.CHEST, BuildPieceData.Behavior.BED,
-			BuildPieceData.Behavior.CLAIM, BuildPieceData.Behavior.FARM]:
+			BuildPieceData.Behavior.CLAIM, BuildPieceData.Behavior.FARM, BuildPieceData.Behavior.BELL]:
 		collision_layer |= Layers.INTERACTABLE
 	if not data.blocks_movement:
 		collision_layer = Layers.INTERACTABLE if collision_layer & Layers.INTERACTABLE else 0
@@ -89,6 +98,10 @@ func setup(p_data: BuildPieceData) -> void:
 			add_child(flame)
 		BuildPieceData.Behavior.CLAIM:
 			add_to_group(&"land_claims")
+		BuildPieceData.Behavior.TURRET:
+			add_to_group(&"turrets")
+		BuildPieceData.Behavior.BELL:
+			add_to_group(&"alarm_bells")
 		BuildPieceData.Behavior.FARM:
 			add_to_group(&"farm_plots")
 			_crop_mesh = MeshInstance3D.new()
@@ -125,6 +138,9 @@ func update_crop_visual() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if data.behavior == BuildPieceData.Behavior.TURRET:
+		_turret_update(delta)
+		return
 	if _spike_area == null:
 		return
 	_spike_tick -= delta
@@ -144,6 +160,106 @@ func _physics_process(delta: float) -> void:
 			body.receive_hit(info)
 
 
+# --- Hit points (Milestone 7) ----------------------------------------------------------
+
+func max_health() -> float:
+	return data.get_max_health()
+
+
+func is_damaged() -> bool:
+	return health < max_health() - 0.5
+
+
+## Raiders (and their bombs) damage pieces. Returns damage dealt.
+func receive_hit(info: DamageInfo) -> float:
+	if health <= 0.0 or info.amount <= 0.0 or info.source is Player:
+		return 0.0
+	var dealt := minf(info.amount, health)
+	health -= dealt
+	Events.damage_dealt.emit(global_position + Vector3(0, 1.8, 0), dealt, false, false, "")
+	_update_damage_look()
+	if _shake == null or not _shake.is_running():
+		var base := _mesh_instance.position
+		_shake = create_tween()
+		_shake.tween_property(_mesh_instance, "position", base + Vector3(0.06, 0, 0.04), 0.05)
+		_shake.tween_property(_mesh_instance, "position", base, 0.08)
+	if health <= 0.0:
+		Events.building_damaged.emit(self, true)
+		if World.instance and World.instance.building:
+			World.instance.building.destroy(self)
+	else:
+		Events.building_damaged.emit(self, false)
+	return dealt
+
+
+## Materials to bring the piece back to full health: 30% of its cost, scaled by the damage.
+func repair_cost() -> Dictionary:
+	var out := {}
+	var missing := 1.0 - health / max_health()
+	if missing <= 0.0:
+		return out
+	for item in data.cost:
+		var n := ceili(int(data.cost[item]) * 0.3 * missing)
+		if n > 0:
+			out[item] = n
+	return out
+
+
+func repair_full() -> void:
+	health = max_health()
+	_update_damage_look()
+
+
+func _update_damage_look() -> void:
+	var ratio := health / max_health()
+	var step := 0 if ratio > 0.75 else (1 if ratio > 0.5 else (2 if ratio > 0.25 else 3))
+	if step != _damage_step:
+		_damage_step = step
+		_mesh_instance.material_overlay = null if step == 0 else Materials.damage_overlay(step)
+
+
+func _turret_update(delta: float) -> void:
+	_turret_cd -= delta
+	if _turret_cd > 0.0 or not visible:
+		return
+	_turret_cd = 0.25
+	var origin := global_position + Vector3(0, 2.6, 0)
+	var best: Node3D = null
+	var bd := data.turret_range
+	for e in get_tree().get_nodes_in_group(&"enemies"):
+		var en := e as Enemy
+		if en == null or en.is_dead or not en.is_visible_in_tree():
+			continue
+		var d := en.global_position.distance_to(global_position)
+		if d < bd:
+			var q := PhysicsRayQueryParameters3D.create(origin, en.global_position + Vector3(0, 1.0, 0), Layers.TERRAIN)
+			if get_world_3d().direct_space_state.intersect_ray(q).is_empty():
+				bd = d
+				best = en
+	if best == null:
+		return
+	_turret_cd = data.turret_interval
+	var p := Projectile.new()
+	var aim := best.global_position + Vector3(0, 1.0, 0)
+	var dir := (aim - origin).normalized()
+	p.velocity = dir * 26.0
+	p.lifetime = data.turret_range / 26.0 + 0.3
+	p.color = Color(0.85, 0.75, 0.5)
+	p.mask = Layers.TERRAIN | Layers.ENEMY
+	p.exclude = [get_rid()]
+	var dmg := data.turret_damage
+	var src := self
+	p.info_builder = func(_t: Node) -> DamageInfo:
+		var info := DamageInfo.create(dmg, src if is_instance_valid(src) else null, &"physical")
+		info.direction = dir
+		info.knockback = dir * 1.5
+		info.poise_damage = 6.0
+		info.tag = "Arrow tower"
+		return info
+	get_parent().add_child(p)
+	p.global_position = origin
+
+
 ## Warmth for TemperatureComponent (torches are small heat sources).
 func heat_at(pos: Vector3) -> float:
 	if data.behavior != BuildPieceData.Behavior.LIGHT:
@@ -160,7 +276,8 @@ func claim_radius() -> float:
 
 func is_interactable() -> bool:
 	return data.behavior in [BuildPieceData.Behavior.DOOR, BuildPieceData.Behavior.CHEST,
-		BuildPieceData.Behavior.BED, BuildPieceData.Behavior.CLAIM, BuildPieceData.Behavior.FARM]
+		BuildPieceData.Behavior.BED, BuildPieceData.Behavior.CLAIM, BuildPieceData.Behavior.FARM,
+		BuildPieceData.Behavior.BELL]
 
 
 func get_interact_text() -> String:
@@ -175,6 +292,8 @@ func get_interact_text() -> String:
 			return "%s (radius %d m)" % [data.display_name, roundi(data.claim_radius)]
 		BuildPieceData.Behavior.FARM:
 			return _farm_text()
+		BuildPieceData.Behavior.BELL:
+			return "Ring the alarm bell"
 	return data.display_name
 
 
@@ -189,6 +308,9 @@ func interact(player: Node) -> void:
 				World.instance.use_bed(self, player)
 		BuildPieceData.Behavior.FARM:
 			farm_interact(player)
+		BuildPieceData.Behavior.BELL:
+			if World.instance and World.instance.raids:
+				World.instance.raids.ring_bell(self)
 		BuildPieceData.Behavior.CLAIM:
 			Events.toast.emit("This land is yours: no monsters spawn within %d m, full refunds when deconstructing" % roundi(data.claim_radius), Color(0.6, 0.85, 1.0))
 
@@ -266,6 +388,8 @@ func save_data() -> Dictionary:
 	if crop != &"":
 		d["crop"] = String(crop)
 		d["planted_at"] = planted_at
+	if is_damaged():
+		d["hp"] = health
 	return d
 
 
@@ -274,6 +398,9 @@ func load_data(d: Dictionary) -> void:
 		storage.from_array(d.storage)
 	if d.get("open", false):
 		set_open(true)
+	if d.has("hp"):
+		health = clampf(float(d.hp), 1.0, max_health())
+		_update_damage_look()
 	if d.has("crop"):
 		crop = StringName(d.crop)
 		planted_at = float(d.get("planted_at", 0.0))

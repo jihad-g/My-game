@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"meteor"
+display_name = "Meteor"
+description = "Call down a meteor at the cursor: huge fire damage and burn after a short delay. Shatters frozen foes."
+effect = &"meteor"
+unlock_level = 1
+cost_type = 1
+cost = 60
+cooldown = 22
+damage = 90
+damage_type = &"fire"
+radius = 4
+range = 18
+duration = 1.2
+power = 4
+required_mana_control = 50
+icon_color = Color(1, 0.45, 0.15, 1)
+icon_glyph = "Me"

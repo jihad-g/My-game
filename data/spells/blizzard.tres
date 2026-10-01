@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"blizzard"
+display_name = "Blizzard"
+description = "A storm of ice at the cursor for 5 s: frost damage and chill. Chilling twice freezes (Deep Freeze)."
+effect = &"blizzard"
+unlock_level = 1
+cost_type = 1
+cost = 40
+cooldown = 16
+damage = 6
+damage_type = &"frost"
+radius = 4.5
+range = 16
+duration = 5
+power = 0
+required_mana_control = 35
+icon_color = Color(0.6, 0.9, 1, 1)
+icon_glyph = "Bz"

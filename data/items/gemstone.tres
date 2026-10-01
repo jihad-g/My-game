@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"gemstone"
+display_name = "Gemstone"
+description = "A flawless cut gem. Very valuable."
+category = 0
+rarity = 4
+max_stack = 99
+base_value = 110
+icon_color = Color(0.4, 0.9, 0.85, 1)
+icon_glyph = "Gm"

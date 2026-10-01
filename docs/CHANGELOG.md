@@ -2,6 +2,44 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.7.0] — Milestone 7: Advanced Gameplay
+
+### Added
+- **Status effects** (`StatusEffects`, now on the player too): bleed, shock, wet, weakened,
+  slowed, silenced, regen and haste join burn, poison, chill, freeze, stun and taunt.
+  Elemental interactions: Steam, Doused, Deep Freeze, Shatter, Conducted and Combustion.
+  Water makes you wet. HUD status chips. Cures: bandages now stop bleeding; new antidote, purifying
+  draught and Troll's Brew.
+- **Advanced enemy AI**: attack tokens (`CombatDirector`, max 2 melee attackers, others circle),
+  pack alerts, dodging, fleeing, separation, feeler-ray steering, ledge hops and detours,
+  support casters (heal / ward / haste).
+- **Elites** (`EliteAffixes`): 9 affixes, champions with 2, auras, name prefixes, elite loot.
+- **Boss mechanics**: phases with transitions, arena hazards and new move lists; poise break;
+  ward pylons (`WardPylon`); moves spikes, nova, beam, meteor rain, teleport, pull, roar, bomb
+  (`GroundHazard` telegraphed area attacks). Phases for all four M6 bosses.
+- **New monsters**: bandit cutthroat, archer, brute, hexer, bomber; **Grimtusk the Warlord**
+  (raid boss), **Treasure Goblin**, **Starborn Colossus** (meteor world boss).
+- **Advanced magic** (`SpellBook`, `SpellbookPanel`): 8 spells from tomes (Blink, Healing Light,
+  Miasma, Arcane Barrier, Arcane Missiles, Blizzard, Meteor, Storm Call), 2 spell slots (Y/H),
+  spellbook (L), Mana Control requirements; tomes in loot and at the Arcane Altar.
+- **Raids** (`RaidManager`): base raids with warnings, waves, siege, spoils or plunder; town
+  raids announced by riders; defend for reputation and coins, or towns may be plundered.
+- **Building health**: hit points by material, damage overlay, destruction, repair (U / Shift+U).
+  New pieces: Log Palisade, Reinforced Door, Arrow Tower, Alarm Bell.
+- **Rare events** (`WorldEvents`, `MeteorCrater`): Blood Moon, Meteor Shower (star metal +
+  Starborn Colossus), Aurora, Treasure Goblin, Eclipse; sky tint and eclipse darkness in
+  `DayNightCycle`; saved.
+- Star metal crafting (ingots, Starmetal Amulet, Starfall Blade, Tome: Meteor); Warlord's Cleaver.
+- New physics layer `npc` (8). Debug keys F4 (raid) and F12 (next event).
+- Tests: 713 checks (+151). Screenshot runner `--only=advanced`.
+
+### Changed
+- `Monster` AI rewritten around targets (player, townsfolk, buildings) and the new behaviours;
+  dungeon elites now roll affixes instead of a flat buff.
+- Enemies wait instead of falling when their terrain collision isn't loaded yet.
+- Defense skill perk "Iron Skin" (30% shorter harmful effects) now works for the player.
+- The boss bar closes when a boss is despawned/pooled.
+
 ## [0.6.0] — Milestone 6: Exploration
 
 ### Added

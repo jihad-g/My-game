@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/sword.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"starfall_blade"
+display_name = "Starfall Blade"
+description = "A sword of star metal. Its edge leaves a trail of light."
+category = 3
+rarity = 6
+max_stack = 1
+base_value = 2600
+icon_color = Color(0.7, 0.75, 1, 1)
+icon_glyph = "Sw"
+equip_slot = 1
+required_level = 30
+stat_bonuses = {
+&"damage_bonus": 26,
+&"crit_chance": 10,
+&"spell_power": 10,
+&"dexterity": 3
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"sword"

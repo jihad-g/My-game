@@ -1,7 +1,8 @@
 class_name BuildMode
 extends Node3D
 ## Player building mode (B): ghost preview snapped to the grid, place with
-## left click, deconstruct with right click, rotate with R.
+## left click, deconstruct with right click, rotate with R, repair the piece
+## under the cursor with U (Shift+U repairs everything nearby).
 
 signal toggled(active: bool)
 signal selection_changed(data: BuildPieceData)
@@ -80,6 +81,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"attack_heavy"):
 		remove_under_cursor()
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"build_repair"):
+		if Input.is_key_pressed(KEY_SHIFT):
+			var n := world.building.repair_all_near(world.player.global_position, 20.0, world.player)
+			Events.toast.emit("Repaired %d piece%s" % [n, "" if n == 1 else "s"] if n > 0 else "Nothing you can repair nearby",
+				Color(0.7, 1, 0.7) if n > 0 else Color(1, 0.8, 0.5))
+		else:
+			repair_under_cursor()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"build_rotate"):
 		rot = (rot + 1) % 4
 		get_viewport().set_input_as_handled()
@@ -136,3 +145,12 @@ func remove_under_cursor() -> void:
 	var piece := world.building.piece_at(_cursor())
 	if piece:
 		world.building.remove(piece, world.player)
+
+
+func repair_under_cursor() -> void:
+	var piece := world.building.piece_at(_cursor())
+	if piece == null:
+		return
+	var err := world.building.repair(piece, world.player)
+	Events.toast.emit("Repaired %s" % piece.data.display_name if err == "" else err,
+		Color(0.7, 1, 0.7) if err == "" else Color(1, 0.7, 0.5))

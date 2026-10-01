@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"palisade_wall"
+display_name = "Log Palisade"
+description = "A wall of sharpened logs. Much tougher than a plank wall (700 HP)."
+category = 1
+placement = 2
+behavior = 0
+cost = {
+&"wood": 6,
+&"stick": 2
+}
+mesh = &"palisade_wall"
+collision_size = Vector3(1, 2.8, 0.3)
+collision_center = Vector3(0, 1.4, 0)
+blocks_movement = true
+required_level = 4
+max_health = 700.0

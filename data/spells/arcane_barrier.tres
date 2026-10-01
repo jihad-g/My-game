@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"arcane_barrier"
+display_name = "Arcane Barrier"
+description = "A barrier that absorbs damage (scales with spell power) for 12 s."
+effect = &"arcane_barrier"
+unlock_level = 1
+cost_type = 1
+cost = 35
+cooldown = 25
+damage = 0
+damage_type = &"arcane"
+radius = 0
+range = 0
+duration = 12
+power = 60
+required_mana_control = 25
+icon_color = Color(0.5, 0.7, 1, 1)
+icon_glyph = "AB"

@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/bandit_slash.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"bandit_insignia"
+min_count = 1
+max_count = 1
+chance = 0.5
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"flint"
+min_count = 1
+max_count = 3
+chance = 0.4
+
+[resource]
+script = ExtResource("1_md")
+id = &"bandit_archer"
+display_name = "Bandit Archer"
+category = 2
+level = 5
+max_health = 50.0
+walk_speed = 2.4
+run_speed = 4.0
+turn_speed = 9.0
+aggro_range = 16.0
+leash_range = 34.0
+max_poise = 15.0
+damage_multipliers = {}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 20
+respawn_time = 600.0
+style = 1
+look = &"bandit_archer"
+model_scale = 1.0
+tint = Color(0.35, 0.3, 0.22, 1)
+accent = Color(0.45, 0.35, 0.2, 1)
+melee = ExtResource("2_melee")
+projectile_damage = 10.0
+projectile_type = &"physical"
+projectile_speed = 20.0
+projectile_color = Color(0.8, 0.7, 0.5, 1)
+projectile_windup = 0.7
+projectile_cooldown = 2.2
+preferred_min = 7.0
+preferred_max = 12.0
+projectile_status = [&"bleed", 4.0, {"dps": 1.5}]
+dodge_chance = 0.2
+flee_below = 0.25
+raider = true

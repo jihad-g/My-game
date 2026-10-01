@@ -14,6 +14,8 @@ var trader: NPC
 
 ## True once geometry is attached and townsfolk exist.
 var is_built := false
+## A raid is attacking this settlement (Milestone 7): villagers hide, guards fight.
+var under_attack := false
 var _task := -1
 var _roof_nodes: Dictionary = {}  # building index -> MeshInstance3D
 var _hidden_roof := -1
@@ -275,6 +277,18 @@ func _spawn_npcs() -> void:
 		add_child(n)
 		npcs.append(n)
 	refresh_trader()
+
+
+func set_under_attack(on: bool) -> void:
+	if on == under_attack:
+		return
+	under_attack = on
+	for n in npcs:
+		if is_instance_valid(n):
+			if on:
+				n._update_activity(false)
+			else:
+				n.recover()
 
 
 func is_trader_day(day: int) -> bool:

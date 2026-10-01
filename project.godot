@@ -8,7 +8,7 @@ config_version=5
 
 config/name="Shardlands"
 config/description="Stylized blocky open-world survival RPG (prototype)."
-config/version="0.6.0"
+config/version="0.7.0"
 run/main_scene="res://scenes/menu/main_menu.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
@@ -37,6 +37,7 @@ window/stretch/aspect="expand"
 3d_physics/layer_5="pickup"
 3d_physics/layer_6="interactable"
 3d_physics/layer_7="building"
+3d_physics/layer_8="npc"
 
 [physics]
 

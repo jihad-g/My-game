@@ -59,3 +59,7 @@ projectile_cooldown = 2.3
 preferred_min = 5.0
 preferred_max = 10.0
 projectile_status = [&"burn", 3.0, {"dps": 4.0}]
+support = &"heal"
+support_power = 30.0
+support_cooldown = 7.0
+flee_below = 0.2

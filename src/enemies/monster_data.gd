@@ -38,7 +38,8 @@ enum Style { MELEE, RANGED, CASTER, BOSS }
 @export_group("Boss")
 ## Title shown on the boss bar ("The Bone King").
 @export var boss_title: String = ""
-## Moves the boss cycles through: cleave, slam, volley, charge, summon.
+## Moves the boss cycles through: cleave, slam, volley, charge, summon,
+## and (Milestone 7) spikes, nova, beam, meteor_rain, teleport, shield, pull, roar, bomb.
 @export var boss_moves: Array = []
 @export var slam_damage: float = 30.0
 @export var slam_radius: float = 4.5
@@ -48,3 +49,36 @@ enum Style { MELEE, RANGED, CASTER, BOSS }
 @export var summon_count: int = 2
 ## Health fraction below which the boss enrages (faster, shorter cooldowns).
 @export var enrage_at: float = 0.5
+
+@export_group("Boss phases (M7)")
+## Phase changes as health drops: Array of Dictionaries
+## {"at": 0.66, "moves": [&"..."], "text": "...", "hazard": &"falling_rocks" / &"fire_rain" / &"poison_pools" / &""}
+## On entering a phase the boss roars (briefly invulnerable), switches its move
+## list and, if `hazard` is set, keeps dropping hazards around the player.
+@export var phases: Array = []
+## Status put on the player by spikes / nova (e.g. [&"bleed", 5.0, {"dps": 3.0}]).
+@export var spike_status: Array = []
+## Shield move: number of ward pylons that must be destroyed.
+@export var shield_pylons: int = 3
+@export var beam_damage: float = 8.0
+@export var nova_radius: float = 7.0
+
+@export_group("Behaviour (M7)")
+## Run away below this health fraction (once), then come back to fight. 1.0 = always flees (treasure goblin).
+@export var flee_below: float = 0.0
+## Chance to sidestep when the player swings at it from close by.
+@export var dodge_chance: float = 0.0
+## Alerts idle allies within this radius when it spots you.
+@export var pack_alert: float = 10.0
+## Support casters: &"heal" (heals the most wounded ally), &"haste" (speeds allies up), &"ward" (shields an ally).
+@export var support: StringName = &""
+@export var support_power: float = 40.0
+@export var support_cooldown: float = 6.0
+## Damage multiplier against building pieces (raiders: brutes smash walls).
+@export var siege_mult: float = 1.0
+## Projectiles explode on impact in this radius (bandit bombs). 0 = single target.
+@export var projectile_explode_radius: float = 0.0
+## Raiders also attack townsfolk (guards) and buildings.
+@export var raider: bool = false
+## Can roll elite affixes.
+@export var can_be_elite: bool = true

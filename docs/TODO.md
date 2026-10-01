@@ -105,7 +105,35 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
-## Milestone 6 — Exploration  ✅ (this milestone, Phases 3–4)
+## Milestone 7 — Advanced Gameplay  ✅ (this milestone)
+
+- [x] Status effects shared by player and enemies (`StatusEffects`): burn, poison (3 stacks), bleed (5 stacks), chill, freeze, stun, shock (+20% damage taken), wet, weakened (−25% damage), slowed, silenced, taunt; buffs regen and haste; immunities; HUD status chips
+- [x] Elemental interactions: Steam (fire on wet), Doused (water puts out fire), Deep Freeze (chill a chilled/wet target), Shatter (fire on frozen ×2), Conducted (lightning on wet ×1.5), Combustion (fire ignites Miasma)
+- [x] Water makes you (and enemies) wet; Defense 50 "Iron Skin" now really shortens harmful effects by 30%
+- [x] Cures: bandages now also stop bleeding, antidotes (poison), purifying draught (everything), Troll's Brew (regeneration)
+- [x] Advanced enemy AI: attack tokens (max 2 melee attackers, the rest circle you), pack alerts, flanking ranged strafing, dodging your swings, fleeing when badly hurt, separation, feeler-ray steering around walls/cliffs, hopping up ledges and detouring when stuck
+- [x] Support casters: heal (Grotto Cultist, Bandit Hexer), ward (Tower Warden), haste
+- [x] Elite affixes (9): vampiric, frenzied, molten, glacial, shielded, thorned, blinking, juggernaut, venomous; champions with 2; auras, name prefixes, ×2.2 health, elite loot table; in dungeons, raids, blood moons and eclipses
+- [x] Boss mechanics: phases at 66%/33% (roar + invulnerable transition, new move lists, arena hazards: falling rocks, fire rain, poison pools, frost shards), poise break ("Broken!", exposed), ward shields powered by destructible pylons, new moves: spikes, nova, beam, meteor rain, teleport, pull, roar, bomb
+- [x] All 4 M6 bosses got two extra phases; new bosses: Grimtusk the Warlord (raids), Starborn Colossus (meteor world boss)
+- [x] Advanced magic: 8 spells learned from tomes (Blink, Healing Light, Miasma, Arcane Barrier, Arcane Missiles, Blizzard, Meteor, Storm Call), 2 spell slots (Y/H), spellbook (L), Mana Control requirements, any class can learn; tomes from towers, dungeons, elites, goblins and the Arcane Altar
+- [x] Bandits: cutthroat (bleed), archer, brute (siege ×3), hexer (weakens, heals), bomber (exploding fire bombs, siege)
+- [x] Building hit points by material, damage visuals, destruction (chests spill), repair in build mode (U / Shift+U) for 30% of the cost
+- [x] Defenses: Log Palisade (700 HP), Reinforced Door (1200 HP), Arrow Tower (auto-shoots enemies), Alarm Bell (+45 s warning, ring to start the fight)
+- [x] Base raids: at night once your claim has 8+ pieces; warning + countdown, 2–4 waves from one walkable side, raiders smash what's in their way, spoils + XP for winning, plunder of your chests if you abandon it; undead raid on blood moons
+- [x] Settlement defense: riders warn of attacks on nearby towns; be there to defend (villagers hide, guards fight and can be knocked down) for reputation + coins; otherwise the guards hold or the town is plundered for 2 days (+25% prices); map markers and gossip
+- [x] Rare events: Blood Moon, Meteor Shower (crater with star metal, sometimes the Starborn Colossus), Aurora (×2 mana regen, +15% spell damage), Treasure Goblin, Eclipse; sky tints; saved
+- [x] Star metal: ore → ingots → Starmetal Amulet, Starfall Blade, Tome: Meteor
+- [x] Debug keys: F4 raid (base or nearest town), F12 next rare event
+- [ ] NOT IMPLEMENTED: real pathfinding (navmesh/A*) - monsters steer with feeler rays, hop and detour; complex terrain can still trap them
+- [ ] NOT IMPLEMENTED: raiders don't open/burn doors specially or climb walls; they break through
+- [ ] NOT IMPLEMENTED: raids against other player structures outside a claim, sieges with ladders/rams, raid difficulty settings
+- [ ] NOT IMPLEMENTED: weather (rain making everyone wet), spell upgrades/talents, spell combos beyond the listed six
+- [ ] NOT IMPLEMENTED: villagers dying or settlements being destroyed (plunder is economic only); kingdom-wide wars
+- [ ] Known limitation: town raids only play out while you are near the town (otherwise the outcome is rolled)
+- [ ] Known limitation: the active raid/event monsters are not saved (a raid in progress ends when you quit; announced town raids and events are saved)
+
+## Milestone 6 — Exploration  ✅ (Phases 3–4)
 
 - [x] Points of interest per 256 m cell, deterministic, ranked by distance (E near spawn → S far), kept clear of towns, flattened ground
 - [x] Ruins: broken walls, pillars, skeleton guardians, chest, hidden vault under a cracked floor
@@ -123,10 +151,10 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Gossip points you to dungeons, ruins, towers, temples and hints at hidden groves; map markers; save/load of all progress
 - [ ] NOT IMPLEMENTED: dungeon fog of war (the floor map shows every room except the secret one), keys/locked doors, puzzles beyond cracked walls
 - [ ] NOT IMPLEMENTED: multi-storey tower interiors (only the ground floor is walkable), climbing
-- [ ] NOT IMPLEMENTED: world bosses roaming the overworld, dungeon modifiers/affixes, party/co-op
+- [~] World bosses: the Starborn Colossus guards meteor craters (M7); roaming world bosses, dungeon modifiers and party/co-op NOT IMPLEMENTED
 - [ ] NOT IMPLEMENTED: unique legendary effects (legendaries are strong stat items, no special procs)
 - [ ] Known limitation: dungeons are built in the sky (y = 800) with the surface paused; a short load when entering
-- [ ] Known limitation: monsters don't path-find around walls (they slide along them); dungeon rooms are designed with clear lines
+- [~] Monsters steer around walls with feeler rays and hop/detour when stuck (M7); still no full pathfinding
 
 ## Phase 2 — Core RPG (remaining)
 
@@ -150,11 +178,11 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 - [~] Kingdoms (castle, advanced blacksmith, rare shops, guards, reputation) — done in Milestone 5; kingdom quests not yet
 - [x] Dungeons ranks E–S with scaling enemies, traps, secrets, loot, bosses (Milestone 6)
-- [x] Bosses with unique mechanics (Milestone 6: 4 bosses)
-- [~] More enemy categories — undead, magical, beasts and elites done (M6); bandits NOT IMPLEMENTED
+- [x] Bosses with unique mechanics (Milestone 6: 4 bosses; Milestone 7: phases, wards, beams, 2 new bosses)
+- [x] More enemy categories — undead, magical, beasts (M6); bandits, elites with affixes, treasure goblin (M7)
 - [~] Farming (seeds, planting, harvesting) — Milestone 5; magical plants in groves (M6); watering, seasons, planting magical plants NOT IMPLEMENTED
 - [x] Trading & economy (per-settlement inventories and prices) (Milestone 5)
-- [ ] Raids with warnings, reputation/popularity rewards
+- [x] Raids with warnings, reputation/popularity rewards (Milestone 7)
 - [~] NPC routines and reputation (Milestone 5); relationships and reactions not yet
 
 ## Phase 5 — Building
@@ -192,7 +220,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - The world map reveals everything (no fog-of-war yet).
 - Placed objects on the other layer stay in memory (harmless, but not culled).
 - Debug-spawned enemies (F8) are not tied to a chunk and never despawn unless killed.
-- Enemy perception is distance-only (no line-of-sight or stealth yet).
+- Enemy perception is distance-only (no line-of-sight); stealth exists for the Assassin (Vanish).
 - Terrain is a heightmap of block columns per layer: no overhangs or multi-level caves.
 - The Compatibility (OpenGL) renderer shows brighter colours than Forward+.
 - Placeholder art: all meshes are code-built boxes, item icons are coloured tiles with a glyph.

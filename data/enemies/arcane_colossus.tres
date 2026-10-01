@@ -66,3 +66,6 @@ slam_radius = 5.0
 volley_count = 5
 summon = ExtResource("4_summon")
 summon_count = 2
+phases = [{"at": 0.66, "moves": [&"beam", &"volley", &"cleave", &"summon", &"slam"], "text": "The Arcane Colossus focuses its power!", "hazard": &""}, {"at": 0.33, "moves": [&"teleport", &"meteor_rain", &"beam", &"shield", &"nova"], "text": "The Arcane Colossus tears at reality!", "hazard": &"frost_shards"}]
+shield_pylons = 3
+beam_damage = 9.0

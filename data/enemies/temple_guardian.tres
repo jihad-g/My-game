@@ -56,3 +56,6 @@ boss_moves = [&"slam", &"volley", &"cleave", &"charge"]
 slam_damage = 28.0
 slam_radius = 4.5
 volley_count = 5
+phases = [{"at": 0.66, "moves": [&"beam", &"slam", &"volley", &"cleave"], "text": "The Temple Guardian channels the sun!", "hazard": &""}, {"at": 0.33, "moves": [&"shield", &"nova", &"beam", &"charge", &"slam"], "text": "Sun-fire rains on the temple!", "hazard": &"fire_rain"}]
+shield_pylons = 3
+beam_damage = 9.0

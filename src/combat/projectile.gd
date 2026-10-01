@@ -9,6 +9,10 @@ var lifetime := 1.5
 var exclude: Array[RID] = []
 var color := Color(1.0, 0.5, 0.15)
 var on_hit: Callable  ## optional func(target: Node, dealt: float)
+var on_impact: Callable  ## optional func(position: Vector3), called on any impact (bombs explode)
+## Homing (Arcane Missiles): steer toward this target at `turn_rate` radians/s.
+var homing_target: Node3D
+var turn_rate := 6.0
 ## What the projectile can hit (enemy projectiles use PLAYER instead of ENEMY).
 var mask := Layers.TERRAIN | Layers.ENEMY | Layers.PROP | Layers.BUILDING
 
@@ -38,6 +42,15 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_age += delta
+	if homing_target and is_instance_valid(homing_target) and homing_target.is_inside_tree() and homing_target.get("is_dead") != true:
+		var want := (homing_target.global_position + Vector3(0, 1.0, 0) - global_position).normalized()
+		var speed := velocity.length()
+		var cur := velocity / maxf(speed, 0.001)
+		var ang := cur.angle_to(want)
+		if ang > 0.001:
+			var axis := cur.cross(want)
+			if axis.length() > 0.0001:
+				velocity = cur.rotated(axis.normalized(), minf(ang, turn_rate * delta)) * speed
 	var from := global_position
 	var motion := velocity * delta
 	var space := get_world_3d().direct_space_state
@@ -69,5 +82,7 @@ func _impact(target: Object, pos: Vector3) -> void:
 		var dealt = target.receive_hit(info)
 		if on_hit.is_valid():
 			on_hit.call(target, float(dealt) if dealt != null else 0.0)
+	if on_impact.is_valid():
+		on_impact.call(pos)
 	VFX.burst(get_parent(), pos, 1.2, Color(color.r, color.g, color.b, 0.8))
 	queue_free()

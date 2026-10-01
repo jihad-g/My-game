@@ -515,3 +515,53 @@ static func build_dungeon_wall(b: BlockMesh) -> void:
 	b.box(Vector3(0, 1.75, 0), Vector3(1.0, 3.5, 0.5), Color(0.25, 0.24, 0.28))
 	b.box(Vector3(0, 3.55, 0), Vector3(1.04, 0.14, 0.56), Color(0.32, 0.3, 0.34))
 	b.box(Vector3(0, 0.1, 0), Vector3(1.04, 0.2, 0.56), Color(0.2, 0.19, 0.22))
+
+
+# --- Milestone 7: defenses ---------------------------------------------------------------
+
+## Log palisade: thick sharpened logs (edge piece, high hit points).
+static func build_palisade_wall(b: BlockMesh) -> void:
+	for k in 4:
+		var x := -0.375 + k * 0.25
+		var h := 2.7 + (k % 2) * 0.2
+		b.box(Vector3(x, h * 0.5 - 0.5, 0), Vector3(0.24, h + 1.0, 0.28), WOOD_DARK * (0.95 + 0.08 * (k % 2)))
+		b.box(Vector3(x, h + 0.05, 0), Vector3(0.14, 0.2, 0.16), WOOD * 0.9)
+	b.box(Vector3(0, 0.6, 0.15), Vector3(1.0, 0.12, 0.06), IRON * 0.8)
+	b.box(Vector3(0, 1.9, 0.15), Vector3(1.0, 0.12, 0.06), IRON * 0.8)
+
+
+## Iron-banded door frame (the leaf is the shared door_leaf).
+static func build_reinforced_door(b: BlockMesh) -> void:
+	b.box(Vector3(-0.45, 0.8, 0), Vector3(0.12, 2.6, 0.26), STONE * 0.8)
+	b.box(Vector3(0.45, 0.8, 0), Vector3(0.12, 2.6, 0.26), STONE * 0.8)
+	b.box(Vector3(0, 2.3, 0), Vector3(1.0, 0.4, 0.26), STONE * 0.75)
+	b.box(Vector3(0, 2.15, 0.14), Vector3(0.9, 0.06, 0.04), IRON)
+
+
+## Arrow tower: wooden platform on stilts with a crossbow on top (shoots raiders).
+static func build_arrow_tower(b: BlockMesh) -> void:
+	for sx in [-0.35, 0.35]:
+		for sz in [-0.35, 0.35]:
+			b.box(Vector3(sx, 1.0, sz), Vector3(0.14, 2.0, 0.14), WOOD_DARK)
+	b.box(Vector3(0, 0.7, 0), Vector3(0.84, 0.06, 0.06), WOOD)
+	b.box(Vector3(0, 0.7, 0), Vector3(0.06, 0.06, 0.84), WOOD)
+	b.box(Vector3(0, 2.05, 0), Vector3(1.0, 0.12, 1.0), WOOD)
+	for k in 4:
+		var a := k * PI * 0.5
+		b.box(Vector3(cos(a) * 0.45, 2.3, sin(a) * 0.45), Vector3(0.12 if k % 2 == 0 else 0.9, 0.36, 0.9 if k % 2 == 0 else 0.12), WOOD_DARK)
+	b.box(Vector3(0, 2.55, 0), Vector3(0.12, 0.3, 0.12), WOOD_DARK)
+	b.box(Vector3(0, 2.72, 0.05), Vector3(0.12, 0.1, 0.7), WOOD)
+	b.box(Vector3(0, 2.75, 0.3), Vector3(0.7, 0.06, 0.06), IRON)
+	b.box(Vector3(0, 2.8, 0.42), Vector3(0.04, 0.04, 0.3), Color(0.9, 0.9, 0.85))
+
+
+## Alarm bell: post with a hanging brass bell.
+static func build_alarm_bell(b: BlockMesh) -> void:
+	b.box(Vector3(-0.35, 1.1, 0), Vector3(0.12, 2.2, 0.12), WOOD_DARK)
+	b.box(Vector3(0.35, 1.1, 0), Vector3(0.12, 2.2, 0.12), WOOD_DARK)
+	b.box(Vector3(0, 2.15, 0), Vector3(0.9, 0.12, 0.14), WOOD)
+	var brass := Color(0.85, 0.65, 0.25)
+	b.box(Vector3(0, 1.95, 0), Vector3(0.04, 0.2, 0.04), IRON)
+	b.box(Vector3(0, 1.72, 0), Vector3(0.3, 0.3, 0.3), brass)
+	b.box(Vector3(0, 1.52, 0), Vector3(0.42, 0.14, 0.42), brass * 0.9)
+	b.box(Vector3(0, 1.4, 0), Vector3(0.08, 0.1, 0.08), IRON * 0.7)

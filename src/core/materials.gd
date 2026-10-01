@@ -96,3 +96,15 @@ static func overlay_color(color: Color) -> StandardMaterial3D:
 		m.render_priority = 10
 		_cache[key] = m
 	return _cache[key]
+
+
+## Dark overlay showing damage on building pieces (4 steps: 0 = none .. 3 = heavy).
+static func damage_overlay(step: int) -> StandardMaterial3D:
+	var key := "damage_%d" % step
+	if not _cache.has(key):
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color(0.12, 0.06, 0.03, 0.18 * step)
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_cache[key] = m
+	return _cache[key]
