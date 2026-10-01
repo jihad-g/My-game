@@ -1,0 +1,653 @@
+<title>Shardlands Blueprint Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a drafting table - tool rail on the left, the blueprint sheet in the middle,
+   the bill of materials on the right; stacks to one column on phones. */
+:root {
+  --paper: #eef3f8;        /* drafting paper */
+  --sheet: #f8fbfe;
+  --ink: #12355b;          /* cyanotype ink */
+  --ink-soft: #4d6a8a;
+  --grid: rgba(18, 53, 91, 0.10);
+  --grid-major: rgba(18, 53, 91, 0.22);
+  --rule: rgba(18, 53, 91, 0.18);
+  --accent: #d9631e;       /* builder's chalk orange: selection, anchor */
+  --good: #2c8a52;
+  --bad: #c2382b;
+  --c-floor: #b99a6b;
+  --c-wall: #6e5233;
+  --c-stone: #7d8794;
+  --c-door: #2c8a52;
+  --c-window: #3b8fd1;
+  --c-fence: #9a7848;
+  --c-roof: rgba(176, 72, 52, 0.28);
+  --c-object: #5a4fa8;
+  --c-defense: #c2382b;
+  --c-farm: #6f8f2f;
+  --c-light: #d99a1e;
+  --font-display: "Saira Stencil One", "Arial Narrow", Impact, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0d2440; --sheet: #102c4d; --ink: #e8f1fb; --ink-soft: #9fb7d1;
+    --grid: rgba(232, 241, 251, 0.08); --grid-major: rgba(232, 241, 251, 0.18); --rule: rgba(232, 241, 251, 0.16);
+    --accent: #ff9a52; --good: #5fd08c; --bad: #ff6b5c;
+    --c-floor: #8a7350; --c-wall: #d7b88e; --c-stone: #b9c3cf; --c-door: #5fd08c; --c-window: #7cc4ff;
+    --c-fence: #c9a06a; --c-roof: rgba(255, 140, 110, 0.22); --c-object: #b3a8ff; --c-defense: #ff6b5c;
+    --c-farm: #a9cf5c; --c-light: #ffc95c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0d2440; --sheet: #102c4d; --ink: #e8f1fb; --ink-soft: #9fb7d1;
+  --grid: rgba(232, 241, 251, 0.08); --grid-major: rgba(232, 241, 251, 0.18); --rule: rgba(232, 241, 251, 0.16);
+  --accent: #ff9a52; --good: #5fd08c; --bad: #ff6b5c;
+  --c-floor: #8a7350; --c-wall: #d7b88e; --c-stone: #b9c3cf; --c-door: #5fd08c; --c-window: #7cc4ff;
+  --c-fence: #c9a06a; --c-roof: rgba(255, 140, 110, 0.22); --c-object: #b3a8ff; --c-defense: #ff6b5c;
+  --c-farm: #a9cf5c; --c-light: #ffc95c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 14px; margin: 0; }
+.app { display: grid; grid-template-columns: 240px minmax(0, 1fr) 300px; grid-template-rows: auto minmax(0, 1fr);
+  height: 100%; gap: 0; padding-inline: 16px; padding-block: 12px; column-gap: 14px; row-gap: 10px; }
+header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 26px; letter-spacing: 0.02em; margin: 0; line-height: 1;
+  text-wrap: balance; }
+h1 small { display: block; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; color: var(--ink-soft);
+  text-transform: uppercase; margin-top: 4px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; min-width: 0; }
+.meta input { min-width: 0; }
+input[type="text"], textarea, select { font: inherit; color: var(--ink); background: var(--sheet); border: 1px solid var(--rule);
+  border-radius: 4px; padding: 6px 8px; }
+input#bp-name { font-weight: 600; width: 220px; }
+input#bp-author { width: 150px; }
+input#bp-desc { flex: 1; min-width: 160px; }
+button, .btn { font: inherit; font-size: 13px; font-weight: 500; color: var(--ink); background: var(--sheet); border: 1px solid var(--rule);
+  border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+button:hover, .btn:hover { border-color: var(--ink-soft); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button.primary { background: var(--ink); color: var(--sheet); border-color: var(--ink); }
+button[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+.label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+
+/* Tool rail */
+.rail { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding-right: 2px; }
+.tools { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.palette { display: flex; flex-direction: column; gap: 10px; }
+.cat { display: flex; flex-direction: column; gap: 4px; }
+.piece { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; align-items: center; gap: 8px; text-align: left;
+  padding: 5px 8px; }
+.piece .sw { width: 14px; height: 14px; border-radius: 2px; }
+.piece .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.piece .lv { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); }
+.piece[aria-pressed="true"] .lv { color: inherit; }
+
+/* Sheet */
+.sheet { position: relative; min-height: 0; border: 1px solid var(--rule); border-radius: 6px; background: var(--sheet); overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.hud { position: absolute; left: 10px; bottom: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  pointer-events: none; }
+.hud > * { pointer-events: auto; }
+.chip { font-family: var(--font-mono); font-size: 12px; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  padding: 3px 7px; font-variant-numeric: tabular-nums; }
+.hud .spacer { flex: 1; }
+
+/* Bill of materials */
+.side { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; }
+.card { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.stat b { display: block; font-family: var(--font-mono); font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+td { padding: 3px 0; border-bottom: 1px dashed var(--rule); }
+td:last-child { text-align: right; font-family: var(--font-mono); }
+.warn { color: var(--bad); font-size: 13px; margin: 0; padding-left: 16px; }
+.ok { color: var(--good); font-size: 13px; margin: 0; }
+textarea { width: 100%; min-height: 110px; font-family: var(--font-mono); font-size: 11px; resize: vertical; }
+.row { display: flex; flex-wrap: wrap; gap: 6px; }
+.hint { font-size: 12px; color: var(--ink-soft); margin: 0; line-height: 1.45; }
+kbd { font-family: var(--font-mono); font-size: 11px; border: 1px solid var(--rule); border-radius: 3px; padding: 0 4px; }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  background: var(--ink); color: var(--sheet); padding: 8px 14px; border-radius: 4px; font-size: 13px; }
+
+@media (max-width: 980px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(380px, 62vh) auto; height: auto; }
+  .rail { max-height: 260px; }
+  .sheet { min-height: 380px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Blueprint Designer<small>Shardlands · building grid 1 m · walls on cell edges</small></h1>
+    <div class="meta">
+      <input type="text" id="bp-name" aria-label="Blueprint name" placeholder="Name">
+      <input type="text" id="bp-author" aria-label="Author" placeholder="Author">
+      <input type="text" id="bp-desc" aria-label="Description" placeholder="Description">
+    </div>
+    <label class="label" for="examples">Start from</label>
+    <select id="examples" aria-label="Examples"></select>
+  </header>
+
+  <aside class="rail">
+    <div class="tools" role="toolbar" aria-label="Tools">
+      <button id="t-place" aria-pressed="true" title="Place the selected piece (click or drag)">Place</button>
+      <button id="t-erase" aria-pressed="false" title="Erase (E). Right click also erases.">Erase</button>
+      <button id="t-pan" aria-pressed="false" title="Pan the sheet (or drag with the middle mouse button)">Pan</button>
+      <button id="t-anchor" aria-pressed="false" title="Click a cell to make it the anchor (0,0) - where the cursor holds the design in game">Anchor</button>
+      <button id="b-rotate" title="Turn the whole design 90° (same as R in the game)">Turn design</button>
+      <button id="b-roofs" aria-pressed="true" title="Show or hide roofs">Roofs</button>
+      <button id="b-undo" title="Undo (Ctrl+Z)">Undo</button>
+      <button id="b-redo" title="Redo (Ctrl+Y)">Redo</button>
+    </div>
+    <p class="hint">Piece rotation <kbd>R</kbd> · erase <kbd>E</kbd> · walls snap to the nearest cell edge · wheel to zoom.</p>
+    <div class="palette" id="palette"></div>
+  </aside>
+
+  <main class="sheet">
+    <canvas id="sheet" aria-label="Blueprint sheet"></canvas>
+    <div class="hud">
+      <span class="chip" id="hud-sel"></span>
+      <span class="chip" id="hud-pos">x 0  z 0</span>
+      <span class="spacer"></span>
+      <button id="b-zoom-out" aria-label="Zoom out">−</button>
+      <button id="b-zoom-in" aria-label="Zoom in">+</button>
+      <button id="b-fit">Fit</button>
+    </div>
+  </main>
+
+  <aside class="side">
+    <section class="card" aria-labelledby="sum-h">
+      <span class="label" id="sum-h">Summary</span>
+      <div class="stats">
+        <div class="stat"><b id="s-pieces">0</b><span class="label">pieces</span></div>
+        <div class="stat"><b id="s-size">0×0</b><span class="label">metres</span></div>
+        <div class="stat"><b id="s-level">1</b><span class="label">level</span></div>
+      </div>
+    </section>
+    <section class="card" aria-labelledby="mat-h">
+      <span class="label" id="mat-h">Bill of materials</span>
+      <table id="materials"><tbody></tbody></table>
+    </section>
+    <section class="card" aria-labelledby="chk-h">
+      <span class="label" id="chk-h">Checks</span>
+      <div id="checks"></div>
+    </section>
+    <section class="card" aria-labelledby="io-h">
+      <span class="label" id="io-h">Take it into the game</span>
+      <p class="hint">Copy the JSON, then in game press <kbd>N</kbd> → <b>Import from clipboard</b>. Or save it as a <code>.json</code> file in your <code>user://blueprints</code> folder.</p>
+      <textarea id="json-out" readonly aria-label="Blueprint JSON"></textarea>
+      <div class="row">
+        <button class="primary" id="b-copy">Copy JSON</button>
+        <!--DL--><button id="b-download" hidden>Download .json</button>
+        <button id="b-clear">Clear sheet</button>
+      </div>
+      <span class="label">Bring a design in</span>
+      <textarea id="json-in" aria-label="Paste blueprint JSON here" placeholder="Paste blueprint JSON here (exported from the game's blueprint screen)"></textarea>
+      <div class="row">
+        <button id="b-load">Load pasted JSON</button>
+        <label class="btn" for="file-in">Open .json file</label>
+        <input type="file" id="file-in" accept=".json,application/json" hidden>
+      </div>
+      <div class="row" id="clear-confirm" hidden>
+        <span class="hint">Clear every piece?</span>
+        <button id="b-clear-yes">Clear</button>
+        <button id="b-clear-no">Keep</button>
+      </div>
+    </section>
+  </aside>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const CATALOG = /*CATALOG*/null;
+const STANDALONE = /*STANDALONE*/false;
+const PIECES = Object.fromEntries(CATALOG.pieces.filter(p => p.behavior !== 7).map(p => [p.id, p]));
+const ORDER = { floor: 0, edge_n: 1, edge_w: 1, object: 2, roof: 3 };
+
+// ---- State ---------------------------------------------------------------------------------
+const state = {
+  name: "", author: "", description: "",
+  pieces: new Map(),               // "x,z,slot" -> {id, x, z, slot, rot}
+  selected: "wood_wall", rot: 0, tool: "place", showRoofs: true,
+  view: { ox: 0, oy: 0, scale: 34 }, hover: null,
+};
+let undoStack = [], redoStack = [];
+const $ = id => document.getElementById(id);
+
+const keyOf = e => `${e.x},${e.z},${e.slot}`;
+
+function snapshot() {
+  return JSON.stringify({ name: state.name, author: state.author, description: state.description, pieces: [...state.pieces.values()] });
+}
+function pushUndo() { undoStack.push(snapshot()); if (undoStack.length > 200) undoStack.shift(); redoStack = []; }
+function restore(s) {
+  const d = JSON.parse(s);
+  state.name = d.name; state.author = d.author; state.description = d.description;
+  state.pieces = new Map(d.pieces.map(p => [keyOf(p), p]));
+  syncMeta(); changed(false);
+}
+
+// ---- Blueprint format (same as src/blueprints/blueprint.gd) ----------------------------------
+function toBlueprint() {
+  const list = [...state.pieces.values()].sort((a, b) =>
+    (ORDER[a.slot] - ORDER[b.slot]) || (Math.abs(a.x) + Math.abs(a.z) - Math.abs(b.x) - Math.abs(b.z)) || keyOf(a).localeCompare(keyOf(b)));
+  return { format: CATALOG.format, version: CATALOG.version, name: state.name || "Untitled", author: state.author,
+    description: state.description, pieces: list.map(p => ({ id: p.id, x: p.x, z: p.z, slot: p.slot, rot: p.rot })) };
+}
+
+function loadBlueprint(d) {
+  if (!d || d.format !== CATALOG.format || !Array.isArray(d.pieces)) throw new Error("This isn't a Shardlands blueprint (format must be \"shardlands-blueprint\").");
+  const pieces = new Map(); const skipped = [];
+  for (const e of d.pieces) {
+    const p = PIECES[e.id];
+    if (!p) { skipped.push(`unknown piece "${e.id}"`); continue; }
+    let slot = e.slot || (p.slot === "edge" ? "edge_n" : p.slot);
+    if ((p.slot === "edge") !== slot.startsWith("edge") || (p.slot !== "edge" && slot !== p.slot)) { skipped.push(`${p.name} in slot ${slot}`); continue; }
+    const entry = { id: p.id, x: e.x | 0, z: e.z | 0, slot, rot: ((e.rot | 0) % 4 + 4) % 4 };
+    if (!pieces.has(keyOf(entry))) pieces.set(keyOf(entry), entry);
+  }
+  pushUndo();
+  state.name = String(d.name || "Untitled"); state.author = String(d.author || ""); state.description = String(d.description || "");
+  state.pieces = pieces;
+  syncMeta(); changed(); fit();
+  return skipped;
+}
+
+// Quarter turn, identical to Blueprint.rotate_entry() in the game.
+function rotateEntry(e) {
+  const x = e.x, z = e.z;
+  if (e.slot === "edge_n") return { ...e, slot: "edge_w", x: z, z: -x - 1 };
+  if (e.slot === "edge_w") return { ...e, slot: "edge_n", x: z, z: -x };
+  return { ...e, x: z, z: -x - 1, rot: (e.rot + 1) % 4 };
+}
+
+// ---- Derived info -------------------------------------------------------------------------
+function totals() {
+  const cost = {}; let level = 1;
+  for (const e of state.pieces.values()) {
+    const p = PIECES[e.id];
+    level = Math.max(level, p.level);
+    for (const [k, n] of Object.entries(p.cost)) cost[k] = (cost[k] || 0) + n;
+  }
+  return { cost, level };
+}
+function bounds() {
+  if (!state.pieces.size) return null;
+  let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
+  for (const e of state.pieces.values()) { x0 = Math.min(x0, e.x); z0 = Math.min(z0, e.z); x1 = Math.max(x1, e.x); z1 = Math.max(z1, e.z); }
+  return { x0, z0, x1, z1 };
+}
+// The game's roof rule: a wall on one of the cell's edges or a roof next to it.
+// Roofs connected (through other roofs) to a supported roof are fine once built in order.
+function unsupportedRoofs() {
+  const roofs = [...state.pieces.values()].filter(e => e.slot === "roof");
+  const has = (x, z, s) => state.pieces.has(`${x},${z},${s}`);
+  const ok = new Set();
+  for (const r of roofs) {
+    if (has(r.x, r.z, "edge_n") || has(r.x, r.z, "edge_w") || has(r.x, r.z + 1, "edge_n") || has(r.x + 1, r.z, "edge_w")) ok.add(keyOf(r));
+  }
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const r of roofs) {
+      if (ok.has(keyOf(r))) continue;
+      if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dz]) => ok.has(`${r.x + dx},${r.z + dz},roof`))) { ok.add(keyOf(r)); grew = true; }
+    }
+  }
+  return roofs.filter(r => !ok.has(keyOf(r)));
+}
+
+// ---- Rendering ----------------------------------------------------------------------------
+const canvas = $("sheet"), ctx = canvas.getContext("2d");
+let colors = {};
+function readColors() {
+  const cs = getComputedStyle(document.documentElement);
+  for (const k of ["sheet", "ink", "ink-soft", "grid", "grid-major", "accent", "bad", "c-floor", "c-wall", "c-stone", "c-door", "c-window",
+    "c-fence", "c-roof", "c-object", "c-defense", "c-farm", "c-light"]) colors[k] = cs.getPropertyValue("--" + k).trim();
+}
+function pieceColor(p) {
+  switch (p.category) {
+    case "Floors": return colors["c-floor"];
+    case "Walls": return /stone/.test(p.id) ? colors["c-stone"] : colors["c-wall"];
+    case "Doors": return colors["c-door"];
+    case "Windows": return colors["c-window"];
+    case "Fences": return colors["c-fence"];
+    case "Roofs": return colors["c-roof"];
+    case "Defenses": return colors["c-defense"];
+    case "Farming": return colors["c-farm"];
+    case "Lights": return colors["c-light"];
+    default: return colors["c-object"];
+  }
+}
+function resize() {
+  const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, Math.round(r.width * dpr)); canvas.height = Math.max(1, Math.round(r.height * dpr));
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  draw();
+}
+const toScreen = (x, z) => [state.view.ox + x * state.view.scale, state.view.oy + z * state.view.scale];
+const toWorld = (sx, sy) => [(sx - state.view.ox) / state.view.scale, (sy - state.view.oy) / state.view.scale];
+
+function draw() {
+  readColors();
+  const w = canvas.clientWidth, h = canvas.clientHeight, s = state.view.scale;
+  ctx.fillStyle = colors.sheet; ctx.fillRect(0, 0, w, h);
+  const [wx0, wz0] = toWorld(0, 0), [wx1, wz1] = toWorld(w, h);
+  for (let x = Math.floor(wx0); x <= Math.ceil(wx1); x++) {
+    ctx.strokeStyle = x % 5 === 0 ? colors["grid-major"] : colors.grid; ctx.lineWidth = 1;
+    const [sx] = toScreen(x, 0); ctx.beginPath(); ctx.moveTo(Math.round(sx) + 0.5, 0); ctx.lineTo(Math.round(sx) + 0.5, h); ctx.stroke();
+  }
+  for (let z = Math.floor(wz0); z <= Math.ceil(wz1); z++) {
+    ctx.strokeStyle = z % 5 === 0 ? colors["grid-major"] : colors.grid; ctx.lineWidth = 1;
+    const [, sy] = toScreen(0, z); ctx.beginPath(); ctx.moveTo(0, Math.round(sy) + 0.5); ctx.lineTo(w, Math.round(sy) + 0.5); ctx.stroke();
+  }
+  const list = [...state.pieces.values()];
+  const by = slot => list.filter(e => slot === "edge" ? e.slot.startsWith("edge") : e.slot === slot);
+  for (const e of by("floor")) drawPiece(e, 1);
+  for (const e of by("object")) drawPiece(e, 1);
+  for (const e of by("edge")) drawPiece(e, 1);
+  if (state.showRoofs) {
+    for (const e of by("roof")) drawPiece(e, 1);
+    for (const r of unsupportedRoofs()) { const [sx, sy] = toScreen(r.x, r.z); ctx.strokeStyle = colors.bad; ctx.lineWidth = 2; ctx.strokeRect(sx + 2, sy + 2, s - 4, s - 4); }
+  }
+  // Anchor (0,0): the cell the cursor holds in game.
+  const [ax, ay] = toScreen(0, 0);
+  ctx.strokeStyle = colors.accent; ctx.lineWidth = 2; ctx.strokeRect(ax + 1, ay + 1, s - 2, s - 2);
+  ctx.beginPath(); ctx.moveTo(ax + s / 2, ay - 6); ctx.lineTo(ax + s / 2, ay + s + 6); ctx.moveTo(ax - 6, ay + s / 2); ctx.lineTo(ax + s + 6, ay + s / 2); ctx.stroke();
+  // Ghost of what a click would place.
+  if (state.hover && state.tool === "place") {
+    ctx.globalAlpha = 0.45; drawPiece(state.hover, 1); ctx.globalAlpha = 1;
+  }
+  if (state.hover && state.tool === "erase") {
+    const t = eraseTarget(state.hover.fx, state.hover.fz);
+    if (t) { const [sx, sy] = toScreen(t.x, t.z); ctx.strokeStyle = colors.bad; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.strokeRect(sx, sy, s, s); ctx.setLineDash([]); }
+  }
+}
+
+function drawPiece(e, alpha) {
+  const p = PIECES[e.id]; if (!p) return;
+  const s = state.view.scale, [sx, sy] = toScreen(e.x, e.z), col = pieceColor(p);
+  ctx.fillStyle = col; ctx.strokeStyle = col;
+  if (e.slot === "floor") {
+    if (p.category === "Farming") { ctx.fillRect(sx + 3, sy + 3, s - 6, s - 6); ctx.strokeStyle = colors.sheet; ctx.lineWidth = 1;
+      for (let i = 1; i < 3; i++) { ctx.beginPath(); ctx.moveTo(sx + 3, sy + i * s / 3); ctx.lineTo(sx + s - 3, sy + i * s / 3); ctx.stroke(); } }
+    else if (p.category === "Defenses") { ctx.fillStyle = colors["c-defense"]; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) ctx.fillRect(sx + s * (0.2 + i * 0.25), sy + s * (0.2 + j * 0.25), s * 0.1, s * 0.1); }
+    else ctx.fillRect(sx + 1, sy + 1, s - 2, s - 2);
+  } else if (e.slot === "roof") {
+    ctx.fillRect(sx, sy, s, s);
+    ctx.save(); ctx.beginPath(); ctx.rect(sx, sy, s, s); ctx.clip(); ctx.strokeStyle = colors["c-defense"]; ctx.globalAlpha *= 0.35; ctx.lineWidth = 1;
+    for (let k = -s; k < s; k += 7) { ctx.beginPath(); ctx.moveTo(sx + k, sy + s); ctx.lineTo(sx + k + s, sy); ctx.stroke(); }
+    ctx.restore();
+  } else if (e.slot.startsWith("edge")) {
+    const horiz = e.slot === "edge_n";
+    const [x0, y0] = [sx, sy], [x1, y1] = horiz ? [sx + s, sy] : [sx, sy + s];
+    const lw = Math.max(3, s * 0.2);
+    if (p.category === "Doors") {
+      ctx.lineWidth = lw; ctx.beginPath();
+      if (horiz) { ctx.moveTo(x0, y0); ctx.lineTo(x0 + s * 0.12, y0); ctx.moveTo(x1 - s * 0.12, y0); ctx.lineTo(x1, y0); }
+      else { ctx.moveTo(x0, y0); ctx.lineTo(x0, y0 + s * 0.12); ctx.moveTo(x0, y1 - s * 0.12); ctx.lineTo(x0, y1); }
+      ctx.stroke(); ctx.lineWidth = 1.5; ctx.beginPath();
+      if (horiz) { ctx.arc(x0 + s * 0.12, y0, s * 0.76, 0, Math.PI / 2); } else { ctx.arc(x0, y0 + s * 0.12, s * 0.76, 0, Math.PI / 2); }
+      ctx.stroke();
+    } else if (p.category === "Windows") {
+      ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+      ctx.strokeStyle = colors.sheet; ctx.lineWidth = lw * 0.4; ctx.beginPath();
+      if (horiz) { ctx.moveTo(x0 + s * 0.2, y0); ctx.lineTo(x1 - s * 0.2, y0); } else { ctx.moveTo(x0, y0 + s * 0.2); ctx.lineTo(x0, y1 - s * 0.2); }
+      ctx.stroke();
+    } else {
+      ctx.lineWidth = p.category === "Fences" ? lw * 0.55 : lw; ctx.lineCap = "square";
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); ctx.lineCap = "butt";
+      if (p.category === "Defenses") { ctx.fillStyle = colors["c-defense"]; for (let i = 0; i < 3; i++) { const t = (i + 0.5) / 3;
+        const [cx, cy] = horiz ? [x0 + s * t, y0] : [x0, y0 + s * t]; ctx.beginPath(); ctx.arc(cx, cy, lw * 0.6, 0, Math.PI * 2); ctx.fill(); } }
+    }
+  } else {
+    const pad = s * 0.16; ctx.fillRect(sx + pad, sy + pad, s - pad * 2, s - pad * 2);
+    // Facing tick (piece rotation)
+    const cx = sx + s / 2, cy = sy + s / 2, dirs = [[0, 1], [1, 0], [0, -1], [-1, 0]], [dx, dy] = dirs[e.rot % 4];
+    ctx.strokeStyle = colors.sheet; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + dx * s * 0.3, cy + dy * s * 0.3); ctx.stroke();
+    if (s >= 26) {
+      ctx.fillStyle = colors.sheet; ctx.font = `600 ${Math.round(s * 0.28)}px ${getComputedStyle(document.documentElement).getPropertyValue("--font-mono")}`;
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillText(p.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(), cx, sy + pad + 1);
+    }
+  }
+}
+
+// ---- Editing ------------------------------------------------------------------------------
+// Address under a world point for a piece (same rules as BuildingManager.address_for).
+function addressFor(p, fx, fz) {
+  let x = Math.floor(fx), z = Math.floor(fz), slot = p.slot;
+  if (slot === "edge") {
+    const ax = fx - x, az = fz - z, d = { n: az, s: 1 - az, w: ax, e: 1 - ax };
+    const best = Object.keys(d).reduce((a, b) => d[b] < d[a] ? b : a, "n");
+    if (best === "n") slot = "edge_n";
+    else if (best === "s") { slot = "edge_n"; z += 1; }
+    else if (best === "w") slot = "edge_w";
+    else { slot = "edge_w"; x += 1; }
+  }
+  return { id: p.id, x, z, slot, rot: state.rot, fx, fz };
+}
+function eraseTarget(fx, fz) {
+  const x = Math.floor(fx), z = Math.floor(fz), ax = fx - x, az = fz - z;
+  const near = Math.min(az, 1 - az, ax, 1 - ax);
+  if (near < 0.22) {
+    const e = addressFor({ id: "", slot: "edge" }, fx, fz);
+    const k = `${e.x},${e.z},${e.slot}`;
+    if (state.pieces.has(k)) return { ...state.pieces.get(k) };
+  }
+  for (const slot of state.showRoofs ? ["object", "roof", "floor"] : ["object", "floor"]) {
+    const k = `${x},${z},${slot}`; if (state.pieces.has(k)) return state.pieces.get(k);
+  }
+  return null;
+}
+let stroke = null;
+function applyAt(fx, fz, erase) {
+  if (erase) {
+    const t = eraseTarget(fx, fz); if (!t) return;
+    if (!stroke.dirty) { pushUndo(); stroke.dirty = true; }
+    state.pieces.delete(keyOf(t)); changed();
+    return;
+  }
+  const p = PIECES[state.selected], a = addressFor(p, fx, fz), k = keyOf(a);
+  if (stroke.done.has(k)) return;
+  stroke.done.add(k);
+  const cur = state.pieces.get(k);
+  if (cur && cur.id === a.id && cur.rot === a.rot) return;
+  if (!stroke.dirty) { pushUndo(); stroke.dirty = true; }
+  state.pieces.set(k, { id: a.id, x: a.x, z: a.z, slot: a.slot, rot: a.rot }); changed();
+}
+
+let panning = null;
+canvas.addEventListener("contextmenu", e => e.preventDefault());
+canvas.addEventListener("pointerdown", e => {
+  canvas.setPointerCapture(e.pointerId);
+  const r = canvas.getBoundingClientRect(), [fx, fz] = toWorld(e.clientX - r.left, e.clientY - r.top);
+  if (e.button === 1 || state.tool === "pan") { panning = { x: e.clientX, y: e.clientY, ox: state.view.ox, oy: state.view.oy }; return; }
+  if (state.tool === "anchor" && e.button === 0) {
+    const cx = Math.floor(fx), cz = Math.floor(fz); if (cx === 0 && cz === 0) return;
+    pushUndo();
+    state.pieces = new Map([...state.pieces.values()].map(p => { const q = { ...p, x: p.x - cx, z: p.z - cz }; return [keyOf(q), q]; }));
+    state.view.ox += cx * state.view.scale; state.view.oy += cz * state.view.scale;
+    changed(); toast("Anchor moved: this cell is now 0,0"); setTool("place");
+    return;
+  }
+  stroke = { done: new Set(), dirty: false, erase: e.button === 2 || state.tool === "erase" };
+  applyAt(fx, fz, stroke.erase);
+});
+canvas.addEventListener("pointermove", e => {
+  const r = canvas.getBoundingClientRect(), [fx, fz] = toWorld(e.clientX - r.left, e.clientY - r.top);
+  if (panning) { state.view.ox = panning.ox + e.clientX - panning.x; state.view.oy = panning.oy + e.clientY - panning.y; draw(); return; }
+  const p = PIECES[state.selected];
+  state.hover = state.tool === "place" ? addressFor(p, fx, fz) : { fx, fz };
+  $("hud-pos").textContent = `x ${Math.floor(fx)}  z ${Math.floor(fz)}`;
+  if (stroke) applyAt(fx, fz, stroke.erase);
+  draw();
+});
+const endStroke = () => { stroke = null; panning = null; };
+canvas.addEventListener("pointerup", endStroke);
+canvas.addEventListener("pointercancel", endStroke);
+canvas.addEventListener("pointerleave", () => { state.hover = null; draw(); });
+canvas.addEventListener("wheel", e => {
+  e.preventDefault();
+  const r = canvas.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.15 : 1 / 1.15);
+}, { passive: false });
+function zoomAt(sx, sy, f) {
+  const [wx, wz] = toWorld(sx, sy);
+  state.view.scale = Math.min(90, Math.max(8, state.view.scale * f));
+  state.view.ox = sx - wx * state.view.scale; state.view.oy = sy - wz * state.view.scale; draw();
+}
+function fit() {
+  const b = bounds(), w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!b) { state.view.scale = 34; state.view.ox = w / 2; state.view.oy = h / 2; draw(); return; }
+  const cw = b.x1 - b.x0 + 3, ch = b.z1 - b.z0 + 3;
+  state.view.scale = Math.min(90, Math.max(8, Math.min(w / cw, h / ch)));
+  state.view.ox = w / 2 - ((b.x0 + b.x1 + 1) / 2) * state.view.scale;
+  state.view.oy = h / 2 - ((b.z0 + b.z1 + 1) / 2) * state.view.scale;
+  draw();
+}
+
+// ---- Panels -------------------------------------------------------------------------------
+function changed(save = true) {
+  const { cost, level } = totals(), b = bounds();
+  $("s-pieces").textContent = state.pieces.size;
+  $("s-size").textContent = b ? `${b.x1 - b.x0 + 1}×${b.z1 - b.z0 + 1}` : "0×0";
+  $("s-level").textContent = level;
+  const tb = $("materials").tBodies[0]; tb.replaceChildren();
+  const rows = Object.entries(cost).sort((a, b) => b[1] - a[1]);
+  if (!rows.length) { const tr = tb.insertRow(); tr.insertCell().textContent = "Nothing placed yet"; tr.insertCell(); }
+  for (const [item, n] of rows) { const tr = tb.insertRow(); tr.insertCell().textContent = CATALOG.items[item] || item; tr.insertCell().textContent = n; }
+  const checks = $("checks"); checks.replaceChildren();
+  const bad = unsupportedRoofs(), problems = [];
+  if (bad.length) problems.push(`${bad.length} roof tile${bad.length > 1 ? "s" : ""} with no wall or roof to rest on (outlined in red). The game won't build them.`);
+  if (state.pieces.size > 2000) problems.push("More than 2000 pieces: the game keeps only the first 2000.");
+  const claims = [...state.pieces.values()].filter(e => PIECES[e.id].behavior === 7);
+  if (claims.length) problems.push("Land claims aren't carried by blueprints.");
+  if (problems.length) { const ul = document.createElement("ul"); ul.className = "warn"; for (const t of problems) { const li = document.createElement("li"); li.textContent = t; ul.append(li); } checks.append(ul); }
+  else { const pEl = document.createElement("p"); pEl.className = "ok"; pEl.textContent = state.pieces.size ? "Everything here can be built in game." : "Pick a piece on the left and click the sheet."; checks.append(pEl); }
+  $("json-out").value = JSON.stringify(toBlueprint(), null, 1);
+  if (save) { try { localStorage.setItem("shardlands-blueprint-draft", snapshot()); } catch (_) {} }
+  draw();
+}
+function syncMeta() { $("bp-name").value = state.name; $("bp-author").value = state.author; $("bp-desc").value = state.description; }
+for (const [id, key] of [["bp-name", "name"], ["bp-author", "author"], ["bp-desc", "description"]]) {
+  $(id).addEventListener("change", () => { pushUndo(); state[key] = $(id).value.trim(); changed(); });
+}
+function selHud() { const p = PIECES[state.selected]; $("hud-sel").textContent = `${p.name} · ${["S", "E", "N", "W"][state.rot]} facing · ${Object.entries(p.cost).map(([k, n]) => `${n} ${CATALOG.items[k] || k}`).join(", ")}`; }
+
+function buildPalette() {
+  const pal = $("palette"), groups = {};
+  for (const p of Object.values(PIECES)) (groups[p.category] ||= []).push(p);
+  const order = ["Floors", "Walls", "Doors", "Windows", "Fences", "Roofs", "Furniture", "Storage", "Stations", "Defenses", "Lights", "Farming"];
+  for (const cat of order) {
+    if (!groups[cat]) continue;
+    const box = document.createElement("div"); box.className = "cat";
+    const h = document.createElement("span"); h.className = "label"; h.textContent = cat; box.append(h);
+    for (const p of groups[cat].sort((a, b) => a.level - b.level)) {
+      const b = document.createElement("button"); b.className = "piece"; b.dataset.id = p.id;
+      b.title = `${p.description}\nCost: ${Object.entries(p.cost).map(([k, n]) => `${n} ${CATALOG.items[k] || k}`).join(", ")} · ${p.hp} HP`;
+      const sw = document.createElement("span"); sw.className = "sw";
+      const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = p.name;
+      const lv = document.createElement("span"); lv.className = "lv"; lv.textContent = `Lv ${p.level}`;
+      b.append(sw, nm, lv);
+      b.addEventListener("click", () => { state.selected = p.id; setTool("place"); refreshPalette(); });
+      box.append(b);
+    }
+    pal.append(box);
+  }
+  refreshPalette();
+}
+function refreshPalette() {
+  readColors();
+  for (const b of document.querySelectorAll(".piece")) {
+    b.setAttribute("aria-pressed", String(b.dataset.id === state.selected));
+    b.querySelector(".sw").style.background = pieceColor(PIECES[b.dataset.id]);
+  }
+  selHud();
+}
+function setTool(t) {
+  state.tool = t;
+  for (const id of ["place", "erase", "pan", "anchor"]) $("t-" + id).setAttribute("aria-pressed", String(id === t));
+  canvas.style.cursor = t === "pan" ? "grab" : "crosshair";
+  draw();
+}
+let toastTimer = 0;
+function toast(text) { const t = $("toast"); t.textContent = text; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 2600); }
+
+// ---- Wiring ---------------------------------------------------------------------------------
+$("t-place").onclick = () => setTool("place");
+$("t-erase").onclick = () => setTool("erase");
+$("t-pan").onclick = () => setTool("pan");
+$("t-anchor").onclick = () => setTool("anchor");
+$("b-rotate").onclick = () => {
+  pushUndo();
+  state.pieces = new Map([...state.pieces.values()].map(e => { const r = rotateEntry(e); return [keyOf(r), r]; }));
+  changed(); fit();
+};
+$("b-roofs").onclick = () => { state.showRoofs = !state.showRoofs; $("b-roofs").setAttribute("aria-pressed", String(state.showRoofs)); draw(); };
+$("b-undo").onclick = () => { if (undoStack.length) { redoStack.push(snapshot()); restore(undoStack.pop()); } };
+$("b-redo").onclick = () => { if (redoStack.length) { undoStack.push(snapshot()); restore(redoStack.pop()); } };
+$("b-zoom-in").onclick = () => zoomAt(canvas.clientWidth / 2, canvas.clientHeight / 2, 1.25);
+$("b-zoom-out").onclick = () => zoomAt(canvas.clientWidth / 2, canvas.clientHeight / 2, 0.8);
+$("b-fit").onclick = fit;
+$("b-copy").onclick = () => {
+  const text = $("json-out").value;
+  navigator.clipboard.writeText(text).then(() => toast("Copied. In game: N → Import from clipboard"),
+    () => { $("json-out").select(); toast("Copy blocked here: the JSON is selected, press Ctrl+C"); });
+};
+/*DL-START*/if (STANDALONE) {
+  $("b-download").hidden = false;
+  $("b-download").onclick = () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([$("json-out").value], { type: "application/json" }));
+    a.download = (state.name || "blueprint").toLowerCase().replace(/[^a-z0-9]+/g, "_") + ".json"; a.click();
+  };
+}/*DL-END*/
+$("b-clear").onclick = () => { $("clear-confirm").hidden = false; };
+$("b-clear-no").onclick = () => { $("clear-confirm").hidden = true; };
+$("b-clear-yes").onclick = () => { pushUndo(); state.pieces = new Map(); $("clear-confirm").hidden = true; changed(); };
+$("b-load").onclick = () => {
+  try {
+    const skipped = loadBlueprint(JSON.parse($("json-in").value));
+    $("json-in").value = "";
+    toast(skipped.length ? `Loaded, skipped ${skipped.length}: ${skipped.slice(0, 2).join(", ")}` : "Blueprint loaded");
+  } catch (err) { toast(err instanceof SyntaxError ? "That text isn't valid JSON." : err.message); }
+};
+$("file-in").addEventListener("change", async () => {
+  const f = $("file-in").files[0]; if (!f) return;
+  try { const skipped = loadBlueprint(JSON.parse(await f.text())); toast(skipped.length ? `Loaded ${f.name}, skipped ${skipped.length}` : `Loaded ${f.name}`); }
+  catch (err) { toast(err instanceof SyntaxError ? `${f.name} isn't valid JSON.` : err.message); }
+  $("file-in").value = "";
+});
+const sel = $("examples");
+sel.append(new Option("Saved draft / blank", ""));
+CATALOG.examples.forEach((ex, i) => sel.append(new Option(ex.name, String(i))));
+sel.addEventListener("change", () => {
+  if (sel.value === "") { pushUndo(); state.pieces = new Map(); state.name = "My Design"; state.author = ""; state.description = ""; syncMeta(); changed(); fit(); }
+  else { loadBlueprint(CATALOG.examples[+sel.value]); toast(`Loaded ${CATALOG.examples[+sel.value].name}`); }
+});
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input, textarea, select")) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); $(e.shiftKey ? "b-redo" : "b-undo").click(); }
+  else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") { e.preventDefault(); $("b-redo").click(); }
+  else if (e.key === "r" || e.key === "R") { state.rot = (state.rot + 1) % 4; if (state.hover && state.hover.id) state.hover.rot = state.rot; selHud(); draw(); }
+  else if (e.key === "e" || e.key === "E") setTool(state.tool === "erase" ? "place" : "erase");
+});
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { refreshPalette(); draw(); });
+new MutationObserver(() => { refreshPalette(); draw(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+new ResizeObserver(resize).observe(canvas);
+
+// ---- Start: your saved draft, else the Starter Hut ----------------------------------------------
+buildPalette();
+let draft = null;
+try { draft = localStorage.getItem("shardlands-blueprint-draft"); } catch (_) {}
+if (draft) { try { restore(draft); } catch (_) { draft = null; } }
+if (!draft) { const hut = CATALOG.examples.find(x => x.name === "Starter Hut") || CATALOG.examples[0]; loadBlueprint(hut); undoStack = []; sel.value = String(CATALOG.examples.indexOf(hut)); }
+syncMeta(); changed(false);
+requestAnimationFrame(() => { resize(); fit(); });
+</script>

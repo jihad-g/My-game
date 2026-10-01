@@ -105,7 +105,25 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
-## Milestone 7 — Advanced Gameplay  ✅ (this milestone)
+## Milestone 8 — Blueprint System  ✅ (this milestone, Phase 5)
+
+- [x] Blueprint format: versioned JSON (`shardlands-blueprint` v1) shared by the game and the web designer; pieces at grid addresses relative to an anchor; validation with warnings (unknown pieces, wrong slots, duplicates, size limit)
+- [x] Rotation of whole designs in 90° steps (edges stay edges, piece rotation follows); bounds, build order (floors → walls → furniture → roofs)
+- [x] Resource calculation: total bill of materials, what you have (bag + chests nearby) and what's missing, required level, piece counts
+- [x] Blueprint library: 4 built-in designs (Starter Hut, Stone Cottage, Watch Post, Farmstead) + your own in user://blueprints; save (never overwrites), import/export via clipboard, delete
+- [x] Capture: save the buildings on your claim (or within 10 m) as a blueprint
+- [x] Blueprint screen (N): list, top-down plan, materials need/have, warnings, place, export, delete, construction sites with progress, auto-build toggle and remove
+- [x] Placement preview: the whole design follows the cursor as holograms, red where blocked, R rotates, left click lays out a site
+- [x] Construction sites: holograms for every unbuilt piece (furniture rises onto floors), saved with the world, up to 8 at once
+- [x] Manual construction: F on a hologram builds that piece
+- [x] Automatic construction: one piece every 0.3 s while you're within 30 m, from your bag and chests within 18 m of the site; pauses with what's missing; skips blocked pieces; finishes and removes the site
+- [x] External building-design website (first version): `web/blueprint-designer/index.html`, single file, offline; palette from the game's data (tools/build_designer.py), paint/erase/pan, edge snapping like the game, piece rotation, turn design, anchor tool, roof support check, bill of materials, undo/redo, examples, JSON import/export, local draft
+- [ ] NOT IMPLEMENTED: hosting the designer on a public website with accounts and sharing (today it's a file in the repo; a private Artifact copy exists)
+- [ ] NOT IMPLEMENTED: builder NPCs / workers (auto-build is "magic" construction near you), multi-storey blueprints (the building grid has one storey)
+- [ ] NOT IMPLEMENTED: 3D preview in the web designer (it's a top-down plan)
+- [ ] Known limitation: built-in .json blueprints need `*.json` in an export filter when the game is exported (the editor and tests read them directly)
+
+## Milestone 7 — Advanced Gameplay  ✅
 
 - [x] Status effects shared by player and enemies (`StatusEffects`): burn, poison (3 stacks), bleed (5 stacks), chill, freeze, stun, shock (+20% damage taken), wet, weakened (−25% damage), slowed, silenced, taunt; buffs regen and haste; immunities; HUD status chips
 - [x] Elemental interactions: Steam (fire on wet), Doused (water puts out fire), Deep Freeze (chill a chilled/wet target), Shatter (fire on frozen ×2), Conducted (lightning on wet ×1.5), Combustion (fire ignites Miasma)
@@ -190,7 +208,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Land claims (Claim Totem / Claim Flag) (Milestone 4)
 - [x] Grid building: floors, walls, doors, windows, fences, spike walls, roofs, furniture, storage, workstations, defenses (Milestone 4)
 - [x] Shelter affecting temperature (Milestone 4)
-- [ ] Blueprint system (requirements, missing resources, auto-build) + companion web designer
+- [x] Blueprint system (requirements, missing resources, auto-build) + companion web designer (Milestone 8)
 
 ## Phase 6 — Polish
 

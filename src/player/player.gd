@@ -143,7 +143,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		if is_dead and event.is_action_pressed(&"respawn"):
 			respawn()
 		return
-	if World.instance and World.instance.build_mode and World.instance.build_mode.active:
+	if World.instance and ((World.instance.build_mode and World.instance.build_mode.active)
+			or (World.instance.blueprints and World.instance.blueprints.placer.active)):
 		if event.is_action_pressed(&"attack_light") or event.is_action_pressed(&"attack_heavy"):
 			return  # clicks belong to build mode
 	if event.is_action_pressed(&"attack_light"):

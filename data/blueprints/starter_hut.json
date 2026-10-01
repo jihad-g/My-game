@@ -1,0 +1,387 @@
+{
+ "format": "shardlands-blueprint",
+ "version": 1,
+ "name": "Starter Hut",
+ "author": "Shardlands",
+ "description": "A cosy 4 x 4 wooden hut: floor, walls, a door and a window, thatch roof, bed, chest, table and torches.",
+ "pieces": [
+  {
+   "id": "wood_floor",
+   "x": -2,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": -2,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": -2,
+   "z": 0,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": -2,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": -1,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": -1,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": -1,
+   "z": 0,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": -1,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": 0,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": 0,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": 0,
+   "z": 0,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": 0,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": 1,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": 1,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": 1,
+   "z": 0,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_floor",
+   "x": 1,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": -2,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": -2,
+   "z": 2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": -1,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": -1,
+   "z": 2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 0,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 1,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 1,
+   "z": 2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": -2,
+   "z": -2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 2,
+   "z": -2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": -2,
+   "z": -1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": -2,
+   "z": 0,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 2,
+   "z": 0,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": -2,
+   "z": 1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 2,
+   "z": 1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_door",
+   "x": 0,
+   "z": 2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_window",
+   "x": 2,
+   "z": -1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "bed",
+   "x": -2,
+   "z": -2,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "storage_chest",
+   "x": 1,
+   "z": -2,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "table",
+   "x": 1,
+   "z": 0,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "chair",
+   "x": 0,
+   "z": 0,
+   "slot": "object",
+   "rot": 1
+  },
+  {
+   "id": "torch",
+   "x": -2,
+   "z": 1,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "torch",
+   "x": 1,
+   "z": 3,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": -2,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": -2,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": -2,
+   "z": 0,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": -2,
+   "z": 1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": -1,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": -1,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": -1,
+   "z": 0,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": -1,
+   "z": 1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 0,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 0,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 0,
+   "z": 0,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 0,
+   "z": 1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 1,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 1,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 1,
+   "z": 0,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 1,
+   "z": 1,
+   "slot": "roof",
+   "rot": 0
+  }
+ ]
+}

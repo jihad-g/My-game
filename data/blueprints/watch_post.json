@@ -1,0 +1,331 @@
+{
+ "format": "shardlands-blueprint",
+ "version": 1,
+ "name": "Watch Post",
+ "author": "Shardlands",
+ "description": "A 9 x 9 log palisade with a reinforced gate, two arrow towers, an alarm bell, torches and spike traps outside the gate. Built to survive raids.",
+ "pieces": [
+  {
+   "id": "palisade_wall",
+   "x": -4,
+   "z": -4,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -4,
+   "z": 5,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -3,
+   "z": -4,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -3,
+   "z": 5,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -2,
+   "z": -4,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -2,
+   "z": 5,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -1,
+   "z": -4,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -1,
+   "z": 5,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 0,
+   "z": -4,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 1,
+   "z": -4,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 1,
+   "z": 5,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 2,
+   "z": -4,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 2,
+   "z": 5,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 3,
+   "z": -4,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 3,
+   "z": 5,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 4,
+   "z": -4,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 4,
+   "z": 5,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -4,
+   "z": -4,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 5,
+   "z": -4,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -4,
+   "z": -3,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 5,
+   "z": -3,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -4,
+   "z": -2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 5,
+   "z": -2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -4,
+   "z": -1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 5,
+   "z": -1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -4,
+   "z": 0,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 5,
+   "z": 0,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -4,
+   "z": 1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 5,
+   "z": 1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -4,
+   "z": 2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 5,
+   "z": 2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -4,
+   "z": 3,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 5,
+   "z": 3,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": -4,
+   "z": 4,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "palisade_wall",
+   "x": 5,
+   "z": 4,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "reinforced_door",
+   "x": 0,
+   "z": 5,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "arrow_tower",
+   "x": -3,
+   "z": -3,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "arrow_tower",
+   "x": 3,
+   "z": -3,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "arrow_tower",
+   "x": 3,
+   "z": 3,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "alarm_bell",
+   "x": -3,
+   "z": 3,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "storage_chest",
+   "x": 0,
+   "z": -3,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "torch",
+   "x": -1,
+   "z": 4,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "torch",
+   "x": 1,
+   "z": 4,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "spike_trap",
+   "x": -1,
+   "z": 6,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "spike_trap",
+   "x": 0,
+   "z": 6,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "spike_trap",
+   "x": 1,
+   "z": 6,
+   "slot": "floor",
+   "rot": 0
+  }
+ ]
+}

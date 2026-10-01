@@ -53,6 +53,7 @@ var _trade := TradePanel.new()
 var _requests := RequestsPanel.new()
 var _reputation := ReputationPanel.new()
 var _spellbook := SpellbookPanel.new()
+var _blueprints := BlueprintPanel.new()
 ## Raid / world event banner (Milestone 7).
 var _event_label := Label.new()
 var _coins_label := Label.new()
@@ -110,6 +111,7 @@ func _ready() -> void:
 	_root.add_child(_requests)
 	_root.add_child(_reputation)
 	_root.add_child(_spellbook)
+	_root.add_child(_blueprints)
 	_dialogue.trade_requested.connect(func(n: NPC) -> void:
 		_dialogue.close()
 		_trade.open(n))
@@ -175,6 +177,7 @@ func bind(p_player: Player, p_world: World) -> void:
 	_crafting.bind(player)
 	_chest.bind(player)
 	_spellbook.bind(player)
+	_blueprints.bind(world)
 	_refresh_coins()
 	if world.build_mode:
 		_palette.bind(player, world.build_mode)
@@ -595,7 +598,7 @@ func _build_help() -> void:
 		"1-8 use hotbar item (eat / place campfire)",
 		"Q/E or MMB-drag rotate · Wheel zoom · PgUp/PgDn tilt",
 		"Z/X/C class abilities · T temperature shield · K character",
-		"Y/H cast spells · L spellbook",
+		"Y/H cast spells · L spellbook · N blueprints",
 		"G crafting · B build mode (LMB place, RMB remove, R rotate, U repair)",
 		"F talk to townsfolk / read notice boards · J reputation",
 		"Arrows pan camera · V recenter · M map · F5 save",
@@ -702,8 +705,12 @@ func set_paused(on: bool) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"pause"):
-		if world and world.build_mode and world.build_mode.active:
+		if world and world.blueprints and world.blueprints.placer.active:
+			world.blueprints.placer.end()
+		elif world and world.build_mode and world.build_mode.active:
 			world.build_mode.set_active(false)
+		elif _blueprints.visible:
+			_blueprints.visible = false
 		elif _trade.visible:
 			_trade.close()
 		elif _dialogue.visible:
@@ -735,6 +742,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"reputation"):
 		if not _loading.visible:
 			_reputation.toggle()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"blueprints"):
+		if not _loading.visible:
+			_blueprints.toggle()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"spellbook"):
 		if not _loading.visible:

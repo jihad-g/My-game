@@ -1,0 +1,422 @@
+{
+ "format": "shardlands-blueprint",
+ "version": 1,
+ "name": "Farmstead",
+ "author": "Shardlands",
+ "description": "A fenced 8 x 6 field with 18 farm plots (leave the gap in the south fence as your gate) and a tool shed with a chest.",
+ "pieces": [
+  {
+   "id": "wood_fence",
+   "x": -4,
+   "z": -3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -4,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -3,
+   "z": -3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -3,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -2,
+   "z": -3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -2,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -1,
+   "z": -3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -1,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 0,
+   "z": -3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 1,
+   "z": -3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 1,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 2,
+   "z": -3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 2,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 3,
+   "z": -3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 3,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -4,
+   "z": -3,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 4,
+   "z": -3,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -4,
+   "z": -2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 4,
+   "z": -2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -4,
+   "z": -1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 4,
+   "z": -1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -4,
+   "z": 0,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 4,
+   "z": 0,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -4,
+   "z": 1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 4,
+   "z": 1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": -4,
+   "z": 2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_fence",
+   "x": 4,
+   "z": 2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": -3,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": -3,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": -3,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": -2,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": -2,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": -2,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": -1,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": -1,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": -1,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": 0,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": 0,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": 0,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": 1,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": 1,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": 1,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": 2,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": 2,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "farm_plot",
+   "x": 2,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 5,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 5,
+   "z": 0,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 6,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 6,
+   "z": 0,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 5,
+   "z": -2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 7,
+   "z": -2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_wall",
+   "x": 7,
+   "z": -1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_door",
+   "x": 5,
+   "z": -1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "storage_chest",
+   "x": 6,
+   "z": -2,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 5,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 5,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 6,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "thatch_roof",
+   "x": 6,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "torch",
+   "x": 4,
+   "z": 1,
+   "slot": "object",
+   "rot": 0
+  }
+ ]
+}

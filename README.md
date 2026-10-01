@@ -5,16 +5,20 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 7 — Advanced Gameplay** (raids on your base and on towns, settlement defense,
-> smarter enemies, elite affixes, multi-phase bosses, advanced magic, status effects and rare world
-> events) on top of the prototype, world generation (M2), RPG (M3), building & crafting (M4), the
-> living world (M5) and exploration (M6). See [`docs/TODO.md`](docs/TODO.md) for the
+> Status: **Milestone 8 — Blueprint System** (blueprint file format, bill of materials, blueprint
+> screen, automatic and manual construction sites, and a web blueprint designer) on top of the
+> prototype, world generation (M2), RPG (M3), building & crafting (M4), the living world (M5),
+> exploration (M6) and advanced gameplay (M7). See [`docs/TODO.md`](docs/TODO.md) for the
 > honest status of every system and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
 ![Village](docs/screenshots/village_overview.png)
 
-| **Raid on your base** | **Bandits besiege the walls** | **Defending a village** |
+| **Blueprint screen (N)** | **Construction site (holograms)** | **Auto-build in progress** |
 |---|---|---|
+| ![Blueprints](docs/screenshots/blueprint_screen.png) | ![Site](docs/screenshots/construction_site.png) | ![Auto](docs/screenshots/auto_building.png) |
+| **Placement preview** | **Built from blueprints** | **Web blueprint designer** |
+| ![Preview](docs/screenshots/blueprint_preview.png) | ![Built](docs/screenshots/blueprints_built.png) | ![Designer](docs/screenshots/web_designer.png) |
+| **Raid on your base** | **Bandits besiege the walls** | **Defending a village** |
 | ![Raid](docs/screenshots/raid_attack.png) | ![Siege](docs/screenshots/raid_siege.png) | ![Town raid](docs/screenshots/town_raid.png) |
 | **Elites & champions** | **Boss ward + pylons** | **Bone spikes** |
 | ![Elites](docs/screenshots/elites.png) | ![Ward](docs/screenshots/boss_ward.png) | ![Spikes](docs/screenshots/boss_spikes.png) |
@@ -105,6 +109,8 @@ and when you quit through the pause menu or close the window.
 | Build mode: repair piece under cursor / repair everything nearby | U / Shift+U |
 | Cast spell slot 1 / 2 | Y / H |
 | Spellbook (learned spells, slot assignment, combos) | L |
+| Blueprints (designs, materials, construction sites) | N |
+| Blueprint preview: rotate / place / cancel | R / Left mouse / Right mouse or Esc |
 | Open doors & chests, sleep in beds | F |
 | Talk to townsfolk, read notice boards, plant & harvest crops | F |
 | Reputation screen | J |
@@ -284,6 +290,25 @@ and when you quit through the pause menu or close the window.
     **Eclipse** (darkness at noon, undead roam). Star metal makes the Starmetal Amulet, the
     Starfall Blade and the Tome of Meteor.
 
+47. **Blueprints** (**N**) – four built-in designs (Starter Hut, Stone Cottage, Watch Post,
+    Farmstead) plus your own. Each shows a top-down plan, footprint, pieces, the level it needs and a
+    bill of materials (need / have, counting your bag and chests within 18 m) with what's missing.
+48. **Placing a blueprint** – press **Place**: the whole design follows your cursor as holograms
+    (red where a tree, water or a town is in the way), **R** turns it, left click lays out a
+    construction site. Every piece not built yet stays as a hologram.
+49. **Manual construction** – walk to a hologram and press **F**: "Build Wood Wall (4 Wood)".
+50. **Automatic construction** – in the blueprint screen switch **Auto-build** on for a site: while
+    you're within 30 m it builds a piece every 0.3 s (floors, walls, furniture, roofs), taking
+    materials from your bag and then from chests near the site. It pauses and tells you what's
+    missing when you run out. Sites are saved; you can have 8 at once.
+51. **Save your own designs** – stand in your base (on your land claim, or within 10 m) and press
+    **Save my buildings here as a blueprint**. **Export to clipboard** copies the JSON;
+    **Import from clipboard** brings a design in.
+52. **Web designer** – open [`web/blueprint-designer/index.html`](web/blueprint-designer/index.html)
+    in any browser (no install, works offline): paint floors, walls, doors, roofs and furniture on a
+    1 m grid, turn the design, move its anchor, see the bill of materials and roof checks, then copy
+    the JSON and import it in game (or drop the `.json` into the game's `user://blueprints` folder).
+
 ## Run the automated tests
 
 ```bash
@@ -292,7 +317,7 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
 
-The suite (713 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (756 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -327,6 +352,12 @@ molten), boss phases, spikes, wards and pylons, beams, teleports, pulls, roars, 
 bombs, all 8 spells and their combos, tomes and the spellbook, a full base raid (warning,
 waves, siege, arrow towers, spoils, plunder, destruction, repair), a town defense (hiding
 villagers, downed guards, rewards, plunder prices, rolled outcomes) and every rare event.
+Blueprint tests check the built-in designs, the JSON round trip, rotation (edges stay edges,
+four turns = identity), validation warnings, cost and missing-material sums, build order, the
+blueprint library (save, no overwrite, import, delete), the web designer's catalog staying in sync
+with the game, and in the running game: preview, placing a site, building by hand, auto-build
+waiting for materials, chests as sources, saving and reloading a half-built site, finishing it
+piece for piece, capturing it back, rotated placement, removing a site and the blueprint screen.
 
 Balance tables are generated from the code: `godot --headless --path . -s tools/gen_rpg_tables.gd`
 → [`docs/XP_TABLE.md`](docs/XP_TABLE.md), [`docs/CLASSES_AND_SKILLS.md`](docs/CLASSES_AND_SKILLS.md).
@@ -339,6 +370,8 @@ godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=bui
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=town    # villages, kingdom, trade
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=explore # ruins, tower, temple, grove, dungeon
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=advanced # raids, elites, bosses, spells, events
+godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=blueprint # blueprints and construction
+python3 tools/build_designer.py   # rebuild the web designer after changing build pieces or built-in blueprints
 tools/make_video.sh /tmp/video     # scripted gameplay video (needs ffmpeg)
 ```
 
@@ -362,12 +395,15 @@ src/
   inventory/             ItemData resource, Inventory
   crafting/              Recipes, recipe book, crafting rules
   building/              Build pieces, grid building manager, build mode, piece meshes
+  blueprints/            Blueprint format, library, construction sites, holograms, placement preview
   living/                Settlements (generation, layouts, sites), NPCs, economy, reputation, requests, farming, gossip
   exploration/           Points of interest, POI sites, dungeons (plans, instances, traps, doors), loot tables, chests
   raids/                 RaidManager: base raids, town raids, plunder
   events/                WorldEvents (blood moon, meteors, aurora, goblins, eclipse), meteor craters
   ui/                    HUD, theme, slots, temperature gauge, map, panels (character, crafting, trade, spellbook...)
 data/                    Data-driven content (.tres): items, attacks, movesets, abilities, classes, enemies, props, biomes, worldgen
+data/blueprints/         Built-in blueprints (.json, generated by tools/gen_blueprints.py)
+web/blueprint-designer/  External blueprint designer (index.html is built by tools/build_designer.py)
 tests/                   Automated test suite + screenshot runner
 docs/                    TODO, CHANGELOG, architecture notes
 tools/                   Helper scripts

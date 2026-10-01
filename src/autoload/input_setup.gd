@@ -58,6 +58,7 @@ const KEY_BINDINGS := {
 	&"spell_1": [KEY_Y],
 	&"spell_2": [KEY_H],
 	&"spellbook": [KEY_L],
+	&"blueprints": [KEY_N],
 	&"debug_raid": [KEY_F4],
 	&"debug_event": [KEY_F12],
 }

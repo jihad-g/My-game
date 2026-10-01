@@ -23,6 +23,10 @@ func _ready() -> void:
 		await _shot("20_main_menu")
 		get_tree().quit()
 		return
+	if "--only=blueprint" in OS.get_cmdline_user_args():
+		await _blueprint_showcase()
+		get_tree().quit()
+		return
 	if "--only=advanced" in OS.get_cmdline_user_args():
 		await _advanced_showcase()
 		get_tree().quit()
@@ -919,5 +923,73 @@ func _advanced_showcase() -> void:
 		await _sec(2.0)
 		await _shot("85_town_raid")
 		world.raids._finish(true)
+	world.queue_free()
+	await _wait(5)
+
+
+## Milestone 8 showcase: blueprint screen, placement preview, construction site, finished building.
+func _blueprint_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	world.spawner.despawn_all()
+	world.hud._help.visible = false
+	for i in 9:
+		p.character.grant_xp(p.character.xp_needed(), Progression.Source.OTHER)
+	var meadow := _find_biome(world.generator, p.global_position, &"verdant_meadow")
+	await _teleport(world, _dry_center(world, meadow if meadow != Vector3.INF else p.global_position, 30.0))
+	world.day_night.hour = 10.5
+	world.day_night.advance_hours(0.0)
+	var cottage: Blueprint = BlueprintLibrary.builtin().filter(func(b: Blueprint) -> bool: return b.name == "Stone Cottage")[0]
+	var hut: Blueprint = BlueprintLibrary.builtin().filter(func(b: Blueprint) -> bool: return b.name == "Starter Hut")[0]
+	# Give some materials so the bill shows a mix of "have" and "missing".
+	for item in cottage.total_cost():
+		p.inventory.add_item(item, int(cottage.total_cost()[item]) / 2)
+	world.hud._blueprints.toggle()
+	world.hud._blueprints.select(cottage)
+	await _sec(0.5)
+	await _shot("90_blueprint_screen")
+	world.hud._blueprints.toggle()
+	var up := _screen_up(world)
+	var pc := Vector2i(floori(p.global_position.x + up.x * 6.0), floori(p.global_position.z + up.z * 6.0))
+	world.camera_rig._target_distance = 24.0
+	world.camera_rig._target_pitch = 58.0
+	world.blueprints.placer.begin(cottage)
+	world.blueprints.placer.set_process(false)
+	world.blueprints.placer.move_to(pc)
+	await _sec(1.0)
+	await _shot("91_blueprint_preview")
+	var site := world.blueprints.placer.confirm()
+	await _sec(0.6)
+	await _shot("92_construction_site")
+	p.inventory.clear()
+	for item in cottage.total_cost():
+		p.inventory.add_item(item, int(cottage.total_cost()[item]))
+	site.auto = true
+	var t := 0.0
+	while site.pending_count() > site.total * 0.45 and t < 60.0:
+		await _sec(0.5)
+		t += 0.5
+	await _shot("93_auto_building")
+	while world.blueprints.sites.has(site) and t < 120.0:
+		await _sec(0.5)
+		t += 0.5
+	# A second design next to it, then the finished pair.
+	for item in hut.total_cost():
+		p.inventory.add_item(item, int(hut.total_cost()[item]))
+	var side := up.cross(Vector3.UP)
+	var hut_anchor := pc + Vector2i(roundi(side.x * 9.0), roundi(side.z * 9.0))
+	var site2 := world.blueprints.start(hut, hut_anchor, 1, true)
+	while site2 and world.blueprints.sites.has(site2) and t < 180.0:
+		await _sec(0.5)
+		t += 0.5
+	world.camera_rig._target_distance = 30.0
+	await _sec(1.0)
+	await _shot("94_blueprints_built")
 	world.queue_free()
 	await _wait(5)

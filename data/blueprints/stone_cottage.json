@@ -1,0 +1,639 @@
+{
+ "format": "shardlands-blueprint",
+ "version": 1,
+ "name": "Stone Cottage",
+ "author": "Shardlands",
+ "description": "A sturdy 6 x 5 stone cottage with a reinforced door, wooden roof, workbench, forge, alchemy table, bed and storage.",
+ "pieces": [
+  {
+   "id": "stone_floor",
+   "x": -3,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -3,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -3,
+   "z": 0,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -3,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -3,
+   "z": 2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -2,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -2,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -2,
+   "z": 0,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -2,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -2,
+   "z": 2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -1,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -1,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -1,
+   "z": 0,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -1,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": -1,
+   "z": 2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 0,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 0,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 0,
+   "z": 0,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 0,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 0,
+   "z": 2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 1,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 1,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 1,
+   "z": 0,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 1,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 1,
+   "z": 2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 2,
+   "z": -2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 2,
+   "z": -1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 2,
+   "z": 0,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 2,
+   "z": 1,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_floor",
+   "x": 2,
+   "z": 2,
+   "slot": "floor",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": -3,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": -3,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": -2,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": -2,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": -1,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": -1,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": 0,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": 1,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": 1,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": 2,
+   "z": -2,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": 2,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": -3,
+   "z": -2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": 3,
+   "z": -2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": -3,
+   "z": -1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": 3,
+   "z": -1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": -3,
+   "z": 1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": 3,
+   "z": 1,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": -3,
+   "z": 2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "stone_wall",
+   "x": 3,
+   "z": 2,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "reinforced_door",
+   "x": 0,
+   "z": 3,
+   "slot": "edge_n",
+   "rot": 0
+  },
+  {
+   "id": "wood_window",
+   "x": -3,
+   "z": 0,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "wood_window",
+   "x": 3,
+   "z": 0,
+   "slot": "edge_w",
+   "rot": 0
+  },
+  {
+   "id": "bed",
+   "x": -3,
+   "z": -2,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "storage_chest",
+   "x": -2,
+   "z": -2,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "storage_chest",
+   "x": -1,
+   "z": -2,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "workbench",
+   "x": 2,
+   "z": -2,
+   "slot": "object",
+   "rot": 2
+  },
+  {
+   "id": "forge",
+   "x": 2,
+   "z": 0,
+   "slot": "object",
+   "rot": 3
+  },
+  {
+   "id": "alchemy_table",
+   "x": -3,
+   "z": 2,
+   "slot": "object",
+   "rot": 1
+  },
+  {
+   "id": "torch",
+   "x": 2,
+   "z": 2,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "torch",
+   "x": -1,
+   "z": 4,
+   "slot": "object",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -3,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -3,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -3,
+   "z": 0,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -3,
+   "z": 1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -3,
+   "z": 2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -2,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -2,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -2,
+   "z": 0,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -2,
+   "z": 1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -2,
+   "z": 2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -1,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -1,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -1,
+   "z": 0,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -1,
+   "z": 1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": -1,
+   "z": 2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 0,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 0,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 0,
+   "z": 0,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 0,
+   "z": 1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 0,
+   "z": 2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 1,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 1,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 1,
+   "z": 0,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 1,
+   "z": 1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 1,
+   "z": 2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 2,
+   "z": -2,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 2,
+   "z": -1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 2,
+   "z": 0,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 2,
+   "z": 1,
+   "slot": "roof",
+   "rot": 0
+  },
+  {
+   "id": "wood_roof",
+   "x": 2,
+   "z": 2,
+   "slot": "roof",
+   "rot": 0
+  }
+ ]
+}

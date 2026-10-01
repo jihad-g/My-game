@@ -58,6 +58,8 @@ var dungeon: DungeonInstance
 var raids: RaidManager
 ## Blood moons, meteor showers, auroras, treasure goblins, eclipses (Milestone 7).
 var events: WorldEvents
+## Blueprints: construction sites and the placement preview (Milestone 8).
+var blueprints: BlueprintManager
 var _autosave_left := AUTOSAVE_INTERVAL
 var _biome_check_left := 0.0
 var _first_ready := true
@@ -99,6 +101,10 @@ func _ready() -> void:
 	events.name = "WorldEvents"
 	events.world = self
 	add_child(events)
+	blueprints = BlueprintManager.new()
+	blueprints.name = "Blueprints"
+	blueprints.world = self
+	add_child(blueprints)
 	props = PropLibrary.new()
 	chunk_manager.setup(generator, props)
 	spawner.generator = generator
@@ -124,6 +130,7 @@ func _ready() -> void:
 		from_save(save.get("world", {}))
 		player.from_save(save.get("player", {}))
 		building.from_save(save.get("world", {}).get("buildings", []))
+		blueprints.from_save(save.get("world", {}).get("blueprint_sites", []))
 
 	chunk_manager.layer = layer
 	player.frozen = true
@@ -268,6 +275,9 @@ func travel_to_layer(target_layer: int, at: Vector3) -> void:
 	_apply_layer_environment()
 	building.refresh_layer()
 	build_mode.set_active(false)
+	if blueprints.placer.active:
+		blueprints.placer.end()
+	blueprints.refresh_layer()
 	events.refresh_craters()
 	layer_changed.emit(layer)
 
@@ -522,6 +532,7 @@ func to_save() -> Dictionary:
 			placed.append(entry)
 	return {
 		"buildings": building.to_save(),
+		"blueprint_sites": blueprints.to_save(),
 		"living": living.to_save(),
 		"exploration": exploration.to_save(),
 		"raids": raids.to_save(),

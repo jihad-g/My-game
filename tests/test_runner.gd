@@ -62,6 +62,8 @@ func _ready() -> void:
 	await _run_async(&"test_m7_base_raid")
 	await _run_async(&"test_m7_town_raid")
 	await _run_async(&"test_m7_events")
+	_run(&"test_m8_blueprint_format")
+	await _run_async(&"test_m8_construction")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -3390,13 +3392,18 @@ func test_m7_events() -> void:
 	var coins0 := p.coins
 	check(ev.start(&"treasure_goblin") and ev._goblin != null, "a treasure goblin appears")
 	var g := ev._goblin
+	var gpos := p.global_position + _clear_offset(world, 6.0)
+	gpos.y = world.get_ground_height(gpos) + 0.4
+	g.global_position = gpos
 	g._alert(p)
 	var d0 := g.global_position.distance_to(p.global_position)
 	var ran := false
-	for f in 200:
+	var far := 0.0
+	for f in 300:
 		await get_tree().physics_frame
 		ran = ran or g.ai == Monster.AI.FLEE
-	check(ran and g.global_position.distance_to(p.global_position) > d0, "it runs away from you")
+		far = maxf(far, g.global_position.distance_to(p.global_position))
+	check(ran and far > d0 + 2.0, "it runs away from you (%.1f -> %.1f m)" % [d0, far])
 	_kill(g, world)
 	await _frames(5)
 	check(p.coins > coins0 and not ev.is_active(&"treasure_goblin"), "catching it pays well")
@@ -3413,3 +3420,254 @@ func test_m7_events() -> void:
 	ev.refresh_craters()
 	world.queue_free()
 	await _frames(5)
+
+
+# --- Milestone 8: blueprints ------------------------------------------------------------------
+
+func _keys(bp: Blueprint) -> Dictionary:
+	var out := {}
+	for e in bp.pieces:
+		out["%s@%s" % [Blueprint.entry_key(e), e.id]] = true
+	return out
+
+
+func test_m8_blueprint_format() -> void:
+	var builtin := BlueprintLibrary.builtin()
+	check(builtin.size() >= 4, "%d built-in blueprints" % builtin.size())
+	for bp in builtin:
+		check(bp.warnings.is_empty() and bp.pieces.size() >= 10 and not bp.total_cost().is_empty(),
+			"%s: %d pieces, clean, costs %s" % [bp.name, bp.pieces.size(), bp.total_cost()])
+	var hut: Blueprint = builtin.filter(func(b: Blueprint) -> bool: return b.name == "Starter Hut")[0]
+	# JSON round trip
+	var again := Blueprint.from_json(hut.to_json())
+	check(again != null and _keys(again) == _keys(hut) and again.name == hut.name, "blueprints survive a JSON round trip")
+	check(Blueprint.from_json("{\"hello\": 1}") == null and Blueprint.from_json("not json") == null, "other JSON isn't a blueprint")
+	# Rotation
+	check(_keys(hut.rotated(4)) == _keys(hut), "four quarter turns give back the same design")
+	var room := Blueprint.new()
+	for e in [[0, 0, "edge_n"], [0, 1, "edge_n"], [0, 0, "edge_w"], [1, 0, "edge_w"], [0, 0, "floor"]]:
+		room.pieces.append({"id": &"wood_wall" if String(e[2]).begins_with("edge") else &"wood_floor", "x": e[0], "z": e[1], "slot": e[2], "rot": 0})
+	var turned := room.rotated(1)
+	var expect := {}
+	for e in [[0, -1, "edge_n"], [0, 0, "edge_n"], [0, -1, "edge_w"], [1, -1, "edge_w"], [0, -1, "floor"]]:
+		expect["%d,%d,%s" % e] = true
+	var got := {}
+	for e in turned.pieces:
+		got[Blueprint.entry_key(e)] = true
+	check(got == expect, "a walled cell turned 90 degrees is still a walled cell (edges map to edges)")
+	check(turned.pieces[4].rot == 1, "piece rotation turns with the design")
+	# Validation
+	var messy := Blueprint.from_json(JSON.stringify({"format": "shardlands-blueprint", "version": 1, "name": "", "pieces": [
+		{"id": "wood_wall", "x": 0, "z": 0, "slot": "edge_n"}, {"id": "wood_wall", "x": 0, "z": 0, "slot": "edge_n"},
+		{"id": "golden_throne", "x": 1, "z": 1, "slot": "object"}, {"id": "wood_wall", "x": 2, "z": 2, "slot": "floor"},
+		{"id": "bed", "x": 3, "z": 3}]}))
+	check(messy != null and messy.pieces.size() == 2 and messy.warnings.size() == 3 and messy.name == "Untitled",
+		"bad entries are dropped with warnings (unknown piece, wrong slot, duplicate)")
+	check(messy.pieces[1].slot == "object", "a missing slot is filled in from the piece type")
+	# Costs
+	var cost := hut.total_cost()
+	var manual := {}
+	for e in hut.pieces:
+		var d := BuildingManager.get_piece_data(e.id)
+		for item in d.cost:
+			manual[item] = int(manual.get(item, 0)) + int(d.cost[item])
+	check(cost == manual, "total cost adds up every piece")
+	var have := {}
+	for item in cost:
+		have[item] = int(cost[item]) - 1
+	var miss := hut.missing(have)
+	check(miss.size() == cost.size() and int(miss.values()[0]) == 1 and hut.missing(cost).is_empty(), "missing materials are computed")
+	check(hut.required_level() >= 1 and hut.bounds().size.x >= 4 and hut.bounds().size.y >= 4, "footprint %s" % hut.bounds().size)
+	var order := hut.build_order()
+	check(order[0].slot == "floor" and order[order.size() - 1].slot == "roof", "build order: floors first, roofs last")
+	# The web designer's catalog matches the game (rebuild with tools/build_designer.py).
+	var html := FileAccess.get_file_as_string("res://web/blueprint-designer/index.html")
+	var start := html.find("const CATALOG = ")
+	var stop := html.find(";\nconst STANDALONE")
+	var cat = JSON.parse_string(html.substr(start + 16, stop - start - 16)) if start >= 0 and stop > start else null
+	var web_ids := {}
+	if cat is Dictionary:
+		for wp in cat.pieces:
+			web_ids[StringName(wp.id)] = wp
+	var sync: bool = cat is Dictionary and web_ids.size() == BuildingManager.all_pieces().size() and cat.examples.size() == builtin.size()
+	if sync:
+		for id in BuildingManager.all_pieces():
+			var d := BuildingManager.get_piece_data(id)
+			var wp = web_ids.get(id)
+			sync = sync and wp != null and int(wp.level) == d.required_level and float(wp.hp) == d.get_max_health() \
+				and wp.slot == BuildingManager.slot_kind(d) and (wp.cost as Dictionary).size() == d.cost.size()
+	check(sync, "the web designer's piece catalog matches the game's build pieces")
+	# Library (temporary folder)
+	var saved_dir := BlueprintLibrary.user_dir
+	BlueprintLibrary.user_dir = "user://test_blueprints/"
+	for bp in BlueprintLibrary.user():
+		BlueprintLibrary.delete(bp)
+	var copy := hut.duplicate_bp()
+	copy.name = "My Hut!"
+	var path := BlueprintLibrary.save(copy)
+	var path2 := BlueprintLibrary.save(copy.duplicate_bp())
+	check(path.ends_with("my_hut.json") and path2.ends_with("my_hut_2.json") and BlueprintLibrary.user().size() == 2, "saving never overwrites another design")
+	var imported := BlueprintLibrary.import_text(hut.to_json())
+	check(imported != null and BlueprintLibrary.user().size() == 3, "importing JSON text saves the design")
+	check(BlueprintLibrary.import_text("garbage") == null, "garbage isn't imported")
+	for bp in BlueprintLibrary.user():
+		BlueprintLibrary.delete(bp)
+	check(BlueprintLibrary.user().is_empty() and not BlueprintLibrary.delete(hut), "user designs can be deleted; built-ins can't")
+	BlueprintLibrary.user_dir = saved_dir
+
+
+## A flat, clear anchor near the player where every non-roof piece of `bp` fits.
+func _free_anchor(world: World, bp: Blueprint, q: int = 0) -> Vector2i:
+	var placer := world.blueprints.placer
+	placer.begin(bp)
+	placer.rotation_q = q
+	placer._rebuild_ghosts()
+	var pc := Vector2i(floori(world.player.global_position.x), floori(world.player.global_position.z))
+	var found := Vector2i(1 << 30, 0)
+	for r in range(4, 30, 2):
+		for k in 12:
+			var a := TAU * k / 12.0
+			var c := pc + Vector2i(roundi(cos(a) * r), roundi(sin(a) * r))
+			placer.move_to(c)
+			if placer.blocked == 0:
+				found = c
+				break
+		if found.x != 1 << 30:
+			break
+	return found
+
+
+func test_m8_construction() -> void:
+	var saved_dir := SaveManager.worlds_dir
+	SaveManager.worlds_dir = "user://test_worlds"
+	for wl in SaveManager.list_worlds():
+		SaveManager.delete_world(wl.id)
+	var wid := SaveManager.create_world("Blueprint Test", GameState.DEFAULT_SEED, &"knight")
+	var world: World = await _boot_world()
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	for i in 9:
+		p.character.grant_xp(p.character.xp_needed(), Progression.Source.OTHER)
+	var hut: Blueprint = BlueprintLibrary.builtin().filter(func(b: Blueprint) -> bool: return b.name == "Starter Hut")[0]
+	# Placement preview
+	var anchor := _free_anchor(world, hut)
+	check(anchor.x != 1 << 30, "found a clear spot for the Starter Hut at %s" % anchor)
+	var placer := world.blueprints.placer
+	check(placer.active and placer._ghosts.size() == hut.pieces.size(), "the preview shows every piece as a hologram")
+	var site := placer.confirm()
+	check(site != null and not placer.active and world.blueprints.sites.size() == 1 and site.total == hut.pieces.size(), "placing lays out a construction site")
+	await _frames(3)
+	var holos := site._holos.size()
+	check(holos > 0 and holos <= hut.pieces.size(), "%d holograms in the world" % holos)
+	# Manual: build one floor by hand.
+	p.inventory.clear()
+	var floor_i := -1
+	for i in site.entries.size():
+		if site.entries[i].slot == "floor":
+			floor_i = i
+			break
+	var holo: BlueprintHologram = site._holos[floor_i]
+	check(holo.get_interact_text().begins_with("Build Wood Floor"), "holograms say what they build (%s)" % holo.get_interact_text())
+	holo.interact(p)
+	check(not site.entries[floor_i].built, "can't build without materials")
+	p.inventory.add_item(&"wood", 2)
+	holo.interact(p)
+	await _frames(1)
+	var fe: Dictionary = site.entries[floor_i]
+	check(fe.built and world.building.pieces.has(BuildingManager.key(fe.cell, "floor", world.layer)) and p.inventory.count_of(&"wood") == 0,
+		"pressing F on a hologram builds that piece and pays for it")
+	# Auto-build waits for materials
+	site.auto = true
+	await _frames(40)
+	check(site.status.begins_with("Missing") and site.pending_count() == site.total - 1, "auto-build waits when materials are missing (%s)" % site.status)
+	# Chests near the site count as material sources.
+	site.auto = false
+	var chest_data := BuildingManager.get_piece_data(&"storage_chest")
+	var chest: BuildPiece = null
+	for dz in range(-8, 9):
+		for dx in [-7, 7, -8, 8]:
+			if chest == null and world.building.check_place(chest_data, anchor + Vector2i(dx, dz), "object", null, false) == "":
+				chest = world.building.place(chest_data, anchor + Vector2i(dx, dz), "object", 0, null, false)
+	check(chest != null, "placed a storage chest next to the site")
+	var chest_cell := chest.cell
+	var need := site.remaining_cost()
+	for item in need:
+		var n := int(need[item])
+		var into_chest := n / 2
+		chest.storage.add_item(item, into_chest)
+		p.inventory.add_item(item, n - into_chest)
+	check(site.remaining_cost().keys().all(func(it) -> bool: return int(site.available().get(it, 0)) >= int(site.remaining_cost()[it])),
+		"inventory + nearby chest cover the remaining cost")
+	# Save mid-construction and reload.
+	site.build_entry(site.next_buildable())
+	var pending := site.pending_count()
+	world.save_now(false)
+	world.queue_free()
+	await _frames(5)
+	SaveManager.load_world(wid)
+	world = await _boot_world()
+	p = world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	check(world.blueprints.sites.size() == 1 and world.blueprints.sites[0].pending_count() == pending, "construction sites are saved (%d pieces left)" % pending)
+	site = world.blueprints.sites[0]
+	await _frames(70)
+	check(site._holos.size() > 0, "holograms come back after loading")
+	# Auto-build the rest.
+	site.auto = true
+	var frames := 0
+	while world.blueprints.sites.has(site) and frames < 2400:
+		await get_tree().physics_frame
+		frames += 1
+	check(not world.blueprints.sites.has(site), "auto-build finished the hut (%d frames)" % frames)
+	var ok := true
+	for e in hut.pieces:
+		var k := BuildingManager.key(anchor + Vector2i(int(e.x), int(e.z)), String(e.slot), world.layer)
+		var piece: BuildPiece = world.building.pieces.get(k)
+		ok = ok and piece != null and piece.data.id == StringName(e.id)
+	check(ok, "every piece of the design stands where the blueprint says")
+	var chest2: BuildPiece = world.building.pieces.get(BuildingManager.key(chest_cell, "object", world.layer))
+	check(chest2 != null and chest2.storage.free_slot_count() == chest2.storage.capacity, "materials were taken from the chest too")
+	# Capture what we built and compare.
+	p.global_position = Vector3(anchor.x + 0.5, world.get_ground_height(Vector3(anchor.x + 0.5, 0, anchor.y + 0.5)) + 0.3, anchor.y + 0.5)
+	var cap := world.blueprints.capture_here("Copy", 4.5)
+	var hut_keys := _keys(hut)
+	var cap_keys := _keys(cap)
+	var all_in := true
+	for k in hut_keys:
+		all_in = all_in and cap_keys.has(k)
+	check(all_in, "capturing the built hut gives back the design (%d pieces)" % cap.pieces.size())
+	# A rotated placement puts pieces where the rotated design says.
+	var cottage: Blueprint = BlueprintLibrary.builtin().filter(func(b: Blueprint) -> bool: return b.name == "Stone Cottage")[0]
+	var a2 := _free_anchor(world, cottage, 1)
+	var site2 := world.blueprints.placer.confirm()
+	check(site2 != null and site2.rotation_q == 1, "placed a rotated Stone Cottage")
+	var rot_ok := true
+	for i in cottage.pieces.size():
+		var r := Blueprint.rotate_entry(cottage.pieces[i], 1)
+		var found := false
+		for e in site2.entries:
+			found = found or (e.cell == a2 + Vector2i(int(r.x), int(r.z)) and e.slot == r.slot and e.id == StringName(cottage.pieces[i].id))
+		rot_ok = rot_ok and found
+	check(rot_ok, "the rotated site matches the rotated blueprint")
+	world.blueprints.cancel_site(site2)
+	await _frames(2)
+	check(world.blueprints.sites.is_empty() and get_tree().get_nodes_in_group(&"construction_sites").filter(func(n) -> bool: return not n.is_queued_for_deletion()).is_empty(),
+		"removing a site clears its holograms")
+	# UI
+	world.hud._blueprints.toggle()
+	await _frames(3)
+	var panel: BlueprintPanel = world.hud._blueprints
+	check(panel.visible and panel._list.get_child_count() == BlueprintLibrary.all().size() and panel._cost.get_child_count() > 0,
+		"the blueprint screen (N) lists designs with their materials")
+	panel.select(cottage)
+	check(panel._title.text == "Stone Cottage" and panel._preview.blueprint == cottage, "selecting a design shows its preview and costs")
+	panel._on_place()
+	check(not panel.visible and world.blueprints.placer.active, "Place starts the preview")
+	world.blueprints.placer.end()
+	world.queue_free()
+	await _frames(5)
+	SaveManager.delete_world(wid)
+	SaveManager.worlds_dir = saved_dir
+	SaveManager.start_transient(GameState.DEFAULT_SEED)

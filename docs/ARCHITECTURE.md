@@ -209,6 +209,23 @@ World (world.gd)                 wires systems, world services (temperature, pic
   `DayNightCycle.sky_tint`/`eclipse`, spawns hordes, goblins, meteors (`MeteorCrater`) and the
   Starborn Colossus, exposes `xp_mult()` / `spell_mult()`, and saves active events and craters.
 
+## Blueprints (Milestone 8)
+
+- **Format** – `Blueprint` (src/blueprints) holds pieces at grid addresses (`x`, `z`, `slot`, `rot`)
+  relative to the anchor cell. `to_json()` / `from_json()` read and write the shared
+  `shardlands-blueprint` JSON; `rotate_entry()` turns an address by 90° (edges map n↔w).
+- **Library** – `BlueprintLibrary` reads `res://data/blueprints/*.json` (built-in) and
+  `user://blueprints/*.json` (yours).
+- **Sites** – `BlueprintManager` (World child) owns `ConstructionSite`s and the `BlueprintPlacer`
+  preview. A site keeps its plan in build order, shows `BlueprintHologram`s (interactable, no
+  collision with movement) for unbuilt pieces, checks each with `BuildingManager.check_place`
+  (no player reach limit), pays from the player's inventory then nearby chests, and places through
+  `BuildingManager.place`. Sites save their pending pieces in the world save (`blueprint_sites`).
+- **Web designer** – `web/blueprint-designer/designer.src.html` + the catalog that
+  `tools/build_designer.py` extracts from `data/build_pieces`, `data/items` and `data/blueprints`
+  → `index.html`. Its address and rotation rules mirror `BuildingManager.address_for` and
+  `Blueprint.rotate_entry`; a test checks the catalog matches the game.
+
 ## Survival
 
 - `StatBlock` aggregates multiplicative modifiers per source (`&"hunger"`,

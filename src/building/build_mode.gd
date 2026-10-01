@@ -53,6 +53,8 @@ func _ready() -> void:
 func set_active(on: bool) -> void:
 	if on and (world.player.is_dead or world.player.frozen):
 		return
+	if on and world.blueprints and world.blueprints.placer.active:
+		world.blueprints.placer.end()
 	active = on
 	_ghost.visible = on
 	_claim_ring.visible = false
