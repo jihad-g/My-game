@@ -131,9 +131,9 @@ Nothing below is marked `[x]` unless it runs in the game today.
 ## Phase 2 — Core RPG (remaining)
 
 - [x] Crafting system (Milestone 4)
-- [~] Recipe sources — books (cave caches, boars) and discovery done; villages, kingdoms, dungeons, bosses later
+- [x] Recipe sources — books (cave caches, boars), discovery, shops (M5), dungeons, bosses, temples, towers, vaults (M6)
 - [ ] More abilities per class / ability upgrades at higher levels (current unlocks: 1, 5, 15)
-- [ ] Item quality (Fine/Masterwork) and gear drops from more sources (only boars drop gear today)
+- [~] Item quality (Fine/Masterwork) — NOT IMPLEMENTED; gear drops from monsters, chests and bosses done (M6)
 - [x] Basic NPCs (dialogue, shops) (Milestone 5)
 - [ ] Respec (reset skill points)
 
@@ -151,8 +151,8 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [~] Kingdoms (castle, advanced blacksmith, rare shops, guards, reputation) — done in Milestone 5; kingdom quests not yet
 - [x] Dungeons ranks E–S with scaling enemies, traps, secrets, loot, bosses (Milestone 6)
 - [x] Bosses with unique mechanics (Milestone 6: 4 bosses)
-- [ ] More enemy categories (monsters, bandits, undead, magical, elites)
-- [~] Farming (seeds, planting, harvesting) — Milestone 5; watering, seasons, rare/magical plants not yet
+- [~] More enemy categories — undead, magical, beasts and elites done (M6); bandits NOT IMPLEMENTED
+- [~] Farming (seeds, planting, harvesting) — Milestone 5; magical plants in groves (M6); watering, seasons, planting magical plants NOT IMPLEMENTED
 - [x] Trading & economy (per-settlement inventories and prices) (Milestone 5)
 - [ ] Raids with warnings, reputation/popularity rewards
 - [~] NPC routines and reputation (Milestone 5); relationships and reactions not yet
