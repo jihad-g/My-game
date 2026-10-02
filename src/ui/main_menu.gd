@@ -18,8 +18,8 @@ var _status := Label.new()
 var _confirm := ConfirmationDialog.new()
 var _pending_delete := ""
 var _selected_class: StringName = ClassRegistry.DEFAULT_CLASS
-var _class_buttons: Dictionary = {}
-var _class_info := Label.new()
+## Character creation: class, starting kit preview and body (Milestone 14).
+var picker := ClassPicker.new()
 
 
 var _settings := SettingsPanel.new()
@@ -58,7 +58,7 @@ func _handle_command_line() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--class="):
 			cls = StringName(arg.substr(8).to_lower())
-			_selected_class = cls
+			_select_class(cls)
 		elif arg.begins_with("--name="):
 			_mp_name.text = arg.substr(7)
 		elif arg == "--host" or arg.begins_with("--host="):
@@ -122,7 +122,7 @@ func _build() -> void:
 
 	# New world
 	var new_panel := PanelContainer.new()
-	new_panel.custom_minimum_size = Vector2(420, 0)
+	new_panel.custom_minimum_size = Vector2(580, 0)
 	cols.add_child(new_panel)
 	var nv := VBoxContainer.new()
 	nv.add_theme_constant_override(&"separation", 10)
@@ -141,24 +141,10 @@ func _build() -> void:
 	dice.pressed.connect(func() -> void: _seed_edit.text = str(randi()))
 	seed_row.add_child(dice)
 	nv.add_child(seed_row)
-	nv.add_child(_small("Class"))
-	var class_row := HBoxContainer.new()
-	class_row.add_theme_constant_override(&"separation", 6)
-	nv.add_child(class_row)
-	for c in ClassRegistry.all():
-		var b := Button.new()
-		b.text = c.display_name
-		b.toggle_mode = true
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var cid := c.id
-		b.pressed.connect(func() -> void: _select_class(cid))
-		class_row.add_child(b)
-		_class_buttons[cid] = b
-	_class_info.autowrap_mode = TextServer.AUTOWRAP_WORD
-	_class_info.custom_minimum_size = Vector2(360, 96)
-	_class_info.add_theme_font_size_override(&"font_size", 13)
-	nv.add_child(_class_info)
-	_select_class(_selected_class)
+	nv.add_child(_small("Class & character"))
+	picker.selected_class = _selected_class
+	picker.changed.connect(func() -> void: _selected_class = picker.selected_class)
+	nv.add_child(picker)
 	var create := Button.new()
 	create.text = "Create & play"
 	create.pressed.connect(_on_create)
@@ -166,14 +152,14 @@ func _build() -> void:
 	var quick := Button.new()
 	quick.text = "Quick play (temporary, not saved)"
 	quick.pressed.connect(func() -> void:
-		SaveManager.start_transient(_read_seed(), _selected_class)
+		SaveManager.start_transient(_read_seed(), _selected_class, picker.look)
 		_start_game())
 	nv.add_child(quick)
 	nv.add_child(_small("Same seed = same world, on any machine."))
 
 	# World list
 	var list_panel := PanelContainer.new()
-	list_panel.custom_minimum_size = Vector2(520, 420)
+	list_panel.custom_minimum_size = Vector2(430, 420)
 	cols.add_child(list_panel)
 	var lv := VBoxContainer.new()
 	lv.add_theme_constant_override(&"separation", 10)
@@ -285,13 +271,7 @@ func _build_crash_notice(root: VBoxContainer) -> void:
 
 func _select_class(id: StringName) -> void:
 	_selected_class = id
-	for cid in _class_buttons:
-		_class_buttons[cid].button_pressed = cid == id
-	var c := ClassRegistry.get_class_data(id)
-	var sk := PackedStringArray()
-	for s in Skill.ALL:
-		sk.append("%s %d" % [Skill.NAMES[s].substr(0, 3), c.starting_skill(s)])
-	_class_info.text = "%s — %s\n%s\nStart: %s" % [c.display_name, c.role_summary, c.description, " · ".join(sk)]
+	picker.select_class(id)
 
 
 func _header(text: String) -> Label:
@@ -321,7 +301,7 @@ func _on_create() -> void:
 	var world_name := _name_edit.text.strip_edges()
 	if world_name == "":
 		world_name = "World %d" % (SaveManager.list_worlds().size() + 1)
-	SaveManager.create_world(world_name, _read_seed(), _selected_class)
+	SaveManager.create_world(world_name, _read_seed(), _selected_class, picker.look)
 	_start_game()
 
 
@@ -400,7 +380,7 @@ func join_game(address: String) -> void:
 	for c in Net.join_failed.get_connections():
 		Net.join_failed.disconnect(c.callable)
 	Net.welcomed.connect(func(data: Dictionary) -> void:
-		SaveManager.start_transient(GameState.parse_seed(data.get("seed", "0")), StringName(String(data.get("class", "knight"))))
+		SaveManager.start_transient(GameState.parse_seed(data.get("seed", "0")), StringName(String(data.get("class", "knight"))), picker.look)
 		get_tree().change_scene_to_file(GAME_SCENE), CONNECT_ONE_SHOT)
 	Net.join_failed.connect(func(reason: String) -> void: _status.text = "Couldn't join: %s" % reason, CONNECT_ONE_SHOT)
 	var err := Net.join(host, port)

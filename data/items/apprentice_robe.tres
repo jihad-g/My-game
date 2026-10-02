@@ -18,6 +18,9 @@ required_level = 1
 stat_bonuses = {
 &"armor": 2,
 &"max_mana": 15,
-&"mana_regen": 10
+&"mana_regen": 10,
+&"mana_control": 2
 }
-
+set_id = &"apprentice"
+look_style = &"robe"
+look_trim = Color(0.4, 0.85, 1.0, 1)

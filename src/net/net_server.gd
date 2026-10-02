@@ -26,6 +26,8 @@ class PeerState:
 	var profile := {}
 	var regions_sent := {}
 	var dirty_inventory := false
+	## Last "look" event (weapon, body, outfit) - replayed to players who join later.
+	var look: Array = []
 
 	func record() -> Dictionary:
 		return {"class": String(class_id), "inventory": inventory.to_array(), "equipment": equipment.to_save(),
@@ -228,6 +230,12 @@ func on_ready(id: int) -> void:
 	net.players_changed.emit()
 	Events.toast.emit("%s joined the game" % ps.name, Color(0.6, 1.0, 0.7))
 	_send_inventory(ps)
+	# Everyone already here: how they look (host first).
+	if w and w.player:
+		net.s2c_anim.rpc_id(id, 1, "look", w.player.look_args())
+	for other in peers:
+		if other != id and peers[other].ready and not (peers[other] as PeerState).look.is_empty():
+			net.s2c_anim.rpc_id(id, other, "look", (peers[other] as PeerState).look)
 
 
 func on_profile(id: int, profile: Dictionary) -> void:
@@ -337,6 +345,8 @@ func on_anim(id: int, ev: String, args: Array) -> void:
 	var ps: PeerState = peers.get(id)
 	if ps == null or not ps.ready or not ev in RemotePlayer.ANIM_EVENTS or args.size() > 4:
 		return
+	if ev == "look":
+		ps.look = args.duplicate(true)
 	if is_instance_valid(ps.puppet):
 		ps.puppet.play_event(ev, args)
 	for other in peers:

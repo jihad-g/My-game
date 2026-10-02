@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"shadow_garb"
+display_name = "Shadowstalker's Garb"
+description = "Dark, quiet clothes with a short cape. Light armour, fast feet."
+category = 4
+rarity = 0
+max_stack = 1
+base_value = 20
+icon_color = Color(0.22, 0.2, 0.28, 1)
+icon_glyph = "Ck"
+equip_slot = 4
+required_level = 1
+stat_bonuses = {
+&"armor": 3,
+&"dexterity": 2,
+&"move_speed": 3
+}
+set_id = &"shadow"
+look_style = &"cloak"
+look_color = Color(0.22, 0.2, 0.28, 1)
+look_trim = Color(0.45, 0.12, 0.2, 1)

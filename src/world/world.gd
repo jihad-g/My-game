@@ -18,7 +18,9 @@ const AUTOSAVE_INTERVAL := 120.0
 const BIOME_CHECK_INTERVAL := 0.5
 ## Debug (F10): a sample of every gear tier for testing equipment.
 const DEBUG_GEAR: Array[StringName] = [&"iron_sword", &"iron_waraxe", &"copper_dagger", &"crystal_staff",
-	&"iron_kite_shield", &"chainmail", &"fur_cap", &"fur_boots", &"copper_ring", &"tusk_charm", &"sun_hat"]
+	&"iron_kite_shield", &"chainmail", &"fur_cap", &"fur_boots", &"copper_ring", &"tusk_charm", &"sun_hat",
+	# Milestone 14: another class's look - the full Shadowstalker set + two helmets.
+	&"shadow_hood", &"shadow_garb", &"shadow_wraps", &"shadow_boots", &"raider_helm", &"apprentice_hat"]
 
 signal layer_changed(layer: int)
 signal biome_changed(biome: BiomeData)
@@ -157,7 +159,7 @@ func _ready() -> void:
 			Net.server.broadcast_local_anim(ev, args))
 	player.equipment.changed.connect(func() -> void:
 		if Net.is_server():
-			Net.server.broadcast_local_anim("look", [String(player.equipment.weapon_type()), player.equipment.offhand() != null]))
+			Net.server.broadcast_local_anim("look", player.look_args()))
 	Net.mode_changed.connect(_apply_online_rules)
 	_apply_online_rules()
 

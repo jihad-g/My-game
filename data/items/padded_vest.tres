@@ -19,4 +19,5 @@ stat_bonuses = {
 &"armor": 6,
 &"insulation": 4
 }
-
+look_style = &"padded"
+look_trim = Color(0.4, 0.28, 0.16, 1)

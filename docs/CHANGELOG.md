@@ -2,6 +2,37 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.14.0] — Milestone 14: Gear Makes the Hero
+
+### Added
+- **One body for every class** (`CharacterLook`): skin tone, hair colour, hair style and beard, chosen at
+  character creation and saved with the character.
+- **Gear on the body**: armour and clothing are drawn from item data (`ItemData.look_style`,
+  `look_color`, `look_trim`) - 24 styles over head, chest, hands and feet. You look like what you wear.
+- **Starting kits like a souls-like**: every class starts with a weapon, a full outfit and its own
+  supplies. 15 new items: Squire's Helm / Breastplate / Gauntlets / Greaves, Raider's Horned Helm / Fur
+  Harness / Bracers / Fur Boots, Shadowstalker's Hood / Garb / Wraps / Soft Boots, Apprentice's Hat /
+  Wraps / Shoes (+ the Apprentice Robe). Each has a starting recipe, so any class can make any set.
+- **Gear sets** (`GearSets`): Squire's Kit, Raider's Furs, Shadowstalker's Garb and Apprentice's
+  Vestments with 2- and 4-piece bonuses; new gear stats physical damage %, backstab damage % and parry
+  window; set lines in item tooltips.
+- **Character creation screen** (`ClassPicker`): turning 3D preview, skill bars, health/mana/armour,
+  class talent, kit and supplies, body options.
+- Set pieces in village shops and E-rank loot; a gear showcase in the screenshot runner
+  (`--only=gear`); `SHARDLANDS_TESTS` to run selected tests.
+
+### Changed
+- **Classes (Option A)**: the class is the starting kit plus a small talent. Off-class weapons are
+  0.85-0.95 (were 0.5-0.7), weak skills are 0.75-0.9 effective (were down to 0.35), Wizard physical
+  power 0.88 (was 0.7), Knight and Barbarian spell power 0.75 / 0.7 (were 0.6 / 0.5). A max-Strength
+  Wizard reaches 0.81 of a max-Strength Knight (rule: never equal) - test updated from the old
+  "softer than a starting Knight".
+- Class-coloured clothes, helmets and hats were removed from the player model; they now come from gear.
+- The main menu's create panel is wider to fit the new screen.
+
+### Fixed
+- Players who joined a co-op game late did not see the other players' weapons (looks are now replayed).
+
 ## [0.13.0] — Milestone 13: Beta / Release preparation
 
 ### Added

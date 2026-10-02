@@ -19,4 +19,5 @@ stat_bonuses = {
 &"armor": 2,
 &"move_speed": 3
 }
-
+look_style = &"boots"
+look_trim = Color(0.3, 0.2, 0.12, 1)

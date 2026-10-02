@@ -90,17 +90,30 @@ func _ready() -> void:
 	await _run_async(&"test_m13_crash_handling")
 	await _run_async(&"test_m13_platform")
 	_run(&"test_m13_release")
+	_run(&"test_m14_gear_data")
+	await _run_async(&"test_m14_gear_in_game")
+	await _run_async(&"test_m14_character_creation")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
 
+## SHARDLANDS_TESTS="test_a,test_b" runs only those tests (quicker iteration).
+func _selected(test: StringName) -> bool:
+	var only := OS.get_environment("SHARDLANDS_TESTS")
+	return only == "" or String(test) in only.split(",")
+
+
 func _run(test: StringName) -> void:
+	if not _selected(test):
+		return
 	_current = test
 	print("\n-- %s" % test)
 	call(test)
 
 
 func _run_async(test: StringName) -> void:
+	if not _selected(test):
+		return
 	_current = test
 	print("\n-- %s" % test)
 	await call(test)
@@ -696,8 +709,9 @@ func test_integration() -> void:
 	# Cooking: raw meat -> cooked meat
 	var fire: Campfire = get_tree().get_nodes_in_group(&"heat_sources")[0]
 	var raw := player.inventory.count_of(&"raw_meat")
+	var cooked := player.inventory.count_of(&"cooked_meat")  # Barbarians start with some (M14)
 	fire.interact(player)
-	check(player.inventory.count_of(&"cooked_meat") == 1 and player.inventory.count_of(&"raw_meat") == raw - 1, "cooking converts raw meat")
+	check(player.inventory.count_of(&"cooked_meat") == cooked + 1 and player.inventory.count_of(&"raw_meat") == raw - 1, "cooking converts raw meat")
 	fire.queue_free()
 
 	# 8. Cold exposure in the real world: debuffs but never damage
@@ -970,7 +984,10 @@ func test_skill_formulas() -> void:
 	var kn_start := Skill.physical_damage_mult(knight.starting_skill(Skill.STRENGTH), knight.efficiency(Skill.STRENGTH), knight.physical_power)
 	var barb100 := Skill.physical_damage_mult(100, barb.efficiency(Skill.STRENGTH), barb.physical_power)
 	print("   physical x at STR100: wizard %.2f, knight %.2f, barbarian %.2f (knight start %.2f)" % [wiz100, kn100, barb100, kn_start])
-	check(wiz100 < kn_start, "a max-Strength Wizard hits softer than a starting Knight")
+	# Option A (Milestone 14): gear makes the build, the class keeps a talent -
+	# a Wizard who trains Strength gets close to a Knight but never equals one.
+	check(wiz100 < kn100 * 0.9, "a max-Strength Wizard never equals a max-Strength Knight (×%.2f)" % (wiz100 / kn100))
+	check(wiz100 > kn_start, "but a Wizard who trains Strength can out-hit a fresh Knight")
 	check(barb100 > kn100, "Barbarian has the highest physical ceiling")
 	check(Skill.material_cost_mult(1) > 1.4 and Skill.material_cost_mult(100) < 0.85, "crafting skill reduces material cost (never fails)")
 	check(Skill.recipe_tier(100) == ItemData.Rarity.LEGENDARY and Skill.recipe_tier(1) == ItemData.Rarity.BASIC, "crafting unlocks recipe tiers")
@@ -1050,7 +1067,7 @@ func test_character_and_equipment() -> void:
 	ch.grant_xp(Progression.total_xp_for(12) - ch.total_xp, Progression.Source.OTHER)
 	var armor_now := ch.armor
 	check(player.equip_from_slot(slot), "chainmail equips at level %d" % ch.level)
-	check(ch.armor > armor_now + 10.0 and player.inventory.count_of(&"padded_vest") == 1, "armor rises and old chest piece returns to the inventory")
+	check(ch.armor > armor_now + 10.0 and player.inventory.count_of(&"squire_plate") == 1, "armor rises and old chest piece returns to the inventory")
 	var dmg_sword := ch.weapon_mult(&"sword")
 	check(dmg_sword > ch.weapon_mult(&"staff"), "Knights are proficient with swords, not staves")
 	ch.grant_xp(Progression.total_xp_for(ItemDB.get_item(&"crystal_staff").required_level) - ch.total_xp, Progression.Source.OTHER)
@@ -3105,7 +3122,7 @@ func test_m7_magic() -> void:
 	var off := _clear_offset(world, 7.0)
 	p.face_direction(off, true)
 	var target := _spawn_monster(world, &"thorn_crawler", off)
-	target.configure(30.0, 1.0, 0, 1.0)
+	target.configure(60.0, 1.0, 0, 1.0)  # tough: the Apprentice set boosts spells (M14)
 	target.stagger(120.0)
 	await _frames(3)
 	p.set_lock_target(target)
@@ -4554,8 +4571,8 @@ func test_m12_balance() -> void:
 	# Classes: every class can fight level-appropriate content at every stage,
 	# none dominates, and a Wizard never matches the fighters physically.
 	var w_phys := BalanceModel.max_strength_phys(&"wizard")
-	check(w_phys < BalanceModel.max_strength_phys(&"knight") * 0.6 and w_phys < BalanceModel.max_strength_phys(&"barbarian") * 0.6,
-		"max-Strength Wizard far below Knight and Barbarian (×%.2f)" % w_phys)
+	check(w_phys < BalanceModel.max_strength_phys(&"knight") * 0.9 and w_phys < BalanceModel.max_strength_phys(&"barbarian") * 0.9,
+		"max-Strength Wizard stays below Knight and Barbarian (×%.2f vs ×%.2f)" % [w_phys, BalanceModel.max_strength_phys(&"knight")])
 	for lvl in BalanceModel.LEVELS:
 		var powers := []
 		var ratios := []
@@ -5150,3 +5167,165 @@ func test_m13_release() -> void:
 	for a in Achievements.LIST:
 		check(not ach_ids.has(a[0]) and (a[3] == &"" or Achievements.STATS.has(a[3])), "achievement %s is well-formed" % a[0])
 		ach_ids[a[0]] = true
+
+
+# --- Milestone 14: gear makes the hero -----------------------------------------------------
+
+const _M14_STYLES := {
+	ItemData.EquipSlot.HEAD: [&"plate_helm", &"horned_helm", &"hood", &"wizard_hat", &"fur_cap", &"cap", &"straw_hat", &"circlet"],
+	ItemData.EquipSlot.CHEST: [&"cloth", &"padded", &"leather", &"chain", &"plate", &"robe", &"fur", &"cloak"],
+	ItemData.EquipSlot.HANDS: [&"gloves", &"gauntlets", &"bracers", &"wraps"],
+	ItemData.EquipSlot.FEET: [&"boots", &"greaves", &"shoes", &"fur_boots"],
+}
+
+
+func test_m14_gear_data() -> void:
+	# Every class starts with a full outfit + weapon, and its full set.
+	for c in ClassRegistry.all():
+		var eq := ClassPicker.starting_equipment(c)
+		var full: bool = eq.weapon() != null
+		for slot in _M14_STYLES:
+			full = full and eq.get_item(slot) != null
+		check(full, "%s starts with a weapon and a full outfit (head, chest, hands, feet)" % c.display_name)
+		var sets := eq.set_counts()
+		check(sets.size() == 1 and GearSets.has_set(sets.keys()[0]) and int(sets.values()[0]) == 4,
+			"%s starts in its complete set (%s)" % [c.display_name, sets])
+		check(not c.starting_items.is_empty(), "%s has its own starting supplies" % c.display_name)
+		var st := ClassPicker.starting_stats(c)
+		check(int(st.health) > 50 and int(st.armor) >= 0, "%s start: %d health, %d mana, %d armor" % [c.display_name, st.health, st.mana, st.armor])
+	# Every armour piece has a drawable look; set pieces give +1/+2 style skill bonuses.
+	var bad := []
+	var skill_pieces := 0
+	for id in ItemDB.all_ids():
+		var it: ItemData = ItemDB.get_item(id)
+		if it == null or not _M14_STYLES.has(it.equip_slot):
+			continue
+		if not it.worn_style() in _M14_STYLES[it.equip_slot]:
+			bad.append(id)
+		if it.set_id != &"":
+			check(GearSets.has_set(it.set_id), "%s belongs to a real set" % id)
+			for s in Skill.ALL:
+				if it.stat_bonuses.has(s):
+					skill_pieces += 1
+					check(int(it.stat_bonuses[s]) >= 1 and int(it.stat_bonuses[s]) <= 3, "%s gives a small skill bonus (+%d %s)" % [id, it.stat_bonuses[s], s])
+		check(ItemIcons.shape_of(it) in [&"helmet", &"hood", &"hat", &"crown", &"armor", &"robe", &"gloves", &"boots"],
+			"%s gets an armour icon (%s)" % [id, ItemIcons.shape_of(it)])
+	check(bad.is_empty(), "every armour piece has a known look style %s" % [bad])
+	check(skill_pieces >= 16, "set pieces raise skills (%d bonuses)" % skill_pieces)
+	# Anyone can make any set: starting recipes exist for every set piece.
+	for id in [&"squire_plate", &"raider_harness", &"shadow_garb", &"apprentice_hat"]:
+		var r := RecipeBook.get_recipe(id)
+		check(r != null and r.source == RecipeData.Source.STARTING, "%s can be crafted by every class" % id)
+	# Set bonuses.
+	var eq := Equipment.new()
+	eq.equip(ItemDB.get_item(&"shadow_hood"))
+	check(is_zero_approx(eq.total(&"backstab")), "1 shadow piece: no set bonus yet")
+	eq.equip(ItemDB.get_item(&"shadow_garb"))
+	check(is_equal_approx(eq.total(&"backstab"), 15.0), "2 shadow pieces: +15% backstab")
+	eq.equip(ItemDB.get_item(&"shadow_wraps"))
+	eq.equip(ItemDB.get_item(&"shadow_boots"))
+	check(is_equal_approx(eq.total(&"dexterity"), 1 + 2 + 1 + 1 + 2.0), "4 pieces: piece bonuses + set Dexterity (%d)" % eq.total(&"dexterity"))
+	check(GearSets.describe(&"shadow").size() == 3, "set tooltip lists both bonus tiers")
+	check(ItemDB.get_item(&"shadow_garb").effect_lines()[-3].begins_with("Set:"), "item tooltips show the set")
+	# Option A: the class keeps a small talent, a Wizard never equals a Knight.
+	var kn := ClassRegistry.get_class_data(&"knight")
+	var wz := ClassRegistry.get_class_data(&"wizard")
+	var as_ := ClassRegistry.get_class_data(&"assassin")
+	for strength in [10, 40, 70, 100]:
+		var k := Skill.physical_damage_mult(strength, kn.efficiency(Skill.STRENGTH), kn.physical_power) * kn.proficiency(&"sword")
+		var w := Skill.physical_damage_mult(strength, wz.efficiency(Skill.STRENGTH), wz.physical_power) * wz.proficiency(&"sword")
+		check(w < k * 0.9 and w > k * 0.6, "same Strength %d and sword: Wizard ×%.2f of a Knight (close, never equal)" % [strength, w / k])
+	check(kn.proficiency(&"dagger") >= 0.85 and as_.proficiency(&"dagger") > kn.proficiency(&"dagger"),
+		"a Knight can fight with daggers (×%.2f), an Assassin still does it best" % kn.proficiency(&"dagger"))
+	# Body + network helpers.
+	var clean := CharacterLook.sanitize({"skin": 99, "hair": -4, "style": "x", "beard": 1}, &"wizard")
+	check(int(clean.skin) == CharacterLook.SKINS.size() - 1 and int(clean.hair) == 0 and clean.beard == true,
+		"hostile look data is clamped")
+	var ids := CharacterLook.outfit_ids({ItemData.EquipSlot.HEAD: ItemDB.get_item(&"squire_helm")})
+	check(CharacterLook.outfit_from_ids(ids).get(ItemData.EquipSlot.HEAD) == ItemDB.get_item(&"squire_helm"), "outfit ids round-trip")
+	check(CharacterLook.outfit_from_ids({"3": "squire_plate", "4": "no_such_item", "1": "squire_sword"}).is_empty(),
+		"outfit ids in the wrong slot or unknown are dropped")
+	# The model draws what is worn.
+	var m := HumanoidModel.new()
+	add_child(m)
+	m.set_body(CharacterLook.default_for(&"knight"))
+	var bare := m._parts.size()
+	m.set_outfit(ClassPicker.starting_equipment(kn).outfit())
+	check(m._parts.size() > bare + 8 and m.worn_style(ItemData.EquipSlot.HEAD) == &"plate_helm", "the Squire's Kit is drawn on the body (%d -> %d parts)" % [bare, m._parts.size()])
+	m.set_outfit(ClassPicker.starting_equipment(as_).outfit())
+	check(m.worn_style(ItemData.EquipSlot.CHEST) == &"cloak" and m.worn_style(ItemData.EquipSlot.HEAD) == &"hood",
+		"the same body in Shadowstalker's Garb looks like an Assassin")
+	m.queue_free()
+
+
+func test_m14_gear_in_game() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	var ch := p.character
+	check(p.equipment.set_counts().get(&"squire", 0) == 4, "a new Knight wears the full Squire's Kit")
+	check(p.inventory.count_of(&"bandage") >= 3, "and gets the Knight's supplies")
+	check(p.model.worn_style(ItemData.EquipSlot.HEAD) == &"plate_helm", "the Knight looks like a knight")
+	var parry_kit := ch.parry_window
+	var dex_before := ch.skill_level(Skill.DEXTERITY)
+	var backstab_before := ch.backstab_mult
+	# Change into the Assassin's clothes and daggers: still a Knight, plays like an Assassin.
+	for id in [&"shadow_hood", &"shadow_garb", &"shadow_wraps", &"shadow_boots", &"rusty_dagger"]:
+		var item: ItemData = ItemDB.get_item(id)
+		p.equipment.equip(item)
+	p.equipment.unequip(ItemData.EquipSlot.OFF_HAND)
+	p._on_equipment_changed()
+	check(ch.class_data.id == &"knight", "still a Knight")
+	check(ch.skill_level(Skill.DEXTERITY) >= dex_before + 7, "Shadowstalker gear: Dexterity %d -> %d" % [dex_before, ch.skill_level(Skill.DEXTERITY)])
+	check(ch.backstab_mult > backstab_before + 0.14, "the set's backstab bonus applies (×%.2f -> ×%.2f)" % [backstab_before, ch.backstab_mult])
+	check(ch.parry_window < parry_kit, "the Squire's parry bonus is gone with the Squire's Kit")
+	check(p.equipment.weapon_type() == &"dagger" and p.model.worn_style(ItemData.EquipSlot.HEAD) == &"hood"
+		and p.model.worn_style(ItemData.EquipSlot.CHEST) == &"cloak", "and looks like an Assassin")
+	var args := p.look_args()
+	check(args.size() == 4 and String(args[0]) == "dagger" and (args[3] as Dictionary).size() == 4, "the look event carries body + outfit for other players")
+	# A remote puppet draws it the same way.
+	var rp := RemotePlayer.new()
+	rp.setup(77, "Friend", &"knight")
+	world.add_child(rp)
+	rp.play_event("look", args)
+	check(rp.model.worn_style(ItemData.EquipSlot.CHEST) == &"cloak", "other players see the outfit")
+	rp.queue_free()
+	# Save / load keeps body and outfit.
+	p.set_look({"skin": 4, "hair": 6, "style": 2, "beard": true})
+	var saved := p.to_save()
+	check((saved.look as Dictionary).hair == 6, "the body is saved")
+	p.set_look({})
+	p.from_save(saved)
+	check(int(p.look.hair) == 6 and int(p.look.style) == 2 and p.model.worn_style(ItemData.EquipSlot.FEET) == &"shoes",
+		"the body and outfit load back")
+	var old := saved.duplicate(true)
+	old.erase("look")
+	p.from_save(old)
+	check(p.look == CharacterLook.default_for(&"knight"), "pre-M14 saves get the class's default body")
+	world.queue_free()
+	await _frames(2)
+
+
+func test_m14_character_creation() -> void:
+	var picker := ClassPicker.new()
+	add_child(picker)
+	await _frames(2)
+	picker.select_class(&"wizard")
+	check(picker.look == CharacterLook.default_for(&"wizard"), "the picker suggests a look per class")
+	check(picker._model.worn_style(ItemData.EquipSlot.HEAD) == &"wizard_hat", "the preview wears the Wizard's starting kit")
+	picker.cycle_look("hair", 1)
+	picker.select_class(&"barbarian")
+	check(picker.look_edited and int(picker.look.hair) == (CharacterLook.default_for(&"wizard").hair + 1) % CharacterLook.HAIRS.size(),
+		"an edited body is kept when switching class")
+	check(picker._model.worn_style(ItemData.EquipSlot.HEAD) == &"horned_helm", "the preview switches to the Raider's kit")
+	check(ClassPicker.talent_text(ClassRegistry.get_class_data(&"barbarian")).contains("Strength"), "the class talent is shown")
+	var chosen := picker.look.duplicate()
+	picker.queue_free()
+	# A new world starts the character with the chosen class + body.
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"assassin", chosen)
+	var world: World = await _boot_world()
+	check(world.player.character.class_data.id == &"assassin" and world.player.look == CharacterLook.sanitize(chosen),
+		"the new character has the chosen class and body")
+	check(world.player.equipment.set_counts().get(&"shadow", 0) == 4 and world.player.inventory.count_of(&"antidote") >= 2,
+		"and the Assassin's starting kit and supplies")
+	world.queue_free()
+	await _frames(2)

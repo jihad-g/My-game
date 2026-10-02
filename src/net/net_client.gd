@@ -107,7 +107,7 @@ func setup_world(w: World) -> void:
 func _send_look() -> void:
 	var w := World.instance
 	if w and net.is_client() and ready_sent:
-		net.c2s_anim.rpc_id(1, "look", [String(w.player.equipment.weapon_type()), w.player.equipment.offhand() != null])
+		net.c2s_anim.rpc_id(1, "look", w.player.look_args())
 
 
 ## Runs `fn` now if the world is set up, otherwise after setup.

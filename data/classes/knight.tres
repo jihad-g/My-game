@@ -21,10 +21,10 @@ starting_skills = {
 }
 skill_efficiency = {
 &"strength": 1.0,
-&"mana_control": 0.6,
+&"mana_control": 0.8,
 &"defense": 1.2,
 &"crafting": 1.0,
-&"dexterity": 0.8
+&"dexterity": 0.9
 }
 base_health = 95
 health_per_defense = 2.2
@@ -32,13 +32,13 @@ base_stamina = 100
 base_mana = 35
 mana_per_point = 2.2
 physical_power = 1.0
-spell_power = 0.6
+spell_power = 0.75
 base_armor = 10
 weapon_proficiency = {
 &"sword": 1.1,
-&"axe": 0.9,
-&"dagger": 0.7,
-&"staff": 0.5,
+&"axe": 0.95,
+&"dagger": 0.9,
+&"staff": 0.85,
 &"shield": 1.0
 }
 unarmed_moveset = ExtResource("2_unarmed")
@@ -49,7 +49,11 @@ crit_bonus = 0.0
 uses_rage = false
 abilities = [ExtResource("a0"), ExtResource("a1"), ExtResource("a2")]
 temperature_shield_cost = 40
-starting_equipment = [&"squire_sword", &"wooden_buckler", &"padded_vest"]
+starting_items = {
+&"bandage": 3,
+&"bread": 2
+}
+starting_equipment = [&"squire_sword", &"wooden_buckler", &"squire_helm", &"squire_plate", &"squire_gauntlets", &"squire_greaves"]
 shirt_color = Color(0.25, 0.4, 0.75, 1)
 pants_color = Color(0.3, 0.3, 0.36, 1)
 hair_color = Color(0.42, 0.26, 0.14, 1)

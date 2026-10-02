@@ -44,7 +44,8 @@ static func shape_of(item: ItemData) -> StringName:
 		["pickaxe", &"pickaxe"], ["hatchet", &"hatchet"], ["handaxe", &"hatchet"], ["waraxe", &"axe"], ["greataxe", &"axe"],
 		["cleaver", &"axe"], ["dagger", &"dagger"], ["knife", &"dagger"], ["shadowfang", &"dagger"], ["staff", &"staff"],
 		["sword", &"sword"], ["blade", &"sword"], ["shield", &"shield"], ["buckler", &"shield"], ["aegis", &"shield"],
-		["crown", &"crown"], ["cap", &"helmet"], ["hood", &"hood"], ["hat", &"hat"], ["boots", &"boots"], ["gloves", &"gloves"],
+		["crown", &"crown"], ["helm", &"helmet"], ["greaves", &"boots"], ["shoes", &"boots"], ["gauntlets", &"gloves"],
+		["bracers", &"gloves"], ["wraps", &"gloves"], ["harness", &"armor"], ["garb", &"robe"], ["cap", &"helmet"], ["hood", &"hood"], ["hat", &"hat"], ["boots", &"boots"], ["gloves", &"gloves"],
 		["jerkin", &"armor"], ["vest", &"armor"], ["chainmail", &"armor"], ["plate", &"armor"], ["robe", &"robe"],
 		["cloak", &"robe"], ["ring", &"ring"], ["signet", &"ring"], ["amulet", &"amulet"], ["pendant", &"amulet"],
 		["charm", &"amulet"], ["insignia", &"badge"],
@@ -72,6 +73,13 @@ static func shape_of(item: ItemData) -> StringName:
 		ItemData.Category.TOOL:
 			return &"hatchet"
 		ItemData.Category.ARMOR:
+			match item.equip_slot:
+				ItemData.EquipSlot.HEAD:
+					return &"helmet"
+				ItemData.EquipSlot.HANDS:
+					return &"gloves"
+				ItemData.EquipSlot.FEET:
+					return &"boots"
 			return &"armor"
 		ItemData.Category.PLACEABLE:
 			return &"crate"

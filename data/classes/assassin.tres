@@ -20,9 +20,9 @@ starting_skills = {
 &"dexterity": 24
 }
 skill_efficiency = {
-&"strength": 0.85,
-&"mana_control": 0.7,
-&"defense": 0.8,
+&"strength": 0.9,
+&"mana_control": 0.85,
+&"defense": 0.85,
 &"crafting": 0.9,
 &"dexterity": 1.3
 }
@@ -32,14 +32,14 @@ base_stamina = 115
 base_mana = 40
 mana_per_point = 2.4
 physical_power = 0.95
-spell_power = 0.7
+spell_power = 0.8
 base_armor = 2
 weapon_proficiency = {
 &"dagger": 1.15,
-&"sword": 0.9,
-&"axe": 0.7,
-&"staff": 0.5,
-&"shield": 0.7
+&"sword": 0.95,
+&"axe": 0.9,
+&"staff": 0.85,
+&"shield": 0.9
 }
 unarmed_moveset = ExtResource("2_unarmed")
 block_reduction = 0.55
@@ -49,7 +49,11 @@ crit_bonus = 0.1
 uses_rage = false
 abilities = [ExtResource("a0"), ExtResource("a1"), ExtResource("a2")]
 temperature_shield_cost = 42
-starting_equipment = [&"rusty_dagger", &"leather_gloves", &"worn_boots"]
+starting_items = {
+&"antidote": 2,
+&"healing_draught": 1
+}
+starting_equipment = [&"rusty_dagger", &"shadow_hood", &"shadow_garb", &"shadow_wraps", &"shadow_boots"]
 shirt_color = Color(0.22, 0.22, 0.28, 1)
 pants_color = Color(0.18, 0.18, 0.22, 1)
 hair_color = Color(0.15, 0.12, 0.1, 1)

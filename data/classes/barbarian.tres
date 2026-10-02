@@ -21,10 +21,10 @@ starting_skills = {
 }
 skill_efficiency = {
 &"strength": 1.15,
-&"mana_control": 0.5,
+&"mana_control": 0.75,
 &"defense": 1.0,
 &"crafting": 0.9,
-&"dexterity": 0.9
+&"dexterity": 0.95
 }
 base_health = 110
 health_per_defense = 2.4
@@ -32,13 +32,13 @@ base_stamina = 110
 base_mana = 40
 mana_per_point = 2.0
 physical_power = 1.1
-spell_power = 0.5
+spell_power = 0.7
 base_armor = 5
 weapon_proficiency = {
 &"axe": 1.15,
-&"sword": 0.9,
-&"dagger": 0.7,
-&"staff": 0.5,
+&"sword": 0.95,
+&"dagger": 0.9,
+&"staff": 0.85,
 &"shield": 1.0
 }
 unarmed_moveset = ExtResource("2_unarmed")
@@ -49,7 +49,11 @@ crit_bonus = 0.0
 uses_rage = true
 abilities = [ExtResource("a0"), ExtResource("a1"), ExtResource("a2")]
 temperature_shield_cost = 44
-starting_equipment = [&"rough_handaxe", &"padded_vest"]
+starting_items = {
+&"cooked_meat": 4,
+&"warming_draught": 1
+}
+starting_equipment = [&"rough_handaxe", &"raider_helm", &"raider_harness", &"raider_bracers", &"raider_boots"]
 shirt_color = Color(0.62, 0.22, 0.18, 1)
 pants_color = Color(0.35, 0.25, 0.18, 1)
 hair_color = Color(0.72, 0.35, 0.12, 1)

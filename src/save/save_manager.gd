@@ -56,6 +56,8 @@ var current_meta: Dictionary = {}
 var pending: Dictionary = {}
 ## Class for a brand-new character (set when creating/quick-playing a world).
 var new_character_class: StringName = ClassRegistry.DEFAULT_CLASS
+## Body for a brand-new character (CharacterLook dict; empty = class default).
+var new_character_look: Dictionary = {}
 var _session_start_msec := 0
 
 
@@ -86,7 +88,7 @@ func world_exists(id: String) -> bool:
 
 
 ## Creates a new world folder and makes it the current world. Returns its id.
-func create_world(world_name: String, seed_value: int, class_id: StringName = ClassRegistry.DEFAULT_CLASS) -> String:
+func create_world(world_name: String, seed_value: int, class_id: StringName = ClassRegistry.DEFAULT_CLASS, look: Dictionary = {}) -> String:
 	world_name = world_name.strip_edges()
 	if world_name == "":
 		world_name = "New World"
@@ -109,6 +111,7 @@ func create_world(world_name: String, seed_value: int, class_id: StringName = Cl
 	current_world_id = id
 	pending = {}
 	new_character_class = class_id
+	new_character_look = look.duplicate()
 	GameState.reset(seed_value)
 	GameState.set_region_directory(regions_path(id))
 	_session_start_msec = Time.get_ticks_msec()
@@ -169,11 +172,12 @@ func load_world(id: String) -> bool:
 
 
 ## Plays a world that is never written to disk (quick play, tests, --seed=).
-func start_transient(seed_value: int, class_id: StringName = ClassRegistry.DEFAULT_CLASS) -> void:
+func start_transient(seed_value: int, class_id: StringName = ClassRegistry.DEFAULT_CLASS, look: Dictionary = {}) -> void:
 	current_world_id = ""
 	current_meta = {}
 	pending = {}
 	new_character_class = class_id
+	new_character_look = look.duplicate()
 	GameState.reset(seed_value)
 	_last_snapshot_msec = -1
 	last_load = {}

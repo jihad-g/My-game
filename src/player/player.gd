@@ -61,6 +61,8 @@ var recipes := RecipeBook.new()
 var spells := SpellBook.new()
 ## Money in copper (Milestone 5).
 var coins: int = 0
+## Body chosen at character creation: {skin, hair, style, beard} (CharacterLook).
+var look: Dictionary = {}
 ## Status effects (burn, poison, bleed, chill, shock, wet, buffs...): the
 ## shared StatusEffects component (Milestone 7). Created in _ready().
 var status: StatusEffects
@@ -862,6 +864,8 @@ func setup_class(class_data: ClassData, fresh: bool) -> void:
 	character.setup(class_data, fresh)
 	model.set_appearance(class_data)
 	if fresh:
+		set_look(SaveManager.new_character_look if not SaveManager.new_character_look.is_empty()
+			else CharacterLook.default_for(class_data.id))
 		recipes.learn_starting()
 		equipment.clear()
 		for id in class_data.starting_equipment:
@@ -923,7 +927,20 @@ func _on_equipment_changed() -> void:
 		moveset = character.class_data.unarmed_moveset
 	combat.set_moveset(moveset)
 	model.set_weapon(equipment.weapon_type(), equipment.offhand() != null)
+	model.set_outfit(equipment.outfit())
 	character.recalculate()
+
+
+## The shared body chosen at character creation (Milestone 14, CharacterLook).
+func set_look(p_look: Dictionary) -> void:
+	look = CharacterLook.sanitize(p_look, character.class_data.id if character.class_data else &"knight")
+	model.set_body(look)
+
+
+## What other players need to draw us: [weapon type, has shield, body, outfit ids].
+func look_args() -> Array:
+	return [String(equipment.weapon_type()), equipment.offhand() != null, look.duplicate(),
+		CharacterLook.outfit_ids(equipment.outfit())]
 
 
 ## Highest tier of a tool kind (&"axe", &"pickaxe") in the inventory (0 = none).
@@ -1067,6 +1084,7 @@ func to_save() -> Dictionary:
 		"coins": coins,
 		"reputation": reputation.to_save(),
 		"spells": spells.to_save(),
+		"look": look.duplicate(),
 	}
 
 
@@ -1111,3 +1129,5 @@ func from_save(data: Dictionary) -> void:
 	coins = int(data.get("coins", World.STARTING_COINS))
 	reputation.from_save(data.get("reputation", {}))
 	spells.from_save(data.get("spells", {}))
+	# Saves from before Milestone 14 get the class's default body.
+	set_look(data.get("look", CharacterLook.default_for(character.class_data.id if character.class_data else &"knight")))

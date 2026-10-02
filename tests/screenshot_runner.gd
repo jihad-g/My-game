@@ -23,6 +23,10 @@ func _ready() -> void:
 		await _shot("20_main_menu")
 		get_tree().quit()
 		return
+	if "--only=gear" in OS.get_cmdline_user_args():
+		await _gear_showcase()
+		get_tree().quit()
+		return
 	if "--only=blueprint" in OS.get_cmdline_user_args():
 		await _blueprint_showcase()
 		get_tree().quit()
@@ -228,6 +232,58 @@ func _teleport(world: World, pos: Vector3) -> void:
 	if p.global_position.y < g:
 		p.global_position.y = g + 0.3
 	await _wait(40)
+
+
+## Milestone 14: the four starting outfits on the shared body, then the same
+## body swapped into other classes' gear (Knight as an Assassin, Wizard in plate).
+func _gear_showcase() -> void:
+	var root := Node3D.new()
+	add_child(root)
+	var cam := Camera3D.new()
+	cam.position = Vector3(0, 1.4, 7.2)
+	cam.rotation_degrees = Vector3(-5, 0, 0)
+	cam.fov = 45.0
+	root.add_child(cam)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-45, 25, 0)
+	root.add_child(sun)
+	var env := WorldEnvironment.new()
+	env.environment = Environment.new()
+	env.environment.background_mode = Environment.BG_COLOR
+	env.environment.background_color = Color(0.32, 0.42, 0.55)
+	env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.environment.ambient_light_color = Color(0.75, 0.75, 0.8)
+	env.environment.ambient_light_energy = 0.7
+	root.add_child(env)
+	var specs := [
+		[&"knight", &"knight"], [&"barbarian", &"barbarian"], [&"assassin", &"assassin"], [&"wizard", &"wizard"],
+		[&"knight", &"assassin"], [&"wizard", &"knight"], [&"barbarian", &""],
+	]
+	for i in specs.size():
+		var body_class: StringName = specs[i][0]
+		var kit_class: StringName = specs[i][1]
+		var m := HumanoidModel.new()
+		root.add_child(m)
+		m.position = Vector3(-4.2 + i * 1.4, 0, 0)
+		m.rotation.y = 0.35
+		m.set_appearance(ClassRegistry.get_class_data(body_class))
+		m.set_body(CharacterLook.default_for(body_class))
+		if kit_class != &"":
+			var eq := ClassPicker.starting_equipment(ClassRegistry.get_class_data(kit_class))
+			m.set_outfit(eq.outfit())
+			m.set_weapon(eq.weapon_type(), eq.offhand() != null)
+		else:
+			m.set_outfit({})
+			m.set_weapon(&"unarmed", false)
+	await _wait(10)
+	await _shot("40_gear_outfits")
+	root.queue_free()
+	var m2 := (load("res://scenes/menu/main_menu.tscn") as PackedScene).instantiate()
+	add_child(m2)
+	await _wait(10)
+	m2._select_class(&"assassin")
+	await _wait(20)
+	await _shot("41_class_picker")
 
 
 func _wait(n: int) -> void:

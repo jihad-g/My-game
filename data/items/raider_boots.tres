@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"raider_boots"
+display_name = "Raider's Fur Boots"
+description = "Fur-cuffed boots for cold mountain raids."
+category = 4
+rarity = 0
+max_stack = 1
+base_value = 10
+icon_color = Color(0.38, 0.26, 0.17, 1)
+icon_glyph = "Bt"
+equip_slot = 6
+required_level = 1
+stat_bonuses = {
+&"armor": 2,
+&"insulation": 4,
+&"move_speed": 3
+}
+set_id = &"raider"
+look_style = &"fur_boots"
+look_color = Color(0.38, 0.26, 0.17, 1)
+look_trim = Color(0.62, 0.5, 0.38, 1)

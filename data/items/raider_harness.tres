@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"raider_harness"
+display_name = "Raider's Fur Harness"
+description = "A fur mantle and leather straps. Warm, light and loud."
+category = 4
+rarity = 0
+max_stack = 1
+base_value = 20
+icon_color = Color(0.55, 0.42, 0.3, 1)
+icon_glyph = "Ch"
+equip_slot = 4
+required_level = 1
+stat_bonuses = {
+&"armor": 5,
+&"strength": 2,
+&"insulation": 5
+}
+set_id = &"raider"
+look_style = &"fur"
+look_color = Color(0.55, 0.42, 0.3, 1)
+look_trim = Color(0.3, 0.2, 0.12, 1)

@@ -24,6 +24,7 @@ const STAT_NAMES := {
 	&"mana_regen": "Mana regen %", &"insulation": "Cold protection °C", &"cooling": "Heat protection °C",
 	&"block": "Block %", &"strength": "Strength", &"mana_control": "Mana Control",
 	&"defense": "Defense", &"crafting": "Crafting", &"dexterity": "Dexterity",
+	&"physical_damage": "Physical damage %", &"backstab": "Backstab damage %", &"parry": "Parry window (ms)",
 }
 
 ## Description of potion/shrine buffs (see PlayerAbilities outgoing/incoming_mult).
@@ -68,6 +69,20 @@ const BUFF_TEXT := {&"might": "+20% damage", &"stoneskin": "-20% damage taken",
 @export var required_level: int = 1
 ## Stat -> value (see STAT_NAMES). Percent stats are in percent points.
 @export var stat_bonuses: Dictionary = {}
+## Gear set this piece belongs to (see GearSets, Milestone 14).
+@export var set_id: StringName
+
+@export_group("Look")
+## How worn armour/clothing is drawn on the character (Milestone 14), e.g.
+## head: plate_helm, horned_helm, hood, wizard_hat, fur_cap, cap, straw_hat,
+## circlet; chest: cloth, padded, leather, chain, plate, robe, fur, cloak;
+## hands: gloves, gauntlets, bracers, wraps; feet: boots, greaves, shoes,
+## fur_boots. Empty = a plain default for the slot in icon_color.
+@export var look_style: StringName
+## Main colour of the piece (alpha 0 = use icon_color).
+@export var look_color: Color = Color(0, 0, 0, 0)
+## Trim / accent colour (plumes, sashes, horns, masks...).
+@export var look_trim: Color = Color(0.75, 0.6, 0.25)
 
 @export_group("Tool")
 ## Harvesting tool type (&"axe", &"pickaxe") - used automatically from the inventory.
@@ -156,4 +171,26 @@ func effect_lines() -> PackedStringArray:
 			lines.append("Requires level %d" % required_level)
 		for stat in stat_bonuses:
 			lines.append("%+d %s" % [roundi(float(stat_bonuses[stat])), STAT_NAMES.get(stat, String(stat))])
+		if set_id != &"":
+			lines.append_array(GearSets.describe(set_id))
 	return lines
+
+
+## Default look style for an armour slot when look_style is empty.
+func worn_style() -> StringName:
+	if look_style != &"":
+		return look_style
+	match equip_slot:
+		EquipSlot.HEAD:
+			return &"cap"
+		EquipSlot.CHEST:
+			return &"cloth"
+		EquipSlot.HANDS:
+			return &"gloves"
+		EquipSlot.FEET:
+			return &"boots"
+	return &""
+
+
+func worn_color() -> Color:
+	return look_color if look_color.a > 0.0 else icon_color

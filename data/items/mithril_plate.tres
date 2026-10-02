@@ -21,3 +21,5 @@ stat_bonuses = {
 &"insulation": 8,
 &"defense": 4
 }
+look_style = &"plate"
+look_trim = Color(0.95, 0.85, 0.4, 1)

@@ -5,16 +5,22 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 13 — Beta (v0.13.0)**: release preparation on top of the alpha loop - a
-> contextual tutorial and an in-game guide (F1), a full settings screen with key and gamepad rebinding,
-> difficulty and accessibility options (interface scale, colour-vision filters, high contrast, sound
-> captions, reduced flashing and motion), checksummed saves with automatic backups and a Recover screen,
-> crash reports, achievements with a Steam backend, and release builds for Windows, Linux and the browser
-> ([`docs/RELEASE.md`](docs/RELEASE.md)). Download a Windows build from [`releases/`](releases/).
-> Built on Milestones 1–12 (balance: [`docs/BALANCE.md`](docs/BALANCE.md), performance:
-> [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md)). See
-> [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
+> Status: **Milestone 14 — Gear Makes the Hero (v0.14.0)**: every class now shares one body and you
+> look like what you wear. Pick a class like a souls-like starting class - its starting stats, a full
+> outfit (helmet, chest, gloves, boots), a weapon and supplies - and choose your skin, hair and beard.
+> Armour and clothes add +1/+2 to skills, and wearing a full set (Squire's Kit, Raider's Furs,
+> Shadowstalker's Garb, Apprentice's Vestments) gives set bonuses, so a Knight in shadow clothes with
+> daggers plays like an Assassin. The class keeps a small talent, so a Wizard is never a Knight's equal.
+> Built on the beta (Milestone 13: tutorial, guide, settings and accessibility, save recovery, crash
+> reports, achievements, release builds - [`docs/RELEASE.md`](docs/RELEASE.md)). Download a Windows
+> build from [`releases/`](releases/) (v0.13.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
+> performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md).
+> See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
+
+| **Starting outfits on one shared body** | **Character creation** |
+|---|---|
+| ![Outfits](docs/screenshots/gear_outfits.png) | ![Class picker](docs/screenshots/class_picker.png) |
 
 ![Village](docs/screenshots/village_overview.png)
 
@@ -187,7 +193,10 @@ D-pad spells and hotbar, View bag, Menu pause. Menus still need the mouse.
     crystals, glowcaps and stalagmites; always 12 °C. Climb the rope ladder to return.
 12. **Resources** – mine copper/iron/coal veins in mountains and caves, dig clay at
     riverbanks, pick moonpetals and glowcaps. Mined veins regrow after a while.
-13. **Classes** – create four worlds with different classes (main menu → class buttons).
+13. **Classes** – create four worlds with different classes (main menu → class buttons). The
+    preview shows the class's starting outfit, stats, talent and supplies; change skin, hair
+    and beard below it. In game, swap into another class's set (F10 test gear, or craft it at the
+    tailoring table / forge) and watch both the look and the stats change.
     Barbarian: Whirlwind (Z) groups of boars, build Rage, Berserk (C, level 15).
     Knight: Shield Bash (Z) stuns and taunts, Guardian Stance halves damage.
     Wizard: Firebolt (Z) burns; Frost Nova (X) then Firebolt = **Shatter** (double damage).
@@ -423,7 +432,7 @@ round trip (including falling back to the backup when a save file is corrupt).
 World-generation tests check determinism, terrain/biome statistics over 10×10 km,
 climate continuity, cave layout and data integrity. RPG tests check class data (50
 starting points, affordable shields), the XP curve, skill balance (e.g. a max-Strength
-Wizard hits softer than a starting Knight), equipment and requirements, every class
+Wizard never equals a max-Strength Knight), equipment and requirements, every class
 ability in the running game, and RPG save/load. Building & crafting tests check that every
 recipe and build cost is obtainable in the world, cost scaling, never-fail crafting,
 station/skill/level gating, discovery and book learning, tool tiers, grid placement rules

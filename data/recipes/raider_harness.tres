@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"raider_harness"
+result_item = &"raider_harness"
+result_count = 1
+ingredients = {
+&"leather": 3,
+&"plant_fiber": 4
+}
+station = 3
+tier = 0
+source = 0
+xp = 6

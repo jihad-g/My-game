@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"apprentice_wraps"
+display_name = "Apprentice's Wraps"
+description = "Silk hand wraps embroidered with focus runes."
+category = 4
+rarity = 0
+max_stack = 1
+base_value = 8
+icon_color = Color(0.55, 0.45, 0.8, 1)
+icon_glyph = "Gl"
+equip_slot = 5
+required_level = 1
+stat_bonuses = {
+&"mana_control": 1,
+&"spell_power": 3
+}
+set_id = &"apprentice"
+look_style = &"wraps"
+look_color = Color(0.55, 0.45, 0.8, 1)
+look_trim = Color(0.4, 0.85, 1.0, 1)

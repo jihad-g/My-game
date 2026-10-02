@@ -10,7 +10,8 @@ const TOMES := [&"tome_blink", &"tome_healing_light", &"tome_poison_cloud", &"to
 	&"tome_arcane_missiles", &"tome_blizzard", &"tome_meteor", &"tome_storm_call"]
 ## Gear by rank band (a random piece is rolled when a table says "gear").
 const GEAR := [
-	[&"copper_sword", &"copper_dagger", &"leather_gloves", &"fur_cap", &"wooden_buckler", &"copper_ring"],
+	[&"copper_sword", &"copper_dagger", &"leather_gloves", &"fur_cap", &"wooden_buckler", &"copper_ring",
+		&"squire_greaves", &"raider_bracers", &"shadow_wraps", &"apprentice_shoes"],
 	[&"iron_sword", &"iron_dirk", &"iron_waraxe", &"chainmail", &"iron_kite_shield", &"fur_boots", &"leather_jerkin"],
 	[&"crystal_staff", &"shadow_cloak", &"crystal_ring", &"tusk_charm", &"copper_pickaxe", &"mithril_dirk"],
 	[&"moonpetal_pendant", &"mithril_sword", &"mithril_waraxe", &"mithril_dirk", &"crystal_ring", &"shadow_cloak"],

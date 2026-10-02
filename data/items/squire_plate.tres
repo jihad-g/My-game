@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"squire_plate"
+display_name = "Squire's Breastplate"
+description = "Steel plates over a mail shirt. Heavy, but it holds."
+category = 4
+rarity = 0
+max_stack = 1
+base_value = 26
+icon_color = Color(0.78, 0.8, 0.86, 1)
+icon_glyph = "Ch"
+equip_slot = 4
+required_level = 1
+stat_bonuses = {
+&"armor": 8,
+&"defense": 2,
+&"strength": 1,
+&"move_speed": -2
+}
+set_id = &"squire"
+look_style = &"plate"
+look_color = Color(0.78, 0.8, 0.86, 1)
+look_trim = Color(0.85, 0.2, 0.2, 1)

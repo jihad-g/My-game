@@ -43,10 +43,15 @@ extends Resource
 @export var temperature_shield_cost: float = 50.0
 
 @export_group("Starting kit")
+## Milestone 14: a full outfit (head, chest, hands, feet) + weapon, like a
+## starting class in a souls-like. Any class can later wear any gear.
 @export var starting_equipment: Array = []  ## item ids
 @export var starting_items: Dictionary = {}
 
 @export_group("Appearance")
+## Milestone 14: every class shares one body and players look like the gear
+## they wear. Only accent_color is still used (staff gem, shield emblem, swing
+## trail); the other colours remain for older tools.
 @export var shirt_color: Color = Color(0.25, 0.48, 0.85)
 @export var pants_color: Color = Color(0.28, 0.24, 0.3)
 @export var hair_color: Color = Color(0.42, 0.26, 0.14)

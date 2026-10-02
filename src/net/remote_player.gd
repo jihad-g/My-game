@@ -38,6 +38,7 @@ func _ready() -> void:
 	var c := ClassRegistry.get_class_data(class_id)
 	if c:
 		model.set_appearance(c)
+	model.set_outfit({})
 	_label.text = player_name
 	_label.position = Vector3(0, 2.35, 0)
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -75,6 +76,15 @@ func set_equipment_look(weapon_type: StringName, shield: bool) -> void:
 		model.set_weapon(weapon_type, shield)
 
 
+## Body + worn armour from a "look" event (Milestone 14). Data comes from
+## another peer, so it is sanitised and only known armour ids are used.
+func set_body_look(body: Dictionary, outfit_ids: Dictionary) -> void:
+	if model == null:
+		return
+	model.set_body(CharacterLook.sanitize(body, class_id))
+	model.set_outfit(CharacterLook.outfit_from_ids(outfit_ids))
+
+
 ## Replays an animation event from the owner.
 func play_event(ev: String, args: Array) -> void:
 	if model == null:
@@ -95,6 +105,8 @@ func play_event(ev: String, args: Array) -> void:
 		"look":
 			if args.size() >= 2:
 				set_equipment_look(StringName(String(args[0])), bool(args[1]))
+			if args.size() >= 4 and args[2] is Dictionary and args[3] is Dictionary:
+				set_body_look(args[2], args[3])
 
 
 ## Interpolated state at `t` (seconds, same clock as push_state).

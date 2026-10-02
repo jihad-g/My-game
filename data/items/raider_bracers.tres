@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"raider_bracers"
+display_name = "Raider's Bracers"
+description = "Studded leather bracers for swinging heavy axes."
+category = 4
+rarity = 0
+max_stack = 1
+base_value = 10
+icon_color = Color(0.4, 0.28, 0.18, 1)
+icon_glyph = "Gl"
+equip_slot = 5
+required_level = 1
+stat_bonuses = {
+&"armor": 2,
+&"strength": 1,
+&"attack_speed": 3
+}
+set_id = &"raider"
+look_style = &"bracers"
+look_color = Color(0.4, 0.28, 0.18, 1)
+look_trim = Color(0.75, 0.75, 0.8, 1)

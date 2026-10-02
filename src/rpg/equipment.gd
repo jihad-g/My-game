@@ -55,13 +55,37 @@ func unequip(slot: int) -> StringName:
 	return old
 
 
+## Sum of a stat over the worn items plus active set bonuses.
 func total(stat: StringName) -> float:
 	var t := 0.0
 	for slot in slots:
 		var item := get_item(slot)
 		if item:
 			t += float(item.stat_bonuses.get(stat, 0.0))
+	var counts := set_counts()
+	for set_id in counts:
+		t += float(GearSets.active_bonuses(set_id, counts[set_id]).get(stat, 0.0))
 	return t
+
+
+## Set id -> number of its pieces worn (Milestone 14).
+func set_counts() -> Dictionary:
+	var out := {}
+	for slot in slots:
+		var item := get_item(slot)
+		if item and item.set_id != &"":
+			out[item.set_id] = int(out.get(item.set_id, 0)) + 1
+	return out
+
+
+## Worn armour/clothing by slot (HEAD, CHEST, HANDS, FEET) for the character model.
+func outfit() -> Dictionary:
+	var out := {}
+	for slot in [ItemData.EquipSlot.HEAD, ItemData.EquipSlot.CHEST, ItemData.EquipSlot.HANDS, ItemData.EquipSlot.FEET]:
+		var item := get_item(slot)
+		if item:
+			out[slot] = item
+	return out
 
 
 func clear() -> void:

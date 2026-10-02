@@ -19,4 +19,5 @@ stat_bonuses = {
 &"armor": 22,
 &"move_speed": -5
 }
-
+look_style = &"chain"
+look_trim = Color(0.5, 0.5, 0.55, 1)

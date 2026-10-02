@@ -19,4 +19,5 @@ stat_bonuses = {
 &"armor": 3,
 &"attack_speed": 3
 }
-
+look_style = &"gloves"
+look_trim = Color(0.3, 0.2, 0.12, 1)
