@@ -4,15 +4,15 @@
 
 [resource]
 script = ExtResource("1_rec")
-id = &"squire_helm"
-result_item = &"squire_helm"
+id = &"iron_gauntlets"
+result_item = &"iron_gauntlets"
 result_count = 1
 ingredients = {
-&"copper_ingot": 2,
+&"iron_ingot": 2,
 &"leather": 1
 }
 station = 2
 tier = 1
-source = 1
-discovered_by = &"copper_ore"
-xp = 10
+source = 2
+source_hint = "Smithing Manual (cave caches, blacksmiths)"
+xp = 14

@@ -18,6 +18,9 @@ required_level = 48
 stat_bonuses = {
 &"armor": 30,
 &"block": 20,
-&"max_health": 40
+&"max_health": 40,
+&"defense": 3
 }
+armor_weight = 3
+outfit_look = &"aegis"
 weapon_type = &"shield"

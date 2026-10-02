@@ -5,14 +5,19 @@ extends Node
 ## Run headless:
 ##   godot --headless --path . res://tests/test_runner.tscn
 ## Exit code 0 = all passed, 1 = failures.
+## Run only some tests: add `-- --only=test_m14` (tests whose name contains it).
 
 var _passed := 0
 var _failed := 0
 var _current := ""
+var _only := ""
 
 
 func _ready() -> void:
-	print("\n=== Shardlands test suite ===")
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--only="):
+			_only = a.substr(7)
+	print("\n=== Shardlands test suite ===%s" % (" (only %s)" % _only if _only != "" else ""))
 	var t0 := Time.get_ticks_msec()
 	# Unit tests
 	_run(&"test_hash_determinism")
@@ -90,6 +95,8 @@ func _ready() -> void:
 	await _run_async(&"test_m13_crash_handling")
 	await _run_async(&"test_m13_platform")
 	_run(&"test_m13_release")
+	_run(&"test_m14_outfit_data")
+	await _run_async(&"test_m14_outfits_ingame")
 	_run(&"test_m14_gear_data")
 	await _run_async(&"test_m14_gear_in_game")
 	await _run_async(&"test_m14_character_creation")
@@ -97,14 +104,8 @@ func _ready() -> void:
 	get_tree().quit(1 if _failed > 0 else 0)
 
 
-## SHARDLANDS_TESTS="test_a,test_b" runs only those tests (quicker iteration).
-func _selected(test: StringName) -> bool:
-	var only := OS.get_environment("SHARDLANDS_TESTS")
-	return only == "" or String(test) in only.split(",")
-
-
 func _run(test: StringName) -> void:
-	if not _selected(test):
+	if _only != "" and not String(test).contains(_only):
 		return
 	_current = test
 	print("\n-- %s" % test)
@@ -112,7 +113,7 @@ func _run(test: StringName) -> void:
 
 
 func _run_async(test: StringName) -> void:
-	if not _selected(test):
+	if _only != "" and not String(test).contains(_only):
 		return
 	_current = test
 	print("\n-- %s" % test)
@@ -5136,7 +5137,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.13"), "version 0.13 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.14"), "version 0.14 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -5169,14 +5170,165 @@ func test_m13_release() -> void:
 		ach_ids[a[0]] = true
 
 
+# --- Milestone 14: Outfits --------------------------------------------------------------
+
+## Equips `id` directly (level requirements are tested elsewhere).
+func _wear(player: Player, id: StringName) -> void:
+	player.equipment.equip(ItemDB.get_item(id))
+
+
+func test_m14_outfit_data() -> void:
+	var bad := []
+	var looks := {}
+	for id in ItemDB.all_ids():
+		var it: ItemData = ItemDB.get_item(id)
+		if it == null or not it.is_equippable():
+			continue
+		var worn: bool = it.equip_slot in [ItemData.EquipSlot.HEAD, ItemData.EquipSlot.CHEST, ItemData.EquipSlot.HANDS,
+			ItemData.EquipSlot.FEET, ItemData.EquipSlot.OFF_HAND]
+		if worn and (it.armor_weight == ItemData.ArmorWeight.NONE or it.outfit_look == &""):
+			bad.append(id)
+		if it.outfit_look != &"":
+			looks[it.outfit_look] = true
+			if not HumanoidModel.OUTFIT_LOOKS.has(it.outfit_look):
+				bad.append("%s:%s" % [id, it.outfit_look])
+		if it.equip_slot == ItemData.EquipSlot.MAIN_HAND and it.armor_weight != ItemData.ArmorWeight.NONE:
+			bad.append("%s (weapon with weight)" % id)
+	check(bad.is_empty(), "every armour piece and shield has a weight and a known look %s" % [bad])
+	check(looks.size() >= 20, "gear uses many different looks (%d)" % looks.size())
+	# Classes: same body, different starting outfits; abilities and skills stay per class.
+	var heads := {}
+	for cid in ClassRegistry.ORDER:
+		var c := ClassRegistry.get_class_data(cid)
+		var head := &""
+		for id in c.starting_equipment:
+			var it: ItemData = ItemDB.get_item(StringName(id))
+			if it and it.equip_slot == ItemData.EquipSlot.HEAD:
+				head = it.outfit_look
+		check(head != &"" and not heads.has(head), "%s starts with its own head piece (%s)" % [cid, head])
+		heads[head] = true
+		check(c.starting_skill_total() == 50 and c.abilities.size() == 3, "%s keeps its 50 starting points and 3 class abilities" % cid)
+	# Every new piece can be made by anyone (crafting never fails, any class can craft).
+	for id in [&"squire_helm", &"horned_helm", &"wizard_hat", &"shadow_hood", &"iron_helm", &"iron_gauntlets",
+			&"iron_greaves", &"soft_leather_boots"]:
+		check(RecipeBook.get_recipe(id) != null, "%s has a crafting recipe" % id)
+	# Small skill bonuses on everyday gear.
+	check(int(ItemDB.get_item(&"leather_gloves").stat_bonuses.get(&"dexterity", 0)) == 1
+		and int(ItemDB.get_item(&"chainmail").stat_bonuses.get(&"defense", 0)) == 2
+		and int(ItemDB.get_item(&"iron_gauntlets").stat_bonuses.get(&"strength", 0)) == 2,
+		"armour and clothes give +1 / +2 to skills")
+	# Weight maths.
+	var eq := Equipment.new()
+	check(is_equal_approx(eq.notice_mult(), 1.0) and eq.outfit_style() == "Clothes only", "no armour: normal notice range")
+	for id in [&"shadow_hood", &"leather_jerkin", &"leather_gloves", &"soft_leather_boots"]:
+		eq.equip(ItemDB.get_item(id))
+	var light_notice := eq.notice_mult()
+	var light_dodge := eq.dodge_cost_mult()
+	check(eq.outfit_style() == "Light" and light_notice < 0.8 and light_dodge < 0.9,
+		"full light outfit: noticed at %d%%, dodge %d%%" % [roundi(light_notice * 100), roundi(light_dodge * 100)])
+	eq.clear()
+	for id in [&"iron_helm", &"chainmail", &"iron_gauntlets", &"iron_greaves", &"iron_kite_shield"]:
+		eq.equip(ItemDB.get_item(id))
+	check(eq.outfit_style() == "Heavy" and eq.notice_mult() > 1.3 and eq.dodge_cost_mult() > 1.2,
+		"full heavy outfit: noticed at %d%%, dodge %d%%" % [roundi(eq.notice_mult() * 100), roundi(eq.dodge_cost_mult() * 100)])
+	var args := eq.look_args()
+	check(args.size() == 4 and String(args[2]).split(",").size() == 5, "look args carry the outfit for multiplayer (%s)" % [args])
+
+
+func test_m14_outfits_ingame() -> void:
+	# Every class: same body, its own starting outfit.
+	var shirts := {}
+	for cid in ClassRegistry.ORDER:
+		var w: World = await _boot_class(cid)
+		var m := w.player.model
+		shirts[m.shirt_color] = true
+		var looks := m.outfit_looks()
+		print("   %s wears %s" % [cid, looks])
+		check(not looks.is_empty(), "%s is dressed by its starting gear" % cid)
+		w.queue_free()
+		await _frames(5)
+	check(shirts.size() == 1, "all classes share one body")
+
+	# A Knight dressed as an Assassin.
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	check(p.model.outfit_looks().has(&"helm_plume"), "Knight starts with the plumed helm")
+	_wear(p, &"shadow_hood")
+	_wear(p, &"shadow_cloak")
+	_wear(p, &"leather_gloves")
+	_wear(p, &"soft_leather_boots")
+	_wear(p, &"iron_dirk")
+	p.equipment.unequip(ItemData.EquipSlot.OFF_HAND)
+	await _frames(2)
+	var looks: Array = p.model.outfit_looks()
+	check(looks.has(&"hood_mask") and looks.has(&"cloak") and not looks.has(&"helm_plume"), "changing clothes changes the look %s" % [looks])
+	check(p.equipment.weapon_type() == &"dagger" and p.combat.light_combo.size() == 4, "the Knight fights with the dagger combo")
+	check(p.character.weapon_mult(&"dagger") >= 0.9, "Knights are no longer bad with daggers (x%.2f)" % p.character.weapon_mult(&"dagger"))
+	check(p.character.class_data.id == &"knight" and p.abilities.get_slot(0).id == &"shield_bash", "still a Knight with Knight abilities")
+	var dex_base := p.character.base_skill(Skill.DEXTERITY)
+	check(p.character.skill_level(Skill.DEXTERITY) >= dex_base + 4, "light gear adds Dexterity (%d -> %d)" % [dex_base, p.character.skill_level(Skill.DEXTERITY)])
+	# Stealthy outfit: an idle skeleton 11 m away doesn't notice the Knight...
+	var off := _clear_offset(world, 11.0)
+	var sk := _spawn_monster(world, &"skeleton_warrior", off)
+	await _frames(10)
+	print("   light: notice x%.2f, range %.1f m" % [p.notice_mult(), sk.notice_range(p)])
+	check(sk.ai in [Monster.AI.IDLE, Monster.AI.WANDER], "light armour: an idle skeleton at 11 m doesn't notice you")
+	# ...but in full iron he is spotted at once.
+	for id in [&"iron_helm", &"chainmail", &"iron_gauntlets", &"iron_greaves", &"iron_kite_shield"]:
+		_wear(p, id)
+	await _frames(10)
+	print("   heavy: notice x%.2f, range %.1f m" % [p.notice_mult(), sk.notice_range(p)])
+	check(not sk.ai in [Monster.AI.IDLE, Monster.AI.WANDER], "heavy armour: the same skeleton notices you")
+	check(p.model.outfit_looks().has(&"great_helm"), "now wearing the great helm")
+	# Dodging costs more stamina in heavy armour.
+	p.stamina.current = p.stamina.max_stamina
+	var before := p.stamina.current
+	p._start_dodge(Vector3.FORWARD)
+	var heavy_cost := before - p.stamina.current
+	check(heavy_cost > p.dodge_cost * 1.1, "heavy armour: dodge costs %.1f stamina (base %.1f)" % [heavy_cost, p.dodge_cost])
+	# Save and load keep the outfit.
+	var saved := p.equipment.to_save()
+	p.equipment.clear()
+	await _frames(1)
+	check(p.model.outfit_looks().is_empty(), "no gear: plain clothes")
+	p.equipment.from_save(saved)
+	await _frames(1)
+	check(p.model.outfit_looks().has(&"great_helm") and p.model.outfit_looks().has(&"plate") == false, "outfit restored after loading")
+	sk.health.apply_raw_damage(99999.0)
+	world.queue_free()
+	await _frames(5)
+
+	# The Wizard rule still holds in any outfit.
+	world = await _boot_class(&"wizard")
+	p = world.player
+	p.character.skills[Skill.STRENGTH] = Skill.MAX_LEVEL
+	for id in [&"horned_helm", &"chainmail", &"iron_gauntlets", &"iron_greaves", &"iron_kite_shield", &"iron_sword"]:
+		_wear(p, id)
+	await _frames(1)
+	var wiz := p.character.physical_mult * p.character.weapon_mult(&"sword")
+	var knight := ClassRegistry.get_class_data(&"knight")
+	var knight_start := Skill.physical_damage_mult(knight.starting_skill(Skill.STRENGTH), knight.efficiency(Skill.STRENGTH),
+		knight.physical_power) * knight.proficiency(&"sword")
+	var knight_max := BalanceModel.max_strength_phys(&"knight") * knight.proficiency(&"sword")
+	print("   Wizard in iron with a sword at 100 Strength: x%.2f · starting Knight x%.2f · max Knight x%.2f" % [wiz, knight_start, knight_max])
+	# Option A (chosen with the player): close, but never equal.
+	check(wiz < knight_max * 0.9, "a Wizard in full iron is never as strong as a Knight (×%.2f)" % (wiz / knight_max))
+	check(p.abilities.get_slot(0).id == &"firebolt", "the Wizard keeps Wizard abilities in any outfit")
+	world.queue_free()
+	await _frames(5)
+
+	# Multiplayer: another player's outfit is drawn from the look event.
+	var rp := RemotePlayer.new()
+	rp.setup(7, "Guest", &"wizard")
+	add_child(rp)
+	rp.play_event("look", ["dagger", false, "shadow_hood,shadow_cloak,not_an_item", "iron_dirk"])
+	var rl: Array = rp.model.outfit_looks()
+	check(rl.has(&"hood_mask") and rl.has(&"cloak") and rl.size() == 2, "a remote player's outfit is shown (unknown ids ignored)")
+	rp.queue_free()
+
 # --- Milestone 14: gear makes the hero -----------------------------------------------------
 
-const _M14_STYLES := {
-	ItemData.EquipSlot.HEAD: [&"plate_helm", &"horned_helm", &"hood", &"wizard_hat", &"fur_cap", &"cap", &"straw_hat", &"circlet"],
-	ItemData.EquipSlot.CHEST: [&"cloth", &"padded", &"leather", &"chain", &"plate", &"robe", &"fur", &"cloak"],
-	ItemData.EquipSlot.HANDS: [&"gloves", &"gauntlets", &"bracers", &"wraps"],
-	ItemData.EquipSlot.FEET: [&"boots", &"greaves", &"shoes", &"fur_boots"],
-}
+const _M14_SLOTS := [ItemData.EquipSlot.HEAD, ItemData.EquipSlot.CHEST, ItemData.EquipSlot.HANDS, ItemData.EquipSlot.FEET]
 
 
 func test_m14_gear_data() -> void:
@@ -5184,7 +5336,7 @@ func test_m14_gear_data() -> void:
 	for c in ClassRegistry.all():
 		var eq := ClassPicker.starting_equipment(c)
 		var full: bool = eq.weapon() != null
-		for slot in _M14_STYLES:
+		for slot in _M14_SLOTS:
 			full = full and eq.get_item(slot) != null
 		check(full, "%s starts with a weapon and a full outfit (head, chest, hands, feet)" % c.display_name)
 		var sets := eq.set_counts()
@@ -5198,9 +5350,9 @@ func test_m14_gear_data() -> void:
 	var skill_pieces := 0
 	for id in ItemDB.all_ids():
 		var it: ItemData = ItemDB.get_item(id)
-		if it == null or not _M14_STYLES.has(it.equip_slot):
+		if it == null or not it.equip_slot in _M14_SLOTS:
 			continue
-		if not it.worn_style() in _M14_STYLES[it.equip_slot]:
+		if not it.outfit_look in HumanoidModel.OUTFIT_LOOKS:
 			bad.append(id)
 		if it.set_id != &"":
 			check(GearSets.has_set(it.set_id), "%s belongs to a real set" % id)
@@ -5213,7 +5365,7 @@ func test_m14_gear_data() -> void:
 	check(bad.is_empty(), "every armour piece has a known look style %s" % [bad])
 	check(skill_pieces >= 16, "set pieces raise skills (%d bonuses)" % skill_pieces)
 	# Anyone can make any set: starting recipes exist for every set piece.
-	for id in [&"squire_plate", &"raider_harness", &"shadow_garb", &"apprentice_hat"]:
+	for id in [&"squire_plate", &"raider_harness", &"shadow_garb", &"wizard_hat"]:
 		var r := RecipeBook.get_recipe(id)
 		check(r != null and r.source == RecipeData.Source.STARTING, "%s can be crafted by every class" % id)
 	# Set bonuses.
@@ -5237,24 +5389,24 @@ func test_m14_gear_data() -> void:
 		check(w < k * 0.9 and w > k * 0.6, "same Strength %d and sword: Wizard ×%.2f of a Knight (close, never equal)" % [strength, w / k])
 	check(kn.proficiency(&"dagger") >= 0.85 and as_.proficiency(&"dagger") > kn.proficiency(&"dagger"),
 		"a Knight can fight with daggers (×%.2f), an Assassin still does it best" % kn.proficiency(&"dagger"))
-	# Body + network helpers.
+	# Body.
 	var clean := CharacterLook.sanitize({"skin": 99, "hair": -4, "style": "x", "beard": 1}, &"wizard")
 	check(int(clean.skin) == CharacterLook.SKINS.size() - 1 and int(clean.hair) == 0 and clean.beard == true,
 		"hostile look data is clamped")
-	var ids := CharacterLook.outfit_ids({ItemData.EquipSlot.HEAD: ItemDB.get_item(&"squire_helm")})
-	check(CharacterLook.outfit_from_ids(ids).get(ItemData.EquipSlot.HEAD) == ItemDB.get_item(&"squire_helm"), "outfit ids round-trip")
-	check(CharacterLook.outfit_from_ids({"3": "squire_plate", "4": "no_such_item", "1": "squire_sword"}).is_empty(),
-		"outfit ids in the wrong slot or unknown are dropped")
-	# The model draws what is worn.
+	# The model draws what is worn, on the chosen body.
 	var m := HumanoidModel.new()
 	add_child(m)
-	m.set_body(CharacterLook.default_for(&"knight"))
+	m.set_body({"skin": 5, "hair": 6, "style": 1, "beard": true})
+	check(m.skin_color == CharacterLook.SKINS[5] and m.hair_color == CharacterLook.HAIRS[6], "the chosen skin and hair are used")
 	var bare := m._parts.size()
-	m.set_outfit(ClassPicker.starting_equipment(kn).outfit())
-	check(m._parts.size() > bare + 8 and m.worn_style(ItemData.EquipSlot.HEAD) == &"plate_helm", "the Squire's Kit is drawn on the body (%d -> %d parts)" % [bare, m._parts.size()])
-	m.set_outfit(ClassPicker.starting_equipment(as_).outfit())
-	check(m.worn_style(ItemData.EquipSlot.CHEST) == &"cloak" and m.worn_style(ItemData.EquipSlot.HEAD) == &"hood",
+	m.set_outfit(ClassPicker.starting_equipment(kn).outfit_ids())
+	check(m._parts.size() > bare + 8 and &"helm_plume" in m.outfit_looks() and &"plate" in m.outfit_looks(),
+		"the Squire's Kit is drawn on the body (%d -> %d parts)" % [bare, m._parts.size()])
+	m.set_outfit(ClassPicker.starting_equipment(as_).outfit_ids())
+	check(&"cloak" in m.outfit_looks() and &"hood_mask" in m.outfit_looks() and &"wraps" in m.outfit_looks(),
 		"the same body in Shadowstalker's Garb looks like an Assassin")
+	m.set_outfit(ClassPicker.starting_equipment(ClassRegistry.get_class_data(&"barbarian")).outfit_ids())
+	check(&"fur_mantle" in m.outfit_looks() and &"bracers" in m.outfit_looks(), "the Raider's Furs draw a fur mantle and bracers")
 	m.queue_free()
 
 
@@ -5264,7 +5416,7 @@ func test_m14_gear_in_game() -> void:
 	var ch := p.character
 	check(p.equipment.set_counts().get(&"squire", 0) == 4, "a new Knight wears the full Squire's Kit")
 	check(p.inventory.count_of(&"bandage") >= 3, "and gets the Knight's supplies")
-	check(p.model.worn_style(ItemData.EquipSlot.HEAD) == &"plate_helm", "the Knight looks like a knight")
+	check(&"helm_plume" in p.model.outfit_looks(), "the Knight looks like a knight")
 	var parry_kit := ch.parry_window
 	var dex_before := ch.skill_level(Skill.DEXTERITY)
 	var backstab_before := ch.backstab_mult
@@ -5278,16 +5430,18 @@ func test_m14_gear_in_game() -> void:
 	check(ch.skill_level(Skill.DEXTERITY) >= dex_before + 7, "Shadowstalker gear: Dexterity %d -> %d" % [dex_before, ch.skill_level(Skill.DEXTERITY)])
 	check(ch.backstab_mult > backstab_before + 0.14, "the set's backstab bonus applies (×%.2f -> ×%.2f)" % [backstab_before, ch.backstab_mult])
 	check(ch.parry_window < parry_kit, "the Squire's parry bonus is gone with the Squire's Kit")
-	check(p.equipment.weapon_type() == &"dagger" and p.model.worn_style(ItemData.EquipSlot.HEAD) == &"hood"
-		and p.model.worn_style(ItemData.EquipSlot.CHEST) == &"cloak", "and looks like an Assassin")
+	check(p.equipment.weapon_type() == &"dagger" and &"hood_mask" in p.model.outfit_looks()
+		and &"cloak" in p.model.outfit_looks(), "and looks like an Assassin")
 	var args := p.look_args()
-	check(args.size() == 4 and String(args[0]) == "dagger" and (args[3] as Dictionary).size() == 4, "the look event carries body + outfit for other players")
+	check(args.size() == 5 and String(args[0]) == "dagger" and (args[4] as Dictionary).size() == 4, "the look event carries outfit + body for other players")
 	# A remote puppet draws it the same way.
 	var rp := RemotePlayer.new()
 	rp.setup(77, "Friend", &"knight")
 	world.add_child(rp)
+	p.set_look({"skin": 5, "hair": 3, "style": 0, "beard": false})
+	args = p.look_args()
 	rp.play_event("look", args)
-	check(rp.model.worn_style(ItemData.EquipSlot.CHEST) == &"cloak", "other players see the outfit")
+	check(&"cloak" in rp.model.outfit_looks() and rp.model.skin_color == CharacterLook.SKINS[5], "other players see the outfit and the body")
 	rp.queue_free()
 	# Save / load keeps body and outfit.
 	p.set_look({"skin": 4, "hair": 6, "style": 2, "beard": true})
@@ -5295,7 +5449,7 @@ func test_m14_gear_in_game() -> void:
 	check((saved.look as Dictionary).hair == 6, "the body is saved")
 	p.set_look({})
 	p.from_save(saved)
-	check(int(p.look.hair) == 6 and int(p.look.style) == 2 and p.model.worn_style(ItemData.EquipSlot.FEET) == &"shoes",
+	check(int(p.look.hair) == 6 and int(p.look.style) == 2 and &"cloak" in p.model.outfit_looks(),
 		"the body and outfit load back")
 	var old := saved.duplicate(true)
 	old.erase("look")
@@ -5311,12 +5465,12 @@ func test_m14_character_creation() -> void:
 	await _frames(2)
 	picker.select_class(&"wizard")
 	check(picker.look == CharacterLook.default_for(&"wizard"), "the picker suggests a look per class")
-	check(picker._model.worn_style(ItemData.EquipSlot.HEAD) == &"wizard_hat", "the preview wears the Wizard's starting kit")
+	check(&"wizard_hat" in picker._model.outfit_looks() and &"robe" in picker._model.outfit_looks(), "the preview wears the Wizard's starting kit")
 	picker.cycle_look("hair", 1)
 	picker.select_class(&"barbarian")
 	check(picker.look_edited and int(picker.look.hair) == (CharacterLook.default_for(&"wizard").hair + 1) % CharacterLook.HAIRS.size(),
 		"an edited body is kept when switching class")
-	check(picker._model.worn_style(ItemData.EquipSlot.HEAD) == &"horned_helm", "the preview switches to the Raider's kit")
+	check(&"horned_helm" in picker._model.outfit_looks(), "the preview switches to the Raider's kit")
 	check(ClassPicker.talent_text(ClassRegistry.get_class_data(&"barbarian")).contains("Strength"), "the class talent is shown")
 	var chosen := picker.look.duplicate()
 	picker.queue_free()

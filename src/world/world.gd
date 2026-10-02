@@ -20,7 +20,7 @@ const BIOME_CHECK_INTERVAL := 0.5
 const DEBUG_GEAR: Array[StringName] = [&"iron_sword", &"iron_waraxe", &"copper_dagger", &"crystal_staff",
 	&"iron_kite_shield", &"chainmail", &"fur_cap", &"fur_boots", &"copper_ring", &"tusk_charm", &"sun_hat",
 	# Milestone 14: another class's look - the full Shadowstalker set + two helmets.
-	&"shadow_hood", &"shadow_garb", &"shadow_wraps", &"shadow_boots", &"raider_helm", &"apprentice_hat"]
+	&"shadow_hood", &"shadow_garb", &"shadow_wraps", &"shadow_boots", &"horned_helm", &"wizard_hat"]
 
 signal layer_changed(layer: int)
 signal biome_changed(biome: BiomeData)

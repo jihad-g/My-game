@@ -21,6 +21,5 @@ stat_bonuses = {
 &"move_speed": 5
 }
 set_id = &"shadow"
-look_style = &"shoes"
-look_color = Color(0.16, 0.15, 0.18, 1)
-look_trim = Color(0.45, 0.12, 0.2, 1)
+armor_weight = 1
+outfit_look = &"boots"

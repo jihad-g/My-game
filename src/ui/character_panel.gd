@@ -169,6 +169,9 @@ func refresh() -> void:
 	lines.append("Attack speed x%.2f · Move speed x%.2f" % [ch.attack_speed, ch.move_speed])
 	lines.append("Backstab x%.2f · Block %d%% · Parry %.2fs" % [ch.backstab_mult, roundi(ch.block_reduction * 100.0), ch.parry_window])
 	lines.append("Cold protection %+d°C · Heat protection %+d°C" % [roundi(player.temperature.insulation), roundi(player.temperature.cooling)])
+	var eq := player.equipment
+	lines.append("Outfit: %s · enemies notice you at %d%% range · dodge costs %d%%" % [eq.outfit_style(),
+		roundi(eq.notice_mult() * 100.0), roundi(eq.dodge_cost_mult() * 100.0)])
 	var shield_req := c.temperature_shield_requirement() if c else 0
 	lines.append("Temperature Shield: %s" % ("available" if ch.can_use_temperature_shield() else "needs Mana Control %d" % shield_req))
 	_stats_label.text = "\n".join(lines)

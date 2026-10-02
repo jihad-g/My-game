@@ -209,6 +209,13 @@ func on_states(states: Dictionary) -> void:
 
 
 func on_anim(pid: int, ev: String, args: Array) -> void:
+	if ev == "look":
+		# Outfits can arrive before the puppet exists (just after joining).
+		_later(func() -> void:
+			var p := _ensure_puppet(pid)
+			if p:
+				p.play_event(ev, args))
+		return
 	var rp: RemotePlayer = puppets.get(pid)
 	if rp and is_instance_valid(rp) and ev in RemotePlayer.ANIM_EVENTS:
 		rp.play_event(ev, args)

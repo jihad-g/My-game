@@ -6,20 +6,19 @@
 script = ExtResource("1_item")
 id = &"squire_helm"
 display_name = "Squire's Helm"
-description = "A plumed steel helm for knights in training."
+description = "A dented steel helm with a red plume. Every knight's first."
 category = 4
 rarity = 0
 max_stack = 1
-base_value = 14
+base_value = 48
 icon_color = Color(0.72, 0.74, 0.8, 1)
-icon_glyph = "Hd"
+icon_glyph = "Hm"
 equip_slot = 3
 required_level = 1
 stat_bonuses = {
 &"armor": 4,
 &"defense": 1
 }
+armor_weight = 2
+outfit_look = &"helm_plume"
 set_id = &"squire"
-look_style = &"plate_helm"
-look_color = Color(0.72, 0.74, 0.8, 1)
-look_trim = Color(0.85, 0.2, 0.2, 1)

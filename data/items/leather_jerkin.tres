@@ -17,7 +17,9 @@ equip_slot = 4
 required_level = 6
 stat_bonuses = {
 &"armor": 10,
-&"insulation": 3
+&"insulation": 3,
+&"dexterity": 1
 }
-look_style = &"leather"
-look_trim = Color(0.3, 0.2, 0.12, 1)
+armor_weight = 1
+outfit_look = &"jerkin"
+

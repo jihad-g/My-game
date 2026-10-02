@@ -20,6 +20,6 @@ stat_bonuses = {
 &"dexterity": 3,
 &"move_speed": 3
 }
+armor_weight = 1
+outfit_look = &"cloak"
 set_id = &"shadow"
-look_style = &"cloak"
-look_trim = Color(0.45, 0.12, 0.2, 1)

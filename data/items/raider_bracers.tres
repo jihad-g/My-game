@@ -21,6 +21,5 @@ stat_bonuses = {
 &"attack_speed": 3
 }
 set_id = &"raider"
-look_style = &"bracers"
-look_color = Color(0.4, 0.28, 0.18, 1)
-look_trim = Color(0.75, 0.75, 0.8, 1)
+armor_weight = 1
+outfit_look = &"bracers"

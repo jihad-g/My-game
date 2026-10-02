@@ -4,14 +4,15 @@
 
 [resource]
 script = ExtResource("1_rec")
-id = &"apprentice_hat"
-result_item = &"apprentice_hat"
+id = &"horned_helm"
+result_item = &"horned_helm"
 result_count = 1
 ingredients = {
-&"plant_fiber": 8,
-&"rope": 1
+&"boar_hide": 1,
+&"boar_tusk": 2
 }
 station = 3
 tier = 0
-source = 0
-xp = 6
+source = 1
+discovered_by = &"boar_tusk"
+xp = 8

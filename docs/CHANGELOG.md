@@ -2,36 +2,50 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
-## [0.14.0] — Milestone 14: Gear Makes the Hero
+## [0.14.0] — Milestone 14: Outfits & Gear Makes the Hero
+
+Two sessions built this milestone in parallel; this release combines both.
 
 ### Added
-- **One body for every class** (`CharacterLook`): skin tone, hair colour, hair style and beard, chosen at
-  character creation and saved with the character.
-- **Gear on the body**: armour and clothing are drawn from item data (`ItemData.look_style`,
-  `look_color`, `look_trim`) - 24 styles over head, chest, hands and feet. You look like what you wear.
-- **Starting kits like a souls-like**: every class starts with a weapon, a full outfit and its own
-  supplies. 15 new items: Squire's Helm / Breastplate / Gauntlets / Greaves, Raider's Horned Helm / Fur
-  Harness / Bracers / Fur Boots, Shadowstalker's Hood / Garb / Wraps / Soft Boots, Apprentice's Hat /
-  Wraps / Shoes (+ the Apprentice Robe). Each has a starting recipe, so any class can make any set.
-- **Gear sets** (`GearSets`): Squire's Kit, Raider's Furs, Shadowstalker's Garb and Apprentice's
-  Vestments with 2- and 4-piece bonuses; new gear stats physical damage %, backstab damage % and parry
-  window; set lines in item tooltips.
-- **Character creation screen** (`ClassPicker`): turning 3D preview, skill bars, health/mana/armour,
-  class talent, kit and supplies, body options.
-- Set pieces in village shops and E-rank loot; a gear showcase in the screenshot runner
-  (`--only=gear`); `SHARDLANDS_TESTS` to run selected tests.
+- **One body for every class.** All player characters share the same blocky body; what you wear decides how
+  you look. Head, chest, hands, feet, off-hand and amulet items each have a look (27 looks: helms, hoods,
+  hats, robes, vests, chainmail, plate, cloaks, fur mantle, gloves, gauntlets, bracers, wraps, boots,
+  greaves, three shield styles, pendants), coloured by the item.
+- **Choose your body** (`CharacterLook`): skin tone (6), hair colour (8), hair style (short, long, topknot,
+  bald) and beard, picked at character creation and saved; helmets and hoods hide the hair, masks the beard.
+- **Character creation screen** (`ClassPicker`), souls-like: a turning 3D preview in the class's starting
+  kit, skill bars with gear bonuses, health/mana/armour, the class talent and abilities, kit and supplies,
+  and the body options.
+- **Armour weight** (`ItemData.armor_weight`): Light, Medium or Heavy. Each light piece makes enemies notice
+  you 6% later and a dodge 4% cheaper; each heavy piece makes them notice you 8% sooner and a dodge 6%
+  dearer (notice range ×0.6–×1.5, dodge cost ×0.7–×1.5). Only idle or wandering enemies use the notice range.
+- **Gear sets** (`GearSets`) with 2- and 4-piece bonuses: Squire's Kit (Knight), Raider's Furs (Barbarian),
+  Shadowstalker's Garb (Assassin), Apprentice's Vestments (Wizard). New gear stats: physical damage %,
+  backstab damage %, parry window. Set lines in tooltips.
+- **Full starting kits**: every class starts with a weapon, its complete 4-piece set and its own supplies
+  (Knight: bandages, bread; Barbarian: cooked meat, a warming draught; Assassin: antidotes, a healing draught;
+  Wizard: mana tonics).
+- **+1 / +2 skill bonuses** on everyday gear and set pieces.
+- **New armour**: Squire's Helm / Breastplate / Gauntlets / Greaves, Horned Helm, Raider's Fur Harness /
+  Bracers / Fur Boots, Shadow Hood, Shadowstalker's Garb / Wraps / Soft Boots, Wizard's Hat, Apprentice's
+  Wraps / Shoes, Iron Great Helm, Iron Gauntlets, Iron Greaves, Soft Leather Boots. Set pieces have starting
+  recipes (any class can craft any set), are sold in villages and drop in E-rank loot.
+- Character screen line: outfit style, notice range and dodge cost. Item tooltips show weight and set.
+- Multiplayer: other players see your outfit and body; players who join later get everyone's current look
+  (this also fixed late joiners not seeing other players' weapons).
+- Tests: `test_m14_outfit_data`, `test_m14_outfits_ingame`, `test_m14_gear_data`, `test_m14_gear_in_game`,
+  `test_m14_character_creation`. The test runner takes `-- --only=<name part>`. Screenshot runner
+  `--only=outfits` and `--only=gear`.
 
 ### Changed
-- **Classes (Option A)**: the class is the starting kit plus a small talent. Off-class weapons are
-  0.85-0.95 (were 0.5-0.7), weak skills are 0.75-0.9 effective (were down to 0.35), Wizard physical
-  power 0.88 (was 0.7), Knight and Barbarian spell power 0.75 / 0.7 (were 0.6 / 0.5). A max-Strength
-  Wizard reaches 0.81 of a max-Strength Knight (rule: never equal) - test updated from the old
-  "softer than a starting Knight".
-- Class-coloured clothes, helmets and hats were removed from the player model; they now come from gear.
-- The main menu's create panel is wider to fit the new screen.
+- **Classes (Option A)**: the class is its starting kit plus a small talent (its best skill grows more
+  effective, class power, best weapon, its abilities). Off-class weapons are ×0.85–0.95 (were down to ×0.5),
+  weak skills are 0.75–0.9 effective (were down to 0.35), Wizard physical power 0.88 (was 0.7), Knight and
+  Barbarian spell power 0.75 / 0.7. **A Wizard never equals a Knight**: with 100 Strength in full iron with
+  a sword a Wizard hits ×0.66 of a max-Strength Knight (tested, limit ×0.9).
+- `ClassData` shirt/pants/hair colours no longer change the body (kept in the data for now).
+- The main menu's create panel is wider to fit character creation.
 
-### Fixed
-- Players who joined a co-op game late did not see the other players' weapons (looks are now replayed).
 
 ## [0.13.0] — Milestone 13: Beta / Release preparation
 

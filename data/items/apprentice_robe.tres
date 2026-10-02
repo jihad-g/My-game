@@ -19,8 +19,8 @@ stat_bonuses = {
 &"armor": 2,
 &"max_mana": 15,
 &"mana_regen": 10,
-&"mana_control": 2
+&"mana_control": 1
 }
+armor_weight = 1
+outfit_look = &"robe"
 set_id = &"apprentice"
-look_style = &"robe"
-look_trim = Color(0.4, 0.85, 1.0, 1)

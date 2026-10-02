@@ -66,59 +66,72 @@ var _weapon_type: StringName = &"sword"
 var _has_shield := false
 var _shield: Node3D
 var _ghost := false
-## Player characters (Milestone 14): one shared body + whatever they wear.
-var _is_player := false
-var _body: Dictionary = {}
-## ItemData.EquipSlot -> ItemData (head, chest, hands, feet).
-var _outfit: Dictionary = {}
-var _hand_color := Color(0.96, 0.78, 0.62)
 
 
 func _ready() -> void:
 	_build()
 
 
-## Player look from a class (kept for older callers): the class only picks
-## the accent colour and a default body - clothes come from set_outfit().
-func set_appearance(c: ClassData) -> void:
-	if c == null:
-		return
-	_accent = c.accent_color
-	_is_player = true
+## Milestone 14 (Outfits): every player character has the same body. The class
+## only decides the starting gear; what you wear decides how you look.
+const PLAYER_SKIN := Color(0.96, 0.78, 0.62)
+const PLAYER_HAIR := Color(0.42, 0.26, 0.14)
+const PLAYER_SHIRT := Color(0.66, 0.6, 0.5)   # plain linen tunic
+const PLAYER_PANTS := Color(0.36, 0.3, 0.24)
+const PLAYER_BOOTS := Color(0.35, 0.22, 0.14)
+
+## Outfit items being drawn (ItemData), in ItemData.OUTFIT_SLOTS order.
+var _outfit: Array = []
+var _weapon_item: ItemData
+
+
+## The chosen body: {skin, hair, style, beard} (CharacterLook). Empty = defaults.
+var _body: Dictionary = {}
+
+
+## Player look: the shared body. The class only suggests a default body (until
+## set_body() is called); call set_outfit() to dress the character.
+func set_appearance(c: ClassData = null) -> void:
 	_class_id = &"player"
 	if _body.is_empty():
-		_apply_body(CharacterLook.default_for(c.id))
+		_body = CharacterLook.default_for(c.id if c else &"knight")
+	skin_color = CharacterLook.skin_color(_body)
+	hair_color = CharacterLook.hair_color(_body)
+	shirt_color = PLAYER_SHIRT
+	pants_color = PLAYER_PANTS
+	boot_color = PLAYER_BOOTS
+	_accent = Color(0.75, 0.6, 0.25)
 	_build()
 
 
-## The shared player body: skin, hair colour, hair style, beard (CharacterLook).
+## Body chosen at character creation (Milestone 14): skin tone, hair colour,
+## hair style and beard - see CharacterLook. Same for every class.
 func set_body(look: Dictionary) -> void:
-	_is_player = true
-	_class_id = &"player"
-	_apply_body(CharacterLook.sanitize(look))
-	_build()
+	_body = CharacterLook.sanitize(look)
+	set_appearance()
 
 
-func _apply_body(look: Dictionary) -> void:
-	_body = look
-	skin_color = CharacterLook.skin_color(look)
-	hair_color = CharacterLook.hair_color(look)
+## Dresses the player in these items (ids of head/chest/hands/feet/off-hand/
+## amulet pieces; unknown ids are ignored) and colours the weapon after `weapon_id`.
+func set_outfit(ids: PackedStringArray, weapon_id: StringName = &"") -> void:
+	_outfit.clear()
+	for id in ids:
+		var item: ItemData = ItemDB.get_item(StringName(id)) if ItemDB.has_item(StringName(id)) else null
+		if item and item.is_equippable():
+			_outfit.append(item)
+	_weapon_item = ItemDB.get_item(weapon_id) if weapon_id != &"" and ItemDB.has_item(weapon_id) else null
+	weapon_color = ItemIcons.metal_of(_weapon_item) if _weapon_item else Color(0.78, 0.8, 0.86)
+	if _root:
+		_build()
 
 
-## Worn armour and clothes: {ItemData.EquipSlot: ItemData}. Drawn on the body.
-func set_outfit(outfit: Dictionary) -> void:
-	_is_player = true
-	_class_id = &"player"
-	_outfit = outfit.duplicate()
-	if _body.is_empty():
-		_apply_body(CharacterLook.default_for(&"knight"))
-	_build()
-
-
-## Style id worn in a slot ("" = nothing).
-func worn_style(slot: int) -> StringName:
-	var item: ItemData = _outfit.get(slot)
-	return item.worn_style() if item else &""
+## Outfit looks currently drawn (tests and multiplayer).
+func outfit_looks() -> Array:
+	var out := []
+	for item: ItemData in _outfit:
+		if item.outfit_look != &"":
+			out.append(item.outfit_look)
+	return out
 
 
 ## Townsperson look (Milestone 5): seeded colours + role clothing and tool.
@@ -225,9 +238,6 @@ func _build() -> void:
 	_parts.clear()
 	_root = Node3D.new()
 	add_child(_root)
-	_hand_color = skin_color
-	if _is_player:
-		_resolve_outfit_colors()
 	# Legs: hip -> thigh, knee -> shin + boot.
 	_leg_l = _pivot(_root, Vector3(-0.14, 0.72, 0))
 	_part(_leg_l, Vector3(0, -0.17, 0), Vector3(0.22, 0.36, 0.24), pants_color)
@@ -246,7 +256,7 @@ func _build() -> void:
 	# Head
 	_head = _pivot(_torso, Vector3(0, 0.62, 0))
 	_part(_head, Vector3(0, 0.24, 0), Vector3(0.46, 0.46, 0.44), skin_color)
-	if _is_player:
+	if _class_id == &"player":
 		_build_hair()
 	else:
 		_part(_head, Vector3(0, 0.49, -0.02), Vector3(0.5, 0.12, 0.48), hair_color)
@@ -258,12 +268,12 @@ func _build() -> void:
 	_part(_arm_l, Vector3(0, -0.13, 0), Vector3(0.18, 0.28, 0.2), shirt_color * 0.92)
 	_fore_l = _pivot(_arm_l, Vector3(0, -0.26, 0))
 	_part(_fore_l, Vector3(0, -0.09, 0), Vector3(0.17, 0.2, 0.19), shirt_color * 0.88)
-	_part(_fore_l, Vector3(0, -0.24, 0), Vector3(0.16, 0.14, 0.16), _hand_color)
+	_part(_fore_l, Vector3(0, -0.24, 0), Vector3(0.16, 0.14, 0.16), skin_color)
 	_arm_r = _pivot(_torso, Vector3(0.36, 0.54, 0))
 	_part(_arm_r, Vector3(0, -0.13, 0), Vector3(0.18, 0.28, 0.2), shirt_color * 0.92)
 	_fore_r = _pivot(_arm_r, Vector3(0, -0.26, 0))
 	_part(_fore_r, Vector3(0, -0.09, 0), Vector3(0.17, 0.2, 0.19), shirt_color * 0.88)
-	_part(_fore_r, Vector3(0, -0.24, 0), Vector3(0.16, 0.14, 0.16), _hand_color)
+	_part(_fore_r, Vector3(0, -0.24, 0), Vector3(0.16, 0.14, 0.16), skin_color)
 	_build_class_gear()
 	_weapon = _pivot(_fore_r, Vector3(0, -0.26, 0.05))
 	_shield = _pivot(_fore_l, Vector3(-0.1, -0.09, 0.08))
@@ -272,167 +282,12 @@ func _build() -> void:
 		set_ghost(true)
 
 
-# --- Player body & outfit (Milestone 14) ------------------------------------------------
-
-## Base clothes and colours from what is worn. Without armour the character
-## wears a plain linen shirt, trousers and foot wraps.
-func _resolve_outfit_colors() -> void:
-	shirt_color = Color(0.8, 0.74, 0.62)
-	pants_color = Color(0.38, 0.31, 0.24)
-	boot_color = Color(0.42, 0.34, 0.26)
-	var chest: ItemData = _outfit.get(ItemData.EquipSlot.CHEST)
-	if chest:
-		var c := chest.worn_color()
-		match chest.worn_style():
-			&"robe":
-				shirt_color = c
-				pants_color = c.darkened(0.25)
-			&"leather":
-				shirt_color = c.darkened(0.2)
-			&"plate":
-				shirt_color = c.darkened(0.4)
-				pants_color = Color(0.3, 0.3, 0.34)
-			&"fur":
-				shirt_color = Color(0.45, 0.32, 0.22)
-			&"cloak":
-				shirt_color = c.darkened(0.15)
-				pants_color = c.darkened(0.35)
-			_:  # cloth, padded, chain
-				shirt_color = c
-	var feet: ItemData = _outfit.get(ItemData.EquipSlot.FEET)
-	if feet:
-		boot_color = feet.worn_color()
-	var hands: ItemData = _outfit.get(ItemData.EquipSlot.HANDS)
-	if hands and hands.worn_style() != &"bracers":
-		_hand_color = hands.worn_color()
-
-
-## Hair is hidden under helmets, hoods and caps.
-func _build_hair() -> void:
-	var covered := worn_style(ItemData.EquipSlot.HEAD) in [&"plate_helm", &"horned_helm", &"hood", &"fur_cap", &"cap"]
-	var style := CharacterLook.hair_style(_body)
-	if not covered and style != &"bald":
-		_part(_head, Vector3(0, 0.49, -0.02), Vector3(0.5, 0.12, 0.48), hair_color)
-		match style:
-			&"long":
-				_part(_head, Vector3(0, 0.22, -0.21), Vector3(0.52, 0.56, 0.1), hair_color)
-				_part(_head, Vector3(-0.24, 0.3, -0.04), Vector3(0.06, 0.34, 0.3), hair_color)
-				_part(_head, Vector3(0.24, 0.3, -0.04), Vector3(0.06, 0.34, 0.3), hair_color)
-			&"topknot":
-				_part(_head, Vector3(0, 0.36, -0.2), Vector3(0.5, 0.24, 0.1), hair_color)
-				_part(_head, Vector3(0, 0.62, -0.08), Vector3(0.18, 0.16, 0.18), hair_color)
-			_:
-				_part(_head, Vector3(0, 0.33, -0.2), Vector3(0.5, 0.3, 0.1), hair_color)
-	if bool(_body.get("beard", false)) and worn_style(ItemData.EquipSlot.HEAD) != &"hood":
-		var long_beard := style == &"long"
-		_part(_head, Vector3(0, 0.04 if long_beard else 0.08, 0.2), Vector3(0.36, 0.24 if long_beard else 0.16, 0.08), hair_color)
-
-
-## Armour and clothing pieces on top of the body.
-func _build_outfit() -> void:
-	var head: ItemData = _outfit.get(ItemData.EquipSlot.HEAD)
-	if head:
-		_build_headwear(head.worn_style(), head.worn_color(), head.look_trim)
-	var chest: ItemData = _outfit.get(ItemData.EquipSlot.CHEST)
-	if chest:
-		_build_bodywear(chest.worn_style(), chest.worn_color(), chest.look_trim)
-	var hands: ItemData = _outfit.get(ItemData.EquipSlot.HANDS)
-	if hands:
-		var c := hands.worn_color()
-		match hands.worn_style():
-			&"gauntlets":
-				for fore in [_fore_l, _fore_r]:
-					_part(fore, Vector3(0, -0.15, 0), Vector3(0.2, 0.1, 0.22), c)
-			&"bracers":
-				for fore in [_fore_l, _fore_r]:
-					_part(fore, Vector3(0, -0.11, 0), Vector3(0.2, 0.14, 0.21), c)
-					_part(fore, Vector3(0, -0.11, 0.1), Vector3(0.08, 0.06, 0.03), hands.look_trim)
-			&"wraps":
-				for fore in [_fore_l, _fore_r]:
-					_part(fore, Vector3(0, -0.16, 0), Vector3(0.18, 0.05, 0.2), c.lightened(0.15))
-	var feet: ItemData = _outfit.get(ItemData.EquipSlot.FEET)
-	if feet:
-		var c := feet.worn_color()
-		match feet.worn_style():
-			&"greaves":
-				for shin in [_shin_l, _shin_r]:
-					_part(shin, Vector3(0, -0.1, 0.1), Vector3(0.2, 0.24, 0.05), c.lightened(0.1))
-			&"fur_boots":
-				for shin in [_shin_l, _shin_r]:
-					_part(shin, Vector3(0, -0.18, 0.02), Vector3(0.27, 0.08, 0.29), feet.look_trim)
-
-
-func _build_headwear(style: StringName, c: Color, trim: Color) -> void:
-	match style:
-		&"plate_helm":
-			_part(_head, Vector3(0, 0.36, 0), Vector3(0.52, 0.34, 0.5), c)
-			_part(_head, Vector3(0, 0.26, 0.24), Vector3(0.36, 0.06, 0.04), Color(0.15, 0.15, 0.2))  # visor slit
-			_part(_head, Vector3(0, 0.6, -0.05), Vector3(0.08, 0.14, 0.34), trim)  # plume
-		&"horned_helm":
-			_part(_head, Vector3(0, 0.42, 0), Vector3(0.52, 0.22, 0.5), c)
-			_part(_head, Vector3(0, 0.3, 0.24), Vector3(0.08, 0.2, 0.04), c)  # nose guard
-			_part(_head, Vector3(0.3, 0.56, 0), Vector3(0.1, 0.26, 0.1), trim)  # horns
-			_part(_head, Vector3(-0.3, 0.56, 0), Vector3(0.1, 0.26, 0.1), trim)
-		&"hood":
-			# Open at the front so the eyes show between hood and mask.
-			_part(_head, Vector3(0, 0.36, -0.07), Vector3(0.54, 0.42, 0.5), c)
-			_part(_head, Vector3(0, 0.52, 0.2), Vector3(0.54, 0.1, 0.08), c.darkened(0.1))  # brow
-			_part(_head, Vector3(0, 0.1, 0.23), Vector3(0.44, 0.16, 0.04), trim)  # mask
-		&"wizard_hat":
-			_part(_head, Vector3(0, 0.52, 0), Vector3(0.62, 0.06, 0.6), c.darkened(0.1))  # brim
-			_part(_head, Vector3(0, 0.68, 0), Vector3(0.36, 0.28, 0.36), c)
-			_part(_head, Vector3(0.03, 0.88, -0.03), Vector3(0.2, 0.2, 0.2), c.lightened(0.05))
-			_part(_head, Vector3(0.06, 1.02, -0.06), Vector3(0.1, 0.12, 0.1), trim)
-		&"fur_cap":
-			_part(_head, Vector3(0, 0.48, -0.01), Vector3(0.54, 0.18, 0.52), c)
-			_part(_head, Vector3(0, 0.4, 0), Vector3(0.56, 0.06, 0.54), c.lightened(0.25))  # fur band
-		&"straw_hat":
-			_part(_head, Vector3(0, 0.52, 0), Vector3(0.74, 0.06, 0.72), c)
-			_part(_head, Vector3(0, 0.62, 0), Vector3(0.4, 0.16, 0.4), c.darkened(0.08))
-		&"circlet":
-			_part(_head, Vector3(0, 0.46, 0), Vector3(0.5, 0.06, 0.48), c)
-			_part(_head, Vector3(0, 0.46, 0.245), Vector3(0.08, 0.08, 0.02), trim)  # gem
-		_:  # cap / padded hood
-			_part(_head, Vector3(0, 0.44, -0.02), Vector3(0.52, 0.18, 0.5), c)
-			_part(_head, Vector3(0, 0.3, -0.21), Vector3(0.52, 0.32, 0.1), c.darkened(0.1))
-
-
-func _build_bodywear(style: StringName, c: Color, trim: Color) -> void:
-	match style:
-		&"plate":
-			_part(_torso, Vector3(0, 0.32, 0.17), Vector3(0.48, 0.48, 0.04), c)  # breastplate
-			_part(_torso, Vector3(0, 0.3, 0.195), Vector3(0.12, 0.3, 0.02), trim)  # crest
-			_part(_torso, Vector3(-0.4, 0.6, 0), Vector3(0.24, 0.12, 0.26), c.darkened(0.05))  # pauldrons
-			_part(_torso, Vector3(0.4, 0.6, 0), Vector3(0.24, 0.12, 0.26), c.darkened(0.05))
-			_part(_torso, Vector3(0, -0.06, 0.02), Vector3(0.58, 0.16, 0.36), c.darkened(0.15))  # tassets
-		&"chain":
-			for k in 3:
-				_part(_torso, Vector3(0, 0.12 + k * 0.17, 0.165), Vector3(0.5, 0.03, 0.02), c.darkened(0.25))
-			_part(_torso, Vector3(0, -0.05, 0), Vector3(0.58, 0.14, 0.34), c.darkened(0.1))  # mail skirt
-		&"leather":
-			_part(_torso, Vector3(0, 0.3, 0.17), Vector3(0.5, 0.5, 0.04), c)  # vest
-			_part(_torso, Vector3(0.12, 0.3, 0.19), Vector3(0.08, 0.56, 0.02), trim)  # strap
-		&"padded":
-			for k in 3:
-				_part(_torso, Vector3(0, 0.14 + k * 0.16, 0.165), Vector3(0.52, 0.025, 0.02), c.darkened(0.2))
-		&"robe":
-			_part(_torso, Vector3(0, -0.14, 0), Vector3(0.6, 0.4, 0.36), c.darkened(0.08))  # robe skirt
-			_part(_torso, Vector3(0, 0.3, 0.17), Vector3(0.12, 0.54, 0.02), trim)  # sash
-		&"fur":
-			_part(_torso, Vector3(0, 0.62, -0.02), Vector3(0.7, 0.14, 0.4), c)  # fur mantle
-			_part(_torso, Vector3(0, 0.3, 0.17), Vector3(0.44, 0.36, 0.04), Color(0.4, 0.28, 0.18))  # harness
-			_part(_torso, Vector3(-0.12, 0.3, 0.19), Vector3(0.08, 0.56, 0.02), trim)
-		&"cloak":
-			_part(_torso, Vector3(0, 0.25, -0.2), Vector3(0.56, 0.86, 0.06), c)  # cape
-			_part(_torso, Vector3(0, 0.6, 0.0), Vector3(0.6, 0.08, 0.38), trim)  # collar
-
-
 func _build_class_gear() -> void:
 	var a := _accent
-	if _is_player:
-		_build_outfit()
-		return
 	match _class_id:
+		&"player":
+			for item: ItemData in _outfit:
+				_build_outfit_piece(item.outfit_look, item.icon_color)
 		&"mon_skeleton", &"mon_skeleton_archer", &"mon_bone_king":
 			_part(_head, Vector3(-0.1, 0.26, 0.23), Vector3(0.1, 0.1, 0.02), a)  # glowing eyes
 			_part(_head, Vector3(0.1, 0.26, 0.23), Vector3(0.1, 0.1, 0.02), a)
@@ -533,6 +388,176 @@ func _build_class_gear() -> void:
 			_part(_torso, Vector3(0, 0.7, -0.3), Vector3(0.5, 0.16, 0.32), Color(0.8, 0.75, 0.6))  # bedroll
 
 
+## Every outfit look a piece of gear can have (ItemData.outfit_look).
+const OUTFIT_LOOKS := [
+	&"hood_padded", &"sun_hat", &"fur_cap", &"wizard_hat", &"helm_plume", &"horned_helm", &"hood_mask",
+	&"great_helm", &"crown_stars",
+	&"vest", &"robe", &"jerkin", &"chainmail", &"cloak", &"plate",
+	&"fur_mantle",
+	&"gloves", &"gauntlets", &"bracers", &"wraps",
+	&"boots", &"fur_boots", &"greaves",
+	&"buckler", &"kite", &"aegis",
+	&"pendant",
+]
+
+
+## Draws one piece of gear on the shared body, tinted with the item colour `c`.
+## Overlays are a little bigger than the body parts they cover.
+func _build_outfit_piece(look: StringName, c: Color) -> void:
+	var dark := c.darkened(0.25)
+	var light := c.lightened(0.25)
+	var slit := Color(0.12, 0.12, 0.15)
+	match look:
+		# --- Head ---
+		&"hood_padded":
+			_part(_head, Vector3(0, 0.36, -0.03), Vector3(0.53, 0.4, 0.5), c)
+			_part(_head, Vector3(0, 0.08, 0.0), Vector3(0.5, 0.08, 0.48), dark)  # collar
+		&"sun_hat":
+			_part(_head, Vector3(0, 0.52, 0), Vector3(0.74, 0.06, 0.72), c)
+			_part(_head, Vector3(0, 0.62, 0), Vector3(0.4, 0.16, 0.4), dark)
+		&"fur_cap":
+			_part(_head, Vector3(0, 0.5, -0.02), Vector3(0.52, 0.16, 0.5), c)
+			_part(_head, Vector3(0, 0.42, 0), Vector3(0.56, 0.08, 0.54), light)  # fur rim
+			_part(_head, Vector3(0.27, 0.3, 0), Vector3(0.06, 0.2, 0.18), c)  # ear flaps
+			_part(_head, Vector3(-0.27, 0.3, 0), Vector3(0.06, 0.2, 0.18), c)
+		&"wizard_hat":
+			_part(_head, Vector3(0, 0.52, 0), Vector3(0.62, 0.06, 0.6), c * 0.8)  # brim
+			_part(_head, Vector3(0, 0.68, 0), Vector3(0.36, 0.28, 0.36), c * 0.85)
+			_part(_head, Vector3(0.03, 0.88, -0.03), Vector3(0.2, 0.2, 0.2), c * 0.9)
+			_part(_head, Vector3(0.06, 1.02, -0.06), Vector3(0.1, 0.12, 0.1), Color(0.4, 0.85, 1.0))  # glowing tip
+		&"helm_plume":
+			_part(_head, Vector3(0, 0.36, 0), Vector3(0.52, 0.34, 0.5), c)
+			_part(_head, Vector3(0, 0.26, 0.24), Vector3(0.36, 0.06, 0.04), slit)  # visor slit
+			_part(_head, Vector3(0, 0.6, -0.05), Vector3(0.08, 0.14, 0.34), Color(0.75, 0.2, 0.2))  # plume
+		&"horned_helm":
+			_part(_head, Vector3(0, 0.42, 0), Vector3(0.52, 0.22, 0.5), c)
+			_part(_head, Vector3(0, 0.34, 0.24), Vector3(0.08, 0.2, 0.04), dark)  # nose guard
+			_part(_head, Vector3(0.3, 0.56, 0), Vector3(0.1, 0.24, 0.1), Color(0.95, 0.92, 0.82))  # horns
+			_part(_head, Vector3(-0.3, 0.56, 0), Vector3(0.1, 0.24, 0.1), Color(0.95, 0.92, 0.82))
+		&"hood_mask":
+			# Open at the front so the eyes show between hood and mask.
+			_part(_head, Vector3(0, 0.36, -0.07), Vector3(0.54, 0.42, 0.5), c)
+			_part(_head, Vector3(0, 0.52, 0.2), Vector3(0.54, 0.1, 0.08), dark)  # brow
+			_part(_head, Vector3(0, 0.1, 0.23), Vector3(0.44, 0.16, 0.04), slit)  # face mask
+		&"great_helm":
+			_part(_head, Vector3(0, 0.27, 0), Vector3(0.54, 0.54, 0.52), c)
+			_part(_head, Vector3(0, 0.28, 0.265), Vector3(0.38, 0.05, 0.02), slit)  # eye slit
+			_part(_head, Vector3(0, 0.15, 0.265), Vector3(0.05, 0.14, 0.02), slit)  # breathing slit
+			_part(_head, Vector3(0, 0.56, 0), Vector3(0.1, 0.06, 0.5), dark)  # crest
+		&"crown_stars":
+			_part(_head, Vector3(0, 0.54, 0), Vector3(0.5, 0.1, 0.48), c)
+			for k in 5:
+				var ang := k * TAU / 5.0
+				_part(_head, Vector3(cos(ang) * 0.24, 0.66, sin(ang) * 0.24), Vector3(0.07, 0.16, 0.07), Color(0.65, 0.8, 1.0))
+		# --- Chest ---
+		&"vest":
+			_part(_torso, Vector3(0, 0.32, 0), Vector3(0.6, 0.56, 0.36), c)
+			for k in 3:
+				_part(_torso, Vector3(0, 0.16 + k * 0.16, 0.185), Vector3(0.5, 0.03, 0.01), dark)  # quilting
+		&"robe":
+			_part(_torso, Vector3(0, 0.31, 0), Vector3(0.6, 0.62, 0.36), c)
+			_part(_torso, Vector3(0, -0.14, 0), Vector3(0.62, 0.4, 0.38), c * 0.9)  # skirt
+			_part(_torso, Vector3(0, 0.3, 0.185), Vector3(0.12, 0.56, 0.01), Color(0.95, 0.8, 0.35))  # trim
+			_sleeves(c)
+		&"jerkin":
+			_part(_torso, Vector3(0, 0.3, 0.0), Vector3(0.6, 0.54, 0.36), c)
+			_part(_torso, Vector3(0.12, 0.3, 0.185), Vector3(0.08, 0.56, 0.01), dark)  # strap
+			_part(_torso, Vector3(0, 0.62, 0), Vector3(0.62, 0.08, 0.38), dark)  # collar
+		&"chainmail":
+			_part(_torso, Vector3(0, 0.3, 0), Vector3(0.6, 0.62, 0.36), c)
+			_part(_torso, Vector3(0, -0.08, 0), Vector3(0.62, 0.22, 0.38), c * 0.92)  # skirt
+			_sleeves(c)
+			for k in 4:
+				_part(_torso, Vector3(0, 0.08 + k * 0.15, 0.185), Vector3(0.52, 0.02, 0.01), dark)  # rings
+		&"cloak":
+			_part(_torso, Vector3(0, 0.3, 0), Vector3(0.6, 0.6, 0.36), c.darkened(0.15))  # dark tunic under the cape
+			_sleeves(c.darkened(0.15))
+			_part(_torso, Vector3(0, 0.22, -0.2), Vector3(0.62, 0.86, 0.06), c)  # cape
+			_part(_torso, Vector3(0, 0.62, 0), Vector3(0.64, 0.1, 0.4), c)  # collar
+			_part(_torso, Vector3(0, 0.62, 0.21), Vector3(0.1, 0.08, 0.02), Color(0.8, 0.8, 0.85))  # clasp
+		&"plate":
+			_part(_torso, Vector3(0, 0.32, 0.0), Vector3(0.6, 0.6, 0.36), c * 0.9)
+			_part(_torso, Vector3(0, 0.36, 0.185), Vector3(0.46, 0.42, 0.02), light)  # breastplate
+			_part(_torso, Vector3(-0.4, 0.6, 0), Vector3(0.26, 0.14, 0.28), c)  # pauldrons
+			_part(_torso, Vector3(0.4, 0.6, 0), Vector3(0.26, 0.14, 0.28), c)
+			_part(_torso, Vector3(0, -0.08, 0), Vector3(0.62, 0.18, 0.38), c * 0.85)  # faulds
+		&"fur_mantle":  # Raider's Fur Harness (Milestone 14 sets)
+			_part(_torso, Vector3(0, 0.62, -0.02), Vector3(0.7, 0.14, 0.4), light)  # fur mantle
+			_part(_torso, Vector3(0, 0.3, 0.17), Vector3(0.44, 0.36, 0.04), dark)  # harness
+			_part(_torso, Vector3(-0.12, 0.3, 0.19), Vector3(0.08, 0.56, 0.02), c.darkened(0.45))  # strap
+		# --- Hands ---
+		&"gloves":
+			_part(_fore_l, Vector3(0, -0.23, 0), Vector3(0.19, 0.17, 0.19), c)
+			_part(_fore_r, Vector3(0, -0.23, 0), Vector3(0.19, 0.17, 0.19), c)
+		&"gauntlets":
+			for fore in [_fore_l, _fore_r]:
+				_part(fore, Vector3(0, -0.23, 0), Vector3(0.21, 0.18, 0.21), c)
+				_part(fore, Vector3(0, -0.11, 0), Vector3(0.21, 0.12, 0.22), dark)  # cuff
+		&"bracers":
+			for fore in [_fore_l, _fore_r]:
+				_part(fore, Vector3(0, -0.11, 0), Vector3(0.2, 0.14, 0.21), c)
+				_part(fore, Vector3(0, -0.11, 0.1), Vector3(0.08, 0.06, 0.03), Color(0.75, 0.75, 0.8))  # stud
+		&"wraps":
+			for fore in [_fore_l, _fore_r]:
+				_part(fore, Vector3(0, -0.23, 0), Vector3(0.18, 0.15, 0.18), c)
+				_part(fore, Vector3(0, -0.14, 0), Vector3(0.18, 0.05, 0.2), light)
+		# --- Feet ---
+		&"boots":
+			_part(_shin_l, Vector3(0, -0.28, 0.03), Vector3(0.27, 0.22, 0.33), c)
+			_part(_shin_r, Vector3(0, -0.28, 0.03), Vector3(0.27, 0.22, 0.33), c)
+		&"fur_boots":
+			for shin in [_shin_l, _shin_r]:
+				_part(shin, Vector3(0, -0.28, 0.03), Vector3(0.27, 0.22, 0.33), c)
+				_part(shin, Vector3(0, -0.15, 0.0), Vector3(0.27, 0.08, 0.27), light)  # fur rim
+		&"greaves":
+			for shin in [_shin_l, _shin_r]:
+				_part(shin, Vector3(0, -0.28, 0.03), Vector3(0.27, 0.22, 0.33), dark)
+				_part(shin, Vector3(0, -0.1, 0.0), Vector3(0.25, 0.24, 0.26), c)  # shin plate
+		# --- Amulet ---
+		&"pendant":
+			_part(_torso, Vector3(0, 0.5, 0.18), Vector3(0.08, 0.08, 0.03), c)
+		# Shields (buckler / kite / aegis) are drawn by _build_weapon().
+
+
+## The player's hair and beard (CharacterLook style). Helmets, hoods and caps
+## hide the hair; a face mask hides the beard.
+func _build_hair() -> void:
+	var looks := outfit_looks()
+	var covered := false
+	for l in [&"hood_padded", &"fur_cap", &"helm_plume", &"horned_helm", &"hood_mask", &"great_helm"]:
+		covered = covered or l in looks
+	var style := CharacterLook.hair_style(_body)
+	if not covered and style != &"bald":
+		_part(_head, Vector3(0, 0.49, -0.02), Vector3(0.5, 0.12, 0.48), hair_color)
+		match style:
+			&"long":
+				_part(_head, Vector3(0, 0.22, -0.21), Vector3(0.52, 0.56, 0.1), hair_color)
+				_part(_head, Vector3(-0.24, 0.3, -0.04), Vector3(0.06, 0.34, 0.3), hair_color)
+				_part(_head, Vector3(0.24, 0.3, -0.04), Vector3(0.06, 0.34, 0.3), hair_color)
+			&"topknot":
+				_part(_head, Vector3(0, 0.36, -0.2), Vector3(0.5, 0.24, 0.1), hair_color)
+				_part(_head, Vector3(0, 0.62, -0.08), Vector3(0.18, 0.16, 0.18), hair_color)
+			_:
+				_part(_head, Vector3(0, 0.33, -0.2), Vector3(0.5, 0.3, 0.1), hair_color)
+	if bool(_body.get("beard", false)) and not (&"hood_mask" in looks or &"great_helm" in looks):
+		var long_beard: bool = style == &"long"
+		_part(_head, Vector3(0, 0.04 if long_beard else 0.08, 0.2), Vector3(0.36, 0.24 if long_beard else 0.16, 0.08), hair_color)
+
+
+## Long sleeves in colour `c` over the upper arms.
+func _sleeves(c: Color) -> void:
+	_part(_arm_l, Vector3(0, -0.13, 0), Vector3(0.21, 0.3, 0.23), c * 0.92)
+	_part(_arm_r, Vector3(0, -0.13, 0), Vector3(0.21, 0.3, 0.23), c * 0.92)
+
+
+## The off-hand item's shield look and colour, if the player carries one.
+func _shield_item() -> ItemData:
+	for item: ItemData in _outfit:
+		if item.equip_slot == ItemData.EquipSlot.OFF_HAND:
+			return item
+	return null
+
+
 func _build_weapon() -> void:
 	for holder in [_weapon, _shield]:
 		for c in holder.get_children():
@@ -558,7 +583,8 @@ func _build_weapon() -> void:
 			_part(_shield, Vector3(0.1, -0.1, 0.2), Vector3(0.06, 0.03, 0.3), steel)
 		&"staff":
 			_part(_weapon, Vector3(0, 0, 0.35), Vector3(0.07, 0.07, 1.5), wood)
-			_part(_weapon, Vector3(0, 0, 1.12), Vector3(0.18, 0.18, 0.18), _accent)
+			var orb := _weapon_item.icon_color.lightened(0.2) if _weapon_item and _class_id == &"player" else _accent
+			_part(_weapon, Vector3(0, 0, 1.12), Vector3(0.18, 0.18, 0.18), orb)
 		&"unarmed":
 			pass
 		&"hammer":
@@ -583,8 +609,27 @@ func _build_weapon() -> void:
 	_tip.position = Vector3(0, 0, float(TIPS.get(_weapon_type, 0.4)))
 	_weapon.add_child(_tip)
 	if _has_shield:
-		_part(_shield, Vector3(-0.05, 0, 0.1), Vector3(0.08, 0.55, 0.45), Color(0.5, 0.32, 0.18))
-		_part(_shield, Vector3(-0.1, 0, 0.1), Vector3(0.04, 0.2, 0.2), _accent)
+		var si := _shield_item() if _class_id == &"player" else null
+		var look := si.outfit_look if si else &""
+		var c := si.icon_color if si else Color(0.5, 0.32, 0.18)
+		match look:
+			&"buckler":
+				_part(_shield, Vector3(-0.05, 0, 0.1), Vector3(0.08, 0.42, 0.42), c)
+				_part(_shield, Vector3(-0.1, 0, 0.1), Vector3(0.04, 0.14, 0.14), Color(0.7, 0.7, 0.75))  # boss
+			&"kite":
+				_part(_shield, Vector3(-0.05, 0.04, 0.1), Vector3(0.08, 0.62, 0.46), c)
+				_part(_shield, Vector3(-0.05, -0.32, 0.1), Vector3(0.08, 0.14, 0.24), c)  # point
+				_part(_shield, Vector3(-0.1, 0.04, 0.1), Vector3(0.04, 0.46, 0.08), Color(0.7, 0.2, 0.2))  # cross
+				_part(_shield, Vector3(-0.1, 0.12, 0.1), Vector3(0.04, 0.08, 0.32), Color(0.7, 0.2, 0.2))
+			&"aegis":
+				_part(_shield, Vector3(-0.05, 0, 0.1), Vector3(0.08, 0.62, 0.52), c)
+				_part(_shield, Vector3(-0.1, 0, 0.1), Vector3(0.04, 0.26, 0.26), Color(1.0, 0.95, 0.7))  # sun
+				for k in 4:
+					var ang := k * TAU / 4.0 + PI * 0.25
+					_part(_shield, Vector3(-0.1, sin(ang) * 0.2, 0.1 + cos(ang) * 0.2), Vector3(0.03, 0.08, 0.08), Color(1.0, 0.95, 0.7))
+			_:
+				_part(_shield, Vector3(-0.05, 0, 0.1), Vector3(0.08, 0.55, 0.45), Color(0.5, 0.32, 0.18))
+				_part(_shield, Vector3(-0.1, 0, 0.1), Vector3(0.04, 0.2, 0.2), _accent)
 
 
 ## Stealth look: parts become translucent.

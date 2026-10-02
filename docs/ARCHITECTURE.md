@@ -363,6 +363,22 @@ CrashHandler, Platform.
   engine), `tools/export_steam_config.gd` → `platform/steam/`. `ChunkManager.single_threaded` (no
   `threads` feature, i.e. the web build) limits streaming to one job per frame.
 
+## Outfits (Milestone 14)
+
+- **Data**: `ItemData.armor_weight` (`ArmorWeight` NONE/LIGHT/MEDIUM/HEAVY) and `ItemData.outfit_look` (a look id
+  from `HumanoidModel.OUTFIT_LOOKS`). Every head/chest/hands/feet/off-hand item has both; amulets use `pendant`.
+- **Model**: `HumanoidModel.set_appearance()` builds the one shared player body; `set_outfit(ids, weapon_id)`
+  draws each item with `_build_outfit_piece(look, item.icon_color)` (overlays slightly bigger than the body
+  parts) and shields in `_build_weapon()`. `Player._on_equipment_changed()` calls it on every gear change.
+- **Rules**: `Equipment.notice_mult()` and `dodge_cost_mult()` sum the weights; `Player.notice_mult()` exposes
+  it; `Enemy.notice_range(target)` scales `aggro_range` and is used only in the idle/wander/march checks of
+  `Monster` and `ThornbackBoar`. `Player._start_dodge` multiplies the stamina cost.
+- **Classes** are unchanged in code: starting skills, `skill_efficiency`, `physical_power`/`spell_power`,
+  proficiencies and abilities still come from `ClassData`. Gear skill bonuses are added to the skill level and
+  then go through the class efficiency, which is why a Wizard's +Strength gear does little.
+- **Multiplayer**: the "look" animation event carries `Equipment.look_args()` = [weapon type, has off-hand,
+  "id,id,...", weapon id]; `NetServer` remembers each guest's last look and sends all looks to late joiners.
+
 ## Survival
 
 - `StatBlock` aggregates multiplicative modifiers per source (`&"hunger"`,
@@ -394,6 +410,6 @@ CrashHandler, Platform.
 | New biome | Add a `BiomeData` (role + climate ranges + colours + prop rules) and append it to `data/worldgen/default_worldgen.tres`. |
 | New class | Add `data/classes/<id>.tres` (50 starting points), add its id to `ClassRegistry.ORDER`, give it 3 `AbilityData`. |
 | New ability | Add an `AbilityData` .tres and a `_ability_<effect>()` method in `PlayerAbilities`. |
-| New weapon/armor | Add an `ItemData` with `equip_slot`, `stat_bonuses`, (weapons) `weapon_type` + `moveset`. |
+| New weapon/armor | Add an `ItemData` with `equip_slot`, `stat_bonuses`, (weapons) `weapon_type` + `moveset`; armour also needs `armor_weight` and an `outfit_look` (add new looks to `HumanoidModel.OUTFIT_LOOKS` + `_build_outfit_piece`). |
 | Save a new placeable | Put it under `World.placed_root` (via `place_object`) and implement `save_data()` / `load_data()`. |
 | New input | Add to `InputSetup.KEY_BINDINGS`. |

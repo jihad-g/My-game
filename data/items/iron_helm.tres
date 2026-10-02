@@ -4,22 +4,20 @@
 
 [resource]
 script = ExtResource("1_item")
-id = &"fur_cap"
-display_name = "Fur Cap"
-description = "Warm cap of boar fur."
+id = &"iron_helm"
+display_name = "Iron Great Helm"
+description = "A full iron helm with an eye slit."
 category = 4
 rarity = 1
 max_stack = 1
-base_value = 25
-icon_color = Color(0.55, 0.4, 0.28, 1)
-icon_glyph = "Hd"
+base_value = 115
+icon_color = Color(0.7, 0.72, 0.78, 1)
+icon_glyph = "IH"
 equip_slot = 3
-required_level = 4
+required_level = 10
 stat_bonuses = {
-&"armor": 2,
-&"insulation": 8,
-&"strength": 1
+&"armor": 10,
+&"defense": 2
 }
-armor_weight = 1
-outfit_look = &"fur_cap"
-
+armor_weight = 3
+outfit_look = &"great_helm"

@@ -16,6 +16,13 @@ const CATEGORY_NAMES := ["Material", "Food", "Tool", "Weapon", "Armor", "Placeab
 enum EquipSlot { NONE, MAIN_HAND, OFF_HAND, HEAD, CHEST, HANDS, FEET, RING, AMULET }
 const SLOT_NAMES := ["", "Main hand", "Off hand", "Head", "Chest", "Hands", "Feet", "Ring", "Amulet"]
 
+## Milestone 14 (Outfits): how heavy a piece of armour is. Light pieces make you
+## harder to notice and cheaper to dodge in; heavy pieces do the opposite.
+enum ArmorWeight { NONE, LIGHT, MEDIUM, HEAVY }
+const WEIGHT_NAMES := ["", "Light", "Medium", "Heavy"]
+## Slots that are drawn on the character and count towards armour weight.
+const OUTFIT_SLOTS := [EquipSlot.HEAD, EquipSlot.CHEST, EquipSlot.HANDS, EquipSlot.FEET, EquipSlot.OFF_HAND, EquipSlot.AMULET]
+
 ## Human-readable names for stat_bonuses keys.
 const STAT_NAMES := {
 	&"armor": "Armor", &"damage_bonus": "Weapon damage", &"spell_power": "Spell power %",
@@ -71,18 +78,11 @@ const BUFF_TEXT := {&"might": "+20% damage", &"stoneskin": "-20% damage taken",
 @export var stat_bonuses: Dictionary = {}
 ## Gear set this piece belongs to (see GearSets, Milestone 14).
 @export var set_id: StringName
-
-@export_group("Look")
-## How worn armour/clothing is drawn on the character (Milestone 14), e.g.
-## head: plate_helm, horned_helm, hood, wizard_hat, fur_cap, cap, straw_hat,
-## circlet; chest: cloth, padded, leather, chain, plate, robe, fur, cloak;
-## hands: gloves, gauntlets, bracers, wraps; feet: boots, greaves, shoes,
-## fur_boots. Empty = a plain default for the slot in icon_color.
-@export var look_style: StringName
-## Main colour of the piece (alpha 0 = use icon_color).
-@export var look_color: Color = Color(0, 0, 0, 0)
-## Trim / accent colour (plumes, sashes, horns, masks...).
-@export var look_trim: Color = Color(0.75, 0.6, 0.25)
+## Armour weight (Milestone 14). NONE for weapons, rings and amulets.
+@export var armor_weight: ArmorWeight = ArmorWeight.NONE
+## How the piece is drawn on the character (HumanoidModel outfit looks, e.g.
+## &"helm_plume", &"robe", &"hood_mask"). Empty = not drawn.
+@export var outfit_look: StringName
 
 @export_group("Tool")
 ## Harvesting tool type (&"axe", &"pickaxe") - used automatically from the inventory.
@@ -166,7 +166,14 @@ func effect_lines() -> PackedStringArray:
 		var slot_line: String = SLOT_NAMES[equip_slot]
 		if weapon_type != &"":
 			slot_line += " · %s" % String(weapon_type).capitalize()
+		if armor_weight != ArmorWeight.NONE:
+			slot_line += " · %s armour" % WEIGHT_NAMES[armor_weight]
 		lines.append(slot_line)
+		match armor_weight:
+			ArmorWeight.LIGHT:
+				lines.append("Light: enemies notice you later, dodging costs less")
+			ArmorWeight.HEAVY:
+				lines.append("Heavy: enemies notice you sooner, dodging costs more")
 		if required_level > 1:
 			lines.append("Requires level %d" % required_level)
 		for stat in stat_bonuses:
@@ -175,22 +182,3 @@ func effect_lines() -> PackedStringArray:
 			lines.append_array(GearSets.describe(set_id))
 	return lines
 
-
-## Default look style for an armour slot when look_style is empty.
-func worn_style() -> StringName:
-	if look_style != &"":
-		return look_style
-	match equip_slot:
-		EquipSlot.HEAD:
-			return &"cap"
-		EquipSlot.CHEST:
-			return &"cloth"
-		EquipSlot.HANDS:
-			return &"gloves"
-		EquipSlot.FEET:
-			return &"boots"
-	return &""
-
-
-func worn_color() -> Color:
-	return look_color if look_color.a > 0.0 else icon_color

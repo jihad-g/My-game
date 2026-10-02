@@ -20,6 +20,5 @@ stat_bonuses = {
 &"spell_power": 3
 }
 set_id = &"apprentice"
-look_style = &"wraps"
-look_color = Color(0.55, 0.45, 0.8, 1)
-look_trim = Color(0.4, 0.85, 1.0, 1)
+armor_weight = 1
+outfit_look = &"wraps"

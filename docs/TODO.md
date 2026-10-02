@@ -105,22 +105,25 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
-## Milestone 14 — Gear Makes the Hero  ✅
+## Milestone 14 — Outfits & Gear Makes the Hero  ✅
 
-- [x] One shared body for every class; the player picks skin tone (6), hair colour (8), hair style (short, long, topknot, bald) and beard; saved per character, older saves get the class's default body
-- [x] Worn armour and clothing are drawn on the character from item data (`look_style`, `look_color`, `look_trim`): 8 head styles (plate helm, horned helm, hood + mask, wizard hat, fur cap, cap, straw hat, circlet), 8 chest styles (cloth, padded, leather, chain, plate, robe, fur, cloak), 4 glove and 4 boot styles; helmets and hoods hide the hair; every existing armour piece got a look
-- [x] Souls-like starting classes: each class starts with a weapon, a complete 4-piece outfit and its own supplies (Knight: Squire's Kit + bandages and bread; Barbarian: Raider's Furs + meat and a warming draught; Assassin: Shadowstalker's Garb + antidotes and a healing draught; Wizard: Apprentice's Vestments + mana tonics)
-- [x] Gear sets (`GearSets`): 2- and 4-piece bonuses; set pieces give +1/+2 to skills; new gear stats: physical damage %, backstab damage %, parry window
-- [x] Any class can wear and craft any set (starting recipes at the forge / tailoring table); set pieces are sold in villages and drop in E-rank loot
-- [x] Option A class talent: classes keep their skill efficiency, physical/spell power and best weapon; off-class weapons now 0.85-0.95 instead of 0.5-0.7. A Wizard with the same Strength and a sword deals about 0.66-0.71 of a Knight's damage (was about 0.25) - close, never equal
-- [x] Character creation screen: turning 3D preview in the starting kit, skill bars with gear bonuses, health/mana/armour, the class talent and abilities, kit and supplies, body options with random
-- [x] Multiplayer: the look event carries body + outfit; players who join later receive everyone's current look (this also fixes late joiners not seeing other players' weapons)
-- [x] Tests (`test_m14_*`): kits and sets, set bonuses, Option A numbers, model drawing, save/load and old saves, network look, the picker; `SHARDLANDS_TESTS=` env var runs selected tests
-- [ ] NOT IMPLEMENTED: learning another class's abilities (abilities stay with the class; tomes only teach shared spells)
+- [x] One shared body for all classes; looks come from the equipped head, chest, hands, feet, off-hand and amulet (27 code-built looks, tinted by the item); helmets and hoods hide the hair
+- [x] Character customisation: skin tone (6), hair colour (8), hair style (short, long, topknot, bald) and beard; saved per character, older saves get a class default
+- [x] Souls-like character creation screen: 3D preview in the starting kit, skill bars with gear bonuses, health/mana/armour, class talent and abilities, kit and supplies, body options
+- [x] Full starting kits: weapon + complete 4-piece set + class supplies (Squire's Kit, Raider's Furs, Shadowstalker's Garb, Apprentice's Vestments)
+- [x] Gear sets with 2- and 4-piece bonuses (`GearSets`); new gear stats physical damage %, backstab %, parry window
+- [x] Armour weight (Light / Medium / Heavy) on every armour piece and shield: changes how far away idle enemies notice you and the stamina cost of a dodge
+- [x] +1 / +2 skill bonuses on everyday armour, clothes and set pieces
+- [x] New armour with recipes any class can craft (set pieces, class starting hats, iron helm/gauntlets/greaves, soft leather boots); set pieces in shops and E-rank loot
+- [x] Option A class talent: classes keep skill efficiency, class power, best weapon and abilities; off-class weapons ×0.85–0.95; a Wizard never equals a Knight (×0.66 of a max Knight in full iron with a sword; tested)
+- [x] Character screen and tooltips show armour weight and sets; outfits and bodies are synced in multiplayer (also for late joiners)
+- [ ] NOT IMPLEMENTED: ability ranks that level up with use, or learning another class's abilities (class abilities stay per class, unlocked at levels 1 / 5 / 15)
 - [ ] NOT IMPLEMENTED: a different starting place per class (everyone starts at the world spawn)
-- [ ] NOT IMPLEMENTED: higher-tier versions of the four sets (iron / mithril set pieces); only the starting tier exists, plus the Shadow Cloak as a level-15 Shadowstalker piece
-- [ ] NOT IMPLEMENTED: dyeing clothes, face options, body shapes, changing the body after creation (a mirror / barber)
-- [ ] Known limitation: with the crash notice showing, the menu is taller than a 900-pixel-high window (the Quick play button can be cut off)
+- [ ] NOT IMPLEMENTED: higher-tier versions of the four sets (only the starting tier exists, plus the Shadow Cloak as a level-15 Shadowstalker piece)
+- [ ] NOT IMPLEMENTED: dyes / colouring your own gear; face options; changing the body after creation; ring looks (rings are not drawn)
+- [ ] Known limitation: weight only affects noticing and dodging (no swim or sprint penalty); ranged and raiding enemies that are already fighting ignore it
+- [ ] Known limitation: with the crash notice showing, the menu is taller than a 900-pixel-high window (Quick play can be cut off)
+
 
 ## Milestone 13 — Beta / Release preparation  ✅
 

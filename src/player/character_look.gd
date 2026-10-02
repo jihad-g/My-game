@@ -60,27 +60,3 @@ static func describe(look: Dictionary) -> String:
 	return "%s skin · %s %s hair%s" % [SKIN_NAMES[l.skin], HAIR_NAMES[l.hair], STYLE_NAMES[l.style].to_lower(),
 		" · beard" if l.beard else ""]
 
-
-## Equipment outfit -> {slot (int): item id (String)} for the network.
-static func outfit_ids(outfit: Dictionary) -> Dictionary:
-	var out := {}
-	for slot in outfit:
-		var item: ItemData = outfit[slot]
-		if item:
-			out[str(slot)] = String(item.id)
-	return out
-
-
-## Inverse of outfit_ids (unknown or non-armour ids are dropped).
-static func outfit_from_ids(ids: Dictionary) -> Dictionary:
-	var out := {}
-	for k in ids:
-		var slot := int(k)
-		var id := StringName(String(ids[k]))
-		if not ItemDB.has_item(id):
-			continue
-		var item: ItemData = ItemDB.get_item(id)
-		if item and item.equip_slot == slot and slot in [ItemData.EquipSlot.HEAD, ItemData.EquipSlot.CHEST,
-				ItemData.EquipSlot.HANDS, ItemData.EquipSlot.FEET]:
-			out[slot] = item
-	return out

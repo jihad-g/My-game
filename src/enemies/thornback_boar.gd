@@ -88,14 +88,14 @@ func _think(delta: float) -> void:
 
 	match ai:
 		AI.IDLE:
-			if player and dist < data.aggro_range:
+			if player and dist < notice_range(player):
 				_alert(player)
 			elif ai_time <= 0.0:
 				var a := _rng.randf() * TAU
 				_wander_target = home_position + Vector3(cos(a), 0, sin(a)) * _rng.randf_range(2.0, 7.0)
 				_set_ai(AI.WANDER, 6.0)
 		AI.WANDER:
-			if player and dist < data.aggro_range:
+			if player and dist < notice_range(player):
 				_alert(player)
 			else:
 				var to := _wander_target - global_position

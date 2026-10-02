@@ -11,7 +11,7 @@ const SETS := {
 	&"squire": {
 		"name": "Squire's Kit",
 		"feel": "Knight",
-		"bonuses": {2: {&"block": 5, &"max_health": 10}, 4: {&"parry": 50, &"defense": 2}},
+		"bonuses": {2: {&"max_health": 15}, 4: {&"parry": 50, &"block": 5, &"defense": 2}},
 	},
 	&"raider": {
 		"name": "Raider's Furs",

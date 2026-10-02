@@ -5,17 +5,17 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 14 — Gear Makes the Hero (v0.14.0)**: every class now shares one body and you
-> look like what you wear. Pick a class like a souls-like starting class - its starting stats, a full
-> outfit (helmet, chest, gloves, boots), a weapon and supplies - and choose your skin, hair and beard.
-> Armour and clothes add +1/+2 to skills, and wearing a full set (Squire's Kit, Raider's Furs,
-> Shadowstalker's Garb, Apprentice's Vestments) gives set bonuses, so a Knight in shadow clothes with
-> daggers plays like an Assassin. The class keeps a small talent, so a Wizard is never a Knight's equal.
-> Built on the beta (Milestone 13: tutorial, guide, settings and accessibility, save recovery, crash
-> reports, achievements, release builds - [`docs/RELEASE.md`](docs/RELEASE.md)). Download a Windows
-> build from [`releases/`](releases/) (v0.13.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
-> performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md).
-> See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
+> Status: **Milestone 14 — Outfits & Gear Makes the Hero (v0.14.0)**: every class shares one body and you
+> look like what you wear. Create your character like a souls-like starting class - its starting stats,
+> a full outfit set, a weapon and supplies - and choose skin, hair and beard. Armour and clothes add +1/+2
+> to skills, full sets (Squire's Kit, Raider's Furs, Shadowstalker's Garb, Apprentice's Vestments) give set
+> bonuses, and armour weight matters: light armour keeps you hidden, heavy armour protects you but gets you
+> noticed. A Knight in shadow clothes with daggers plays like an Assassin; the class keeps a small talent, so
+> a Wizard is never a Knight's equal. Built on the beta (Milestone 13: tutorial, guide, settings and
+> accessibility, save recovery, crash reports, achievements, release builds - [`docs/RELEASE.md`](docs/RELEASE.md)).
+> Download a Windows build from [`releases/`](releases/) (v0.13.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
+> performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
+> design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md). See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
 | **Starting outfits on one shared body** | **Character creation** |
@@ -23,6 +23,9 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 | ![Outfits](docs/screenshots/gear_outfits.png) | ![Class picker](docs/screenshots/class_picker.png) |
 
 ![Village](docs/screenshots/village_overview.png)
+
+![Outfits](docs/screenshots/outfits_lineup.png)
+*Milestone 14: one body, many outfits - the four starting outfits, a Knight in light leather, the same Knight in iron, and end-game gear.*
 
 | **Co-op: a guest in your world** | **Chat & who's online** | |
 |---|---|---|
@@ -414,6 +417,11 @@ D-pad spells and hotbar, View bag, Menu pause. Menus still need the mouse.
 72. **Achievements** – main menu or pause menu → *Achievements*: 20 of them with progress bars and your
     lifetime stats (monsters defeated, trees felled, kilometres walked...).
 
+73. **Outfits** – start a Knight and press K: the outfit line shows your armour style. Craft a Shadow Hood
+    (Tailoring, after you get boar hide) and Leather Gloves, equip a dagger: you look and play like an
+    Assassin, but keep Knight abilities. In light armour idle monsters notice you later; in full iron they
+    notice you sooner and dodging costs more stamina. Item tooltips show Light / Medium / Heavy.
+
 ## Run the automated tests
 
 ```bash
@@ -421,8 +429,9 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 ```
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
+Run part of the suite with `-- --only=test_m14` (any part of a test name).
 
-The suite (1159 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (1206 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -516,6 +525,7 @@ godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=blu
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=massive  # horizon, far reaches, world edge
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=polish   # sky, weather, effects, icons, settings
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=multiplayer # host + headless guest
+godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=outfits  # one body, many outfits
 python3 tools/gen_audio.py        # regenerate all sound effects, ambience and music (needs ffmpeg)
 godot --headless --path . res://tools/world_survey.tscn -- --seed=20250101  # whole-world survey -> docs/WORLD_SURVEY.md
 python3 tools/build_designer.py   # rebuild the web designer after changing build pieces or built-in blueprints

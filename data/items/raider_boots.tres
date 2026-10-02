@@ -21,6 +21,5 @@ stat_bonuses = {
 &"move_speed": 3
 }
 set_id = &"raider"
-look_style = &"fur_boots"
-look_color = Color(0.38, 0.26, 0.17, 1)
-look_trim = Color(0.62, 0.5, 0.38, 1)
+armor_weight = 2
+outfit_look = &"fur_boots"

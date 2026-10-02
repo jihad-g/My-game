@@ -4,21 +4,21 @@
 
 [resource]
 script = ExtResource("1_item")
-id = &"squire_greaves"
-display_name = "Squire's Greaves"
-description = "Boots with steel shin guards."
+id = &"iron_greaves"
+display_name = "Iron Greaves"
+description = "Iron boots with shin plates."
 category = 4
-rarity = 0
+rarity = 1
 max_stack = 1
-base_value = 12
-icon_color = Color(0.4, 0.3, 0.22, 1)
-icon_glyph = "Bt"
+base_value = 80
+icon_color = Color(0.7, 0.72, 0.78, 1)
+icon_glyph = "IB"
 equip_slot = 6
-required_level = 1
+required_level = 12
 stat_bonuses = {
-&"armor": 3,
-&"strength": 1
+&"armor": 7,
+&"defense": 1,
+&"move_speed": -2
 }
-set_id = &"squire"
-armor_weight = 2
+armor_weight = 3
 outfit_look = &"greaves"

@@ -20,7 +20,7 @@ const STOCK := {
 		[&"plank", 20, 0], [&"plant_fiber", 20, 0], [&"campfire_kit", 3, 0], [&"stone_hatchet", 1, 0],
 		[&"stone_pickaxe", 1, 0], [&"wheat_seeds", 8, 0], [&"carrot_seeds", 8, 0], [&"sun_hat", 1, 0],
 		[&"padded_vest", 1, 0], [&"leather", 4, 1], [&"hearty_stew", 3, 2], [&"cooks_journal", 1, 2],
-		[&"shadow_hood", 1, 0], [&"apprentice_hat", 1, 0], [&"raider_boots", 1, 1],
+		[&"shadow_hood", 1, 0], [&"wizard_hat", 1, 0], [&"raider_boots", 1, 1],
 	],
 	&"blacksmith": [
 		[&"flint_knife", 1, 0], [&"rough_handaxe", 1, 0], [&"stone_pickaxe", 2, 0], [&"stone_hatchet", 2, 0],
@@ -38,7 +38,7 @@ const STOCK := {
 		[&"fur_boots", 1, 1], [&"leather_jerkin", 1, 1], [&"leatherworker_notes", 1, 1], [&"crystal_shard", 3, 2],
 		[&"arcane_dust", 6, 2], [&"crystal_ring", 1, 3], [&"arcane_codex", 1, 3], [&"moonpetal", 2, 3],
 		[&"shadow_cloak", 1, 4], [&"moonpetal_pendant", 1, 4], [&"crystal_staff", 1, 3],
-		[&"raider_helm", 1, 0], [&"shadow_garb", 1, 1], [&"apprentice_wraps", 1, 1], [&"squire_plate", 1, 2],
+		[&"horned_helm", 1, 0], [&"shadow_garb", 1, 1], [&"apprentice_wraps", 1, 1], [&"squire_plate", 1, 2],
 	],
 }
 

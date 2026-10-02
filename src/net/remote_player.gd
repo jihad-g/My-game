@@ -38,7 +38,6 @@ func _ready() -> void:
 	var c := ClassRegistry.get_class_data(class_id)
 	if c:
 		model.set_appearance(c)
-	model.set_outfit({})
 	_label.text = player_name
 	_label.position = Vector3(0, 2.35, 0)
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -71,18 +70,19 @@ func push_state(s: Dictionary) -> void:
 		_snaps.pop_front()
 
 
-func set_equipment_look(weapon_type: StringName, shield: bool) -> void:
+## Weapon and outfit (Milestone 14): `outfit` is a comma-separated list of item
+## ids (unknown ids are ignored), `weapon_id` colours the weapon.
+func set_equipment_look(weapon_type: StringName, shield: bool, outfit: String = "", weapon_id: String = "") -> void:
 	if model:
 		model.set_weapon(weapon_type, shield)
+		model.set_outfit(PackedStringArray(outfit.split(",", false)), StringName(weapon_id))
 
 
-## Body + worn armour from a "look" event (Milestone 14). Data comes from
-## another peer, so it is sanitised and only known armour ids are used.
-func set_body_look(body: Dictionary, outfit_ids: Dictionary) -> void:
-	if model == null:
-		return
-	model.set_body(CharacterLook.sanitize(body, class_id))
-	model.set_outfit(CharacterLook.outfit_from_ids(outfit_ids))
+## The body from a "look" event (skin, hair, style, beard). Data comes from
+## another peer, so it is sanitised.
+func set_body_look(body: Dictionary) -> void:
+	if model:
+		model.set_body(CharacterLook.sanitize(body, class_id))
 
 
 ## Replays an animation event from the owner.
@@ -104,9 +104,10 @@ func play_event(ev: String, args: Array) -> void:
 			model.reset_pose()
 		"look":
 			if args.size() >= 2:
-				set_equipment_look(StringName(String(args[0])), bool(args[1]))
-			if args.size() >= 4 and args[2] is Dictionary and args[3] is Dictionary:
-				set_body_look(args[2], args[3])
+				set_equipment_look(StringName(String(args[0])), bool(args[1]),
+					String(args[2]).substr(0, 400) if args.size() > 2 else "", String(args[3]).substr(0, 64) if args.size() > 3 else "")
+			if args.size() > 4 and args[4] is Dictionary:
+				set_body_look(args[4])
 
 
 ## Interpolated state at `t` (seconds, same clock as push_state).

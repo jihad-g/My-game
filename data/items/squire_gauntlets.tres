@@ -17,10 +17,8 @@ equip_slot = 5
 required_level = 1
 stat_bonuses = {
 &"armor": 2,
-&"strength": 1,
-&"block": 3
+&"strength": 1
 }
 set_id = &"squire"
-look_style = &"gauntlets"
-look_color = Color(0.66, 0.68, 0.74, 1)
-look_trim = Color(0.85, 0.2, 0.2, 1)
+armor_weight = 2
+outfit_look = &"gauntlets"

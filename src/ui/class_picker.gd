@@ -201,9 +201,9 @@ func select_class(id: StringName) -> void:
 	for b in _class_buttons.values():
 		b.tooltip_text = ClassRegistry.get_class_data((_class_buttons.find_key(b) as StringName)).description
 	_model.set_appearance(c)
-	_model.set_outfit(eq.outfit())
 	var w := eq.weapon()
 	_model.set_weapon(w.weapon_type if w else &"unarmed", eq.offhand() != null)
+	_model.set_outfit(eq.outfit_ids(), w.id if w else &"")
 	_apply_look()
 	changed.emit()
 

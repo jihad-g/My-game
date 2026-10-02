@@ -53,7 +53,7 @@ starting_items = {
 &"cooked_meat": 4,
 &"warming_draught": 1
 }
-starting_equipment = [&"rough_handaxe", &"raider_helm", &"raider_harness", &"raider_bracers", &"raider_boots"]
+starting_equipment = [&"rough_handaxe", &"horned_helm", &"raider_harness", &"raider_bracers", &"raider_boots"]
 shirt_color = Color(0.62, 0.22, 0.18, 1)
 pants_color = Color(0.35, 0.25, 0.18, 1)
 hair_color = Color(0.72, 0.35, 0.12, 1)

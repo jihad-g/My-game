@@ -8,10 +8,11 @@ id = &"shadow_hood"
 result_item = &"shadow_hood"
 result_count = 1
 ingredients = {
-&"plant_fiber": 6,
-&"leather": 1
+&"leather": 2,
+&"plant_fiber": 2
 }
 station = 3
 tier = 0
-source = 0
+source = 1
+discovered_by = &"boar_hide"
 xp = 6
