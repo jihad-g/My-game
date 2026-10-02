@@ -4,23 +4,21 @@
 
 [resource]
 script = ExtResource("1_item")
-id = &"iron_kite_shield"
-display_name = "Iron Kite Shield"
-description = "A tall iron shield."
+id = &"iron_greaves"
+display_name = "Iron Greaves"
+description = "Iron boots with shin plates."
 category = 4
 rarity = 1
 max_stack = 1
-base_value = 150
+base_value = 80
 icon_color = Color(0.7, 0.72, 0.78, 1)
-icon_glyph = "Sh"
-equip_slot = 2
-required_level = 10
+icon_glyph = "IB"
+equip_slot = 6
+required_level = 12
 stat_bonuses = {
-&"armor": 14,
-&"block": 10,
-&"move_speed": -3,
-&"defense": 2
+&"armor": 7,
+&"defense": 1,
+&"move_speed": -2
 }
 armor_weight = 3
-outfit_look = &"kite"
-weapon_type = &"shield"
+outfit_look = &"greaves"

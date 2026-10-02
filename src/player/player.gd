@@ -475,7 +475,7 @@ func _update_facing(delta: float) -> void:
 # --- Dodge ------------------------------------------------------------------------
 
 func _start_dodge(input: Vector3) -> void:
-	if not stamina.try_consume(dodge_cost * Skill.dodge_cost_mult(character.skill_level(Skill.DEXTERITY))):
+	if not stamina.try_consume(dodge_cost * Skill.dodge_cost_mult(character.skill_level(Skill.DEXTERITY)) * equipment.dodge_cost_mult()):
 		Events.toast.emit("Not enough stamina to dodge", Color(1, 0.85, 0.4))
 		return
 	combat.cancel()
@@ -923,6 +923,7 @@ func _on_equipment_changed() -> void:
 		moveset = character.class_data.unarmed_moveset
 	combat.set_moveset(moveset)
 	model.set_weapon(equipment.weapon_type(), equipment.offhand() != null)
+	model.set_outfit(equipment.outfit_ids(), weapon.id if weapon else &"")
 	character.recalculate()
 
 
@@ -983,6 +984,12 @@ func _announce_recipe(id: StringName) -> void:
 
 func is_stealthed() -> bool:
 	return abilities.is_stealthed()
+
+
+## How far away enemies notice you, as a multiplier on their sight range
+## (Milestone 14): light armour < 1, heavy armour > 1.
+func notice_mult() -> float:
+	return equipment.notice_mult()
 
 
 func _consume(item: ItemData) -> void:

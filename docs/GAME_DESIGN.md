@@ -1,7 +1,8 @@
 # Shardlands — Game Design Document
 
-Version of the game: **0.13.0 beta** (Milestones 1–13 done) · Engine: Godot 4.4.1, GDScript
+Version of the game: **0.14.0 beta** (Milestones 1–14 done) · Engine: Godot 4.4.1, GDScript
 Document written: 2 October 2026, from the real code on branch `claude/survival-rpg-foundation-tu1eqk`.
+Updated for Milestone 14 (Outfits) on the same day.
 
 This document describes the game **as it is in the code today**, then lists what is missing and what
 could come next. When the older docs and the code disagree, this document follows the code and says
@@ -15,7 +16,8 @@ so (see [Differences between the docs and the code](#differences-between-the-doc
 
 How the code protects them today: the Wizard has physical power ×0.7 and Strength efficiency ×0.35,
 so at 100 Strength his physical multiplier is ×1.09 against ×2.42 (Knight) and ×2.88 (Barbarian), and
-a balance test checks it. `Crafting.craft()` has no failure path: if you have the materials, the item is
+a balance test checks it. Since Milestone 14 a test also dresses a 100-Strength Wizard in full iron with a
+sword: he hits ×0.66, less than a starting Knight (×1.28). `Crafting.craft()` has no failure path: if you have the materials, the item is
 made. `TemperatureComponent` has no damage code at all, and its debuff table never touches health.
 
 ## Contents
@@ -42,7 +44,7 @@ made. `TemperatureComponent` has no damage code at all, and its debuff table nev
 | **Look** | Blocky low-poly voxel world. Everything (characters, terrain, icons, sound, music) is made by code |
 | **Platforms** | Windows, Linux, web browser. Steam support is ready but not tested on real Steam. No macOS build |
 | **Players** | Single player, or co-op with up to 8 players (one host or a dedicated server) |
-| **Version** | 0.13.0 beta |
+| **Version** | 0.14.0 beta |
 | **Size of the code** | about 32,600 lines of GDScript in `src/` + 7,800 lines of tests; 386 data files in `data/` |
 
 **Pitch.** You start alone in a huge, seed-generated world (27.7 × 27.7 km). You gather sticks and
@@ -137,12 +139,16 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 - Damage numbers, hit sparks, weapon trails and hit sounds.
 
 ### 3.4 Classes and abilities
-- Four classes, each with **exactly 50 starting skill points**, its own look, weapon proficiencies,
+- Four classes, each with **exactly 50 starting skill points**, its own starting outfit, weapon proficiencies,
   starting gear and three abilities (unlocked at levels 1, 5 and 15). Abilities: Z / X / C.
 - Barbarian has **Rage** (built by fighting, spent by Berserk).
 - Every class can use the **Magic Temperature Shield** (T): 10 minutes of cold/heat protection, needs
   Mana Control +2 above the class start; the Wizard pays the least mana.
 - No respec, no ability upgrades, no fourth ability. See the catalogue for every ability.
+- **What a class is (Milestone 14):** every class has the same body. A class decides its starting outfit and
+  weapon, its starting skill points, how fast each skill grows (skill efficiency), its physical and spell
+  power, its weapon skill and its three abilities. Anything you wear can be worn by any class, so a Knight in
+  light leather with daggers plays like an Assassin but keeps Knight abilities and Knight growth.
 
 ### 3.5 Spells and mana
 - **Mana** pool and regeneration grow with Mana Control.
@@ -197,6 +203,16 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 - Gear has level requirements and stat bonuses (damage, armor, crit, spell power, mana, insulation,
   cooling, move/attack speed, skills). Swapping weapons changes your combo and your model's weapon.
 - Rarity: Basic, Common, Uncommon, Rare, Very Rare, Magical, Legendary (glow in slots).
+- **Outfits (Milestone 14):** every head, chest, hands, feet and off-hand piece is drawn on your character
+  (24 looks) and has an **armour weight**:
+  - **Light** (cloth, leather, cloaks, robes, hats): each piece makes idle enemies notice you 6% later and a
+    dodge 4% cheaper. A full light outfit: noticed at 76% range, dodges cost 84%.
+  - **Medium** (padded cloth, squire's and horned helms, buckler): no change.
+  - **Heavy** (chainmail, iron, plate, big shields): each piece makes enemies notice you 8% sooner and a dodge
+    6% dearer. A full heavy outfit: noticed at 140% range, dodges cost 130%.
+  - Everyday armour gives small **+1 / +2 skill bonuses** (e.g. gloves +1 Dexterity, chainmail +2 Defense).
+    Skill bonuses still pass through your class's skill growth, so a Wizard gets little from Strength gear.
+  - The character screen shows your outfit style, notice range and dodge cost.
 
 ### 3.11 Building and blueprints
 - **Build mode** (B): grid of 1 m cells with floor, object, roof and edge slots. Green ghost = OK, red =
@@ -357,7 +373,7 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 ### 3.27 Multiplayer
 - ENet (UDP), up to 8 players, one authoritative server. Host from the menu or run a dedicated headless
   server. Join by IP. Protocol version + world checksum check.
-- Synced: player movement and animations (20 Hz), chat, gathering, harvesting, crafting, building,
+- Synced: player movement and animations (20 Hz), outfits and weapons (also for late joiners), chat, gathering, harvesting, crafting, building,
   doors, item drop and pickup, world time. Guests' characters are saved with the host's world.
 - **Not synced yet**: combat with monsters (monsters, raids and events **pause** while a session is
   online), PvP, bosses, dungeons, chests, trading, requests, farming, sleeping, cooking, blueprints.
@@ -373,12 +389,12 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 
 ## 4. Content catalogue
 
-Counts from `data/` (October 2026):
+Counts from `data/` (October 2026, after Milestone 14):
 
 | Folder | Files | | Folder | Files |
 |---|---:|---|---|---:|
-| classes | 4 | | items | 139 |
-| abilities | 13 (12 class + Temperature Shield) | | recipes | 76 |
+| classes | 4 | | items | 147 |
+| abilities | 13 (12 class + Temperature Shield) | | recipes | 84 |
 | spells | 8 | | build_pieces | 28 |
 | enemies | 20 (19 monsters + the boar) | | props | 37 |
 | attacks | 39 | | biomes | 12 |
@@ -388,12 +404,13 @@ Counts from `data/` (October 2026):
 
 | Class | Role | Start skills (Str / MC / Def / Craft / Dex) | Health | Physical / Spell power | Block / Parry / Backstab | Start gear |
 |---|---|---|---:|---|---|---|
-| **Barbarian** | Brute force, rage, crowds | 18 / 3 / 12 / 5 / 12 | 139 | ×1.10 / ×0.50 | 60% / 0.18 s / ×1.5 | Rough Hand Axe, Padded Vest |
-| **Knight** | Sword and shield, defense, control | 14 / 4 / 18 / 6 / 8 | 135 | ×1.00 / ×0.60 | 80% / 0.25 s / ×1.3 | Squire's Sword, Wooden Buckler, Padded Vest |
-| **Wizard** | Ranged elemental magic | 4 / 22 / 6 / 8 / 10 | 82 | ×0.70 / ×1.45 | 50% / 0.15 s / ×1.4 | Apprentice Staff, Apprentice Robe |
-| **Assassin** | Stealth, mobility, crits | 9 / 5 / 6 / 6 / 24 | 86 | ×0.95 / ×0.70 | 55% / 0.20 s / ×2.0 | Rusty Dagger, Leather Gloves, Worn Boots |
+| **Barbarian** | Brute force, rage, crowds | 18 / 3 / 12 / 5 / 12 | 139 | ×1.10 / ×0.50 | 60% / 0.18 s / ×1.5 | Rough Hand Axe, Horned Helm, Padded Vest |
+| **Knight** | Sword and shield, defense, control | 14 / 4 / 18 / 6 / 8 | 135 | ×1.00 / ×0.60 | 80% / 0.25 s / ×1.3 | Squire's Sword, Squire's Helm, Wooden Buckler, Padded Vest |
+| **Wizard** | Ranged elemental magic | 4 / 22 / 6 / 8 / 10 | 82 | ×0.70 / ×1.45 | 50% / 0.15 s / ×1.4 | Apprentice Staff, Wizard's Hat, Apprentice Robe |
+| **Assassin** | Stealth, mobility, crits | 9 / 5 / 6 / 6 / 24 | 86 | ×0.95 / ×0.70 | 55% / 0.20 s / ×2.0 | Rusty Dagger, Shadow Hood, Leather Gloves, Worn Boots |
 
-Best weapons: Barbarian axe ×1.15, Knight sword ×1.10, Wizard staff ×1.00, Assassin dagger ×1.15.
+Best weapons: Barbarian axe ×1.15, Knight sword ×1.10, Wizard staff ×1.00, Assassin dagger ×1.15. Since Milestone 14
+the fighters use their other weapons at ×0.9 (staff ×0.5); the Wizard keeps dagger ×0.8, sword ×0.6, axe ×0.5.
 
 ### 4.2 Abilities (per class)
 
@@ -473,7 +490,7 @@ Levels and health above are the base (rank E) values; ranks and distance scale t
 World share (seed 20250101): ocean 36.8%, meadows 13.7%, mountains 10.0%, tundra 7.5%, taiga 7.4%,
 swamp 6.3%, forest 5.1%, desert 4.6%, jungle 3.9%, beach 3.8%, crystal glade 0.9%.
 
-### 4.6 Items by type (139 items)
+### 4.6 Items by type (147 items)
 
 **Weapons (20)**
 
@@ -504,29 +521,37 @@ Gear tier unlock levels: Basic 1 · Common 5 · Uncommon 15 · Rare 22 · Very R
 
 **Shields (3)** — off hand
 
-| Shield | Tier | Level | Stats |
-|---|---|---:|---|
-| Wooden Buckler | Basic | 1 | armor 6, block 5 |
-| Iron Kite Shield | Common | 10 | armor 14, block 10, move −3 |
-| Aegis of Dawn | Legendary | 48 | armor 30, block 20, health +40 |
-
-**Armour (13)**
-
-| Slot | Item | Tier | Level | Stats |
+| Shield | Weight | Tier | Level | Stats |
 |---|---|---|---:|---|
-| Head | Padded Hood | Basic | 1 | armor 3, insulation 3 |
-| Head | Straw Sun Hat | Basic | 1 | cooling 8 |
-| Head | Fur Cap | Common | 4 | armor 2, insulation 8 |
-| Head | Crown of Stars | Legendary | 48 | spell power 20, mana 40, Mana Control 5, cooling 5 |
-| Chest | Padded Vest | Basic | 1 | armor 6, insulation 4 |
-| Chest | Apprentice Robe | Basic | 1 | armor 2, mana 15, mana regen 10 |
-| Chest | Boar-hide Jerkin | Common | 6 | armor 10, insulation 3 |
-| Chest | Chainmail Hauberk | Common | 12 | armor 22, move −5 |
-| Chest | Shadow Cloak | Uncommon | 15 | armor 5, Dexterity 3, move +3 |
-| Chest | Mithril Plate | Legendary | 48 | armor 45, health 60, insulation 8, Defense 4 |
-| Hands | Leather Gloves | Basic | 1 | armor 3, attack speed 3 |
-| Feet | Worn Boots | Basic | 1 | armor 2, move +3 |
-| Feet | Fur-lined Boots | Common | 4 | armor 3, insulation 6 |
+| Wooden Buckler | Medium | Basic | 1 | armor 6, block 5, Defense +1 |
+| Iron Kite Shield | Heavy | Common | 10 | armor 14, block 10, move −3, Defense +2 |
+| Aegis of Dawn | Heavy | Legendary | 48 | armor 30, block 20, health +40, Defense +3 |
+
+**Armour (21)** — weight decides how soon enemies notice you and how much a dodge costs
+
+| Slot | Item | Weight | Tier | Level | Stats | How to get |
+|---|---|---|---|---:|---|---|
+| Head | Padded Hood | Medium | Basic | 1 | armor 3, insulation 3, Defense +1 | Tailoring |
+| Head | Straw Sun Hat | Light | Basic | 1 | cooling 8, Crafting +1 | by hand |
+| Head | Wizard's Hat | Light | Basic | 1 | mana +10, Mana Control +1 | Wizard start; Tailoring |
+| Head | Shadow Hood | Light | Basic | 1 | armor 1, Dexterity +1, crit 1% | Assassin start; Tailoring (boar hide) |
+| Head | Squire's Helm | Medium | Basic | 1 | armor 4, Defense +1 | Knight start; Forge (copper) |
+| Head | Horned Helm | Medium | Basic | 1 | armor 3, Strength +1 | Barbarian start; Tailoring (boar tusk) |
+| Head | Fur Cap | Light | Common | 4 | armor 2, insulation 8, Strength +1 | Tailoring (Leatherworker's Notes) |
+| Head | Iron Great Helm | Heavy | Common | 10 | armor 10, Defense +2 | Forge (Smithing Manual) |
+| Head | Crown of Stars | Light | Legendary | 48 | spell power 20, mana 40, Mana Control 5, cooling 5 | Legendary scroll |
+| Chest | Padded Vest | Medium | Basic | 1 | armor 6, insulation 4, Defense +1 | Tailoring |
+| Chest | Apprentice Robe | Light | Basic | 1 | armor 2, mana 15, mana regen 10, Mana Control +1 | Tailoring |
+| Chest | Boar-hide Jerkin | Light | Common | 6 | armor 10, insulation 3, Dexterity +1 | Tailoring (Leatherworker's Notes) |
+| Chest | Chainmail Hauberk | Heavy | Common | 12 | armor 22, move −5, Defense +2 | Forge (Smithing Manual) |
+| Chest | Shadow Cloak | Light | Uncommon | 15 | armor 5, Dexterity 3, move +3 | Tailoring (Leatherworker's Notes) |
+| Chest | Mithril Plate | Heavy | Legendary | 48 | armor 45, health 60, insulation 8, Defense 4 | Legendary scroll |
+| Hands | Leather Gloves | Light | Basic | 1 | armor 3, attack speed 3, Dexterity +1 | Tailoring |
+| Hands | Iron Gauntlets | Heavy | Common | 12 | armor 6, Strength +2, attack speed −2 | Forge (Smithing Manual) |
+| Feet | Worn Boots | Light | Basic | 1 | armor 2, move +3, Dexterity +1 | Tailoring |
+| Feet | Fur-lined Boots | Light | Common | 4 | armor 3, insulation 6, Strength +1 | Tailoring (Leatherworker's Notes) |
+| Feet | Soft Leather Boots | Light | Common | 8 | armor 3, Dexterity +2, move +4 | Tailoring (Leatherworker's Notes) |
+| Feet | Iron Greaves | Heavy | Common | 12 | armor 7, Defense +1, move −2 | Forge (Smithing Manual) |
 
 **Accessories (6)**
 
@@ -599,14 +624,14 @@ Shadowfang, Staff of the Archmage, Sunforged Blade, Titan's Greataxe); 8 spell t
 
 **Other (2)** — Campfire Kit (placeable), Bandit Insignia (sells to guards and merchants).
 
-### 4.7 Crafting stations and recipes (76)
+### 4.7 Crafting stations and recipes (84)
 
 | Station | How to get it | Recipes |
 |---|---|---:|
 | By hand | always | 8 — bandage, campfire kit, flint knife, rope, rough hand axe, stone hatchet, stone pickaxe, sun hat |
 | Workbench | build piece (wood 8, stone 4) | 5 — planks, apprentice staff, squire's sword, wooden buckler, tusk charm |
-| Forge | build piece, level 3 (stone 15, clay 4, wood 4) | 27 — copper/iron/mithril/star metal ingots, tools, weapons, chainmail, kite shield, 6 legendaries |
-| Tailoring Table | build piece (planks 6, rope 3) | 10 — robe, hood, vest, leather, gloves, boots, fur cap, fur boots, jerkin, shadow cloak |
+| Forge | build piece, level 3 (stone 15, clay 4, wood 4) | 31 — copper/iron/mithril/star metal ingots, tools, weapons, squire's helm, chainmail, iron helm/gauntlets/greaves, kite shield, 6 legendaries |
+| Tailoring Table | build piece (planks 6, rope 3) | 14 — robe, hood, vest, leather, gloves, boots, fur cap, fur boots, jerkin, shadow cloak, wizard's hat, shadow hood, horned helm, soft leather boots |
 | Arcane Altar | build piece, level 5 | 11 — arcane dust, crystal staff/ring, moonpetal pendant, starmetal amulet, 4 tomes, 2 legendaries |
 | Campfire | Campfire Kit (placed) | 5 — cooked meat, bread, vegetable stew, hearty stew, cooling salad |
 | Alchemy Table | build piece, level 2 | 10 — all potions and elixirs |
@@ -673,11 +698,12 @@ There are **no texture, model or animation files**. Everything is built by code 
 
 | Model | Look |
 |---|---|
-| Player (all classes) | Box humanoid: head, torso, arms with elbows, legs with knees, boots; shirt/pants/hair colours per class |
-| Barbarian | Horns, fur mantle, beard; axe |
-| Knight | Helm with visor slit and plume, breastplate, pauldrons; sword and shield |
-| Wizard | Wide hat brim, white beard, robe skirt; staff |
-| Assassin | Hood, face mask, cape; daggers |
+| Player (all classes, Milestone 14) | One shared box humanoid: head, torso, arms with elbows, legs with knees; plain linen tunic, brown pants and boots. Everything else is drawn from the gear |
+| Head gear | Padded hood, straw sun hat, fur cap with ear flaps, tall wizard's hat with glowing tip, squire's helm with red plume, horned helm with nose guard, shadow hood with face mask, iron great helm with eye slit, crown of stars |
+| Chest gear | Quilted vest, robe with skirt, sleeves and gold trim, leather jerkin with strap, chainmail with rings and skirt, cloak with clasp, plate with breastplate, pauldrons and faulds |
+| Hands / feet | Gloves, iron gauntlets with cuffs; boots, fur boots with fur rim, iron greaves with shin plates |
+| Shields / amulets | Round buckler with a metal boss, kite shield with a red cross, golden Aegis with a sun; a small pendant on the chest |
+| Starting looks | Barbarian: horned helm + padded vest + axe. Knight: plumed squire's helm + vest + buckler + sword. Wizard: wizard's hat + purple robe + staff (orb coloured by the staff). Assassin: shadow hood + gloves + boots + dagger |
 | Villager / merchant / farmer / blacksmith | Random skin, hair and shirt colours; farmer straw hat, blacksmith apron, merchant cap and apron |
 | Guard / ruler / trader | Guard helm and tabard; ruler gold crown and cape; trader hood, backpack and bedroll |
 | Skeleton Warrior / Archer | Pale bones, glowing eyes, ribs, jaw gap; sword + shield, or bow with a hood |
@@ -740,6 +766,7 @@ textures on any surface, so large areas look flat up close.
 | Crafting time, queues, fuel, station upgrades | ❌ | |
 | Crafting/building from nearby chests | 🟡 | Blueprints use chests; normal crafting and build mode do not |
 | Inventory and 8 equipment slots | ✅ | |
+| Outfits: gear-driven looks, armour weight, skill bonuses on gear | ✅ | Milestone 14. No character customisation, dyes or ring looks |
 | Building grid, defenses, repair, land claims | ✅ | |
 | Multi-storey buildings, stairs, slopes | ❌ | |
 | Blueprints, auto-build, web designer | ✅ | Designer not hosted online; no builder NPCs |
@@ -825,8 +852,9 @@ All open items from `docs/TODO.md`, plus problems found while writing this docum
 25. Mounts, boats or fast travel (streaming already handles 70 m/s).
 26. Raids: raiders don't open/burn doors or climb walls; no raid difficulty setting; raids on structures
     outside a claim; active raids are not saved.
-27. NEW — Few hand, feet and ring items (one pair of gloves, two pairs of boots, two rings): gear slots
-    feel empty in the mid and late game.
+27. Few ring items and no mid/late hand items besides Iron Gauntlets (Milestone 14 added gauntlets, greaves and
+    soft boots; rings are still thin).
+27b. Character customisation (skin, hair, face) now that every class shares one body.
 28. Tested release on real Steam, achievement icons, Steam Cloud test.
 29. Code signing (Windows SmartScreen warning), macOS build, installer.
 30. Languages other than English (text is in code, not extracted).
@@ -991,8 +1019,8 @@ New abilities at levels 25, 40 and 60, plus an upgrade choice for each old abili
 
 - **8a. Item quality (M).** Fine / Masterwork crafted items with small bonus stats. Crafting still never
   fails: quality only ever adds, a "normal" item is the minimum.
-- **8b. More gloves, boots and rings (S).** Fill the empty slots: Iron Gauntlets, Mithril Greaves, Ring
-  of Embers, Ring of Swiftness, etc.
+- **8b. More gloves, boots and rings (S).** Partly done in Milestone 14 (Iron Gauntlets, Iron Greaves, Soft
+  Leather Boots). Still open: Mithril Greaves, Ring of Embers, Ring of Swiftness, etc.
 - **8c. Set bonuses (M).** Wearing 3 pieces of a set gives a bonus (e.g. Fur set: extra insulation).
 - **8d. Legendary effects (M).** Each legendary gets one special power (Shadowfang: crits make you
   invisible for 1 s; Aegis of Dawn: parries heal).
@@ -1065,7 +1093,10 @@ New abilities at levels 25, 40 and 60, plus an upgrade choice for each old abili
 
 ## 9. Suggested next milestones
 
-### Milestone 14 — "Living Wilds" (fill the world)
+**Done: Milestone 14 — "Outfits".** Every class shares one body; gear decides looks, armour weight and small
+skill bonuses; classes keep their points, growth, power and abilities. It also covers part of idea 8b.
+
+### Milestone 15 — "Living Wilds" (fill the world)
 **Goal:** every biome has life and danger, and new players have enough level-fitting content.
 **Ideas:** 3a (wild spawns for every biome), 3b, 3c, 3h (peaceful animals), 10a (POI ranks near spawn),
 10c, 8f (respec), 8a (item quality, fixes the perk text), 8b.
@@ -1073,26 +1104,26 @@ New abilities at levels 25, 40 and 60, plus an upgrade choice for each old abili
 enemies, and most POIs are end-game. It is mostly data work on systems that already exist (monster
 framework, spawn rules, POI ranks), so it is cheap and makes every other system more fun.
 
-### Milestone 15 — "The Lost Shards" (story and quests)
+### Milestone 16 — "The Lost Shards" (story and quests)
 **Goal:** give the player a reason to explore and a sense of a real place.
 **Ideas:** 4a–4f (lore and backstories), 11a (quest system and journal), 11b (main quest), 11c, 11d.
 **Why second:** once the world has life, a story can send players to places that are now worth visiting.
 The quest system is also needed for later content (kingdom quests, events).
 
-### Milestone 16 — "Heroes' Arsenal" (combat depth)
+### Milestone 17 — "Heroes' Arsenal" (combat depth)
 **Goal:** more ways to fight from level 15 to level 100.
 **Ideas:** 5a–5i (new abilities and upgrades), 6a–6g (shared spells), 7a–7d (new attacks), 9a (bow),
 9b–9d (spear, hammer, greatsword), 9f, 8d (legendary effects), 2a–2b (ability and two-handed animations).
 **Why third:** new abilities and weapons are more valuable when there are more enemy types to use them
-on (M14) and story goals to reach (M15). Animations come together with the moves they show.
+on (M15) and story goals to reach (M16). Animations come together with the moves they show.
 
-### Milestone 17 — "Together in Danger" (real co-op)
+### Milestone 18 — "Together in Danger" (real co-op)
 **Goal:** friends can fight, raid, and clear dungeons together.
 **Ideas:** 13a, 13b, 13c, 5c (Shield Wall), 6b (group heal), 2f (emotes).
 **Why fourth:** shared combat is a large networking job. It is better to do it after combat content has
-grown (M16), so the sync work covers the final set of abilities, enemies and bosses at once.
+grown (M17), so the sync work covers the final set of abilities, enemies and bosses at once.
 
-### Milestone 18 — "World Polish" (look, feel and reach)
+### Milestone 19 — "World Polish" (look, feel and reach)
 **Goal:** a richer look and a bigger audience.
 **Ideas:** 1a–1f (code-made textures), 2c–2g (more animations), 12a–12c (multi-storey building,
 decorations), 14a–14c (horse, boat, waystones), gamepad menus, translations, Steam release checks.

@@ -5,7 +5,10 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 13 — Beta (v0.13.0)**: release preparation on top of the alpha loop - a
+> Status: **Milestone 14 — Outfits (v0.14.0)**: every class shares one body and your gear decides how you look
+> and play - light armour keeps you hidden, heavy armour protects you but gets you noticed, and clothes add
+> +1/+2 to skills. Classes keep their own starting points, growth and abilities (a Wizard stays physically
+> weak in any armour). Before that, **Milestone 13 — Beta (v0.13.0)**: release preparation on top of the alpha loop - a
 > contextual tutorial and an in-game guide (F1), a full settings screen with key and gamepad rebinding,
 > difficulty and accessibility options (interface scale, colour-vision filters, high contrast, sound
 > captions, reduced flashing and motion), checksummed saves with automatic backups and a Recover screen,
@@ -17,6 +20,9 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
 
 ![Village](docs/screenshots/village_overview.png)
+
+![Outfits](docs/screenshots/outfits_lineup.png)
+*Milestone 14: one body, many outfits - the four starting outfits, a Knight in light leather, the same Knight in iron, and end-game gear.*
 
 | **Co-op: a guest in your world** | **Chat & who's online** | |
 |---|---|---|
@@ -405,6 +411,11 @@ D-pad spells and hotbar, View bag, Menu pause. Menus still need the mouse.
 72. **Achievements** – main menu or pause menu → *Achievements*: 20 of them with progress bars and your
     lifetime stats (monsters defeated, trees felled, kilometres walked...).
 
+73. **Outfits** – start a Knight and press K: the outfit line shows your armour style. Craft a Shadow Hood
+    (Tailoring, after you get boar hide) and Leather Gloves, equip a dagger: you look and play like an
+    Assassin, but keep Knight abilities. In light armour idle monsters notice you later; in full iron they
+    notice you sooner and dodging costs more stamina. Item tooltips show Light / Medium / Heavy.
+
 ## Run the automated tests
 
 ```bash
@@ -412,8 +423,9 @@ tools/run_tests.sh            # or: tools/run_tests.sh /path/to/godot
 ```
 
 or directly: `godot --headless --path . res://tests/test_runner.tscn` (exit code 0 = pass).
+Run part of the suite with `-- --only=test_m14` (any part of a test name).
 
-The suite (1159 checks) covers deterministic generation, chunk meshes/LOD/collision,
+The suite (1206 checks) covers deterministic generation, chunk meshes/LOD/collision,
 inventory rules, hunger, temperature (never damages), world-state persistence, and an
 **integration test that boots the real game** and plays it with simulated input:
 movement, eating, combat vs. the boar, block/parry/i-frames, loot, tree harvesting,
@@ -507,6 +519,7 @@ godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=blu
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=massive  # horizon, far reaches, world edge
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=polish   # sky, weather, effects, icons, settings
 godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=multiplayer # host + headless guest
+godot --path . res://tests/screenshot_runner.tscn -- --out=/tmp/shots --only=outfits  # one body, many outfits
 python3 tools/gen_audio.py        # regenerate all sound effects, ambience and music (needs ffmpeg)
 godot --headless --path . res://tools/world_survey.tscn -- --seed=20250101  # whole-world survey -> docs/WORLD_SURVEY.md
 python3 tools/build_designer.py   # rebuild the web designer after changing build pieces or built-in blueprints

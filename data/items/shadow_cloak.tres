@@ -20,4 +20,6 @@ stat_bonuses = {
 &"dexterity": 3,
 &"move_speed": 3
 }
+armor_weight = 1
+outfit_look = &"cloak"
 

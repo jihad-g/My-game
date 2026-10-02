@@ -17,6 +17,9 @@ equip_slot = 2
 required_level = 1
 stat_bonuses = {
 &"armor": 6,
-&"block": 5
+&"block": 5,
+&"defense": 1
 }
+armor_weight = 2
+outfit_look = &"buckler"
 weapon_type = &"shield"

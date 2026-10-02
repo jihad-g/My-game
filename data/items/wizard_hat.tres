@@ -4,21 +4,20 @@
 
 [resource]
 script = ExtResource("1_item")
-id = &"sun_hat"
-display_name = "Straw Sun Hat"
-description = "Wide straw hat. Keeps the desert sun off."
+id = &"wizard_hat"
+display_name = "Wizard's Hat"
+description = "A tall pointed hat that helps you focus."
 category = 4
 rarity = 0
 max_stack = 1
-base_value = 7
-icon_color = Color(0.9, 0.8, 0.5, 1)
-icon_glyph = "Hd"
+base_value = 10
+icon_color = Color(0.42, 0.3, 0.72, 1)
+icon_glyph = "Wh"
 equip_slot = 3
 required_level = 1
 stat_bonuses = {
-&"cooling": 8,
-&"crafting": 1
+&"max_mana": 10,
+&"mana_control": 1
 }
 armor_weight = 1
-outfit_look = &"sun_hat"
-
+outfit_look = &"wizard_hat"

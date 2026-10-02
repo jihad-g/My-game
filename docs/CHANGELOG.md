@@ -2,6 +2,37 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.14.0] — Milestone 14: Outfits
+
+### Added
+- **One body for every class.** All player characters now share the same blocky body; what you wear decides
+  how you look. Every head, chest, hands, feet, off-hand and amulet item has its own look (24 looks: helms,
+  hoods, hats, robes, vests, chainmail, plate, cloaks, gloves, gauntlets, boots, greaves, three shield styles,
+  pendants), coloured by the item.
+- **Armour weight** (`ItemData.armor_weight`): Light, Medium or Heavy. Each light piece makes enemies notice
+  you 6% later and makes a dodge 4% cheaper; each heavy piece makes them notice you 8% sooner and a dodge 6%
+  dearer (notice range ×0.6–×1.5, dodge cost ×0.7–×1.5). Only idle or wandering enemies use the notice
+  range; once they fight you, nothing changes.
+- **+1 / +2 skill bonuses on everyday gear**: e.g. Leather Gloves +1 Dexterity, Padded Vest +1 Defense,
+  Apprentice Robe +1 Mana Control, Chainmail +2 Defense, Fur Cap +1 Strength.
+- **8 new armour items** with recipes any class can craft: Squire's Helm, Horned Helm, Wizard's Hat, Shadow
+  Hood (new class starting hats), Iron Great Helm, Iron Gauntlets, Iron Greaves (Smithing Manual) and Soft
+  Leather Boots (Leatherworker's Notes).
+- **Starting outfits**: Knight — Squire's Helm, Padded Vest, Wooden Buckler; Barbarian — Horned Helm, Padded
+  Vest; Wizard — Wizard's Hat, Apprentice Robe; Assassin — Shadow Hood, Leather Gloves, Worn Boots.
+- Character screen line: outfit style, notice range and dodge cost. Item tooltips show the armour weight.
+- Multiplayer: other players see your outfit; players who join later get everyone's current outfit.
+- Tests: `test_m14_outfit_data`, `test_m14_outfits_ingame` (43 checks). The test runner takes
+  `-- --only=<name part>` to run some tests. Screenshot runner `--only=outfits`.
+
+### Changed
+- Classes keep their own starting skill points, skill growth, class power and abilities. A Knight in light
+  leather with daggers plays like an Assassin, but stays a Knight. **The Wizard rule still holds**: a Wizard
+  with 100 Strength in full iron with a sword hits ×0.66, a starting Knight ×1.28 (tested).
+- Weapon penalties for the fighting classes are smaller: Knight and Barbarian with daggers ×0.9 (was ×0.7),
+  Assassin with axes and shields ×0.9 (was ×0.7). The Wizard's weapon values are unchanged.
+- `ClassData` shirt/pants/hair colours no longer change the body (kept in the data for now).
+
 ## [0.13.0] — Milestone 13: Beta / Release preparation
 
 ### Added

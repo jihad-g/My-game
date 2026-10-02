@@ -17,6 +17,9 @@ equip_slot = 4
 required_level = 12
 stat_bonuses = {
 &"armor": 22,
-&"move_speed": -5
+&"move_speed": -5,
+&"defense": 2
 }
+armor_weight = 3
+outfit_look = &"chainmail"
 

@@ -21,4 +21,5 @@ stat_bonuses = {
 &"insulation": 5,
 &"cooling": 5
 }
+outfit_look = &"pendant"
 

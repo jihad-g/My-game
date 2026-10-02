@@ -64,6 +64,71 @@ func total(stat: StringName) -> float:
 	return t
 
 
+## --- Outfit (Milestone 14) -------------------------------------------------------------
+## Each light piece shortens the range at which enemies notice you, each heavy
+## piece lengthens it; the same weights change the stamina cost of a dodge.
+const NOTICE_LIGHT := -0.06
+const NOTICE_HEAVY := 0.08
+const DODGE_LIGHT := -0.04
+const DODGE_HEAVY := 0.06
+
+
+## ArmorWeight -> number of equipped pieces with that weight.
+func weight_counts() -> Dictionary:
+	var out := {ItemData.ArmorWeight.LIGHT: 0, ItemData.ArmorWeight.MEDIUM: 0, ItemData.ArmorWeight.HEAVY: 0}
+	for slot in slots:
+		var item := get_item(slot)
+		if item and item.armor_weight != ItemData.ArmorWeight.NONE:
+			out[item.armor_weight] += 1
+	return out
+
+
+## Multiplier on how far away enemies notice you (1.0 = normal).
+func notice_mult() -> float:
+	var w := weight_counts()
+	return clampf(1.0 + NOTICE_LIGHT * w[ItemData.ArmorWeight.LIGHT] + NOTICE_HEAVY * w[ItemData.ArmorWeight.HEAVY], 0.6, 1.5)
+
+
+## Multiplier on the stamina cost of a dodge roll.
+func dodge_cost_mult() -> float:
+	var w := weight_counts()
+	return clampf(1.0 + DODGE_LIGHT * w[ItemData.ArmorWeight.LIGHT] + DODGE_HEAVY * w[ItemData.ArmorWeight.HEAVY], 0.7, 1.5)
+
+
+## Short name of the overall outfit style: "Light", "Medium", "Heavy" or "Mixed".
+func outfit_style() -> String:
+	var w := weight_counts()
+	var l: int = w[ItemData.ArmorWeight.LIGHT]
+	var m: int = w[ItemData.ArmorWeight.MEDIUM]
+	var h: int = w[ItemData.ArmorWeight.HEAVY]
+	if l + m + h == 0:
+		return "Clothes only"
+	if l > m + h:
+		return "Light"
+	if h > l + m:
+		return "Heavy"
+	if m >= l and m >= h:
+		return "Medium"
+	return "Mixed"
+
+
+## Item ids of the visible outfit pieces (for the model and for multiplayer).
+func outfit_ids() -> PackedStringArray:
+	var out := PackedStringArray()
+	for slot in ItemData.OUTFIT_SLOTS:
+		var id := get_item_id(slot)
+		if id != &"":
+			out.append(String(id))
+	return out
+
+
+## Everything another machine needs to draw this character:
+## [weapon type, has off-hand, "id,id,...", weapon id].
+func look_args() -> Array:
+	var w := weapon()
+	return [String(weapon_type()), offhand() != null, ",".join(outfit_ids()), String(w.id) if w else ""]
+
+
 func clear() -> void:
 	slots.clear()
 	changed.emit()

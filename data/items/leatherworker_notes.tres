@@ -13,4 +13,4 @@ max_stack = 1
 base_value = 40
 icon_color = Color(0.58, 0.38, 0.24, 1)
 icon_glyph = "Bk"
-teaches_recipes = [&"leather_jerkin", &"fur_cap", &"fur_boots", &"shadow_cloak"]
+teaches_recipes = [&"leather_jerkin", &"fur_cap", &"fur_boots", &"shadow_cloak", &"soft_leather_boots"]

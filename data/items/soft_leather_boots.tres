@@ -4,22 +4,21 @@
 
 [resource]
 script = ExtResource("1_item")
-id = &"fur_boots"
-display_name = "Fur-lined Boots"
-description = "Boots lined with thick fur."
+id = &"soft_leather_boots"
+display_name = "Soft Leather Boots"
+description = "Quiet boots for quick feet."
 category = 4
 rarity = 1
 max_stack = 1
-base_value = 25
-icon_color = Color(0.55, 0.42, 0.3, 1)
-icon_glyph = "Bt"
+base_value = 30
+icon_color = Color(0.4, 0.28, 0.2, 1)
+icon_glyph = "SB"
 equip_slot = 6
-required_level = 4
+required_level = 8
 stat_bonuses = {
 &"armor": 3,
-&"insulation": 6,
-&"strength": 1
+&"dexterity": 2,
+&"move_speed": 4
 }
 armor_weight = 1
-outfit_look = &"fur_boots"
-
+outfit_look = &"boots"

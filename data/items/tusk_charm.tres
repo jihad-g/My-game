@@ -19,4 +19,5 @@ stat_bonuses = {
 &"strength": 3,
 &"max_health": 10
 }
+outfit_look = &"pendant"
 

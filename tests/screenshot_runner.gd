@@ -55,6 +55,10 @@ func _ready() -> void:
 		await _build_showcase()
 		get_tree().quit()
 		return
+	if "--only=outfits" in OS.get_cmdline_user_args():
+		await _outfits_showcase()
+		get_tree().quit()
+		return
 	if "--only=rpg" in OS.get_cmdline_user_args():
 		await _rpg_showcase()
 		get_tree().quit()
@@ -1172,3 +1176,63 @@ func _multiplayer_showcase() -> void:
 	while OS.is_process_running(pid):
 		await get_tree().process_frame
 	Net.leave()
+
+
+## Milestone 14 showcase: one body, many outfits. The four starting outfits in
+## a row, then the same Knight dressed light (Assassin style) and heavy (iron).
+func _outfits_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var frames := 0
+	while world.chunk_manager.pending_count() > 0 and frames < 1500:
+		await get_tree().process_frame
+		frames += 1
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud._help.visible = false
+	world.day_night.hour = 11.0
+	world.weather.force(WeatherSystem.Kind.CLEAR, 0.0)
+	world.weather.settle()
+	# A meadow has open ground with few trees.
+	await _teleport(world, _find_biome(world.generator, p.global_position, &"verdant_meadow"))
+	p.visible = false
+	var cam := world.camera_rig
+	var right := cam.camera.global_transform.basis.x
+	right.y = 0.0
+	right = right.normalized()
+	var toward := -cam.camera.global_transform.basis.z
+	toward.y = 0.0
+	toward = toward.normalized()
+	var outfits := [
+		[&"rough_handaxe", [&"horned_helm", &"padded_vest"]],
+		[&"squire_sword", [&"squire_helm", &"padded_vest", &"wooden_buckler"]],
+		[&"apprentice_staff", [&"wizard_hat", &"apprentice_robe"]],
+		[&"rusty_dagger", [&"shadow_hood", &"leather_gloves", &"worn_boots"]],
+		[&"iron_dirk", [&"shadow_hood", &"shadow_cloak", &"leather_gloves", &"soft_leather_boots"]],
+		[&"iron_sword", [&"iron_helm", &"chainmail", &"iron_gauntlets", &"iron_greaves", &"iron_kite_shield"]],
+		[&"starfall_blade", [&"crown_of_stars", &"mithril_plate", &"aegis_of_dawn", &"starmetal_amulet"]],
+	]
+	var models := []
+	for i in outfits.size():
+		var m := HumanoidModel.new()
+		world.add_child(m)
+		m.set_appearance()
+		var w: ItemData = ItemDB.get_item(outfits[i][0])
+		m.set_weapon(w.weapon_type, outfits[i][1].any(func(id: StringName) -> bool: return ItemDB.get_item(id).equip_slot == ItemData.EquipSlot.OFF_HAND))
+		m.set_outfit(PackedStringArray(outfits[i][1].map(func(id: StringName) -> String: return String(id))), w.id)
+		var pos := p.global_position + right * ((i - 3) * 1.25 + 3.0)
+		pos.y = world.get_ground_height(pos)
+		m.global_position = pos
+		m.look_at(pos + toward, Vector3.UP)  # the model's face is +Z: face the camera
+		models.append(m)
+	cam._pan_offset = right * 3.0
+	cam._target_distance = 11.0
+	cam._target_pitch = 22.0
+	await _wait(60)
+	await _shot("outfits_lineup")
+	cam._target_distance = 7.0
+	await _wait(40)
+	await _shot("outfits_closeup")

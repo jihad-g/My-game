@@ -70,9 +70,12 @@ func push_state(s: Dictionary) -> void:
 		_snaps.pop_front()
 
 
-func set_equipment_look(weapon_type: StringName, shield: bool) -> void:
+## Weapon and outfit (Milestone 14): `outfit` is a comma-separated list of item
+## ids (unknown ids are ignored), `weapon_id` colours the weapon.
+func set_equipment_look(weapon_type: StringName, shield: bool, outfit: String = "", weapon_id: String = "") -> void:
 	if model:
 		model.set_weapon(weapon_type, shield)
+		model.set_outfit(PackedStringArray(outfit.split(",", false)), StringName(weapon_id))
 
 
 ## Replays an animation event from the owner.
@@ -94,7 +97,8 @@ func play_event(ev: String, args: Array) -> void:
 			model.reset_pose()
 		"look":
 			if args.size() >= 2:
-				set_equipment_look(StringName(String(args[0])), bool(args[1]))
+				set_equipment_look(StringName(String(args[0])), bool(args[1]),
+					String(args[2]).substr(0, 400) if args.size() > 2 else "", String(args[3]).substr(0, 64) if args.size() > 3 else "")
 
 
 ## Interpolated state at `t` (seconds, same clock as push_state).

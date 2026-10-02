@@ -37,9 +37,9 @@ base_armor = 2
 weapon_proficiency = {
 &"dagger": 1.15,
 &"sword": 0.9,
-&"axe": 0.7,
+&"axe": 0.9,
 &"staff": 0.5,
-&"shield": 0.7
+&"shield": 0.9
 }
 unarmed_moveset = ExtResource("2_unarmed")
 block_reduction = 0.55
@@ -49,7 +49,7 @@ crit_bonus = 0.1
 uses_rage = false
 abilities = [ExtResource("a0"), ExtResource("a1"), ExtResource("a2")]
 temperature_shield_cost = 42
-starting_equipment = [&"rusty_dagger", &"leather_gloves", &"worn_boots"]
+starting_equipment = [&"rusty_dagger", &"leather_gloves", &"worn_boots", &"shadow_hood"]
 shirt_color = Color(0.22, 0.22, 0.28, 1)
 pants_color = Color(0.18, 0.18, 0.22, 1)
 hair_color = Color(0.15, 0.12, 0.1, 1)

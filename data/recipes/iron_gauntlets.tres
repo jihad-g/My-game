@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"iron_gauntlets"
+result_item = &"iron_gauntlets"
+result_count = 1
+ingredients = {
+&"iron_ingot": 2,
+&"leather": 1
+}
+station = 2
+tier = 1
+source = 2
+source_hint = "Smithing Manual (cave caches, blacksmiths)"
+xp = 14

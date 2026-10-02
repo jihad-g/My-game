@@ -44,7 +44,7 @@ static func shape_of(item: ItemData) -> StringName:
 		["pickaxe", &"pickaxe"], ["hatchet", &"hatchet"], ["handaxe", &"hatchet"], ["waraxe", &"axe"], ["greataxe", &"axe"],
 		["cleaver", &"axe"], ["dagger", &"dagger"], ["knife", &"dagger"], ["shadowfang", &"dagger"], ["staff", &"staff"],
 		["sword", &"sword"], ["blade", &"sword"], ["shield", &"shield"], ["buckler", &"shield"], ["aegis", &"shield"],
-		["crown", &"crown"], ["cap", &"helmet"], ["hood", &"hood"], ["hat", &"hat"], ["boots", &"boots"], ["gloves", &"gloves"],
+		["crown", &"crown"], ["helm", &"helmet"], ["cap", &"helmet"], ["gauntlets", &"gloves"], ["greaves", &"boots"], ["hood", &"hood"], ["hat", &"hat"], ["boots", &"boots"], ["gloves", &"gloves"],
 		["jerkin", &"armor"], ["vest", &"armor"], ["chainmail", &"armor"], ["plate", &"armor"], ["robe", &"robe"],
 		["cloak", &"robe"], ["ring", &"ring"], ["signet", &"ring"], ["amulet", &"amulet"], ["pendant", &"amulet"],
 		["charm", &"amulet"], ["insignia", &"badge"],

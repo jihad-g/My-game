@@ -105,6 +105,21 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 14 — Outfits  ✅
+
+- [x] One shared body for all classes; looks come from the equipped head, chest, hands, feet, off-hand and amulet (24 code-built looks, tinted by the item)
+- [x] Armour weight (Light / Medium / Heavy) on every armour piece and shield: changes how far away idle enemies notice you and the stamina cost of a dodge
+- [x] +1 / +2 skill bonuses on everyday armour and clothes
+- [x] 8 new armour items with recipes (class starting hats, iron helm/gauntlets/greaves, soft leather boots)
+- [x] Class starting outfits; classes keep starting points, skill growth, class power and abilities (Wizard rule tested in full iron)
+- [x] Smaller off-weapon penalties for Knight, Barbarian and Assassin (×0.9)
+- [x] Character screen and tooltips show armour weight; outfits are synced in multiplayer (also for late joiners)
+- [ ] NOT IMPLEMENTED: character customisation (skin, hair, face) - every player has the same default body
+- [ ] NOT IMPLEMENTED: ability ranks that level up with use (class abilities stay per class, unlocked at levels 1 / 5 / 15)
+- [ ] NOT IMPLEMENTED: dyes / colouring your own gear; ring looks (rings are not drawn)
+- [ ] Known limitation: weight only affects noticing and dodging (no swim or sprint penalty); ranged and raiding enemies that are already fighting ignore it
+- [ ] Known limitation: the hood overlaps the face a little (same as the old Assassin hood)
+
 ## Milestone 13 — Beta / Release preparation  ✅
 
 - [x] Tutorial: 16 contextual hints (moving, camera, gathering, bag, crafting, chopping, combat, hunger, cold, levelling, building, night, villages, points of interest, collapsing, guide) shown when the situation comes up, with the real key names; progress per player profile; turn off or replay in Settings

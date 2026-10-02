@@ -91,6 +91,16 @@ func on_pool_release() -> void:
 
 
 ## True while performing a charge/rush (spikes punish it harder).
+## Distance at which this enemy notices `t` while idle or wandering: its sight
+## range scaled by the target's outfit (light armour is noticed later, heavy
+## armour sooner - Milestone 14). Once a fight starts the normal range applies.
+func notice_range(t: Node3D) -> float:
+	var r: float = data.aggro_range if data else 10.0
+	if t and t.has_method("notice_mult"):
+		r *= float(t.notice_mult())
+	return r
+
+
 func is_charging() -> bool:
 	return false
 

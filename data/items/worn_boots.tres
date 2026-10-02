@@ -17,6 +17,9 @@ equip_slot = 6
 required_level = 1
 stat_bonuses = {
 &"armor": 2,
-&"move_speed": 3
+&"move_speed": 3,
+&"dexterity": 1
 }
+armor_weight = 1
+outfit_look = &"boots"
 

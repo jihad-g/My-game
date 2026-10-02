@@ -21,3 +21,5 @@ stat_bonuses = {
 &"insulation": 8,
 &"defense": 4
 }
+armor_weight = 3
+outfit_look = &"plate"

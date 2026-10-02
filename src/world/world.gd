@@ -157,7 +157,7 @@ func _ready() -> void:
 			Net.server.broadcast_local_anim(ev, args))
 	player.equipment.changed.connect(func() -> void:
 		if Net.is_server():
-			Net.server.broadcast_local_anim("look", [String(player.equipment.weapon_type()), player.equipment.offhand() != null]))
+			Net.server.broadcast_local_anim("look", player.equipment.look_args()))
 	Net.mode_changed.connect(_apply_online_rules)
 	_apply_online_rules()
 

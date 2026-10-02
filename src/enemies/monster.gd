@@ -376,7 +376,7 @@ func _think(delta: float) -> void:
 				Events.toast.emit("%s awakens!" % display_name(), Color(1, 0.6, 0.3))
 				_alert(tgt)
 		AI.IDLE:
-			if tgt and dist < data.aggro_range:
+			if tgt and dist < notice_range(tgt):
 				_alert(tgt)
 			elif _is_raider() and global_position.distance_to(objective) > 8.0:
 				_set_ai(AI.MARCH, 60.0)
@@ -386,7 +386,7 @@ func _think(delta: float) -> void:
 				_wander_target = center + Vector3(cos(a), 0, sin(a)) * _rng.randf_range(1.5, 5.0 * minf(leash_mult, 2.0))
 				_set_ai(AI.WANDER, 6.0)
 		AI.WANDER:
-			if tgt and dist < data.aggro_range:
+			if tgt and dist < notice_range(tgt):
 				_alert(tgt)
 			else:
 				var to := _wander_target - global_position
@@ -569,7 +569,7 @@ func _think(delta: float) -> void:
 
 ## Marching on the raid objective; smash what blocks the way, then what's there.
 func _march(tgt: Node3D, dist: float) -> void:
-	if tgt and dist < data.aggro_range:
+	if tgt and dist < notice_range(tgt):
 		_alert(tgt)
 		return
 	if _alive(_blocker) and _blocker is BuildPiece:

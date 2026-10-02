@@ -4,21 +4,20 @@
 
 [resource]
 script = ExtResource("1_item")
-id = &"sun_hat"
-display_name = "Straw Sun Hat"
-description = "Wide straw hat. Keeps the desert sun off."
+id = &"horned_helm"
+display_name = "Horned Helm"
+description = "A leather cap with two boar tusks. Makes you feel stronger."
 category = 4
 rarity = 0
 max_stack = 1
-base_value = 7
-icon_color = Color(0.9, 0.8, 0.5, 1)
-icon_glyph = "Hd"
+base_value = 52
+icon_color = Color(0.55, 0.42, 0.3, 1)
+icon_glyph = "Hh"
 equip_slot = 3
 required_level = 1
 stat_bonuses = {
-&"cooling": 8,
-&"crafting": 1
+&"armor": 3,
+&"strength": 1
 }
-armor_weight = 1
-outfit_look = &"sun_hat"
-
+armor_weight = 2
+outfit_look = &"horned_helm"
