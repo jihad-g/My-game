@@ -1,0 +1,49 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/animal_kick.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"raw_meat"
+min_count = 1
+max_count = 1
+chance = 0.9
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"wild_hide"
+min_count = 1
+max_count = 1
+chance = 0.25
+
+[resource]
+script = ExtResource("1_md")
+id = &"rabbit"
+display_name = "Rabbit"
+category = 0
+level = 1
+max_health = 12.0
+walk_speed = 1.6
+run_speed = 7.5
+turn_speed = 9.0
+aggro_range = 8.0
+leash_range = 30.0
+max_poise = 5.0
+damage_multipliers = {}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 2
+respawn_time = 240.0
+style = 0
+look = &"rabbit"
+model_scale = 1.0
+tint = Color(0.72, 0.66, 0.58, 1)
+accent = Color(0.95, 0.75, 0.75, 1)
+melee = ExtResource("2_melee")
+flee_below = 1.0
+pack_alert = 0.0
+can_be_elite = false
+timid = true

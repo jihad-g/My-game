@@ -144,7 +144,7 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 - Barbarian has **Rage** (built by fighting, spent by Berserk).
 - Every class can use the **Magic Temperature Shield** (T): 10 minutes of cold/heat protection, needs
   Mana Control +2 above the class start; the Wizard pays the least mana.
-- No respec, no ability upgrades, no fourth ability. See the catalogue for every ability.
+- Respec with the Draught of Forgetting (Milestone 15); no ability upgrades, no fourth ability. See the catalogue for every ability.
 - **What a class is (Milestone 14):** every class has the same body. A class decides its starting outfit and
   weapon, its starting skill points, how fast each skill grows (skill efficiency), its physical and spell
   power, its weapon skill and its three abilities. Anything you wear can be worn by any class, so a Knight in
@@ -487,16 +487,16 @@ Levels and health above are the base (rank E) values; ranks and distance scale t
 
 | Biome | Role | Notes | Wild enemies |
 |---|---|---|---|
-| Verdant Meadows | land | grass, oaks, berry bushes, flowers, sunbloom | Boar |
-| Whispering Forest | land | dense forest; the usual spawn biome | Boar |
-| Frostpine Taiga | land | cold pine forest | Boar |
-| Snowy Tundra | land | freezing, frozen lakes, frost lotus, frostberries | none |
-| Sunscorch Desert | land | hot by day, dunes, cactus, sandstorms | none |
-| Emerald Jungle | land | hot and wet, jungle trees | Boar |
-| Murk Swamp | land | half water, mire willows, giant toadstools, glowcaps, clay | none |
-| Sandy Beach | coast | palms, coconuts | none |
-| Stonecrown Mountains | mountain | up to ~60 m, rock and snow caps, ores, emberroot, mithril on peaks | none |
-| Crystal Glade | rare | purple, crystals, moonpetals | none |
+| Verdant Meadows | land | grass, oaks, berry bushes, flowers, sunbloom | Boar, deer, rabbits, bandit thugs |
+| Whispering Forest | land | dense forest; the usual spawn biome | Boar, deer, rabbits, thorn crawlers, bandit archers |
+| Frostpine Taiga | land | cold pine forest | Boar, frost wolf packs, deer, rabbits |
+| Snowy Tundra | land | freezing, frozen lakes, frost lotus, frostberries | Frost wolf packs, rabbits |
+| Sunscorch Desert | land | hot by day, dunes, cactus, sandstorms | Sand scorpions, bandit archers and thugs |
+| Emerald Jungle | land | hot and wet, jungle trees | Boar, thorn crawlers, grotto cultists, deer |
+| Murk Swamp | land | half water, mire willows, giant toadstools, glowcaps, clay | Thorn crawlers, wisps, skeleton warriors |
+| Sandy Beach | coast | palms, coconuts; shipwrecks | Shore crabs, bandit thugs |
+| Stonecrown Mountains | mountain | up to ~60 m, rock and snow caps, ores, emberroot, mithril on peaks | Frost wolf packs, arcane sentinels, skeleton archers |
+| Crystal Glade | rare | purple, crystals, moonpetals | Arcane wisps, arcane sentinels, rabbits |
 | Deep Ocean | ocean | open water | none |
 | The Deeps | underground | caves under entrances; ores, crystals, glowcaps, dreamcaps, Forgotten Caches; always 12 °C | none |
 
@@ -768,14 +768,14 @@ textures on any surface, so large areas look flat up close.
 | Status effects and elemental combos | ✅ | Weather doesn't make everyone wet (only the player in rain) |
 | Classes (4) and abilities (3 each) | ✅ | |
 | More abilities / ability upgrades / talents | ❌ | |
-| Respec (reset skill points) | ❌ | |
+| Respec (reset skill points) | ✅ | Draught of Forgetting (Milestone 15) |
 | Spells (8), spellbook, tomes | ✅ | No spell upgrades |
 | Levels 1–100, skills, perks | ✅ | Levels 75–100 are very slow (only S-rank content) |
 | Hunger, health, stamina, mana | ✅ | |
 | Temperature (never kills) | ✅ | |
 | Gathering, tools, tiers, regrowth | ✅ | |
 | Crafting (never fails) | ✅ | |
-| Item quality (Fine / Masterwork) | ❌ | Crafting 90 perk text promises it |
+| Item quality (Fine / Masterwork) | ✅ | Milestone 15; only from crafting |
 | Crafting time, queues, fuel, station upgrades | ❌ | |
 | Crafting/building from nearby chests | 🟡 | Blueprints use chests; normal crafting and build mode do not |
 | Inventory and 8 equipment slots | ✅ | |
@@ -789,7 +789,7 @@ textures on any surface, so large areas look flat up close.
 | Roads and travelling traders that really travel | ❌ | |
 | Economy, shops, reputation, titles | ✅ | |
 | Farming | 🟡 | 3 crops; no watering, seasons or animals |
-| Wild enemies across biomes | 🟡 | Only the boar, only in 4 of 11 surface biomes |
+| Wild enemies across biomes | ✅ | Milestone 15: 2–4 per land biome, packs, peaceful animals; none in caves yet |
 | Monster framework, elites, smart AI | ✅ | No navmesh, no line of sight |
 | Bosses (6) with phases | ✅ | No roaming world bosses; legendaries have no special effects |
 | Dungeons E–S, 3 themes | ✅ | No fog of war, keys or puzzles |
@@ -824,7 +824,7 @@ All open items from `docs/TODO.md`, plus problems found while writing this docum
 
 ### High priority — these hurt the game the most
 
-1. **NEW — The open world is almost empty of enemies.** Only the Thornback Boar spawns in the wild, and
+1. **FIXED in Milestone 15 — The open world was almost empty of enemies.** Only the Thornback Boar spawns in the wild, and
    only in 4 of 11 surface biomes. Deserts, tundra, swamps, mountains, beaches, crystal glades and caves
    have no wild enemies at all. Every other monster only appears at a POI, in a dungeon, in a raid or in
    an event.
@@ -838,7 +838,7 @@ All open items from `docs/TODO.md`, plus problems found while writing this docum
    "Shardlands" is never explained.
 5. **NEW — The Crafting 90 perk text promises "Masterwork" items, but item quality is not implemented.**
    Either build quality or change the text.
-6. **No respec.** A player who spends points badly can't fix it.
+6. **FIXED in Milestone 15 — No respec.** A player who spends points badly can't fix it.
 7. **Few class abilities.** Only three per class (levels 1, 5, 15); nothing new from level 15 to 100.
 8. **No ranged weapons for the player.** Non-Wizards must always close the distance to archers and casters.
 
@@ -1110,7 +1110,11 @@ New abilities at levels 25, 40 and 60, plus an upgrade choice for each old abili
 skill bonuses; gear sets, full starting kits and a character creation screen with body options; classes keep
 a small talent (Option A). It also covers part of idea 8b.
 
-### Milestone 15 — "Living Wilds" (fill the world)
+**Done: Milestone 15 — "Living Wilds".** Wild creatures in every land biome (frost wolf packs, sand
+scorpions, crabs, deer, rabbits), wild treasure spots, more POIs near spawn, item quality, respec and new
+gloves, boots and rings.
+
+### Milestone 15 — "Living Wilds" (fill the world) — done
 **Goal:** every biome has life and danger, and new players have enough level-fitting content.
 **Ideas:** 3a (wild spawns for every biome), 3b, 3c, 3h (peaceful animals), 10a (POI ranks near spawn),
 10c, 8f (respec), 8a (item quality, fixes the perk text), 8b.

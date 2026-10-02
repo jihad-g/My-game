@@ -11,6 +11,11 @@ extends RefCounted
 const CELL := 256
 const MARGIN := 40
 const POI_CHANCE := 0.6
+## Milestone 15: the starting region is busier - up to 0.92 of the cells within
+## NEAR_RADIUS hold a POI (falling to POI_CHANCE at the edge). Only ever adds
+## POIs, so cells that had one in older worlds keep the same one.
+const NEAR_CHANCE := 0.92
+const NEAR_RADIUS := 3000.0
 ## Distance per rank step (m): E < 1200 <= D < 2400 ... S beyond 6000 (Milestone 12).
 const RANK_STEP := 1200.0
 const SIZES := {  # kind -> [radius, blend]
@@ -101,10 +106,16 @@ func find(id: String) -> PoiInfo:
 	return p if p and p.id == id else null
 
 
+## Chance that a cell at distance `d` from the origin holds a POI.
+static func poi_chance(d: float) -> float:
+	return lerpf(NEAR_CHANCE, POI_CHANCE, clampf(d / NEAR_RADIUS, 0.0, 1.0))
+
+
 func _compute(c: Vector2i) -> PoiInfo:
 	var gen: TerrainGenerator = _gen_ref.get_ref()
 	var hsh := HashUtils.hash4(_seed, 3131, c.x, c.y)
-	if HashUtils.to_unit(hsh, 0) >= POI_CHANCE:
+	var cell_centre := Vector2((c.x + 0.5) * CELL, (c.y + 0.5) * CELL)
+	if HashUtils.to_unit(hsh, 0) >= poi_chance(cell_centre.length()):
 		return null
 	var span := CELL - 2 * MARGIN
 	var center := Vector2i(c.x * CELL + MARGIN + int(HashUtils.to_unit(hsh, 1) * span),

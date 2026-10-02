@@ -8,3 +8,6 @@ extends Resource
 @export var min_height: int = 1
 @export var max_height: int = 999
 @export var salt: int = 1
+## Milestone 15: spawn a group (packs, herds) - extra members stand around the slot.
+@export var group_min: int = 1
+@export var group_max: int = 1

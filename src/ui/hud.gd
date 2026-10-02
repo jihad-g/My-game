@@ -1103,7 +1103,7 @@ func _update_details() -> void:
 	lines.append("Value: %d copper" % item.base_value)
 	_details_body.text = "\n".join(lines)
 	_use_button.disabled = not (item.is_consumable() or item.is_placeable())
-	_use_button.text = "Place" if item.is_placeable() else "Eat" if item.is_consumable() else "Use"
+	_use_button.text = "Place" if item.is_placeable() else "Eat" if item.category == ItemData.Category.FOOD else "Use"
 	_drop_button.disabled = false
 
 

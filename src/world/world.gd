@@ -54,6 +54,8 @@ var build_mode: BuildMode
 var living: SettlementManager
 ## Ruins, towers, temples, dungeon entrances, groves (Milestone 6).
 var exploration: ExplorationManager
+## Wild treasure: camps, shipwrecks, buried caches (Milestone 15).
+var treasure: TreasureSpots
 ## The dungeon floor the player is in (null on the surface/caves).
 var dungeon: DungeonInstance
 ## Base and settlement raids (Milestone 7).
@@ -128,6 +130,11 @@ func _ready() -> void:
 	props = PropLibrary.new()
 	chunk_manager.setup(generator, props)
 	spawner.generator = generator
+	treasure = TreasureSpots.new()
+	treasure.name = "TreasureSpots"
+	treasure.chunk_manager = chunk_manager
+	treasure.generator = generator
+	add_child(treasure)
 	player.camera_rig = camera_rig
 	player.temperature.ambient_provider = func() -> float: return get_temperature_at(player.global_position)
 	player.respawned.connect(_on_player_respawned)

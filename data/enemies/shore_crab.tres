@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/crab_pinch.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"raw_meat"
+min_count = 1
+max_count = 1
+chance = 0.7
+
+[resource]
+script = ExtResource("1_md")
+id = &"shore_crab"
+display_name = "Shore Crab"
+category = 0
+level = 2
+max_health = 40.0
+walk_speed = 1.8
+run_speed = 3.6
+turn_speed = 9.0
+aggro_range = 7.0
+leash_range = 20.0
+max_poise = 25.0
+damage_multipliers = {
+&"physical": 0.8,
+&"lightning": 1.4
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0")]
+xp_reward = 10
+respawn_time = 360.0
+style = 0
+look = &"crab"
+model_scale = 0.9
+tint = Color(0.85, 0.35, 0.22, 1)
+accent = Color(0.95, 0.45, 0.28, 1)
+melee = ExtResource("2_melee")
+pack_alert = 8.0
+can_be_elite = false

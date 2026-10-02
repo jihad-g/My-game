@@ -67,6 +67,8 @@ const BUFF_TEXT := {&"might": "+20% damage", &"stoneskin": "-20% damage taken",
 ## Healing over time (the "regen" status): health per second for regen_duration seconds.
 @export var regen_hps: float = 0.0
 @export var regen_duration: float = 0.0
+## Special effect when used (Milestone 15): &"respec" = refund all skill points.
+@export var use_effect: StringName
 
 @export_group("Equipment")
 @export var equip_slot: EquipSlot = EquipSlot.NONE
@@ -119,7 +121,7 @@ func is_equippable() -> bool:
 
 
 func is_consumable() -> bool:
-	return category == Category.FOOD
+	return category == Category.FOOD or use_effect != &""
 
 
 func is_placeable() -> bool:
@@ -158,6 +160,8 @@ func effect_lines() -> PackedStringArray:
 		lines.append("Cures %s" % ("all harmful effects" if cures.has(&"all") else ", ".join(cures.map(func(c: StringName) -> String: return StatusEffects.display_name(c).to_lower()))))
 	if teaches_spell != &"":
 		lines.append("Use to learn a spell")
+	if use_effect == &"respec":
+		lines.append("Resets your skills - every point comes back to spend again")
 	if is_tool():
 		lines.append("%s tier %d (used automatically when harvesting)" % [String(tool_kind).capitalize(), tool_tier])
 	if is_recipe_book():

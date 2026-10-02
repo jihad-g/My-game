@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"ring_of_swiftness"
+result_item = &"ring_of_swiftness"
+result_count = 1
+ingredients = {
+&"gold_nugget": 2,
+&"crystal_shard": 1,
+&"wisp_essence": 1
+}
+station = 4
+tier = 3
+source = 1
+xp = 30
+discovered_by = &"wisp_essence"

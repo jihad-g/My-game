@@ -5,7 +5,13 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 14 — Outfits & Gear Makes the Hero (v0.14.0)**: every class shares one body and you
+> Status: **Milestone 15 — Living Wilds (v0.15.0)**: every land biome now has wild life - frost wolf packs
+> that howl for each other, sand scorpions hiding under the desert, crabs on the beaches, and deer and
+> rabbits to hunt for meat and hide. Abandoned camps, shipwrecks and buried caches hide treasure, the area
+> around spawn holds many more low-rank ruins and dungeons, crafted gear can come out Fine or Masterwork,
+> and a Draught of Forgetting lets you re-spend your skill points.
+>
+> Before that, **Milestone 14 — Outfits & Gear Makes the Hero (v0.14.0)**: every class shares one body and you
 > look like what you wear. Create your character like a souls-like starting class - its starting stats,
 > a full outfit set, a weapon and supplies - and choose skin, hair and beard. Armour and clothes add +1/+2
 > to skills, full sets (Squire's Kit, Raider's Furs, Shadowstalker's Garb, Apprentice's Vestments) give set
@@ -17,6 +23,8 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 > performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
 > design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md). See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
+
+![Wild creatures](docs/screenshots/wild_creatures.png)
 
 | **Starting outfits on one shared body** | **Character creation** |
 |---|---|

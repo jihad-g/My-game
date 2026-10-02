@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"draught_of_forgetting"
+result_item = &"draught_of_forgetting"
+result_count = 1
+ingredients = {
+&"dreamcap": 2,
+&"moonpetal": 1,
+&"mana_tonic": 1
+}
+station = 6
+tier = 2
+source = 1
+xp = 20
+discovered_by = &"dreamcap"

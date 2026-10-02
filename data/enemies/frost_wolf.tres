@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/wolf_bite.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"raw_meat"
+min_count = 1
+max_count = 2
+chance = 0.8
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"wild_hide"
+min_count = 1
+max_count = 1
+chance = 0.55
+
+[resource]
+script = ExtResource("1_md")
+id = &"frost_wolf"
+display_name = "Frost Wolf"
+category = 0
+level = 4
+max_health = 55.0
+walk_speed = 3.4
+run_speed = 7.2
+turn_speed = 9.0
+aggro_range = 14.0
+leash_range = 40.0
+max_poise = 18.0
+damage_multipliers = {
+&"fire": 1.5,
+&"frost": 0.5
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 18
+respawn_time = 480.0
+style = 0
+look = &"wolf"
+model_scale = 1.0
+tint = Color(0.78, 0.82, 0.88, 1)
+accent = Color(0.55, 0.8, 1.0, 1)
+melee = ExtResource("2_melee")
+melee_status = [&"chilled", 2.5, {}]
+pack_alert = 26.0
+howls = true
+dodge_chance = 0.15

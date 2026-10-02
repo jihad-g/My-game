@@ -82,3 +82,14 @@ enum Style { MELEE, RANGED, CASTER, BOSS }
 @export var raider: bool = false
 ## Can roll elite affixes.
 @export var can_be_elite: bool = true
+
+@export_group("Wild (M15)")
+## Peaceful animal: never attacks, runs away from anyone who comes close (no
+## "!" or "Flees!" popups). Use with flee_below = 1.0.
+@export var timid: bool = false
+## Waits buried (only a little moving sand shows) until something comes within
+## this many metres, then bursts out. 0 = never burrows.
+@export var burrow_range: float = 0.0
+## Howls when it spots you: every idle pack member within pack_alert joins in,
+## even ones that are out of sight.
+@export var howls: bool = false

@@ -23,6 +23,10 @@ func _ready() -> void:
 		await _shot("20_main_menu")
 		get_tree().quit()
 		return
+	if "--only=wilds" in OS.get_cmdline_user_args():
+		await _wilds_showcase()
+		get_tree().quit()
+		return
 	if "--only=gear" in OS.get_cmdline_user_args():
 		await _gear_showcase()
 		get_tree().quit()
@@ -236,6 +240,55 @@ func _teleport(world: World, pos: Vector3) -> void:
 	if p.global_position.y < g:
 		p.global_position.y = g + 0.3
 	await _wait(40)
+
+
+## Milestone 15: the new wild creatures and the three treasure spots.
+func _wilds_showcase() -> void:
+	var root := Node3D.new()
+	add_child(root)
+	var cam := Camera3D.new()
+	cam.position = Vector3(0, 3.2, 9.5)
+	cam.rotation_degrees = Vector3(-14, 0, 0)
+	cam.fov = 50.0
+	root.add_child(cam)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-50, 30, 0)
+	root.add_child(sun)
+	var env := WorldEnvironment.new()
+	env.environment = Environment.new()
+	env.environment.background_mode = Environment.BG_COLOR
+	env.environment.background_color = Color(0.45, 0.6, 0.75)
+	env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.environment.ambient_light_color = Color(0.75, 0.75, 0.8)
+	env.environment.ambient_light_energy = 0.7
+	root.add_child(env)
+	var ground := MeshInstance3D.new()
+	var gm := BoxMesh.new()
+	gm.size = Vector3(40, 0.2, 20)
+	ground.mesh = gm
+	ground.position = Vector3(0, -0.1, -3)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.45, 0.6, 0.32)
+	ground.material_override = mat
+	root.add_child(ground)
+	var ids := [&"frost_wolf", &"frost_wolf", &"sand_scorpion", &"shore_crab", &"deer", &"rabbit"]
+	for i in ids.size():
+		var mm := MonsterModel.new()
+		root.add_child(mm)
+		mm.build(load("res://data/enemies/%s.tres" % ids[i]))
+		mm.position = Vector3(-6.0 + i * 2.2, 0, 1.2)
+		mm.rotation.y = 0.6
+	await _wait(5)
+	var b: BeastModel = (root.get_child(root.get_child_count() - 6) as MonsterModel).rig
+	b.play_howl(3.0)
+	var x := -7.0
+	for kind in [&"camp", &"shipwreck", &"buried"]:
+		var site := TreasureSpots.build_site({"kind": kind, "position": Vector3(x, 0, -4.5), "key": "", "rank": 0, "yaw": 0.4})
+		root.add_child(site)
+		x += 6.5
+	await _wait(12)
+	await _shot("50_wild_creatures")
+	root.queue_free()
 
 
 ## Milestone 14: the four starting outfits on the shared body, then the same

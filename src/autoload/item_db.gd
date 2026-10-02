@@ -36,12 +36,33 @@ func register(item: ItemData) -> void:
 
 
 func get_item(id: StringName) -> ItemData:
-	return _items.get(id)
+	var item: ItemData = _items.get(id)
+	if item == null and String(id).contains("@"):
+		item = _variant(id)
+	return item
 
 
 func has_item(id: StringName) -> bool:
-	return _items.has(id)
+	return _items.has(id) or (String(id).contains("@") and _variant(id) != null)
 
 
+## Base items only (quality variants are made on demand, see ItemQuality).
 func all_ids() -> Array:
-	return _items.keys()
+	var out := []
+	for id in _items:
+		if not String(id).contains("@"):
+			out.append(id)
+	return out
+
+
+## Fine / Masterwork version of an item ("iron_sword@fine"), cached once built.
+func _variant(id: StringName) -> ItemData:
+	var q := ItemQuality.quality_of(id)
+	var base: ItemData = _items.get(ItemQuality.base_id(id))
+	if q == ItemQuality.NORMAL or not ItemQuality.can_have_quality(base):
+		return null
+	var v := ItemQuality.make_variant(base, q)
+	if v.id != id:
+		return null
+	_items[id] = v
+	return v

@@ -105,6 +105,23 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 15 — Living Wilds  ✅
+
+- [x] Wild spawns for every land biome (2–4 creatures each, `WildSpawns`), groups for packs and herds
+- [x] Frost Wolf (pack hunter, howl calls the pack, chilling bite, weak to fire)
+- [x] Sand Scorpion (buried until you come close, moving-sand tell, poison sting)
+- [x] Shore Crab; peaceful Deer and Rabbits that flee and drop meat and Wild Hide
+- [x] Wild treasure: abandoned camps, shipwrecks, buried caches with once-per-world chests
+- [x] More POIs within 3 km of spawn (E/D/C content for the early game)
+- [x] Item quality: Fine / Masterwork crafted gear (fixes the Grandmaster perk text)
+- [x] Respec: Draught of Forgetting
+- [x] More gloves, boots and rings (Mithril Gauntlets/Greaves, Wanderer's Boots, Ring of Embers, Ring of Swiftness)
+- [ ] NOT IMPLEMENTED: wild spawns in caves (The Deeps) - the spawner only fills surface chunks
+- [ ] NOT IMPLEMENTED: birds and fish (3h lists them); night-only creatures; bandit camps with prisoners
+- [ ] NOT IMPLEMENTED: digging - buried caches are opened like a chest (no shovel needed)
+- [ ] Known limitation: quality only comes from crafting (loot and shops sell Normal items)
+- [ ] Known limitation: shipwrecks are rare because beaches are thin strips
+
 ## Milestone 14 — Outfits & Gear Makes the Hero  ✅
 
 - [x] One shared body for all classes; looks come from the equipped head, chest, hands, feet, off-hand and amulet (27 code-built looks, tinted by the item); helmets and hoods hide the hair
@@ -291,9 +308,9 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Crafting system (Milestone 4)
 - [x] Recipe sources — books (cave caches, boars), discovery, shops (M5), dungeons, bosses, temples, towers, vaults (M6)
 - [ ] More abilities per class / ability upgrades at higher levels (current unlocks: 1, 5, 15)
-- [~] Item quality (Fine/Masterwork) — NOT IMPLEMENTED; gear drops from monsters, chests and bosses done (M6)
+- [x] Item quality (Fine/Masterwork, Milestone 15); gear drops from monsters, chests and bosses (M6)
 - [x] Basic NPCs (dialogue, shops) (Milestone 5)
-- [ ] Respec (reset skill points)
+- [x] Respec (Draught of Forgetting, Milestone 15)
 
 ## Phase 3 — World (remaining)
 

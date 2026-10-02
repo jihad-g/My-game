@@ -127,6 +127,21 @@ func spend_point(skill: StringName) -> bool:
 	return true
 
 
+## Draught of Forgetting (Milestone 15): every skill goes back to the class's
+## starting value and the points spent come back. Returns the points refunded.
+func respec() -> int:
+	if class_data == null:
+		return 0
+	var refund := 0
+	for s in Skill.ALL:
+		refund += maxi(base_skill(s) - class_data.starting_skill(s), 0)
+		skills[s] = class_data.starting_skill(s)
+	unspent_points += refund
+	recalculate()
+	skills_changed.emit()
+	return refund
+
+
 func _on_enemy_killed(enemy: Node, _id: StringName, _pos: Vector3) -> void:
 	if not enemy is Enemy or (enemy as Enemy).data == null:
 		return

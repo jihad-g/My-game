@@ -2,6 +2,42 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.15.0] — Milestone 15: Living Wilds
+
+### Added
+- **Wild life in every land biome** (`WildSpawns`): 2–4 wild creatures per biome on top of the boar - deer
+  and rabbits in meadows and forests, thorn crawlers and cultists in the jungle, crawlers, will-o'-wisps
+  and skeletons in the swamp, crabs and bandits on beaches, scorpions and sand bandits in the desert,
+  frost wolves in the tundra, taiga and mountains, wisps and sentinels in crystal glades. Spawn rules can
+  place groups (packs and herds). Monsters still get tougher with distance from spawn.
+- **Frost Wolf**: fast pack hunter; when one spots you it howls and the whole pack comes. Bites chill;
+  weak to fire.
+- **Sand Scorpion**: waits buried in the sand (only a little moving sand gives it away) and bursts out
+  when you step close; poison sting; armoured, weak to frost.
+- **Shore Crab**: armoured beach critter, weak to lightning.
+- **Peaceful animals**: Deer and Rabbits run away from you and never fight. Hunting them gives raw meat
+  and the new **Wild Hide** (2 hides = 1 leather at the tailoring table).
+- New beast models: wolf, deer, rabbit (four-legged gallop, grazing nod), scorpion (curled tail, sting
+  strike) and crab; a howl animation.
+- **Wild treasure** (`TreasureSpots`): abandoned camps (tent, cold fire pit), shipwrecks on beaches and
+  buried caches (mound with a cross of sticks), each with a chest that opens once per world; three new
+  loot tables. About one spot every 80 chunks.
+- **More points of interest near spawn**: up to 92% of the cells within 3 km now hold a ruin, tower,
+  temple, dungeon or grove (60% before), so the early game has many more E/D/C places. Only adds POIs:
+  older worlds keep the ones they had.
+- **Item quality**: crafted gear can come out **Fine** (+10% stats, +2 weapon damage) or **Masterwork**
+  (+20%, +4 weapon damage, +1 to every skill bonus) - chance grows with Crafting from 20; Masterwork from
+  Crafting 90 (the Grandmaster perk). Crafting still never fails. Quality items are ids like
+  `iron_sword@fine`, so they save, trade and sync like any item.
+- **Draught of Forgetting** (alchemy table, found by picking up a dreamcap): resets your skills and gives
+  every point back.
+- **New gear**: Mithril Gauntlets, Mithril Greaves, Wanderer's Boots, Ring of Embers, Ring of Swiftness.
+- Tests: `test_m15_data`, `test_m15_wilds_ingame`. Screenshot runner `--only=wilds`.
+
+### Changed
+- Up to 30 wild enemies at once (was 24).
+- The inventory's use button says "Use" for non-food items such as the Draught of Forgetting.
+
 ## [0.14.0] — Milestone 14: Outfits & Gear Makes the Hero
 
 Two sessions built this milestone in parallel; this release combines both.

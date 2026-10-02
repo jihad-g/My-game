@@ -5,7 +5,7 @@ extends Node3D
 ## animation calls Enemy/Monster make. Also handles hit flash and the red
 ## telegraph glow for dangerous attacks.
 
-const BEASTS := [&"wisp", &"crawler", &"thornmaw"]
+const BEASTS := [&"wisp", &"crawler", &"thornmaw", &"wolf", &"scorpion", &"crab", &"deer", &"rabbit"]
 
 var rig: Node3D
 var _look: StringName = &""

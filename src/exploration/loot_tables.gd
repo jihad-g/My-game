@@ -17,6 +17,16 @@ const GEAR := [
 	[&"moonpetal_pendant", &"mithril_sword", &"mithril_waraxe", &"mithril_dirk", &"crystal_ring", &"shadow_cloak"],
 ]
 const TABLES := {
+	# Milestone 15: wild treasure spots (TreasureSpots).
+	&"wild_camp": {"coins": 12, "gear": 0.2, "items": [
+		[&"cooked_meat", 1, 3, 0.5, 0], [&"bandage", 1, 2, 0.5, 0], [&"rope", 1, 3, 0.4, 0], [&"leather", 1, 2, 0.3, 0],
+		[&"copper_ingot", 1, 2, 0.25, 0], [&"healing_draught", 1, 1, 0.15, 0], [&"iron_ingot", 1, 2, 0.2, 2]]},
+	&"shipwreck": {"coins": 35, "gear": 0.35, "items": [
+		[&"rope", 2, 4, 0.7, 0], [&"plank", 3, 6, 0.7, 0], [&"gold_nugget", 1, 2, 0.35, 0], [&"gemstone", 1, 1, 0.15, 0],
+		[&"healing_draught", 1, 1, 0.3, 0], [&"mithril_ore", 1, 2, 0.2, 2]]},
+	&"buried_cache": {"coins": 40, "gear": 0.3, "scroll": [0.0, 0.0, 0.0, 0.03, 0.06, 0.1], "items": [
+		[&"gold_nugget", 1, 3, 0.5, 0], [&"gemstone", 1, 1, 0.25, 0], [&"crystal_shard", 1, 2, 0.3, 1],
+		[&"elixir_of_might", 1, 1, 0.1, 1], [&"void_shard", 1, 1, 0.05, 4]]},
 	&"ruin_chest": {"coins": 15, "gear": 0.15, "items": [
 		[&"ancient_bone", 1, 3, 0.5, 0], [&"iron_ore", 1, 3, 0.4, 0], [&"copper_ingot", 1, 2, 0.4, 0],
 		[&"healing_draught", 1, 1, 0.3, 0], [&"leather", 1, 3, 0.3, 0], [&"smithing_manual", 1, 1, 0.08, 0],

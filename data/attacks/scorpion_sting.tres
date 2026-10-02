@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"scorpion_sting"
+display_name = "Sting"
+damage = 11
+windup = 0.45
+active = 0.12
+recovery = 0.6
+cancel_ratio = 0.0
+reach = 2.1
+arc_degrees = 60
+knockback = 3
+poise_damage = 12
+lunge_speed = 2.0
+move_multiplier = 0.0
+animation = &"bite"
+camera_shake = 0.0

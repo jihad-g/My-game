@@ -814,8 +814,12 @@ func get_spawn_slots(coord: Vector2i) -> Array:
 	var oz := coord.y * CHUNK_SIZE
 	var b := get_biome_index(ox + CHUNK_SIZE / 2, oz + CHUNK_SIZE / 2)
 	var biome := biomes[b]
-	for r in biome.enemy_spawns.size():
-		var rule: EnemySpawnRule = biome.enemy_spawns[r]
+	# Biome rules (the boar) keep their old keys; wild rules (Milestone 15) start at 100.
+	var rules: Array = biome.enemy_spawns.duplicate()
+	var wild := WildSpawns.rules_for(biome.id)
+	for r in rules.size() + wild.size():
+		var rule: EnemySpawnRule = rules[r] if r < rules.size() else wild[r - rules.size()]
+		var ri := r if r < rules.size() else 100 + r - rules.size()
 		var hsh := HashUtils.hash4(world_seed, rule.salt + 1000, coord.x, coord.y)
 		if HashUtils.to_unit(hsh, 0) >= rule.chance_per_chunk:
 			continue
@@ -826,11 +830,18 @@ func get_spawn_slots(coord: Vector2i) -> Array:
 			continue
 		if settlements.is_inside(ox + lx, oz + lz, 40.0) or pois.is_inside(ox + lx, oz + lz, 30.0):
 			continue  # monsters keep away from towns; POIs have their own guardians
-		out.append({
-			"key": "%d,%d:%d:%d" % [coord.x, coord.y, b, r],
-			"rule": rule,
-			"position": Vector3(ox + lx + 0.5, h * BLOCK_HEIGHT + 0.2, oz + lz + 0.5),
-		})
+		var key := "%d,%d:%d:%d" % [coord.x, coord.y, b, ri]
+		out.append({"key": key, "rule": rule, "position": Vector3(ox + lx + 0.5, h * BLOCK_HEIGHT + 0.2, oz + lz + 0.5)})
+		# Packs and herds: the rest of the group stands around the first one.
+		var n := rule.group_min + int(HashUtils.to_unit(hsh, 3) * float(rule.group_max - rule.group_min + 1))
+		for m in range(1, mini(n, rule.group_max)):
+			var a := TAU * float(m) / float(n) + HashUtils.to_unit(hsh, 4) * TAU
+			var gx := ox + lx + roundi(cos(a) * 2.5)
+			var gz := oz + lz + roundi(sin(a) * 2.5)
+			var gh := get_height_blocks(gx, gz)
+			if gh < rule.min_height or gh > rule.max_height:
+				continue
+			out.append({"key": "%s:m%d" % [key, m], "rule": rule, "position": Vector3(gx + 0.5, gh * BLOCK_HEIGHT + 0.2, gz + 0.5)})
 	return out
 
 

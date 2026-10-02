@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"draught_of_forgetting"
+display_name = "Draught of Forgetting"
+description = "A cloudy, sweet-smelling brew. Drink it to forget everything you trained - all skill points come back so you can spend them again."
+category = 1
+rarity = 3
+max_stack = 5
+base_value = 180
+icon_color = Color(0.75, 0.7, 0.95, 1)
+icon_glyph = "P"
+use_effect = &"respec"

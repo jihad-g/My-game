@@ -1009,6 +1009,9 @@ func notice_mult() -> float:
 
 
 func _consume(item: ItemData) -> void:
+	if item.use_effect == &"respec":
+		var n := character.respec()
+		Events.toast.emit("You forget your training: %d skill point%s to spend again (K)" % [n, "" if n == 1 else "s"], Color(0.8, 0.75, 1.0))
 	if item.hunger_restore > 0.0:
 		hunger.eat(item.hunger_restore)
 	if item.health_restore > 0.0:

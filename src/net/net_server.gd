@@ -678,7 +678,7 @@ func _act_craft(ps: PeerState, a: Array) -> Dictionary:
 			break
 		for item in cost:
 			ps.inventory.remove_item(item, int(cost[item]))
-		give(ps, recipe.result_item, recipe.result_count)
+		give(ps, Crafting.quality_result(recipe, skill), recipe.result_count)
 		made += 1
 	if made == 0:
 		return _no("Missing materials")

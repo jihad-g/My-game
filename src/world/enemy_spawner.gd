@@ -9,9 +9,12 @@ extends Node
 @export var chunk_manager: ChunkManager
 ## Never spawn enemies this close to the player (avoids popping in on top of them).
 @export var min_spawn_distance: float = 14.0
-@export var max_active: int = 24
+@export var max_active: int = 30
 ## Seconds between retries for slots that were too close to the player.
 @export var retry_interval: float = 3.0
+## Automatic spawning into chunks (tests turn this off to fight in an empty
+## world; spawn_enemy() still works).
+var wild_enabled := true
 
 var generator: TerrainGenerator
 var _pools: Dictionary = {}  # PackedScene -> NodePool
@@ -27,7 +30,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_retry_left -= delta
-	if _retry_left > 0.0 or _waiting.is_empty():
+	if _retry_left > 0.0 or _waiting.is_empty() or not wild_enabled:
 		return
 	_retry_left = retry_interval
 	for coord: Vector2i in _waiting.keys():
@@ -63,7 +66,7 @@ func _on_chunk_ready(coord: Vector2i, lod: int, chunk: Chunk) -> void:
 	if lod != 0 or chunk.layer != TerrainGenerator.Layer.SURFACE:
 		_despawn_chunk(coord)
 		return
-	if _by_chunk.has(coord) or _waiting.has(coord):
+	if _by_chunk.has(coord) or _waiting.has(coord) or not wild_enabled:
 		return
 	var data_spawns := _spawns_for(coord)
 	var waiting: Array = []

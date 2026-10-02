@@ -29,6 +29,17 @@ static func check(player: Player, recipe: RecipeData, stations: Dictionary, time
 	return ""
 
 
+## The item a craft gives: gear may come out Fine or Masterwork (Milestone 15).
+static func quality_result(recipe: RecipeData, crafting: int, rng: RandomNumberGenerator = null) -> StringName:
+	var item: ItemData = ItemDB.get_item(recipe.result_item)
+	if not ItemQuality.can_have_quality(item):
+		return recipe.result_item
+	if rng == null:
+		rng = RandomNumberGenerator.new()
+		rng.randomize()
+	return ItemQuality.with_quality(recipe.result_item, ItemQuality.roll(crafting, rng))
+
+
 ## Crafts `times` copies. Returns how many were crafted.
 static func craft(player: Player, recipe: RecipeData, stations: Dictionary, times: int = 1) -> int:
 	var made := 0
@@ -41,7 +52,10 @@ static func craft(player: Player, recipe: RecipeData, stations: Dictionary, time
 		var count := recipe.result_count
 		if recipe.station == RecipeData.Station.CAMPFIRE and randf() < player.character.cooking_bonus_chance():
 			count += 1
-		player.give_or_drop(recipe.result_item, count)
+		var result := quality_result(recipe, player.character.skill_level(Skill.CRAFTING))
+		if ItemQuality.quality_of(result) != ItemQuality.NORMAL:
+			Events.toast.emit("%s!" % ItemDB.get_item(result).display_name, UITheme.GOLD)
+		player.give_or_drop(result, count)
 		made += 1
 		Events.item_crafted.emit(recipe.result_item, maxi(1, recipe.xp / 4))
 	return made

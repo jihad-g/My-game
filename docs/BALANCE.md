@@ -24,26 +24,26 @@ Builds: **Barbarian** (Strength 50%, Defense 35%, Dexterity 15%), **Knight** (De
 | 10 | D, 112, 7.5 | Knight | iron_sword | 187 | 45% | 50.3 | 2.2 s | 45.5 s | 20.4 |
 | 10 | D, 112, 7.5 | Wizard | apprentice_staff | 116 | 33% | 60.7 | 1.8 s | 23.0 s | 12.5 |
 | 10 | D, 112, 7.5 | Assassin | iron_dirk | 123 | 35% | 60.7 | 1.8 s | 25.3 s | 13.7 |
-| 20 | C, 182, 10.0 | Barbarian | iron_waraxe | 211 | 49% | 68.4 | 2.7 s | 40.9 s | 15.4 |
-| 20 | C, 182, 10.0 | Knight | iron_sword | 214 | 54% | 52.3 | 3.5 s | 45.8 s | 13.2 |
-| 20 | C, 182, 10.0 | Wizard | crystal_staff | 130 | 44% | 76.8 | 2.4 s | 23.0 s | 9.7 |
+| 20 | C, 182, 10.0 | Barbarian | iron_waraxe | 211 | 49% | 70.9 | 2.6 s | 40.9 s | 15.9 |
+| 20 | C, 182, 10.0 | Knight | iron_sword | 214 | 54% | 54.2 | 3.4 s | 45.8 s | 13.7 |
+| 20 | C, 182, 10.0 | Wizard | crystal_staff | 130 | 44% | 79.5 | 2.3 s | 23.0 s | 10.1 |
 | 20 | C, 182, 10.0 | Assassin | iron_dirk | 134 | 44% | 64.4 | 2.8 s | 24.0 s | 8.5 |
-| 35 | B, 294, 14.0 | Barbarian | warlords_cleaver | 240 | 51% | 117.3 | 2.5 s | 35.1 s | 14.0 |
-| 35 | B, 294, 14.0 | Knight | mithril_sword | 244 | 56% | 81.8 | 3.6 s | 40.1 s | 11.2 |
+| 35 | B, 294, 14.0 | Barbarian | warlords_cleaver | 240 | 51% | 121.4 | 2.4 s | 35.1 s | 14.5 |
+| 35 | B, 294, 14.0 | Knight | mithril_sword | 244 | 56% | 84.8 | 3.5 s | 40.1 s | 11.6 |
 | 35 | B, 294, 14.0 | Wizard | crystal_staff | 143 | 45% | 101.6 | 2.9 s | 18.7 s | 6.5 |
 | 35 | B, 294, 14.0 | Assassin | mithril_dirk | 147 | 46% | 101.1 | 2.9 s | 19.4 s | 6.7 |
-| 55 | S, 700, 25.7 | Barbarian | titans_greataxe | 386 | 61% | 182.2 | 3.8 s | 38.8 s | 10.1 |
-| 55 | S, 700, 25.7 | Knight | starfall_blade | 397 | 66% | 154.1 | 4.5 s | 45.0 s | 9.9 |
-| 55 | S, 700, 25.7 | Wizard | staff_of_the_archmage | 269 | 54% | 217.6 | 3.2 s | 22.7 s | 7.1 |
-| 55 | S, 700, 25.7 | Assassin | shadowfang | 268 | 57% | 196.3 | 3.6 s | 24.2 s | 6.8 |
-| 75 | S, 700, 25.7 | Barbarian | titans_greataxe | 422 | 63% | 225.3 | 3.1 s | 44.4 s | 14.3 |
-| 75 | S, 700, 25.7 | Knight | starfall_blade | 435 | 67% | 177.4 | 3.9 s | 52.0 s | 13.2 |
-| 75 | S, 700, 25.7 | Wizard | staff_of_the_archmage | 317 | 58% | 219.0 | 3.2 s | 29.1 s | 9.1 |
-| 75 | S, 700, 25.7 | Assassin | shadowfang | 294 | 58% | 243.4 | 2.9 s | 27.5 s | 9.6 |
-| 100 | S, 700, 25.7 | Barbarian | titans_greataxe | 470 | 65% | 256.0 | 2.7 s | 52.4 s | 19.1 |
-| 100 | S, 700, 25.7 | Knight | starfall_blade | 435 | 67% | 252.8 | 2.8 s | 52.0 s | 18.8 |
-| 100 | S, 700, 25.7 | Wizard | staff_of_the_archmage | 357 | 60% | 220.6 | 3.2 s | 35.0 s | 11.0 |
-| 100 | S, 700, 25.7 | Assassin | shadowfang | 362 | 62% | 270.7 | 2.6 s | 37.6 s | 14.5 |
+| 55 | S, 700, 25.7 | Barbarian | titans_greataxe | 388 | 64% | 191.6 | 3.7 s | 41.6 s | 11.4 |
+| 55 | S, 700, 25.7 | Knight | starfall_blade | 399 | 67% | 162.3 | 4.3 s | 47.9 s | 11.1 |
+| 55 | S, 700, 25.7 | Wizard | staff_of_the_archmage | 270 | 57% | 217.6 | 3.2 s | 24.6 s | 7.6 |
+| 55 | S, 700, 25.7 | Assassin | shadowfang | 270 | 60% | 199.0 | 3.5 s | 26.1 s | 7.4 |
+| 75 | S, 700, 25.7 | Barbarian | titans_greataxe | 424 | 65% | 236.8 | 3.0 s | 47.4 s | 16.0 |
+| 75 | S, 700, 25.7 | Knight | starfall_blade | 435 | 69% | 186.8 | 3.7 s | 54.7 s | 14.6 |
+| 75 | S, 700, 25.7 | Wizard | staff_of_the_archmage | 318 | 60% | 219.0 | 3.2 s | 31.4 s | 9.8 |
+| 75 | S, 700, 25.7 | Assassin | shadowfang | 295 | 61% | 246.7 | 2.8 s | 29.6 s | 10.4 |
+| 100 | S, 700, 25.7 | Barbarian | titans_greataxe | 470 | 67% | 267.4 | 2.6 s | 55.3 s | 21.1 |
+| 100 | S, 700, 25.7 | Knight | starfall_blade | 435 | 69% | 264.6 | 2.6 s | 54.7 s | 20.7 |
+| 100 | S, 700, 25.7 | Wizard | staff_of_the_archmage | 357 | 63% | 220.6 | 3.2 s | 37.3 s | 11.7 |
+| 100 | S, 700, 25.7 | Assassin | shadowfang | 364 | 65% | 274.3 | 2.6 s | 40.1 s | 15.7 |
 
 Physical damage multiplier at 100 Strength: Barbarian ×2.88, Knight ×2.42, Wizard ×1.96, Assassin ×2.17 (a Wizard never matches a Knight or Barbarian).
 
@@ -62,11 +62,11 @@ harvesting, crafting and discoveries.
 | 25 | 4320 | 15 | 5.5 |
 | 30 | 6000 | 28 | 7.2 |
 | 40 | 10370 | 26 | 13.5 |
-| 50 | 16270 | 53 | 19.8 |
-| 60 | 23960 | 43 | 28.3 |
-| 75 | 39460 | 177 | 48.0 |
-| 90 | 60540 | 1033 | 217.3 |
-| 99 | 76260 | 1285 | 388.7 |
+| 50 | 16270 | 53 | 19.7 |
+| 60 | 23960 | 43 | 28.1 |
+| 75 | 39460 | 176 | 47.7 |
+| 90 | 60540 | 1027 | 215.9 |
+| 99 | 76260 | 1279 | 386.4 |
 
 ## Crafting value
 
@@ -76,38 +76,48 @@ and materials from S-rank content, so they are worth far more than their inputs.
 
 | Recipe | Station | Inputs | Output | Ratio | Shop money machine? |
 |---|---|---:|---:|---:|---|
-| shadow_hood | Tailoring Table | 16 | 18 | 1.12 | no (0.83) |
-| campfire_kit | By hand | 9 | 9 | 1.00 | materials not sold |
-| copper_ring | Forge | 36 | 40 | 1.11 | no (0.58) |
-| iron_sword | Forge | 169 | 180 | 1.07 | no (0.70) |
-| chainmail | Forge | 238 | 250 | 1.05 | no (0.64) |
 | fur_cap | Tailoring Table | 26 | 25 | 0.96 | materials not sold |
-| iron_kite_shield | Forge | 139 | 150 | 1.08 | no (0.57) |
-| wizard_hat | Tailoring Table | 9 | 10 | 1.11 | no (0.93) |
-| shadow_boots | Tailoring Table | 14 | 10 | 0.71 | no (0.53) |
-| shadow_garb | Tailoring Table | 24 | 20 | 0.83 | no (0.67) |
-| vegetable_stew | Campfire | 16 | 16 | 1.00 | materials not sold |
+| chainmail | Forge | 238 | 250 | 1.05 | no (0.64) |
+| sunforged_blade | Forge | 611 | 2500 | 4.09 | materials not sold |
+| titans_greataxe | Forge | 601 | 2500 | 4.16 | materials not sold |
 | shadow_wraps | Tailoring Table | 9 | 8 | 0.89 | no (0.74) |
 | sun_hat | By hand | 9 | 7 | 0.78 | no (0.84) |
-| tusk_charm | Workbench | 39 | 50 | 1.28 | no (0.68) |
+| wizard_hat | Tailoring Table | 9 | 10 | 1.11 | no (0.93) |
+| iron_kite_shield | Forge | 139 | 150 | 1.08 | no (0.57) |
 | copper_dagger | Forge | 38 | 45 | 1.18 | no (0.62) |
-| horned_helm | Tailoring Table | 48 | 52 | 1.08 | materials not sold |
+| copper_ring | Forge | 36 | 40 | 1.11 | no (0.58) |
 | crystal_staff | Arcane Altar | 144 | 160 | 1.11 | no (0.58) |
+| apprentice_staff | Workbench | 9 | 10 | 1.11 | no (0.82) |
 | fur_boots | Tailoring Table | 26 | 25 | 0.96 | materials not sold |
+| tusk_charm | Workbench | 39 | 50 | 1.28 | no (0.68) |
+| staff_of_the_archmage | Arcane Altar | 584 | 2500 | 4.28 | materials not sold |
+| campfire_kit | By hand | 9 | 9 | 1.00 | materials not sold |
+| wanderer_boots | Tailoring Table | 43 | 140 | 3.26 | materials not sold |
+| shadow_garb | Tailoring Table | 24 | 20 | 0.83 | no (0.67) |
+| shadow_hood | Tailoring Table | 16 | 18 | 1.12 | no (0.83) |
+| raider_harness | Tailoring Table | 25 | 20 | 0.80 | no (0.59) |
+| shadow_boots | Tailoring Table | 14 | 10 | 0.71 | no (0.53) |
+| iron_sword | Forge | 169 | 180 | 1.07 | no (0.70) |
 | iron_waraxe | Forge | 164 | 175 | 1.07 | no (0.69) |
-| sunforged_blade | Forge | 611 | 2500 | 4.09 | materials not sold |
-| iron_hatchet | Forge | 107 | 115 | 1.07 | no (0.50) |
-| crown_of_stars | Arcane Altar | 460 | 2500 | 5.43 | materials not sold |
-| squire_sword | Workbench | 19 | 18 | 0.95 | materials not sold |
-| warming_draught | Alchemy Table | 16 | 25 | 1.56 | materials not sold |
-| cooling_draught | Alchemy Table | 16 | 25 | 1.56 | materials not sold |
-| shadowfang | Forge | 410 | 2500 | 6.10 | materials not sold |
 | worn_boots | Tailoring Table | 17 | 16 | 0.94 | no (0.70) |
+| horned_helm | Tailoring Table | 48 | 52 | 1.08 | materials not sold |
+| starfall_blade | Forge | 1557 | 2600 | 1.67 | materials not sold |
+| star_metal_ingot | Forge | 188 | 200 | 1.06 | materials not sold |
+| squire_sword | Workbench | 19 | 18 | 0.95 | materials not sold |
+| mithril_plate | Forge | 758 | 2500 | 3.30 | materials not sold |
+| mithril_pickaxe | Forge | 236 | 250 | 1.06 | materials not sold |
+| ring_of_embers | Forge | 58 | 160 | 2.76 | materials not sold |
+| mithril_gauntlets | Forge | 239 | 620 | 2.59 | materials not sold |
+| trolls_brew | Alchemy Table | 62 | 65 | 1.05 | materials not sold |
+| mithril_greaves | Forge | 239 | 640 | 2.68 | materials not sold |
+| warming_draught | Alchemy Table | 16 | 25 | 1.56 | materials not sold |
+| leather_from_hide | Tailoring Table | 12 | 7 | 0.58 | materials not sold |
 | leather_jerkin | Tailoring Table | 41 | 38 | 0.93 | no (0.83) |
 | tome_blink | Arcane Altar | 145 | 320 | 2.21 | materials not sold |
 | tome_healing_light | Arcane Altar | 155 | 320 | 2.06 | materials not sold |
 | tome_poison_cloud | Arcane Altar | 163 | 320 | 1.96 | materials not sold |
 | tome_meteor | Arcane Altar | 395 | 1280 | 3.24 | materials not sold |
+| cooked_meat | Campfire | 3 | 8 | 2.67 | materials not sold |
 | copper_sword | Forge | 81 | 90 | 1.11 | no (0.60) |
 | leather_gloves | Tailoring Table | 17 | 16 | 0.94 | no (0.70) |
 | squire_greaves | Forge | 43 | 12 | 0.28 | no (0.15) |
@@ -122,55 +132,52 @@ and materials from S-rank content, so they are worth far more than their inputs.
 | moonpetal_pendant | Arcane Altar | 458 | 480 | 1.05 | no (0.54) |
 | mithril_sword | Forge | 309 | 320 | 1.04 | materials not sold |
 | mithril_waraxe | Forge | 304 | 320 | 1.05 | materials not sold |
-| copper_ingot | Forge | 16 | 18 | 1.12 | materials not sold |
-| healing_draught | Alchemy Table | 18 | 30 | 1.67 | materials not sold |
-| leather | Tailoring Table | 12 | 14 | 1.17 | materials not sold |
-| iron_ingot | Forge | 28 | 32 | 1.14 | materials not sold |
-| mithril_ingot | Forge | 68 | 75 | 1.10 | materials not sold |
-| arcane_dust | Arcane Altar | 40 | 60 | 1.50 | no (0.68) |
-| mana_tonic | Alchemy Table | 47 | 50 | 1.06 | materials not sold |
-| elixir_of_might | Alchemy Table | 50 | 90 | 1.80 | materials not sold |
-| stoneskin_elixir | Alchemy Table | 52 | 90 | 1.73 | materials not sold |
 | bandage | By hand | 4 | 4 | 1.00 | no (0.64) |
-| elixir_of_starlight | Alchemy Table | 108 | 200 | 1.85 | materials not sold |
+| rope | By hand | 3 | 3 | 1.00 | no (0.64) |
+| leather | Tailoring Table | 12 | 14 | 1.17 | materials not sold |
+| healing_draught | Alchemy Table | 18 | 30 | 1.67 | materials not sold |
+| copper_ingot | Forge | 16 | 18 | 1.12 | materials not sold |
+| iron_ingot | Forge | 28 | 32 | 1.14 | materials not sold |
+| plank | Workbench | 2 | 4 | 2.00 | materials not sold |
+| elixir_of_might | Alchemy Table | 50 | 90 | 1.80 | materials not sold |
+| arcane_dust | Arcane Altar | 40 | 60 | 1.50 | no (0.68) |
+| mithril_ingot | Forge | 68 | 75 | 1.10 | materials not sold |
+| mana_tonic | Alchemy Table | 47 | 50 | 1.06 | materials not sold |
+| stoneskin_elixir | Alchemy Table | 52 | 90 | 1.73 | materials not sold |
 | antidote | Alchemy Table | 16 | 20 | 1.25 | materials not sold |
+| elixir_of_starlight | Alchemy Table | 108 | 200 | 1.85 | materials not sold |
 | purifying_draught | Alchemy Table | 53 | 55 | 1.04 | materials not sold |
+| iron_hatchet | Forge | 107 | 115 | 1.07 | no (0.50) |
+| apprentice_robe | Tailoring Table | 36 | 36 | 1.00 | no (0.58) |
 | iron_helm | Forge | 103 | 115 | 1.12 | no (0.59) |
-| starfall_blade | Forge | 1557 | 2600 | 1.67 | materials not sold |
-| mithril_plate | Forge | 758 | 2500 | 3.30 | materials not sold |
-| aegis_of_dawn | Forge | 544 | 2500 | 4.60 | materials not sold |
-| raider_harness | Tailoring Table | 25 | 20 | 0.80 | no (0.59) |
-| staff_of_the_archmage | Arcane Altar | 584 | 2500 | 4.28 | materials not sold |
-| iron_gauntlets | Forge | 71 | 80 | 1.13 | no (0.60) |
+| padded_hood | Tailoring Table | 8 | 8 | 1.00 | no (0.85) |
 | starmetal_amulet | Arcane Altar | 540 | 900 | 1.67 | materials not sold |
-| titans_greataxe | Forge | 601 | 2500 | 4.16 | materials not sold |
+| flint_knife | By hand | 11 | 10 | 0.91 | materials not sold |
+| iron_greaves | Forge | 71 | 80 | 1.13 | no (0.60) |
+| bread | Campfire | 6 | 6 | 1.00 | no (0.84) |
+| raider_boots | Tailoring Table | 18 | 10 | 0.56 | no (0.41) |
+| stone_pickaxe | By hand | 8 | 8 | 1.00 | materials not sold |
+| rough_handaxe | By hand | 8 | 10 | 1.25 | materials not sold |
+| iron_gauntlets | Forge | 71 | 80 | 1.13 | no (0.60) |
+| squire_helm | Forge | 43 | 48 | 1.12 | no (0.61) |
+| squire_gauntlets | Forge | 25 | 12 | 0.48 | no (0.27) |
+| shadowfang | Forge | 410 | 2500 | 6.10 | materials not sold |
 | cooling_salad | Campfire | 8 | 8 | 1.00 | no (0.84) |
 | squire_plate | Forge | 86 | 26 | 0.30 | no (0.16) |
 | apprentice_wraps | Tailoring Table | 9 | 8 | 0.89 | no (0.74) |
+| vegetable_stew | Campfire | 16 | 16 | 1.00 | materials not sold |
+| soft_leather_boots | Tailoring Table | 24 | 30 | 1.25 | no (0.93) |
+| stone_hatchet | By hand | 7 | 7 | 1.00 | materials not sold |
+| copper_hatchet | Forge | 61 | 65 | 1.07 | no (0.50) |
+| iron_pickaxe | Forge | 107 | 115 | 1.07 | no (0.50) |
+| mithril_hatchet | Forge | 236 | 250 | 1.06 | materials not sold |
 | padded_vest | Tailoring Table | 14 | 12 | 0.86 | no (0.68) |
 | hearty_stew | Campfire | 14 | 20 | 1.43 | materials not sold |
-| apprentice_robe | Tailoring Table | 36 | 36 | 1.00 | no (0.58) |
-| star_metal_ingot | Forge | 188 | 200 | 1.06 | materials not sold |
-| iron_greaves | Forge | 71 | 80 | 1.13 | no (0.60) |
-| plank | Workbench | 2 | 4 | 2.00 | materials not sold |
-| bread | Campfire | 6 | 6 | 1.00 | no (0.84) |
-| rope | By hand | 3 | 3 | 1.00 | no (0.64) |
-| trolls_brew | Alchemy Table | 62 | 65 | 1.05 | materials not sold |
-| apprentice_staff | Workbench | 9 | 10 | 1.11 | no (0.82) |
-| copper_hatchet | Forge | 61 | 65 | 1.07 | no (0.50) |
-| squire_helm | Forge | 43 | 48 | 1.12 | no (0.61) |
-| mithril_hatchet | Forge | 236 | 250 | 1.06 | materials not sold |
-| squire_gauntlets | Forge | 25 | 12 | 0.48 | no (0.27) |
-| flint_knife | By hand | 11 | 10 | 0.91 | materials not sold |
-| rough_handaxe | By hand | 8 | 10 | 1.25 | materials not sold |
-| cooked_meat | Campfire | 3 | 8 | 2.67 | materials not sold |
-| raider_boots | Tailoring Table | 18 | 10 | 0.56 | no (0.41) |
-| stone_hatchet | By hand | 7 | 7 | 1.00 | materials not sold |
-| stone_pickaxe | By hand | 8 | 8 | 1.00 | materials not sold |
-| iron_pickaxe | Forge | 107 | 115 | 1.07 | no (0.50) |
-| soft_leather_boots | Tailoring Table | 24 | 30 | 1.25 | no (0.93) |
-| padded_hood | Tailoring Table | 8 | 8 | 1.00 | no (0.85) |
-| mithril_pickaxe | Forge | 236 | 250 | 1.06 | materials not sold |
+| ring_of_swiftness | Arcane Altar | 178 | 260 | 1.46 | materials not sold |
+| cooling_draught | Alchemy Table | 16 | 25 | 1.56 | materials not sold |
+| draught_of_forgetting | Alchemy Table | 214 | 180 | 0.84 | materials not sold |
+| crown_of_stars | Arcane Altar | 460 | 2500 | 5.43 | materials not sold |
+| aegis_of_dawn | Forge | 544 | 2500 | 4.60 | materials not sold |
 
 ## Economy
 

@@ -96,6 +96,9 @@ var _stuck_t := 0.0
 var _detour_t := 0.0
 var _detour_angle := 0.0
 var _hop_cd := 0.0
+## Milestone 15: buried until woken (sand scorpions).
+var _burrowed := false
+var _sand_t := 0.0
 
 
 func _ready() -> void:
@@ -210,6 +213,8 @@ func _on_spawned() -> void:
 	(model as MonsterModel).build(mdata)
 	(model as MonsterModel).reset_pose()
 	model.visible = true
+	model.position.y = 0.0
+	_burrowed = false
 	_apply_shape()
 	_slot_angle = _rng.randf() * TAU
 	_atk_cd = 0.5
@@ -220,6 +225,10 @@ func _on_spawned() -> void:
 	_blink_cd = 5.0
 	_dodge_cd = 0.0
 	_set_ai(AI.IDLE, _rng.randf_range(0.5, 2.5))
+	if mdata.burrow_range > 0.0:
+		_burrowed = true
+		model.position.y = -0.62  # only the sting tip pokes out
+		make_dormant(mdata.burrow_range)
 
 
 func _apply_shape() -> void:
@@ -372,8 +381,16 @@ func _think(delta: float) -> void:
 
 	match ai:
 		AI.DORMANT:
+			if _burrowed:
+				# The only tell: a little sand moving now and then.
+				_sand_t -= delta
+				if _sand_t <= 0.0:
+					_sand_t = _rng.randf_range(1.2, 2.4)
+					if tgt and dist < 30.0:
+						VFX.dust(get_parent(), global_position + Vector3(0, 0.1, 0), Color(0.86, 0.76, 0.52, 0.8), 4)
 			if tgt and dist < wake_range:
-				Events.toast.emit("%s awakens!" % display_name(), Color(1, 0.6, 0.3))
+				if not _burrowed:
+					Events.toast.emit("%s awakens!" % display_name(), Color(1, 0.6, 0.3))
 				_alert(tgt)
 		AI.IDLE:
 			if tgt and dist < notice_range(tgt):
@@ -614,7 +631,8 @@ func _combat(tgt: Node3D, to_t: Vector3, dist: float) -> void:
 	# Badly hurt: run away (once), then come back.
 	if mdata.flee_below > 0.0 and not _fled and not is_boss() and health.get_ratio() <= mdata.flee_below:
 		_fled = mdata.flee_below < 1.0
-		Events.damage_dealt.emit(global_position + Vector3(0, 2.4, 0), 0.0, false, false, "Flees!")
+		if not mdata.timid:
+			Events.damage_dealt.emit(global_position + Vector3(0, 2.4, 0), 0.0, false, false, "Flees!")
 		_set_ai(AI.FLEE, 4.0)
 		return
 	# Sidestep your swings.
@@ -1295,8 +1313,16 @@ func _choose_heading(dir: Vector3) -> float:
 
 func _alert(tgt: Node3D) -> void:
 	target = tgt
+	if _burrowed:
+		_unburrow()
+	if mdata.timid:
+		# Peaceful animals bolt instead of fighting.
+		_set_ai(AI.FLEE, 3.0)
+		return
 	(model as MonsterModel).show_alert()
 	_set_ai(AI.ALERT, 0.5)
+	if mdata.howls and tgt.is_in_group(&"player"):
+		_howl()
 	# Pack alert: idle allies nearby join in.
 	if mdata.pack_alert > 0.0 and tgt.is_in_group(&"player"):
 		for e in get_tree().get_nodes_in_group(&"enemies"):
@@ -1306,6 +1332,24 @@ func _alert(tgt: Node3D) -> void:
 				m.target = tgt
 				(m.model as MonsterModel).show_alert()
 				m._set_ai(AI.ALERT, 0.3 + m._rng.randf() * 0.4)
+
+
+## Bursts out of the sand (sand scorpions).
+func _unburrow() -> void:
+	_burrowed = false
+	var tw := create_tween()
+	tw.tween_property(model, "position:y", 0.0, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	VFX.dust(get_parent(), global_position + Vector3(0, 0.2, 0), Color(0.86, 0.76, 0.52, 0.9), 14)
+	Audio.play_at(&"rock_break", global_position, -6.0)
+
+
+## Wolf howl: the head goes back, and the rest of the pack comes running.
+func _howl() -> void:
+	var rig = (model as MonsterModel).rig
+	if rig and rig.has_method("play_howl"):
+		rig.play_howl()
+	Events.damage_dealt.emit(global_position + Vector3(0, 1.8, 0), 0.0, false, false, "Howl!")
+	Audio.play_at(&"monster_growl", global_position, -2.0, 0.25, 60.0)
 
 
 func _on_hit_reaction(info: DamageInfo) -> void:

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"wild_hide"
+display_name = "Wild Hide"
+description = "A soft hide from deer, rabbits and wolves. Tan it into leather at a tailoring table."
+category = 0
+rarity = 1
+max_stack = 30
+base_value = 6
+icon_color = Color(0.66, 0.5, 0.34, 1)
+icon_glyph = "H"

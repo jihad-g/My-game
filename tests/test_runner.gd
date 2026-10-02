@@ -100,6 +100,8 @@ func _ready() -> void:
 	_run(&"test_m14_gear_data")
 	await _run_async(&"test_m14_gear_in_game")
 	await _run_async(&"test_m14_character_creation")
+	_run(&"test_m15_data")
+	await _run_async(&"test_m15_wilds_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -1459,6 +1461,7 @@ func _place_near(world: World, id: StringName, min_d: int = 2, pay: bool = false
 
 func _clear_enemies(world: World) -> void:
 	world.spawner.max_active = 0
+	world.spawner.wild_enabled = false  # Milestone 15: the land is full of wild life
 	world.spawner.despawn_all()
 
 
@@ -2467,6 +2470,8 @@ func _go_to_poi(world: World, poi: PoiInfo, offset: Vector3 = Vector3(0, 0, 0)) 
 
 func _kill(m: Enemy, world: World) -> void:
 	if is_instance_valid(m) and not m.is_dead:
+		if m is Monster:
+			(m as Monster)._iframes = 0.0  # a mid-dodge monster would shrug off the killing hit
 		m.health.invulnerable = false
 		m.health.current = 0.1
 		m.receive_hit(DamageInfo.create(99.0, world.player, &"true"))
@@ -3239,7 +3244,6 @@ func test_m7_base_raid() -> void:
 	var p := world.player
 	p.health.invulnerable = true
 	_clear_enemies(world)
-	world.spawner.max_active = 60
 	var b := _build_base(world)
 	check(b.claim != null and b.pieces.size() >= 8, "built a base (%d pieces)" % b.pieces.size())
 	var base := world.raids.find_player_base()
@@ -3333,7 +3337,6 @@ func test_m7_town_raid() -> void:
 	var p := world.player
 	p.health.invulnerable = true
 	_clear_enemies(world)
-	world.spawner.max_active = 60
 	var s := _nearest(world, false)
 	await _go_to_town(world, s)
 	var site: SettlementSite = world.living.sites.get(s.id)
@@ -5137,7 +5140,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.14"), "version 0.14 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.15"), "version 0.15 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -5481,5 +5484,178 @@ func test_m14_character_creation() -> void:
 		"the new character has the chosen class and body")
 	check(world.player.equipment.set_counts().get(&"shadow", 0) == 4 and world.player.inventory.count_of(&"antidote") >= 2,
 		"and the Assassin's starting kit and supplies")
+	world.queue_free()
+	await _frames(2)
+
+
+# --- Milestone 15: Living Wilds -------------------------------------------------------------
+
+func test_m15_data() -> void:
+	# Every land biome has wild creatures; every entry loads.
+	var land := 0
+	for b in WildSpawns.TABLE:
+		var rules := WildSpawns.rules_for(b)
+		check(rules.size() >= 2 and rules.size() == WildSpawns.TABLE[b].size(), "%s has %d wild spawns" % [b, rules.size()])
+		land += 1
+	check(land >= 10 and WildSpawns.rules_for(&"deep_ocean").is_empty(), "10 land biomes have wild life, the ocean none")
+	for id in [&"frost_wolf", &"sand_scorpion", &"shore_crab", &"deer", &"rabbit"]:
+		var d: MonsterData = load("res://data/enemies/%s.tres" % id)
+		check(d != null and d.look in MonsterModel.BEASTS and d.melee != null and not d.loot.is_empty(), "%s: data, model and loot" % id)
+	var wolf: MonsterData = load("res://data/enemies/frost_wolf.tres")
+	var scorp: MonsterData = load("res://data/enemies/sand_scorpion.tres")
+	var deer: MonsterData = load("res://data/enemies/deer.tres")
+	check(wolf.howls and wolf.pack_alert >= 20.0 and float(wolf.damage_multipliers.get(&"fire", 1.0)) > 1.0, "Frost Wolves howl for the pack and are weak to fire")
+	check(scorp.burrow_range > 0.0 and scorp.melee_status.size() > 0 and scorp.melee_status[0] == &"poison", "Sand Scorpions burrow and poison")
+	check(deer.timid and deer.flee_below >= 1.0, "deer are timid")
+	# Spawn slots: groups for packs, every land biome reached on a real world.
+	var gen := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var by_biome := {}
+	var wolf_groups := 0
+	var counted := 0
+	for cx in range(-160, 160, 3):
+		for cz in range(-160, 160, 3):
+			var slots := gen.get_spawn_slots(Vector2i(cx, cz))
+			var wolves := 0
+			for sl in slots:
+				var rule: EnemySpawnRule = sl.rule
+				var bid: StringName = gen.biomes[gen.get_biome_index(int(sl.position.x), int(sl.position.z))].id
+				by_biome[bid] = int(by_biome.get(bid, 0)) + 1
+				if rule.enemy_data and rule.enemy_data.id == &"frost_wolf":
+					wolves += 1
+				counted += 1
+			if wolves >= 2:
+				wolf_groups += 1
+	print("   wild spawn slots by biome: %s" % [by_biome])
+	check(by_biome.size() >= 8, "wild spawns in %d biomes (was 4)" % by_biome.size())
+	check(wolf_groups > 0, "frost wolves come in packs (%d packs)" % wolf_groups)
+	var a := gen.get_spawn_slots(Vector2i(12, -7))
+	var b2 := gen.get_spawn_slots(Vector2i(12, -7))
+	check(a.size() == b2.size() and (a.is_empty() or a[0].key == b2[0].key), "spawn slots are deterministic")
+	# Treasure spots.
+	var kinds := {}
+	var spots := 0
+	for cx in range(-250, 250, 2):
+		for cz in range(-250, 250, 2):
+			var sp := TreasureSpots.spot_for(gen, Vector2i(cx, cz))
+			if not sp.is_empty():
+				spots += 1
+				kinds[sp.kind] = int(kinds.get(sp.kind, 0)) + 1
+	print("   treasure spots in 8x8 km (every 2nd chunk): %d %s" % [spots, kinds])
+	check(kinds.has(&"camp") and kinds.has(&"buried") and kinds.has(&"shipwreck"), "camps, buried caches and shipwrecks all exist")
+	check(TreasureSpots.spot_for(gen, Vector2i(3, 3)) == TreasureSpots.spot_for(gen, Vector2i(3, 3)), "treasure spots are deterministic")
+	for t in [&"wild_camp", &"shipwreck", &"buried_cache"]:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 7
+		var r := LootTables.roll(t, 2, rng)
+		check(int(r.coins) > 0, "%s loot rolls coins" % t)
+	# More POIs near spawn.
+	check(Exploration.poi_chance(0.0) > 0.85 and is_equal_approx(Exploration.poi_chance(5000.0), Exploration.POI_CHANCE), "the starting region holds more POIs")
+	var near := 0
+	for cx in range(-10, 10):
+		for cz in range(-10, 10):
+			var p := gen.pois.get_cell(Vector2i(cx, cz))
+			if p and p.rank <= 2 and Vector2(p.center).length() < 2500.0:
+				near += 1
+	print("   E/D/C POIs within 2.5 km: %d" % near)
+	check(near >= 40, "plenty of E/D/C POIs within 2.5 km (%d)" % near)
+	# Item quality.
+	var fine := ItemDB.get_item(&"iron_sword@fine")
+	var mw := ItemDB.get_item(&"crystal_ring@masterwork")
+	var base := ItemDB.get_item(&"iron_sword")
+	check(fine != null and fine.display_name == "Fine Iron Longsword" and float(fine.stat_bonuses.get(&"damage_bonus", 0.0)) > float(base.stat_bonuses.get(&"damage_bonus", 0.0)),
+		"Fine Iron Sword hits harder than an Iron Sword")
+	check(mw != null and int(mw.stat_bonuses[&"mana_control"]) == int(ItemDB.get_item(&"crystal_ring").stat_bonuses[&"mana_control"]) + 1
+		and float(mw.stat_bonuses[&"spell_power"]) > float(ItemDB.get_item(&"crystal_ring").stat_bonuses[&"spell_power"]), "Masterwork: better stats, +1 skill")
+	check(ItemDB.get_item(&"berries@fine") == null and not ItemDB.has_item(&"iron_sword@junk") and ItemDB.has_item(&"iron_sword@masterwork"),
+		"only gear has quality")
+	check(not ItemDB.all_ids().has(&"iron_sword@fine"), "quality items are not listed as separate items")
+	var rng2 := RandomNumberGenerator.new()
+	rng2.seed = 3
+	var counts := [0, 0, 0]
+	for i in 600:
+		counts[ItemQuality.roll(100, rng2)] += 1
+	var low := 0
+	for i in 200:
+		low += ItemQuality.roll(15, rng2)
+	check(low == 0 and counts[1] > 0 and counts[2] > 0 and counts[0] > counts[1], "quality needs Crafting skill; Grandmasters roll Masterwork (%s)" % [counts])
+	# New gear and the respec draught.
+	for id in [&"mithril_gauntlets", &"mithril_greaves", &"wanderer_boots", &"ring_of_embers", &"ring_of_swiftness", &"draught_of_forgetting", &"wild_hide"]:
+		check(ItemDB.has_item(id) and RecipeBook.get_recipe(id if id != &"wild_hide" else &"leather_from_hide") != null, "%s exists with a recipe" % id)
+	check(ItemDB.get_item(&"draught_of_forgetting").is_consumable(), "the Draught of Forgetting can be drunk")
+
+
+func test_m15_wilds_ingame() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	# Wolf pack: one wolf sees you and howls; the others come too.
+	var wolves: Array[Monster] = []
+	for k in 3:
+		wolves.append(_spawn_monster(world, &"frost_wolf", Vector3(18.0 + k * 1.5, 0, 0)))
+	await _frames(3)
+	check(wolves.all(func(w: Monster) -> bool: return w.ai in [Monster.AI.IDLE, Monster.AI.WANDER]), "the pack rests")
+	wolves[0]._alert(p)
+	await _frames(3)
+	check(wolves[1].ai != Monster.AI.IDLE and wolves[2].ai != Monster.AI.IDLE and wolves[1].target == p, "one howl and the whole pack hunts you")
+	for w in wolves:
+		_kill(w, world)
+	# Sand scorpion: buried until you come close.
+	var sc := _spawn_monster(world, &"sand_scorpion", Vector3(0, 0, 9))
+	await _frames(3)
+	check(sc.ai == Monster.AI.DORMANT and sc.model.position.y < -0.3, "the scorpion waits under the sand")
+	sc.global_position = p.global_position + Vector3(0, 0, 3.5)
+	await _frames(25)
+	check(sc.ai != Monster.AI.DORMANT and sc.model.position.y > -0.1, "and bursts out when you step close")
+	_kill(sc, world)
+	# Deer: runs away, never fights.
+	var deer := _spawn_monster(world, &"deer", Vector3(6, 0, 0))
+	await _frames(3)
+	var d0 := deer.global_position.distance_to(p.global_position)
+	deer._alert(p)
+	await _frames(60)
+	check(deer.ai == Monster.AI.FLEE and deer.global_position.distance_to(p.global_position) > d0 + 1.0, "the deer flees (%.1f -> %.1f m)" % [d0, deer.global_position.distance_to(p.global_position)])
+	var meat := func() -> int:
+		var n := 0
+		for c in world.pickup_pool.get_children():
+			if c is Pickup and c.visible and (c as Pickup).item_id == &"raw_meat":
+				n += 1
+		return n + p.inventory.count_of(&"raw_meat")
+	var meat_before: int = meat.call()
+	_kill(deer, world)
+	await _frames(5)
+	check(int(meat.call()) > meat_before, "hunting a deer drops meat")
+	# A treasure site: open its chest once.
+	var site := TreasureSpots.build_site({"kind": &"buried", "position": p.global_position + Vector3(3, 0, 3), "key": "t:test", "rank": 1})
+	world.add_child(site)
+	await _frames(2)
+	var chest: LootChest = null
+	for c in site.get_children():
+		if c is LootChest:
+			chest = c
+	var coins := p.coins
+	chest.interact(p)
+	check(chest.opened and p.coins > coins and world.exploration.has_state("open:t:test"), "the buried cache pays out once and is remembered")
+	site.queue_free()
+	# Respec.
+	var ch := p.character
+	ch.grant_xp(Progression.total_xp_for(8), Progression.Source.OTHER)
+	var pts := ch.unspent_points
+	for k in pts:
+		ch.spend_point(Skill.STRENGTH)
+	check(ch.unspent_points == 0 and ch.base_skill(Skill.STRENGTH) > ch.class_data.starting_skill(Skill.STRENGTH), "points spent on Strength")
+	p.inventory.add_item(&"draught_of_forgetting", 1)
+	for i in p.inventory.capacity:
+		var s = p.inventory.get_slot(i)
+		if s != null and s.id == &"draught_of_forgetting":
+			p.use_slot(i)
+			break
+	check(ch.unspent_points == pts and ch.base_skill(Skill.STRENGTH) == ch.class_data.starting_skill(Skill.STRENGTH)
+		and p.inventory.count_of(&"draught_of_forgetting") == 0, "the Draught of Forgetting gives back every point (%d)" % pts)
+	# Crafting can give quality gear and it equips like any other item.
+	p.equipment.equip(ItemDB.get_item(&"iron_sword@masterwork"))
+	p._on_equipment_changed()
+	check(p.equipment.weapon_type() == &"sword" and p.equipment.to_save().values().has("iron_sword@masterwork"), "quality gear equips and saves by id")
 	world.queue_free()
 	await _frames(2)
