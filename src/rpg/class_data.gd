@@ -6,6 +6,8 @@ extends Resource
 @export var display_name: String = ""
 @export_multiline var description: String = ""
 @export var role_summary: String = ""
+## Where this hero comes from (Milestone 16 story; shown at creation and in the journal).
+@export_multiline var backstory: String = ""
 ## Starting skill levels; must add up to exactly 50.
 @export var starting_skills: Dictionary = {}
 ## How strongly each skill's effects apply for this class (1.0 = normal).

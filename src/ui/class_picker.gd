@@ -181,7 +181,7 @@ func select_class(id: StringName) -> void:
 		_bars.add_child(v)
 	var st := starting_stats(c)
 	_derived.text = "Health %d · Mana %d · Armor %d\nTalent: %s" % [st.health, st.mana, st.armor, talent_text(c)]
-	_title.tooltip_text = c.description
+	_title.tooltip_text = "%s\n\n%s" % [c.description, c.backstory]
 	var kit := PackedStringArray()
 	for item_id in c.starting_equipment:
 		var it: ItemData = ItemDB.get_item(StringName(item_id))

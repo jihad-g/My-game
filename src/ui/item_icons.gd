@@ -57,7 +57,7 @@ static func shape_of(item: ItemData) -> StringName:
 		["moonpetal", &"flower"], ["sunbloom", &"flower"], ["frost_lotus", &"flower"], ["orchid", &"flower"],
 		["emberroot", &"root"], ["thorn_heart", &"heart"], ["star_core", &"orb"], ["essence", &"orb"],
 		["_ore", &"ore"], ["_ingot", &"ingot"], ["nugget", &"nugget"], ["gemstone", &"gem"], ["sunstone", &"gem"],
-		["crystal_shard", &"crystal"], ["void_shard", &"crystal"], ["dust", &"dust"],
+		["crystal_shard", &"crystal"], ["void_shard", &"crystal"], ["shard", &"crystal"], ["dust", &"dust"],
 		["plank", &"plank"], ["wood", &"log"], ["stick", &"stick"], ["flint", &"flint"], ["stone", &"stone"],
 		["clay", &"lump"], ["coal", &"coal"], ["plant_fiber", &"fiber"], ["rope", &"rope"], ["leather", &"hide"],
 		["hide", &"hide"], ["tusk", &"tusk"], ["bone", &"bone"], ["campfire", &"campfire"], ["bandage", &"bandage"],

@@ -56,6 +56,8 @@ var living: SettlementManager
 var exploration: ExplorationManager
 ## Wild treasure: camps, shipwrecks, buried caches (Milestone 15).
 var treasure: TreasureSpots
+## Quests, lore and the chronicle (Milestone 16).
+var quests: QuestLog
 ## The dungeon floor the player is in (null on the surface/caves).
 var dungeon: DungeonInstance
 ## Base and settlement raids (Milestone 7).
@@ -130,6 +132,10 @@ func _ready() -> void:
 	props = PropLibrary.new()
 	chunk_manager.setup(generator, props)
 	spawner.generator = generator
+	quests = QuestLog.new()
+	quests.name = "Quests"
+	quests.world = self
+	add_child(quests)
 	treasure = TreasureSpots.new()
 	treasure.name = "TreasureSpots"
 	treasure.chunk_manager = chunk_manager
@@ -295,6 +301,8 @@ func _on_area_ready() -> void:
 	if _first_ready:
 		Net.on_world_loaded()
 		_first_ready = false
+		if not Net.dedicated:
+			quests.begin_story()
 		if _new_world:
 			Events.toast.emit("A new world awaits. Seed %d" % GameState.world_seed, Color(0.8, 1.0, 0.7))
 			if SaveManager.is_persistent():
@@ -677,6 +685,7 @@ func to_save() -> Dictionary:
 		"blueprint_sites": blueprints.to_save(),
 		"living": living.to_save(),
 		"exploration": exploration.to_save(),
+		"quests": quests.to_save(),
 		"raids": raids.to_save(),
 		"events": events.to_save(),
 		"layer": layer,
@@ -699,6 +708,7 @@ func from_save(data: Dictionary) -> void:
 	layer = int(data.get("layer", TerrainGenerator.Layer.SURFACE))
 	living.from_save(data.get("living", {}))
 	exploration.from_save(data.get("exploration", {}))
+	quests.from_save(data.get("quests", {}))
 	raids.from_save(data.get("raids", {}))
 	events.from_save(data.get("events", {}))
 	day_night.day = int(data.get("day", 1))

@@ -11,6 +11,7 @@ script = ExtResource("1_class")
 id = &"knight"
 display_name = "Knight"
 description = "A disciplined defender. Blocks and parries better than anyone, controls enemies and protects allies."
+backstory = "You were a squire of a kingdom far to the south, sworn to protect its roads. When your lord fell to bandits, you kept your oath and walked north to find out who arms them - and why they hunt for shards."
 role_summary = "Sword & shield · defense · control"
 starting_skills = {
 &"strength": 14,

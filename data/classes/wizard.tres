@@ -11,6 +11,7 @@ script = ExtResource("1_class")
 id = &"wizard"
 display_name = "Wizard"
 description = "A scholar of the elements. Huge mana pool and devastating spells, but fragile and physically weak even at maximum Strength."
+backstory = "You are a student of the tower order that studies the shards. Your master vanished while following a falling star. You took their notes, their staff and their questions with you."
 role_summary = "Ranged elemental magic · crowd control"
 starting_skills = {
 &"strength": 4,

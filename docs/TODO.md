@@ -105,6 +105,20 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 16 — The Lost Shards  ✅
+
+- [x] Quest system and journal (O): multi-step quests, goals, rewards, tracker with distance and direction, saved with the world
+- [x] Main quest "The Lost Shards" (5 steps, 3 Shard Keepers, the altar, the Starborn Colossus, title Shardbearer)
+- [x] Royal errands: one per kingdom (deliver, hunt, dungeon, report) ending in a knighthood
+- [x] Dialogue choices in quest conversations (with consequences for the royal errand)
+- [x] Lore: 12 history pages, boss pages, generated kingdom histories; class backstories; intro and ending pages
+- [x] Chronicle of the player's big moments
+- [ ] NOT IMPLEMENTED: map markers for quest goals (the tracker gives distance and direction instead)
+- [ ] NOT IMPLEMENTED: voiced or branching dialogue trees; quest choices that change the story's ending
+- [ ] NOT IMPLEMENTED: quests for guests in co-op (quest progress is stored in the host's world; guests see their own local journal but it is not saved)
+- [ ] Known limitation: the Shard Keepers are the dungeon bosses, so the main quest needs one dungeon of each theme (crypt, sanctum, grotto); the tracker points to the nearest one of the right theme
+- [ ] Known limitation: lore pages only come from chests opened after Milestone 16
+
 ## Milestone 15 — Living Wilds  ✅
 
 - [x] Wild spawns for every land biome (2–4 creatures each, `WildSpawns`), groups for packs and herds
@@ -323,7 +337,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 ## Phase 4 — Content
 
-- [~] Kingdoms (castle, advanced blacksmith, rare shops, guards, reputation) — done in Milestone 5; kingdom quests not yet
+- [x] Kingdoms (castle, advanced blacksmith, rare shops, guards, reputation) — Milestone 5; royal errands (Milestone 16)
 - [x] Dungeons ranks E–S with scaling enemies, traps, secrets, loot, bosses (Milestone 6)
 - [x] Bosses with unique mechanics (Milestone 6: 4 bosses; Milestone 7: phases, wards, beams, 2 new bosses)
 - [x] More enemy categories — undead, magical, beasts (M6); bandits, elites with affixes, treasure goblin (M7)

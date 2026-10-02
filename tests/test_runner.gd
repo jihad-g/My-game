@@ -102,6 +102,8 @@ func _ready() -> void:
 	await _run_async(&"test_m14_character_creation")
 	_run(&"test_m15_data")
 	await _run_async(&"test_m15_wilds_ingame")
+	_run(&"test_m16_data")
+	await _run_async(&"test_m16_story")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5140,7 +5142,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.15"), "version 0.15 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.16"), "version 0.16 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -5659,3 +5661,167 @@ func test_m15_wilds_ingame() -> void:
 	check(p.equipment.weapon_type() == &"sword" and p.equipment.to_save().values().has("iron_sword@masterwork"), "quality gear equips and saves by id")
 	world.queue_free()
 	await _frames(2)
+
+
+# --- Milestone 16: The Lost Shards -----------------------------------------------------------
+
+func test_m16_data() -> void:
+	var q := QuestBook.main_quest()
+	check((q.steps as Array).size() == 5 and q.rewards.title == QuestBook.MAIN_TITLE, "the main quest has 5 steps and ends with a title")
+	for st in q.steps:
+		check(st.has("goal") and st.has("text") and st.has("hint"), "main quest step '%s' is complete" % st.text)
+	check(LoreBook.PAGES.size() >= 12 and LoreBook.FINDABLE.all(func(p: StringName) -> bool: return LoreBook.PAGES.has(p)), "%d lore pages" % LoreBook.PAGES.size())
+	for k in QuestBook.KEEPERS:
+		check(LoreBook.BOSS_PAGES.has(k) and ResourceLoader.exists("res://data/enemies/%s.tres" % k), "%s is a real boss with a page" % k)
+	for c in ClassRegistry.all():
+		check(c.backstory.length() > 60, "%s has a backstory" % c.display_name)
+	for id in [&"shard_fragment", &"great_shard", &"shardheart_amulet"]:
+		check(ItemDB.has_item(id), "%s exists" % id)
+	var info := SettlementInfo.new()
+	info.id = "k:1,2"
+	info.kingdom_id = "k:1,2"
+	info.kingdom_name = "Varnholm"
+	info.seed = 12345
+	var kq := QuestBook.kingdom_quest(info)
+	check(kq.id == &"kingdom:k:1,2" and (kq.steps as Array).size() == 4 and kq.steps[0].goal == "deliver" and kq.steps[3].goal == "return",
+		"a royal errand: deliver, hunt, dungeon, report back")
+	check(QuestBook.kingdom_quest(info).steps[0].item == kq.steps[0].item, "royal errands are deterministic")
+	var h := LoreBook.kingdom_history("Varnholm", 12345, "Eldmoor")
+	check(h.contains("Varnholm") and h.contains("Eldmoor"), "kingdoms have a history and a rival")
+
+
+func test_m16_story() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	var ql := world.quests
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	# A new world starts the story.
+	check(ql.is_active(QuestBook.MAIN) and ql.step_index(QuestBook.MAIN) == 0, "a new world starts The Lost Shards")
+	check(world.hud.story.visible and ql.intro_seen, "the intro page is shown once")
+	check(not ql.chronicle.is_empty() and String(ql.chronicle[0].text).contains("Knight"), "the chronicle starts: %s" % ql.chronicle[0].text if not ql.chronicle.is_empty() else "")
+	var tr := ql.tracker()
+	check(tr.title == "The Lost Shards" and tr.where != "", "the tracker points to the nearest village (%s)" % tr.get("where", ""))
+	await _frames(40)  # the tracker refreshes twice a second
+	check(world.hud._quest_label.visible and world.hud._quest_label.text.contains("Lost Shards"), "the HUD shows the quest")
+	world.hud.story.visible = false
+	# 1. Talk.
+	var said := ql.talk_main()
+	check(said.contains("Shattering") and ql.step_index(QuestBook.MAIN) == 1 and ql.lore.has(&"shattering"), "a villager tells of the Shattering")
+	# 2. Shard fragments from ruin chests.
+	for k in 3:
+		var chest := LootChest.new()
+		chest.table = &"ruin_chest"
+		world.add_child(chest)
+		chest.global_position = p.global_position + Vector3(2, 0, 0)
+		chest.open()
+		chest.queue_free()
+	await _frames(40)
+	check(ql.step_index(QuestBook.MAIN) == 2 and p.inventory.count_of(&"shard_fragment") == 3, "3 Shard Fragments found in ruin chests")
+	# 3. The three Shard Keepers.
+	for k in QuestBook.KEEPERS:
+		var boss := _spawn_monster(world, k, Vector3(10, 0, 0))
+		Events.boss_started.emit(boss)
+		_kill(boss, world)
+		await _frames(3)
+	check(ql.keepers.size() == 3 and p.inventory.count_of(&"great_shard") + _ground_count(world, &"great_shard") >= 3, "each keeper drops a Great Shard")
+	check(ql.lore.has(&"bone_king") and ql.lore.has(&"elder_thornmaw"), "facing a boss adds its story to the journal")
+	check(ql.step_index(QuestBook.MAIN) == 3, "all keepers down: to the altar")
+	await _frames(30)  # pickups fly into the bag
+	if p.inventory.count_of(&"great_shard") < 3:
+		p.inventory.add_item(&"great_shard", 3 - p.inventory.count_of(&"great_shard"))
+	# 4. The altar.
+	var altar := _place_near(world, &"arcane_altar", 2, false, 6)
+	check(altar != null and altar.is_interactable() and altar.get_interact_text().contains("Altar"), "an Arcane Altar can be used")
+	check(ql.tracker().where != "", "the tracker points to the altar")
+	altar.interact(p)
+	check(ql.step_index(QuestBook.MAIN) == 4 and p.inventory.count_of(&"great_shard") == 0, "the Great Shards join on the altar")
+	var colossus: Monster = null
+	for e in get_tree().get_nodes_in_group(&"enemies"):
+		if e.has_meta(&"quest_starborn") and not (e as Enemy).is_dead:
+			colossus = e
+	check(colossus != null and colossus.target == p, "the Starborn Colossus answers")
+	# 5. The final fight.
+	var coins := p.coins
+	_kill(colossus, world)
+	await _frames(3)
+	check(ql.is_done(QuestBook.MAIN) and ql.titles.has(QuestBook.MAIN_TITLE) and p.coins > coins, "The Lost Shards: done, Shardbearer")
+	check(world.hud.story.visible, "the ending is told")
+	world.hud.story.visible = false
+	# Kingdom errand with a dialogue choice.
+	var caps := world.generator.settlements.near(p.global_position, 9000.0).filter(func(s: SettlementInfo) -> bool: return s.is_kingdom())
+	check(not caps.is_empty(), "a kingdom capital nearby")
+	if not caps.is_empty():
+		var cap: SettlementInfo = caps[0]
+		var kid := StringName("kingdom:%s" % cap.kingdom_id)
+		check(ql.kingdom_state(cap) == "offer", "the ruler offers an errand")
+		coins = p.coins
+		ql.accept_kingdom(cap, true)
+		check(ql.is_active(kid) and p.coins > coins, "half the gold up front (a choice with a cost)")
+		var st := ql.current_step(kid)
+		p.inventory.remove_item(st.item, p.inventory.count_of(st.item))
+		check(ql.kingdom_turn_in(cap).contains("still need"), "can't hand over what you don't have")
+		p.inventory.add_item(st.item, int(st.count))
+		ql.kingdom_turn_in(cap)
+		check(ql.kingdom_state(cap) == "kill", "goods delivered; now the hunt")
+		for k in int(ql.current_step(kid).count):
+			var m := _spawn_monster(world, &"thorn_crawler", Vector3(8, 0, 0))
+			_kill(m, world)
+			await _frames(2)
+		check(ql.kingdom_state(cap) == "dungeon", "monsters defeated")
+		var dpoi := _nearest_poi(world, PoiInfo.Kind.DUNGEON, 5)
+		dpoi = dpoi if dpoi and dpoi.rank >= int(ql.current_step(kid).rank) else null
+		if dpoi == null:
+			for pp in world.generator.pois.near(p.global_position, 6000.0):
+				if pp.kind == PoiInfo.Kind.DUNGEON and pp.rank >= int(ql.current_step(kid).rank):
+					dpoi = pp
+					break
+		Events.dungeon_left.emit(dpoi.id, true)
+		check(ql.kingdom_state(cap) == "return", "a dungeon cleared")
+		coins = p.coins
+		ql.kingdom_turn_in(cap)
+		check(ql.is_done(kid) and int(p.reputation.titles.get(cap.kingdom_id, 0)) >= 3 and p.coins > coins,
+			"knighted: %s" % p.reputation.title_for(cap.kingdom_id, cap.kingdom_name))
+		var hist := ql.kingdom_history(cap)
+		check(hist.contains(cap.kingdom_name) and ql.lore.has(StringName("kingdom:%s" % cap.kingdom_id)), "the ruler's history goes into the journal")
+	# Lore pages from chests.
+	var before := ql.lore.size()
+	for k in 25:
+		var c2 := LootChest.new()
+		c2.table = &"tower"
+		world.add_child(c2)
+		c2.open()
+		c2.queue_free()
+	check(ql.lore.size() > before, "lore pages hide in chests (%d -> %d)" % [before, ql.lore.size()])
+	# Journal and save.
+	world.hud.journal.toggle()
+	await _frames(2)
+	check(world.hud.journal.visible and world.hud.journal._quests.text.contains("Lost Shards") and world.hud.journal._chronicle.text.contains("Day"),
+		"the journal (O) lists quests and the chronicle")
+	world.hud.journal.toggle()
+	var saved := ql.to_save()
+	var copy := QuestLog.new()
+	copy.world = world
+	copy.from_save(JSON.parse_string(JSON.stringify(saved)))
+	check(copy.done.size() == ql.done.size() and copy.lore == ql.lore and copy.titles == ql.titles and copy.chronicle.size() == ql.chronicle.size(),
+		"quests, lore and chronicle survive a save")
+	copy.free()
+	# Dialogue choices.
+	var dp := DialoguePanel.new()
+	add_child(dp)
+	var picked := [false]
+	dp._choices("Choose", [["A", func() -> void: picked[0] = true], ["B", func() -> void: pass]])
+	await _frames(1)
+	var btns := dp._buttons.get_children().filter(func(b: Node) -> bool: return not b.is_queued_for_deletion())
+	check(btns.size() == 2, "dialogue choices are shown as buttons")
+	dp.queue_free()
+	world.queue_free()
+	await _frames(2)
+
+
+func _ground_count(world: World, id: StringName) -> int:
+	var n := 0
+	for c in world.pickup_pool.get_children():
+		if c is Pickup and c.visible and (c as Pickup).item_id == id:
+			n += (c as Pickup).count
+	return n

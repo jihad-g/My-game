@@ -276,12 +276,20 @@ func claim_radius() -> float:
 # --- Interaction ------------------------------------------------------------------------
 
 func is_interactable() -> bool:
+	if _is_altar():
+		return true  # the Arcane Altar joins the Great Shards (Milestone 16)
 	return data.behavior in [BuildPieceData.Behavior.DOOR, BuildPieceData.Behavior.CHEST,
 		BuildPieceData.Behavior.BED, BuildPieceData.Behavior.CLAIM, BuildPieceData.Behavior.FARM,
 		BuildPieceData.Behavior.BELL]
 
 
+func _is_altar() -> bool:
+	return data.station_id == &"arcane"
+
+
 func get_interact_text() -> String:
+	if _is_altar():
+		return "Arcane Altar (craft here with G · place the Great Shards)"
 	match data.behavior:
 		BuildPieceData.Behavior.DOOR:
 			return "Close door" if is_open else "Open door"
@@ -299,6 +307,11 @@ func get_interact_text() -> String:
 
 
 func interact(player: Node) -> void:
+	if _is_altar():
+		if World.instance and World.instance.quests and World.instance.quests.use_altar(self):
+			return
+		Events.toast.emit("The altar glows softly. Craft arcane items here (G).", Color(0.8, 0.8, 1.0))
+		return
 	match data.behavior:
 		BuildPieceData.Behavior.DOOR:
 			if Net.is_client():

@@ -11,6 +11,7 @@ script = ExtResource("1_class")
 id = &"barbarian"
 display_name = "Barbarian"
 description = "A towering warrior who shrugs off wounds and cleaves through crowds. Builds Rage by fighting; weak with magic."
+backstory = "You come from the tundra clans, who lived through the ten-year winter after the Shattering. The elders sent you south when the falling stars came back: if the sky is angry again, the clans must know why."
 role_summary = "Brute force · rage · crowds"
 starting_skills = {
 &"strength": 18,

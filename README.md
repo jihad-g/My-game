@@ -5,7 +5,13 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 15 — Living Wilds (v0.15.0)**: every land biome now has wild life - frost wolf packs
+> Status: **Milestone 16 — The Lost Shards (v0.16.0)**: the Shardlands now have a story. Every world starts the
+> main quest - ask about the falling stars, recover Shard Fragments, defeat the three Shard Keepers, join the
+> Great Shards on an Arcane Altar and face the Starborn Colossus. Kingdom rulers give royal errands that end in
+> a knighthood, conversations have choices, 12 lore pages and kingdom histories wait to be found, and a
+> journal (O) keeps your quests, lore and the chronicle of your adventure.
+>
+> Before that, **Milestone 15 — Living Wilds (v0.15.0)**: every land biome now has wild life - frost wolf packs
 > that howl for each other, sand scorpions hiding under the desert, crabs on the beaches, and deer and
 > rabbits to hunt for meat and hide. Abandoned camps, shipwrecks and buried caches hide treasure, the area
 > around spawn holds many more low-rank ruins and dungeons, crafted gear can come out Fine or Masterwork,
@@ -23,6 +29,10 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 > performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
 > design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md). See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
+
+| **A new world begins** | **The journal (O)** |
+|---|---|
+| ![Intro](docs/screenshots/story_intro.png) | ![Journal](docs/screenshots/journal.png) |
 
 ![Wild creatures](docs/screenshots/wild_creatures.png)
 

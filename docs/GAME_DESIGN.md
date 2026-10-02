@@ -84,7 +84,7 @@ explore points of interest and dungeons → get better gear → go further out (
 
 ### What is missing
 
-- **No main story, no intro, no ending.** The player has no reason to be in the world except to survive
+- **(Fixed in Milestone 16)** No main story, no intro, no ending. The player has no reason to be in the world except to survive
   and grow.
 - **The name "Shardlands" is never explained.** There are crystal shards and void shards as items, but no
   "shard" event, place or history.
@@ -785,7 +785,7 @@ textures on any surface, so large areas look flat up close.
 | Blueprints, auto-build, web designer | ✅ | Designer not hosted online; no builder NPCs |
 | Villages, capitals, NPC routines, dialogue, gossip | ✅ | |
 | Crime, theft, NPC relationships, families | ❌ | |
-| Multi-step quests and story | ❌ | Only notice-board requests |
+| Multi-step quests and story | ✅ | Milestone 16: main quest, royal errands, journal |
 | Roads and travelling traders that really travel | ❌ | |
 | Economy, shops, reputation, titles | ✅ | |
 | Farming | 🟡 | 3 crops; no watering, seasons or animals |
@@ -813,7 +813,7 @@ textures on any surface, so large areas look flat up close.
 | Server-side progression, accounts, encryption | ❌ | |
 | Achievements (20) and Steam layer | 🟡 | Not tested on real Steam; no icons |
 | Code signing, macOS build, installer | ❌ | |
-| Main story, lore, class backstories | ❌ | |
+| Main story, lore, class backstories | ✅ | Milestone 16 |
 | Textures, authored models, skeletal animation | ❌ | Code-built by design |
 
 ---
@@ -1122,7 +1122,10 @@ gloves, boots and rings.
 enemies, and most POIs are end-game. It is mostly data work on systems that already exist (monster
 framework, spawn rules, POI ranks), so it is cheap and makes every other system more fun.
 
-### Milestone 16 — "The Lost Shards" (story and quests)
+**Done: Milestone 16 — "The Lost Shards".** Quest system and journal, the main quest, royal errands with
+dialogue choices, 12 lore pages, kingdom histories, class backstories and the chronicle.
+
+### Milestone 16 — "The Lost Shards" (story and quests) — done
 **Goal:** give the player a reason to explore and a sense of a real place.
 **Ideas:** 4a–4f (lore and backstories), 11a (quest system and journal), 11b (main quest), 11c, 11d.
 **Why second:** once the world has life, a story can send players to places that are now worth visiting.

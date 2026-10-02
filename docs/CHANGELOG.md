@@ -2,6 +2,36 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.16.0] — Milestone 16: The Lost Shards
+
+### Added
+- **Quest system** (`QuestLog`, `QuestBook`): multi-step quests with goals (talk, collect, defeat bosses,
+  use an altar, deliver, hunt, clear a dungeon, report back), rewards (XP, coins, items, titles) and saving.
+- **Main quest "The Lost Shards"** (starts in every world): ask villagers about the falling stars, recover
+  three Shard Fragments from the chests of ruins, towers and temples, defeat the three Shard Keepers (the Bone
+  King, the Arcane Colossus and the Elder Thornmaw) for their Great Shards, join the shards on an Arcane
+  Altar, and defeat the Starborn Colossus that answers. Reward: the title **Shardbearer**, the Shardheart
+  Amulet, XP and coins, and an ending page.
+- **Royal errands** (one per kingdom): the ruler asks for goods, a hunt and a cleared dungeon, then knights
+  you (Knight of <kingdom>).
+- **Dialogue choices**: answers in quest conversations; asking a ruler for half the gold up front gives coins
+  now but costs reputation and half the final reward.
+- **Lore** (`LoreBook`): 12 pages of history - the Shattering, the Ancients, the guardians, the tower order,
+  the Great Shards, every Shard Keeper, the Starborn, the bandit brotherhood, the tundra clans, the first
+  kingdoms. Found in POI chests and buried caches, from facing bosses, and every kingdom's ruler tells its
+  history (founder, banner, old rival).
+- **Class backstories** for the Knight, Barbarian, Assassin and Wizard (intro page, class picker tooltip,
+  journal).
+- **Chronicle**: your big moments with the day they happened - first visits, bosses, cleared dungeons,
+  raids repelled, titles, level milestones, quests.
+- **Journal (O)** with Quests, Lore, Chronicle and Your story tabs; a **quest tracker** on the HUD that says
+  how far and in which direction the next goal is; **story pages** for the intro and the ending.
+- The Arcane Altar can be used (interact) for the main quest.
+- Tests: `test_m16_data`, `test_m16_story`. Screenshot runner `--only=story`.
+
+### Changed
+- Kingdom recognition announces titles to the chronicle (`Events.title_granted`).
+
 ## [0.15.0] — Milestone 15: Living Wilds
 
 ### Added

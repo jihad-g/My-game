@@ -77,4 +77,6 @@ func open() -> Dictionary:
 	VFX.burst(get_parent(), global_position + Vector3(0, 0.8, 0), 1.0, Color(1.0, 0.85, 0.4, 0.7))
 	if World.instance:
 		World.instance.player.character.grant_xp(8 + rank * 6, Progression.Source.EXPLORATION)
+		if World.instance.quests:
+			World.instance.quests.on_chest_opened(self)
 	return result

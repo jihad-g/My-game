@@ -11,6 +11,7 @@ script = ExtResource("1_class")
 id = &"assassin"
 display_name = "Assassin"
 description = "A shadow with twin daggers. Moves fast, strikes from behind for massive criticals and poisons isolated targets."
+backstory = "You grew up in the bandit brotherhood and learned to move like a shadow. When the warlords started killing for shards, you left them. Now you hunt the hunters - and you know how they think."
 role_summary = "Stealth · mobility · critical strikes"
 starting_skills = {
 &"strength": 9,

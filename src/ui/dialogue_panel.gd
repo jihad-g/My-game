@@ -90,11 +90,71 @@ func _rebuild_buttons() -> void:
 			_say(_gossip[_gossip_i % _gossip.size()])
 			_gossip_i += 1)
 	_button("Tell me about %s" % info.name, func() -> void: _say(_about()))
+	_quest_buttons(info)
 	if npc.role == &"noble":
 		_button("Ask for recognition", func() -> void: _say(manager.recognition(info)))
 	if npc.role == &"guard":
 		_button("Any trouble?", func() -> void: _say(_trouble()))
 	_button("Goodbye", close)
+
+
+# --- Quests (Milestone 16) ------------------------------------------------------------------
+
+func _quest_buttons(info: SettlementInfo) -> void:
+	var ql: QuestLog = World.instance.quests if World.instance else null
+	if ql == null:
+		return
+	if ql.current_step(QuestBook.MAIN).get("goal", "") == "talk":
+		_button("Ask about the falling stars", func() -> void:
+			var text := ql.talk_main()
+			_choices(text, [
+				["\"I will find the shards.\"", func() -> void: _say("Then go with the sky's blessing. Start with the old ruins - nobody else wants to.")],
+				["\"What's in it for me?\"", func() -> void:
+					_say("Gold, if you are lucky. A name, if you are brave. The ruins are full of both.")],
+				["\"Tell me more about the Shattering.\"", func() -> void: _say(LoreBook.text_of(&"shattering"))],
+			]))
+	if npc.role != &"noble" or not info.is_kingdom():
+		return
+	_button("Tell me the history of %s" % info.kingdom_name, func() -> void: _say(ql.kingdom_history(info)))
+	var q := QuestBook.kingdom_quest(info)
+	match ql.kingdom_state(info):
+		"offer":
+			_button("Do you have work for me?", func() -> void:
+				_choices("%s A royal errand: %s; then %s; then %s. Do it, and you will kneel as a knight of %s." % [
+					q.summary, String(q.steps[0].text).to_lower(), String(q.steps[1].text).to_lower(),
+					String(q.steps[2].text).to_lower(), info.kingdom_name], [
+					["Accept the errand", func() -> void:
+						ql.accept_kingdom(info, false)
+						_say("Good. The realm remembers those who serve it.")],
+					["Ask for half the gold up front", func() -> void:
+						ql.accept_kingdom(info, true)
+						_say("Hmph. Coin before deeds? Take it - but the realm will remember that too.")],
+					["\"Not now.\"", func() -> void: _say("The offer stands. Come back when you are ready.")],
+				]))
+		"deliver", "return":
+			var label := "Hand over the goods" if ql.kingdom_state(info) == "deliver" else "I have done everything you asked"
+			_button(label, func() -> void:
+				_say(ql.kingdom_turn_in(info))
+				_rebuild_buttons())
+		"done":
+			pass
+		_:
+			_button("About your errand...", func() -> void:
+				_say("You have not finished yet: %s." % String(ql.current_step(StringName("kingdom:%s" % info.kingdom_id)).get("text", "")).to_lower()))
+
+
+## Says `text`, then shows the choices [[label, callable], ...] instead of the
+## usual buttons (Milestone 16 dialogue choices). Picking one runs it and
+## brings the usual buttons back.
+func _choices(text: String, options: Array) -> void:
+	_say(text)
+	for c in _buttons.get_children():
+		c.queue_free()
+	for o in options:
+		var cb: Callable = o[1]
+		_button(String(o[0]), func() -> void:
+			cb.call()
+			_rebuild_buttons())
 
 
 func _about() -> String:

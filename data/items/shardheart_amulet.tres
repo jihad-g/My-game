@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"shardheart_amulet"
+display_name = "Shardheart Amulet"
+description = "The three Great Shards, joined and quiet at last, set in star metal. Only the Shardbearer can wear it."
+category = 4
+rarity = 5
+max_stack = 1
+base_value = 3000
+icon_color = Color(0.8, 0.9, 1.0, 1)
+icon_glyph = "Am"
+equip_slot = 8
+required_level = 30
+stat_bonuses = {
+&"strength": 2,
+&"mana_control": 2,
+&"defense": 2,
+&"dexterity": 2,
+&"max_health": 40,
+&"spell_power": 10
+}

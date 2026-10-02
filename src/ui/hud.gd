@@ -56,6 +56,11 @@ var _spellbook := SpellbookPanel.new()
 var _blueprints := BlueprintPanel.new()
 ## Raid / world event banner (Milestone 7).
 var _event_label := Label.new()
+## Milestone 16: journal (O), quest tracker and story pages.
+var journal := JournalPanel.new()
+var story := StoryCard.new()
+var _quest_label := Label.new()
+var _quest_t := 0.0
 var _coins_label := Label.new()
 var _boss_panel := PanelContainer.new()
 var _boss_name := Label.new()
@@ -123,6 +128,8 @@ func _ready() -> void:
 	_root.add_child(_requests)
 	_root.add_child(_reputation)
 	_root.add_child(_spellbook)
+	_root.add_child(journal)
+	_root.add_child(story)
 	_root.add_child(_blueprints)
 	_root.add_child(tutorial_card)
 	_root.add_child(guide)
@@ -173,7 +180,7 @@ func _ready() -> void:
 	Events.target_changed.connect(_on_target_changed)
 	Events.player_died.connect(func() -> void: _death.visible = true)
 	Events.player_respawned.connect(func() -> void: _death.visible = false)
-	for panel in [_inv_panel, _map, _character, _crafting, _chest, _dialogue, _trade, _requests, _reputation, _spellbook, _blueprints, _settings, guide]:
+	for panel in [_inv_panel, _map, _character, _crafting, _chest, _dialogue, _trade, _requests, _reputation, _spellbook, _blueprints, _settings, guide, journal, story]:
 		UIFx.attach(panel)
 
 
@@ -194,6 +201,8 @@ func bind(p_player: Player, p_world: World) -> void:
 	_crafting.bind(player)
 	_chest.bind(player)
 	_spellbook.bind(player)
+	if world.quests:
+		journal.bind(world)
 	_blueprints.bind(world)
 	_refresh_coins()
 	if world.build_mode:
@@ -593,6 +602,15 @@ func _build_corner_info() -> void:
 	_event_label.custom_minimum_size.x = 300
 	_event_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	v.add_child(_event_label)
+	_quest_label.add_theme_font_size_override(&"font_size", 14)
+	_quest_label.add_theme_color_override(&"font_color", Color(1.0, 0.88, 0.55))
+	_quest_label.add_theme_constant_override(&"outline_size", 6)
+	_quest_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_quest_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	_quest_label.custom_minimum_size.x = 300
+	_quest_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_quest_label.visible = false
+	v.add_child(_quest_label)
 	_debug.add_theme_font_size_override(&"font_size", 12)
 	_debug.add_theme_color_override(&"font_color", Color(0.8, 0.9, 1.0))
 	_debug.visible = false
@@ -782,6 +800,19 @@ func set_paused(on: bool) -> void:
 	get_tree().paused = on
 
 
+## Story page in the middle of the screen (intro, quest ending).
+func show_story(title: String, text: String) -> void:
+	story.show_story(title, text)
+
+
+func _update_quest_tracker() -> void:
+	var t := world.quests.tracker()
+	_quest_label.visible = not t.is_empty() and world.dungeon == null
+	if t.is_empty():
+		return
+	_quest_label.text = "◆ %s (%d/%d)\n%s%s" % [t.title, t.step, t.steps, t.text, ("\n→ " + t.where) if t.where != "" else ""]
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"pause"):
 		if world and world.blueprints and world.blueprints.placer.active:
@@ -802,6 +833,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			_requests.close()
 		elif _reputation.visible:
 			_reputation.visible = false
+		elif story.visible:
+			story.visible = false
+		elif journal.visible:
+			journal.visible = false
 		elif _spellbook.visible:
 			_spellbook.visible = false
 		elif _chest.visible:
@@ -829,6 +864,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"blueprints"):
 		if not _loading.visible:
 			_blueprints.toggle()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"journal"):
+		if not _loading.visible:
+			journal.toggle()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"spellbook"):
 		if not _loading.visible:
@@ -862,10 +901,14 @@ func _toggle_inventory() -> void:
 	_refresh_inventory()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if player == null:
 		return
 	_update_temperature()
+	_quest_t -= delta
+	if _quest_t <= 0.0 and world and world.quests:
+		_quest_t = 0.5
+		_update_quest_tracker()
 	if world and world.day_night:
 		var extra := ""
 		if world.weather and world.layer == TerrainGenerator.Layer.SURFACE and world.dungeon == null:
@@ -873,7 +916,7 @@ func _process(_delta: float) -> void:
 			if world.day_night.is_night():
 				extra += " · %s" % world.day_night.moon_phase_name()
 		_clock.text = world.day_night.time_string() + extra
-	_update_vignette(_delta)
+	_update_vignette(delta)
 	if _target and is_instance_valid(_target):
 		_target_bar.value = _target.health.get_ratio() * 100.0
 		_target_panel.visible = not _target.is_dead and _target.is_visible_in_tree()
@@ -881,7 +924,7 @@ func _process(_delta: float) -> void:
 		_update_debug()
 	_refresh_abilities()
 	_update_buffs()
-	_status_refresh -= _delta
+	_status_refresh -= delta
 	if _status_refresh <= 0.0:
 		_status_refresh = 0.2
 		_update_status_chips()

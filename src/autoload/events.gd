@@ -43,6 +43,8 @@ signal open_requests(site: Node)
 signal settlement_entered(settlement_id: String)
 signal settlement_left(settlement_id: String)
 signal reputation_changed(target_id: String, value: float)
+## A title was granted (kingdom recognition or a quest), e.g. "Knight of Varnholm" (Milestone 16).
+signal title_granted(title: String)
 signal coins_changed(coins: int)
 signal trade_done(settlement_id: String, copper: int)
 

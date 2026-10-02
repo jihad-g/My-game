@@ -23,6 +23,10 @@ func _ready() -> void:
 		await _shot("20_main_menu")
 		get_tree().quit()
 		return
+	if "--only=story" in OS.get_cmdline_user_args():
+		await _story_showcase()
+		get_tree().quit()
+		return
 	if "--only=wilds" in OS.get_cmdline_user_args():
 		await _wilds_showcase()
 		get_tree().quit()
@@ -240,6 +244,33 @@ func _teleport(world: World, pos: Vector3) -> void:
 	if p.global_position.y < g:
 		p.global_position.y = g + 0.3
 	await _wait(40)
+
+
+## Milestone 16: the intro page, the quest tracker and the journal.
+func _story_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"wizard")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var frames := 0
+	while world.chunk_manager.pending_count() > 0 and frames < 1500:
+		await get_tree().process_frame
+		frames += 1
+	world.hud._help.visible = false
+	world.player.health.invulnerable = true
+	await _wait(30)
+	await _shot("60_story_intro")
+	world.hud.story.visible = false
+	world.quests.talk_main()
+	for page in [&"ancients", &"great_shards", &"bone_king"]:
+		world.quests.read_lore(page, true)
+	await _wait(40)
+	await _shot("61_quest_tracker")
+	world.hud.journal.toggle()
+	await _wait(10)
+	await _shot("62_journal")
+	world.queue_free()
 
 
 ## Milestone 15: the new wild creatures and the three treasure spots.

@@ -246,6 +246,7 @@ func recognition(info: SettlementInfo) -> String:
 	Events.coins_changed.emit(world.player.coins)
 	var title := rep.title_for(kid, info.kingdom_name)
 	Events.toast.emit("Title granted: %s" % title, UITheme.GOLD)
+	Events.title_granted.emit(title)
 	return "By my decree, you are named %s! Take these as thanks: %s." % [title, ", ".join(gifts)]
 
 
