@@ -1132,6 +1132,7 @@ dialogue choices, 12 lore pages, kingdom histories, class backstories and the ch
 The quest system is also needed for later content (kingdom quests, events).
 
 ### Milestone 17 — "Heroes' Arsenal" (combat depth)
+**Full list:** [ARSENAL_PLAN.md](ARSENAL_PLAN.md) — 50 new abilities per class, 20 weapons, 20 shared spells (plan only).
 **Goal:** more ways to fight from level 15 to level 100.
 **Ideas:** 5a–5i (new abilities and upgrades), 6a–6g (shared spells), 7a–7d (new attacks), 9a (bow),
 9b–9d (spear, hammer, greatsword), 9f, 8d (legendary effects), 2a–2b (ability and two-handed animations).
