@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/hammer.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"iron_warhammer"
+display_name = "Iron Warhammer"
+description = "A two-handed hammer that breaks magic wards."
+category = 3
+rarity = 2
+max_stack = 1
+base_value = 190
+icon_color = Color(0.76, 0.78, 0.84, 1)
+icon_glyph = "Hm"
+equip_slot = 1
+required_level = 14
+stat_bonuses = {
+&"damage_bonus": 8
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"hammer"
+weapon_params = {
+&"shield_break": 2.5,
+&"combo_stun": 0.6
+}

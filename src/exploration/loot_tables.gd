@@ -11,16 +11,21 @@ const TOMES := [&"tome_blink", &"tome_healing_light", &"tome_poison_cloud", &"to
 ## Gear by rank band (a random piece is rolled when a table says "gear").
 const GEAR := [
 	[&"copper_sword", &"copper_dagger", &"leather_gloves", &"fur_cap", &"wooden_buckler", &"copper_ring",
-		&"squire_greaves", &"raider_bracers", &"shadow_wraps", &"apprentice_shoes"],
-	[&"iron_sword", &"iron_dirk", &"iron_waraxe", &"chainmail", &"iron_kite_shield", &"fur_boots", &"leather_jerkin"],
-	[&"crystal_staff", &"shadow_cloak", &"crystal_ring", &"tusk_charm", &"copper_pickaxe", &"mithril_dirk"],
-	[&"moonpetal_pendant", &"mithril_sword", &"mithril_waraxe", &"mithril_dirk", &"crystal_ring", &"shadow_cloak"],
+		&"squire_greaves", &"raider_bracers", &"shadow_wraps", &"apprentice_shoes",
+		&"wooden_shortbow", &"ash_spear", &"stone_maul", &"copper_staff", &"apprentice_wand", &"copper_waraxe"],
+	[&"iron_sword", &"iron_dirk", &"iron_waraxe", &"chainmail", &"iron_kite_shield", &"fur_boots", &"leather_jerkin",
+		&"recurve_bow", &"iron_pike", &"iron_warhammer", &"iron_greatsword", &"iron_staff"],
+	[&"crystal_staff", &"shadow_cloak", &"crystal_ring", &"tusk_charm", &"copper_pickaxe", &"mithril_dirk",
+		&"embers_tome", &"mithril_staff"],
+	[&"moonpetal_pendant", &"mithril_sword", &"mithril_waraxe", &"mithril_dirk", &"crystal_ring", &"shadow_cloak",
+		&"mithril_longbow", &"mithril_halberd", &"frostbite_warhammer", &"stormcaller_wand"],
 ]
 const TABLES := {
 	# Milestone 15: wild treasure spots (TreasureSpots).
 	&"wild_camp": {"coins": 12, "gear": 0.2, "items": [
 		[&"cooked_meat", 1, 3, 0.5, 0], [&"bandage", 1, 2, 0.5, 0], [&"rope", 1, 3, 0.4, 0], [&"leather", 1, 2, 0.3, 0],
-		[&"copper_ingot", 1, 2, 0.25, 0], [&"healing_draught", 1, 1, 0.15, 0], [&"iron_ingot", 1, 2, 0.2, 2]]},
+		[&"copper_ingot", 1, 2, 0.25, 0], [&"healing_draught", 1, 1, 0.15, 0], [&"iron_ingot", 1, 2, 0.2, 2],
+		[&"wooden_arrow", 5, 12, 0.4, 0]]},
 	&"shipwreck": {"coins": 35, "gear": 0.35, "items": [
 		[&"rope", 2, 4, 0.7, 0], [&"plank", 3, 6, 0.7, 0], [&"gold_nugget", 1, 2, 0.35, 0], [&"gemstone", 1, 1, 0.15, 0],
 		[&"healing_draught", 1, 1, 0.3, 0], [&"mithril_ore", 1, 2, 0.2, 2]]},
@@ -30,10 +35,11 @@ const TABLES := {
 	&"ruin_chest": {"coins": 15, "gear": 0.15, "items": [
 		[&"ancient_bone", 1, 3, 0.5, 0], [&"iron_ore", 1, 3, 0.4, 0], [&"copper_ingot", 1, 2, 0.4, 0],
 		[&"healing_draught", 1, 1, 0.3, 0], [&"leather", 1, 3, 0.3, 0], [&"smithing_manual", 1, 1, 0.08, 0],
-		[&"leatherworker_notes", 1, 1, 0.08, 0], [&"crystal_shard", 1, 1, 0.2, 1], [&"mithril_ore", 1, 2, 0.25, 2]]},
+		[&"leatherworker_notes", 1, 1, 0.08, 0], [&"weaponsmith_folio", 1, 1, 0.06, 1], [&"copper_arrow", 5, 10, 0.3, 0], [&"crystal_shard", 1, 1, 0.2, 1], [&"mithril_ore", 1, 2, 0.25, 2]]},
 	&"vault": {"coins": 45, "gear": 0.6, "scroll": [0.0, 0.0, 0.0, 0.05, 0.15, 0.25], "items": [
 		[&"iron_ingot", 2, 4, 0.6, 0], [&"healing_draught", 1, 2, 0.5, 0], [&"mithril_ingot", 1, 2, 0.35, 2],
-		[&"crystal_shard", 1, 2, 0.4, 1], [&"void_shard", 1, 1, 0.1, 4]]},
+		[&"crystal_shard", 1, 2, 0.4, 1], [&"void_shard", 1, 1, 0.1, 4], [&"master_weaponsmith_folio", 1, 1, 0.08, 2],
+		[&"iron_arrow", 8, 15, 0.3, 1]]},
 	&"tower": {"coins": 25, "gear": 0.2, "tome": [0.2, 0.25, 0.3, 0.35, 0.4, 0.45], "items": [
 		[&"arcane_dust", 2, 4, 0.8, 0], [&"wisp_essence", 1, 2, 0.5, 0], [&"crystal_shard", 1, 2, 0.4, 0],
 		[&"mana_tonic", 1, 2, 0.5, 0], [&"arcane_codex", 1, 1, 0.12, 1], [&"void_shard", 1, 1, 0.1, 4]]},
@@ -42,11 +48,13 @@ const TABLES := {
 		[&"healing_draught", 2, 3, 0.8, 0], [&"mithril_ingot", 1, 3, 0.5, 2]]},
 	&"dungeon_chest": {"coins": 30, "gear": 0.25, "items": [
 		[&"healing_draught", 1, 2, 0.5, 0], [&"mana_tonic", 1, 1, 0.3, 0], [&"iron_ore", 2, 4, 0.4, 0],
-		[&"coal", 2, 4, 0.4, 0], [&"crystal_shard", 1, 2, 0.3, 1], [&"mithril_ore", 1, 3, 0.4, 2],
+		[&"coal", 2, 4, 0.4, 0], [&"crystal_shard", 1, 2, 0.3, 1], [&"iron_arrow", 6, 12, 0.3, 1], [&"fire_arrow", 4, 8, 0.15, 2], [&"mithril_ore", 1, 3, 0.4, 2],
 		[&"elixir_of_might", 1, 1, 0.15, 2], [&"void_shard", 1, 1, 0.1, 4]]},
 	&"dungeon_boss": {"coins": 150, "gear": 1.0, "scroll": [0.0, 0.0, 0.02, 0.08, 0.35, 0.6], "tome": [0.15, 0.2, 0.25, 0.3, 0.4, 0.5], "items": [
 		[&"healing_draught", 2, 3, 0.8, 0], [&"mithril_ingot", 2, 4, 0.6, 2], [&"elixir_of_starlight", 1, 1, 0.3, 3],
-		[&"stoneskin_elixir", 1, 1, 0.4, 1], [&"elixir_of_might", 1, 1, 0.4, 1]]},
+		[&"stoneskin_elixir", 1, 1, 0.4, 1], [&"elixir_of_might", 1, 1, 0.4, 1],
+		[&"master_weaponsmith_folio", 1, 1, 0.12, 2], [&"mithril_arrow", 8, 15, 0.3, 3],
+		[&"starfall_bow", 1, 1, 0.04, 5], [&"shardbreaker", 1, 1, 0.04, 5]]},
 	&"secret": {"coins": 60, "gear": 0.6, "scroll": [0.0, 0.0, 0.0, 0.1, 0.15, 0.2], "tome": [0.25, 0.25, 0.3, 0.3, 0.35, 0.4], "items": [
 		[&"elixir_of_might", 1, 1, 0.4, 0], [&"stoneskin_elixir", 1, 1, 0.4, 0], [&"mithril_ingot", 1, 2, 0.5, 2],
 		[&"starlight_orchid", 1, 1, 0.2, 3]]},

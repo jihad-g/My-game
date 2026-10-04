@@ -23,6 +23,32 @@ const WEIGHT_NAMES := ["", "Light", "Medium", "Heavy"]
 ## Slots that are drawn on the character and count towards armour weight.
 const OUTFIT_SLOTS := [EquipSlot.HEAD, EquipSlot.CHEST, EquipSlot.HANDS, EquipSlot.FEET, EquipSlot.OFF_HAND, EquipSlot.AMULET]
 
+## Milestone 17a (Heroes' Arsenal): weapons that need both hands. Equipping one
+## takes off the off-hand item, and an off-hand item takes off a two-handed weapon.
+const TWO_HANDED: Array[StringName] = [&"bow", &"greatsword", &"hammer"]
+## Off-hand items for casters (they never block like a shield).
+const CASTER_OFFHANDS: Array[StringName] = [&"wand", &"tome"]
+
+## What each weapon_params key does, for tooltips (see PlayerCombat / WeaponSpecials).
+const PARAM_TEXT := {
+	&"draw_time": "Full draw in %.2f s",
+	&"range": "Arrow range %d m",
+	&"full_draw_crit": "Full-draw shots: +%d%% critical chance",
+	&"reach": "+%.1f m reach",
+	&"combo_stun": "The last hit of a combo stuns for %.1f s",
+	&"shield_break": "Heavy attacks deal x%.1f damage to wards and barriers",
+	&"on_hit_chill": "Every hit chills (%.0f s)",
+	&"chain_bonus": "Chain Lightning jumps to %d more enemy",
+	&"undead_heal": "Heals you by %d%% of the damage you deal to undead",
+	&"star_every": "Every %dth shot or hit calls down a falling star",
+	&"heavy_shockwave": "Heavy attacks send a shockwave through the ground (%d damage)",
+	&"on_hit_burn": "Hits set enemies on fire (%.0f s)",
+	&"crit_poison": "Critical hits poison the enemy",
+	&"kill_heal": "Each kill heals you by %d%% of your health",
+	&"arrow_damage": "+%d arrow damage",
+	&"arrow_burn": "Arrows set enemies on fire (%.0f s)",
+}
+
 ## Human-readable names for stat_bonuses keys.
 const STAT_NAMES := {
 	&"armor": "Armor", &"damage_bonus": "Weapon damage", &"spell_power": "Spell power %",
@@ -75,6 +101,9 @@ const BUFF_TEXT := {&"might": "+20% damage", &"stoneskin": "-20% damage taken",
 ## Weapon/offhand type: &"sword", &"axe", &"dagger", &"staff", &"shield"...
 @export var weapon_type: StringName
 @export var moveset: WeaponMoveset
+## Weapon specials and legendary powers (Milestone 17a); keys in PARAM_TEXT.
+## Arrows use the same dictionary (arrow_damage, arrow_burn).
+@export var weapon_params: Dictionary = {}
 @export var required_level: int = 1
 ## Stat -> value (see STAT_NAMES). Percent stats are in percent points.
 @export var stat_bonuses: Dictionary = {}
@@ -118,6 +147,14 @@ func is_spell_tome() -> bool:
 
 func is_equippable() -> bool:
 	return equip_slot != EquipSlot.NONE
+
+
+func is_two_handed() -> bool:
+	return equip_slot == EquipSlot.MAIN_HAND and TWO_HANDED.has(weapon_type)
+
+
+func is_arrow() -> bool:
+	return weapon_params.has(&"arrow_damage")
 
 
 func is_consumable() -> bool:
@@ -172,7 +209,11 @@ func effect_lines() -> PackedStringArray:
 			slot_line += " · %s" % String(weapon_type).capitalize()
 		if armor_weight != ArmorWeight.NONE:
 			slot_line += " · %s armour" % WEIGHT_NAMES[armor_weight]
+		if is_two_handed():
+			slot_line += " · Two-handed"
 		lines.append(slot_line)
+		if weapon_type == &"bow":
+			lines.append("Hold attack to draw, release to shoot. Uses arrows")
 		match armor_weight:
 			ArmorWeight.LIGHT:
 				lines.append("Light: enemies notice you later, dodging costs less")
@@ -184,5 +225,19 @@ func effect_lines() -> PackedStringArray:
 			lines.append("%+d %s" % [roundi(float(stat_bonuses[stat])), STAT_NAMES.get(stat, String(stat))])
 		if set_id != &"":
 			lines.append_array(GearSets.describe(set_id))
+	lines.append_array(param_lines())
+	return lines
+
+
+## Tooltip lines for weapon_params (specials, legendary powers, arrows).
+func param_lines() -> PackedStringArray:
+	var lines := PackedStringArray()
+	for k in weapon_params:
+		if PARAM_TEXT.has(k):
+			var v = weapon_params[k]
+			var text: String = PARAM_TEXT[k]
+			if k in [&"full_draw_crit", &"undead_heal", &"kill_heal"]:
+				v = roundi(float(v) * 100.0)
+			lines.append(text % v if text.contains("%") else text)
 	return lines
 

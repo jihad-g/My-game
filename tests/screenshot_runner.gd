@@ -31,6 +31,10 @@ func _ready() -> void:
 		await _wilds_showcase()
 		get_tree().quit()
 		return
+	if "--only=arsenal" in OS.get_cmdline_user_args():
+		await _arsenal_showcase()
+		get_tree().quit()
+		return
 	if "--only=gear" in OS.get_cmdline_user_args():
 		await _gear_showcase()
 		get_tree().quit()
@@ -372,6 +376,91 @@ func _gear_showcase() -> void:
 	m2._select_class(&"assassin")
 	await _wait(20)
 	await _shot("41_class_picker")
+
+
+## Milestone 17a: the new weapons in the hands of the shared body, and their icons.
+func _arsenal_showcase() -> void:
+	var root := Node3D.new()
+	add_child(root)
+	var cam := Camera3D.new()
+	cam.position = Vector3(0, 1.5, 7.6)
+	cam.rotation_degrees = Vector3(-6, 0, 0)
+	cam.fov = 45.0
+	root.add_child(cam)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-45, 25, 0)
+	root.add_child(sun)
+	var env := WorldEnvironment.new()
+	env.environment = Environment.new()
+	env.environment.background_mode = Environment.BG_COLOR
+	env.environment.background_color = Color(0.36, 0.4, 0.5)
+	env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.environment.ambient_light_color = Color(0.75, 0.75, 0.8)
+	env.environment.ambient_light_energy = 0.7
+	root.add_child(env)
+	# [class kit, main hand, off hand, pose]
+	var specs := [
+		[&"assassin", &"starfall_bow", &"", &""], [&"knight", &"mithril_halberd", &"iron_kite_shield", &""],
+		[&"barbarian", &"shardbreaker", &"", &""], [&"knight", &"fallen_king_greatsword", &"", &""],
+		[&"wizard", &"mithril_staff", &"stormcaller_wand", &""], [&"wizard", &"iron_staff", &"embers_tome", &""],
+		[&"barbarian", &"frostbite_warhammer", &"", &""],
+	]
+	var models: Array[HumanoidModel] = []
+	for i in specs.size():
+		var s: Array = specs[i]
+		var eq := ClassPicker.starting_equipment(ClassRegistry.get_class_data(s[0]))
+		eq.equip(ItemDB.get_item(s[1]))
+		if s[2] != &"":
+			eq.equip(ItemDB.get_item(s[2]))
+		var m := HumanoidModel.new()
+		root.add_child(m)
+		m.position = Vector3(-4.5 + i * 1.5, 0, 0)
+		m.rotation.y = 0.7
+		m.set_appearance(ClassRegistry.get_class_data(s[0]))
+		m.set_body(CharacterLook.default_for(s[0]))
+		m.set_outfit(eq.outfit_ids(), eq.weapon().id)
+		m.set_weapon(eq.weapon_type(), eq.has_shield())
+		models.append(m)
+	await _wait(5)
+	for i in specs.size():
+		if specs[i][3] != &"":
+			models[i].play_attack(specs[i][3], 0.2, 0.1, 0.3, true)
+	await _wait(30)
+	await _shot("50_arsenal_weapons")
+	root.queue_free()
+	# Icon sheet: every new weapon and arrow.
+	var ids := [&"wooden_shortbow", &"recurve_bow", &"mithril_longbow", &"starfall_bow", &"ash_spear", &"iron_pike",
+		&"mithril_halberd", &"stone_maul", &"iron_warhammer", &"frostbite_warhammer", &"shardbreaker", &"iron_greatsword",
+		&"fallen_king_greatsword", &"copper_staff", &"iron_staff", &"mithril_staff", &"apprentice_wand", &"stormcaller_wand",
+		&"embers_tome", &"copper_waraxe", &"wooden_arrow", &"copper_arrow", &"fire_arrow", &"iron_arrow", &"mithril_arrow"]
+	var bg := ColorRect.new()
+	bg.color = Color(0.13, 0.12, 0.16)
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(bg)
+	var grid := GridContainer.new()
+	grid.columns = 5
+	grid.position = Vector2(40, 30)
+	grid.add_theme_constant_override(&"h_separation", 16)
+	grid.add_theme_constant_override(&"v_separation", 8)
+	bg.add_child(grid)
+	for id in ids:
+		var it: ItemData = ItemDB.get_item(id)
+		var box := HBoxContainer.new()
+		var tr := TextureRect.new()
+		tr.texture = ItemIcons.get_icon(it)
+		tr.custom_minimum_size = Vector2(64, 64)
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		box.add_child(tr)
+		var l := Label.new()
+		l.text = it.display_name
+		l.custom_minimum_size = Vector2(150, 0)
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD
+		l.add_theme_color_override(&"font_color", it.rarity_color())
+		box.add_child(l)
+		grid.add_child(box)
+	await _wait(5)
+	await _shot("51_arsenal_icons")
 
 
 func _wait(n: int) -> void:

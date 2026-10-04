@@ -395,7 +395,7 @@ func _ability_berserk(a: AbilityData) -> bool:
 
 ## Shield Bash: frontal hit that stuns (duration) and taunts. Weaker without a shield.
 func _ability_shield_bash(a: AbilityData) -> bool:
-	var has_shield := player.equipment.offhand() != null
+	var has_shield := player.equipment.has_shield()
 	player.model.play_attack(&"thrust", 0.05, 0.08, 0.25)
 	for t in _enemies_in(a.radius, 100.0):
 		_physical_hit(t, a.damage * (1.0 if has_shield else 0.6), a.power, 6.0, "Bash")
@@ -479,7 +479,8 @@ func _ability_chain_lightning(a: AbilityData) -> bool:
 	var points := PackedVector3Array([player.global_position + Vector3(0, 1.4, 0)])
 	var current: Node3D = first
 	var amount := _spell_damage(a)
-	for jump in int(a.power) + 1:
+	# Stormcaller Wand and other gear (Milestone 17a) add jumps.
+	for jump in int(a.power) + 1 + roundi(player.combat.weapon_param(&"chain_bonus")):
 		if current == null:
 			break
 		hit.append(current)

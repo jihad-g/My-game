@@ -764,7 +764,9 @@ textures on any surface, so large areas look flat up close.
 | Movement, sprint, dodge, swimming | ✅ | No jump key, no climbing, no drowning |
 | Camera | ✅ | |
 | Melee combat (combos, block, parry, lock-on, crits, backstab, poise) | ✅ | |
-| Ranged weapons for the player (bows, crossbows, throwing) | ❌ | Monsters have bows, the player does not |
+| Ranged weapons for the player (bows, crossbows, throwing) | 🟡 | Bows and 5 kinds of arrows (M17a); no crossbows or throwing weapons yet |
+| Weapon types (sword, axe, dagger, staff, shield, bow, spear, war hammer, greatsword, wand, tome) | ✅ | M17a: two-handed weapons, caster off-hands |
+| Charged heavy, sprint, plunging attacks and ripostes | ✅ | M17a |
 | Status effects and elemental combos | ✅ | Weather doesn't make everyone wet (only the player in rain) |
 | Classes (4) and abilities (3 each) | ✅ | |
 | More abilities / ability upgrades / talents | ❌ | |
@@ -1121,6 +1123,10 @@ gloves, boots and rings.
 **Why first:** this is the biggest hole in the game today — the world is beautiful but empty of
 enemies, and most POIs are end-game. It is mostly data work on systems that already exist (monster
 framework, spawn rules, POI ranks), so it is cheap and makes every other system more fun.
+
+**Done: Milestone 17a — "Heroes' Arsenal" part 1.** Six new weapon types (bow, spear, war hammer, greatsword,
+wand, tome), 20 new weapons, arrows, two-handed weapons, charged heavy / sprint / plunging attacks, ripostes,
+and weapon and legendary powers (ideas 9a–9f, 7a–7d, part of 8d). Next: M17b, the ability book.
 
 **Done: Milestone 16 — "The Lost Shards".** Quest system and journal, the main quest, royal errands with
 dialogue choices, 12 lore pages, kingdom histories, class backstories and the chronicle.

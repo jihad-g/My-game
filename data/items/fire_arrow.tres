@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"fire_arrow"
+display_name = "Fire Arrow"
+description = "An arrow wrapped in emberroot. It sets enemies on fire."
+category = 0
+rarity = 2
+max_stack = 99
+base_value = 4
+icon_color = Color(1.0, 0.5, 0.2, 1)
+icon_glyph = "Ar"
+weapon_params = {
+&"arrow_damage": 5,
+&"arrow_burn": 3
+}

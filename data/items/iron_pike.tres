@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/spear.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"iron_pike"
+display_name = "Iron Pike"
+description = "A long spear with an iron point."
+category = 3
+rarity = 2
+max_stack = 1
+base_value = 170
+icon_color = Color(0.76, 0.78, 0.84, 1)
+icon_glyph = "Sp"
+equip_slot = 1
+required_level = 14
+stat_bonuses = {
+&"damage_bonus": 7
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"spear"
+weapon_params = {
+&"reach": 0.4
+}

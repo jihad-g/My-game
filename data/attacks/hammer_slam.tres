@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"hammer_slam"
+display_name = "Earth Slam"
+damage = 42
+stamina_cost = 30
+windup = 0.6
+active = 0.14
+recovery = 0.65
+cancel_ratio = 0.55
+reach = 2.6
+arc_degrees = 120
+knockback = 10
+poise_damage = 70
+lunge_speed = 1.5
+move_multiplier = 0.12
+crit_chance_bonus = 0
+animation = &"overhead"
+camera_shake = 0.5
+stun = 1.0

@@ -19,7 +19,11 @@ const PAGES := [
 [b]Collapsing[/b]: press Respawn to get back up at your bed (or where you started) with part of your health."""],
 	["Combat", """[b]Light attacks[/b] chain into a combo; [b]heavy attacks[/b] hit harder and break poise. [b]Dodge-roll[/b] through attacks - you can't be hit while rolling.
 
-[b]Block[/b] (hold) takes most of the damage for stamina. Tap block [i]just before[/i] a hit to [b]parry[/b]: no damage and the attacker is stunned.
+[b]Block[/b] (hold) takes most of the damage for stamina. Tap block [i]just before[/i] a hit to [b]parry[/b]: no damage and the attacker is stunned. Attack right after a parry for a [b]riposte[/b] (x2.5, always a critical hit).
+
+[b]Hold heavy[/b] to charge it (up to +75% damage). Attack while [b]sprinting[/b] for a long lunge, or while [b]falling[/b] for a plunging slam - the higher the fall, the harder it hits.
+
+[b]Bows[/b]: hold attack to draw, release to shoot. A full draw hits hardest. Bows use the best arrows in your bag - make them at a workbench. [b]Bows, greatswords and war hammers[/b] need both hands. [b]Spears[/b] reach far; [b]war hammers[/b] stun. Wizards can hold a [b]wand or tome[/b] in the off hand for more spell power.
 
 [b]Lock on[/b] to keep facing one enemy. Hitting enemies from behind deals extra damage; enemies flash red before big attacks.
 

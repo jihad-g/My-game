@@ -28,6 +28,8 @@ extends Resource
 ## Animation id interpreted by the character model ("slash_r", "slash_l", "thrust", "overhead", "bite").
 @export var animation: StringName = &"slash_r"
 @export var camera_shake: float = 0.15
+## Seconds every enemy hit is stunned (war hammers, Milestone 17a). 0 = none.
+@export var stun: float = 0.0
 
 
 func total_duration() -> float:

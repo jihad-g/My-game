@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"halberd_whirl"
+display_name = "Halberd Whirl"
+damage = 30
+stamina_cost = 28
+windup = 0.45
+active = 0.14
+recovery = 0.55
+cancel_ratio = 0.55
+reach = 3.0
+arc_degrees = 360
+knockback = 8
+poise_damage = 40
+lunge_speed = 1
+move_multiplier = 0.15
+crit_chance_bonus = 0
+animation = &"spin"
+camera_shake = 0.35

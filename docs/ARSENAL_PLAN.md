@@ -1,7 +1,8 @@
 # Heroes' Arsenal — the big list (plan)
 
-**Status: PLAN ONLY — NOT IMPLEMENTED.** Nothing in this file is in the game yet. It is the list of new content
-for Milestone 17 and later. Change, remove or add anything before we build it.
+**Status:** the weapons (section 5) and the new attacks are **done in Milestone 17a (v0.17.0)**. The abilities
+(sections 1–4) and the shared spells (section 6) are **NOT IMPLEMENTED yet** — they come in M17b–M17d.
+Change, remove or add anything before we build it.
 
 What is in this list:
 - **50 new abilities for every class** (200 in total). Each class also keeps its 3 abilities from today,
@@ -272,18 +273,18 @@ There are 6 new weapon types:
 | # | Weapon | Type | Level | Rarity | Best for | Special |
 |---:|---|---|---:|---|---|---|
 | 1 | Wooden Shortbow | Bow | 3 | Common | Assassin | Fast to draw. Your first bow. |
-| 2 | Copper Staff | Staff | 4 | Common | Wizard | +5% fire damage. |
+| 2 | Copper Staff | Staff | 4 | Common | Wizard | +8 spell power. |
 | 3 | Ash Spear | Spear | 5 | Common | Knight | Long reach. |
 | 4 | Apprentice's Wand | Wand | 5 | Common | Wizard | +5% spell power. |
 | 5 | Copper War Axe | Axe | 6 | Common | Barbarian | Fills the gap before iron. |
 | 6 | Stone Maul | War hammer | 6 | Common | Barbarian | The 3rd hit of a combo stuns. |
-| 7 | Iron Dagger | Dagger | 10 | Uncommon | Assassin | +5% critical chance. |
+| 7 | Mithril Staff | Staff | 24 | Rare | Wizard | +28 spell power, +40 mana. (Replaces "Iron Dagger": the game already had the Iron Dirk.) |
 | 8 | Iron Staff | Staff | 10 | Uncommon | Wizard | +10% mana. |
 | 9 | Recurve Bow | Bow | 12 | Uncommon | Assassin | +20% arrow range. |
-| 10 | Iron Pike | Spear | 14 | Uncommon | Knight | Thrusts go through 2 enemies. |
-| 11 | Iron Warhammer | War hammer | 14 | Uncommon | Barbarian | Heavy attacks break shields. |
+| 10 | Iron Pike | Spear | 14 | Uncommon | Knight | +0.4 m reach. |
+| 11 | Iron Warhammer | War hammer | 14 | Uncommon | Barbarian | Heavy attacks deal x2.5 to magic wards. |
 | 12 | Iron Greatsword | Greatsword | 16 | Uncommon | Knight, Barbarian | Very wide swings. |
-| 13 | Tome of Embers | Tome | 18 | Rare | Wizard | +1 spell slot, +10% fire damage. |
+| 13 | Tome of Embers | Tome | 18 | Rare | Wizard | +15 spell power, +25 mana. The +1 spell slot comes with the new ability bar in M17b. |
 | 14 | Mithril Longbow | Bow | 26 | Rare | Assassin | Charged shots are +15% critical chance. |
 | 15 | Mithril Halberd | Spear | 28 | Very Rare | Knight | The heavy attack sweeps in a full circle. |
 | 16 | Frostbite Warhammer | War hammer | 34 | Very Rare | Barbarian | Every hit chills. |
@@ -330,7 +331,7 @@ This list is about **5 times bigger than any milestone so far**. Each ability ne
 an effect you can see, an icon, a sound and tests. Building it all at once would take a very long time and
 nothing could be tested along the way. So I suggest building it in steps, and every step is a working game:
 
-1. **M17a: Weapons.**
+1. **M17a: Weapons.** ✅ Done (v0.17.0).
    - The 6 new weapon types, all 20 weapons and arrows.
    - The new attacks: charged heavy, sprint attack, plunging attack and riposte.
 2. **M17b: The ability book.**

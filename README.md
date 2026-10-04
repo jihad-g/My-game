@@ -5,7 +5,14 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 16 — The Lost Shards (v0.16.0)**: the Shardlands now have a story. Every world starts the
+> Status: **Milestone 17a — Heroes' Arsenal, part 1 (v0.17.0)**: six new weapon types and 20 new weapons. Shoot
+> bows (hold to draw, release to shoot, craft arrows), keep enemies away with spears, stun them with war
+> hammers, swing greatswords, and hold a wand or tome as a caster. New attacks: hold heavy to charge it, lunge
+> out of a sprint, slam down while falling, and riposte after a perfect parry. Legendary weapons now have
+> special powers. The full plan for the rest of Milestone 17 (50 new abilities per class, 20 shared spells) is
+> in [`docs/ARSENAL_PLAN.md`](docs/ARSENAL_PLAN.md).
+>
+> Before that, **Milestone 16 — The Lost Shards (v0.16.0)**: the Shardlands now have a story. Every world starts the
 > main quest - ask about the falling stars, recover Shard Fragments, defeat the three Shard Keepers, join the
 > Great Shards on an Arcane Altar and face the Starborn Colossus. Kingdom rulers give royal errands that end in
 > a knighthood, conversations have choices, 12 lore pages and kingdom histories wait to be found, and a
@@ -25,10 +32,16 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 > noticed. A Knight in shadow clothes with daggers plays like an Assassin; the class keeps a small talent, so
 > a Wizard is never a Knight's equal. Built on the beta (Milestone 13: tutorial, guide, settings and
 > accessibility, save recovery, crash reports, achievements, release builds - [`docs/RELEASE.md`](docs/RELEASE.md)).
-> Download a Windows build from [`releases/`](releases/) (v0.16.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
+> Download a Windows build from [`releases/`](releases/) (v0.17.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
 > performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
 > design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md). See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
+
+![New weapons](docs/screenshots/arsenal_weapons.png)
+
+| **20 new weapons and 5 arrows** |
+|---|
+| ![Weapon icons](docs/screenshots/arsenal_icons.png) |
 
 | **A new world begins** | **The journal (O)** |
 |---|---|

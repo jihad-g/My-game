@@ -21,6 +21,7 @@ const STOCK := {
 		[&"stone_pickaxe", 1, 0], [&"wheat_seeds", 8, 0], [&"carrot_seeds", 8, 0], [&"sun_hat", 1, 0],
 		[&"padded_vest", 1, 0], [&"leather", 4, 1], [&"hearty_stew", 3, 2], [&"cooks_journal", 1, 2],
 		[&"shadow_hood", 1, 0], [&"wizard_hat", 1, 0], [&"raider_boots", 1, 1],
+		[&"wooden_shortbow", 1, 0], [&"wooden_arrow", 20, 0],
 	],
 	&"blacksmith": [
 		[&"flint_knife", 1, 0], [&"rough_handaxe", 1, 0], [&"stone_pickaxe", 2, 0], [&"stone_hatchet", 2, 0],
@@ -28,6 +29,10 @@ const STOCK := {
 		[&"copper_pickaxe", 1, 1], [&"copper_hatchet", 1, 1], [&"wooden_buckler", 1, 0], [&"iron_ingot", 4, 2],
 		[&"iron_sword", 1, 2], [&"iron_waraxe", 1, 2], [&"iron_kite_shield", 1, 2], [&"iron_pickaxe", 1, 3],
 		[&"chainmail", 1, 3], [&"smithing_manual", 1, 2], [&"squire_helm", 1, 0], [&"squire_gauntlets", 1, 1],
+		# Milestone 17a: new weapons and arrows.
+		[&"wooden_arrow", 30, 0], [&"ash_spear", 1, 0], [&"stone_maul", 1, 0], [&"copper_waraxe", 1, 1],
+		[&"copper_arrow", 20, 1], [&"recurve_bow", 1, 2], [&"iron_arrow", 20, 2], [&"weaponsmith_folio", 1, 2],
+		[&"iron_pike", 1, 2], [&"iron_greatsword", 1, 3], [&"iron_warhammer", 1, 3],
 	],
 	&"farmer": [
 		[&"wheat_seeds", 10, 0], [&"carrot_seeds", 10, 0], [&"pumpkin_seeds", 5, 0], [&"wheat", 12, 0],
@@ -39,6 +44,8 @@ const STOCK := {
 		[&"arcane_dust", 6, 2], [&"crystal_ring", 1, 3], [&"arcane_codex", 1, 3], [&"moonpetal", 2, 3],
 		[&"shadow_cloak", 1, 4], [&"moonpetal_pendant", 1, 4], [&"crystal_staff", 1, 3],
 		[&"horned_helm", 1, 0], [&"shadow_garb", 1, 1], [&"apprentice_wraps", 1, 1], [&"squire_plate", 1, 2],
+		[&"apprentice_wand", 1, 0], [&"copper_staff", 1, 0], [&"iron_staff", 1, 2], [&"embers_tome", 1, 3],
+		[&"master_weaponsmith_folio", 1, 3], [&"mithril_arrow", 20, 4],
 	],
 }
 
@@ -47,7 +54,7 @@ const TRADER_POOL := [
 	[&"coconut", 5], [&"cactus_fruit", 5], [&"frostberries", 6], [&"glowcap", 4], [&"moonpetal", 1],
 	[&"crystal_shard", 2], [&"cooks_journal", 1], [&"leatherworker_notes", 1], [&"arcane_dust", 4],
 	[&"boar_tusk", 3], [&"pumpkin_seeds", 6], [&"tusk_charm", 1], [&"copper_ring", 1], [&"hearty_stew", 3],
-	[&"cooling_salad", 4], [&"smithing_manual", 1],
+	[&"cooling_salad", 4], [&"smithing_manual", 1], [&"fire_arrow", 15], [&"weaponsmith_folio", 1],
 ]
 const TRADER_MARKUP := 1.25
 

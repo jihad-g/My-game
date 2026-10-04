@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"gs_slash_2"
+display_name = "Great Backslash"
+damage = 21
+stamina_cost = 9
+windup = 0.24
+active = 0.1
+recovery = 0.42
+cancel_ratio = 0.45
+reach = 2.7
+arc_degrees = 170
+knockback = 5
+poise_damage = 22
+lunge_speed = 2.5
+move_multiplier = 0.25
+crit_chance_bonus = 0
+animation = &"slash_l"
+camera_shake = 0.2

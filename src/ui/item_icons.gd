@@ -40,7 +40,11 @@ static func shape_of(item: ItemData) -> StringName:
 	var rules := [
 		["seeds", &"seeds"], ["mushroom", &"mushroom"], ["glowcap", &"mushroom"], ["dreamcap", &"mushroom"],
 		["scroll_", &"scroll"], ["tome_", &"book"], ["grimoire", &"book"], ["codex", &"book"], ["manual", &"book"],
-		["journal", &"book"], ["notes", &"book"],
+		["journal", &"book"], ["notes", &"book"], ["folio", &"book"], ["embers_tome", &"book"],
+		# Milestone 17a weapons.
+		["_arrow", &"arrow"], ["bow", &"bow"], ["spear", &"spear"], ["pike", &"spear"], ["halberd", &"spear"],
+		["maul", &"hammer"], ["hammer", &"hammer"], ["shardbreaker", &"hammer"], ["greatsword", &"greatsword"],
+		["_wand", &"wand"],
 		["pickaxe", &"pickaxe"], ["hatchet", &"hatchet"], ["handaxe", &"hatchet"], ["waraxe", &"axe"], ["greataxe", &"axe"],
 		["cleaver", &"axe"], ["dagger", &"dagger"], ["knife", &"dagger"], ["shadowfang", &"dagger"], ["staff", &"staff"],
 		["sword", &"sword"], ["blade", &"sword"], ["shield", &"shield"], ["buckler", &"shield"], ["aegis", &"shield"],
@@ -313,6 +317,37 @@ static func _draw(img: Image, shape: StringName, item: ItemData) -> void:
 			_rect(img, 6, 25, 20, 4, Color(0.8, 0.72, 0.55))
 			for y in [11, 15, 19]:
 				_line(img, Vector2(11, y), Vector2(21, y), 1, c)
+		&"bow":
+			_line(img, Vector2(9, 4), Vector2(18, 9), 2, c)
+			_line(img, Vector2(18, 9), Vector2(20, 16), 2, c)
+			_line(img, Vector2(20, 16), Vector2(18, 23), 2, c)
+			_line(img, Vector2(18, 23), Vector2(9, 28), 2, c)
+			_line(img, Vector2(9, 5), Vector2(9, 27), 1, PAPER)
+			_rect(img, 18, 14, 3, 5, WOOD_D)
+		&"arrow":
+			_line(img, Vector2(7, 25), Vector2(24, 8), 1, WOOD)
+			_poly(img, [Vector2(21, 7), Vector2(27, 5), Vector2(25, 11)], c)
+			_line(img, Vector2(5, 23), Vector2(8, 26), 2, PAPER)
+			_line(img, Vector2(7, 21), Vector2(10, 24), 1, PAPER)
+		&"spear":
+			_line(img, Vector2(5, 28), Vector2(22, 11), 2, WOOD)
+			_poly(img, [Vector2(20, 9), Vector2(27, 4), Vector2(23, 12)], m)
+			_line(img, Vector2(19, 10), Vector2(22, 13), 1, m.darkened(0.2))
+			if String(item.id).contains("halberd"):
+				_poly(img, [Vector2(17, 9), Vector2(22, 5), Vector2(25, 9), Vector2(20, 14)], m.darkened(0.1))
+		&"hammer":
+			_line(img, Vector2(7, 28), Vector2(19, 12), 2, WOOD)
+			_poly(img, [Vector2(13, 9), Vector2(20, 2), Vector2(29, 11), Vector2(22, 18)], m)
+			_line(img, Vector2(15, 8), Vector2(21, 3), 1, m.lightened(0.35))
+		&"greatsword":
+			_line(img, Vector2(9, 23), Vector2(27, 5), 4, m)
+			_line(img, Vector2(10, 21), Vector2(26, 5), 1, m.lightened(0.4))
+			_line(img, Vector2(5, 18), Vector2(14, 27), 2, GOLD if item.rarity >= ItemData.Rarity.RARE else Color(0.5, 0.42, 0.3))
+			_line(img, Vector2(3, 29), Vector2(9, 23), 2, WOOD_D)
+		&"wand":
+			_line(img, Vector2(8, 26), Vector2(21, 11), 2, WOOD_D)
+			_disc(img, Vector2(23, 9), 3.0, c)
+			_disc(img, Vector2(22, 8), 1.0, c.lightened(0.6))
 		&"book":
 			_rect(img, 6, 5, 20, 23, c)
 			_rect(img, 22, 7, 3, 19, PAPER)

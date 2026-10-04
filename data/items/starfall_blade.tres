@@ -24,3 +24,6 @@ stat_bonuses = {
 }
 moveset = ExtResource("2_ms")
 weapon_type = &"sword"
+weapon_params = {
+&"star_every": 6
+}

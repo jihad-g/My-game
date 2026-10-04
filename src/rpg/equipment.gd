@@ -39,12 +39,39 @@ static func check_requirements(item: ItemData, level: int) -> String:
 	return ""
 
 
+## Items taken off by the last equip() because of two-handed weapons (M17a).
+var displaced: Array[StringName] = []
+
+
 ## Puts the item in its slot. Returns the id previously in that slot (or &"").
+## A two-handed weapon also takes off the off-hand item and an off-hand item
+## takes off a two-handed weapon; those ids are listed in `displaced` (call
+## take_displaced() to collect them).
 func equip(item: ItemData) -> StringName:
+	displaced.clear()
 	var old := get_item_id(item.equip_slot)
+	if item.is_two_handed() and get_item_id(ItemData.EquipSlot.OFF_HAND) != &"":
+		displaced.append(get_item_id(ItemData.EquipSlot.OFF_HAND))
+		slots.erase(ItemData.EquipSlot.OFF_HAND)
+	elif item.equip_slot == ItemData.EquipSlot.OFF_HAND and weapon() and weapon().is_two_handed():
+		displaced.append(weapon().id)
+		slots.erase(ItemData.EquipSlot.MAIN_HAND)
 	slots[item.equip_slot] = item.id
 	changed.emit()
 	return old
+
+
+## Returns and clears the items the last equip() took off besides its own slot.
+func take_displaced() -> Array[StringName]:
+	var out := displaced.duplicate()
+	displaced.clear()
+	return out
+
+
+## True if the off-hand item is a shield (wands and tomes never block).
+func has_shield() -> bool:
+	var o := offhand()
+	return o != null and o.weapon_type == &"shield"
 
 
 func unequip(slot: int) -> StringName:
@@ -140,7 +167,7 @@ func outfit_ids() -> PackedStringArray:
 ## [weapon type, has off-hand, "id,id,...", weapon id].
 func look_args() -> Array:
 	var w := weapon()
-	return [String(weapon_type()), offhand() != null, ",".join(outfit_ids()), String(w.id) if w else ""]
+	return [String(weapon_type()), has_shield(), ",".join(outfit_ids()), String(w.id) if w else ""]
 
 
 func clear() -> void:

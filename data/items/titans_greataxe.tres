@@ -23,3 +23,6 @@ stat_bonuses = {
 }
 moveset = ExtResource("2_ms")
 weapon_type = &"axe"
+weapon_params = {
+&"kill_heal": 0.05
+}

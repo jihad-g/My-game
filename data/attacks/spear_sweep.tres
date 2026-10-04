@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"spear_sweep"
+display_name = "Spear Sweep"
+damage = 26
+stamina_cost = 22
+windup = 0.4
+active = 0.12
+recovery = 0.5
+cancel_ratio = 0.5
+reach = 3.0
+arc_degrees = 160
+knockback = 7
+poise_damage = 30
+lunge_speed = 1.5
+move_multiplier = 0.2
+crit_chance_bonus = 0
+animation = &"slash_r"
+camera_shake = 0.3

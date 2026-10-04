@@ -2,6 +2,40 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.17.0] — Milestone 17a: Heroes' Arsenal (weapons and new attacks)
+
+### Added
+- **Six new weapon types**: bows (hold attack to draw, release to shoot; a full draw hits hardest, a quick
+  tap shoots at once), spears (long reach), war hammers (slow, big poise damage, stuns), greatswords (wide
+  swings), and wands and tomes for the off hand (spell power and mana for casters).
+- **20 new weapons**: Wooden Shortbow, Copper Staff, Ash Spear, Apprentice's Wand, Copper War Axe, Stone Maul,
+  Iron Staff, Recurve Bow, Iron Pike, Iron Warhammer, Iron Greatsword, Tome of Embers, Mithril Staff, Mithril
+  Longbow, Mithril Halberd, Frostbite Warhammer, Stormcaller Wand, Greatsword of the Fallen King, and the
+  legendary **Starfall Bow** and **Shardbreaker**. Each has a recipe, a shop, chest loot or a boss drop.
+- **Arrows** (wooden, copper, fire, iron, mithril), crafted 5–10 at a time at a workbench; a bow always uses
+  the best arrows in your bag; fire arrows set enemies on fire. The HUD shows your arrows while you hold a bow.
+- **Two-handed weapons**: bows, greatswords and war hammers take off your shield (it goes back into your bag);
+  equipping a shield, wand or tome takes off a two-handed weapon.
+- **New attacks**: charged heavy attack (hold heavy: up to +75% damage and double poise), sprint attack (a
+  long lunge out of a sprint), plunging attack (attack while falling; the slam grows with the fall) and
+  riposte (attack right after a perfect parry: x2.5 and always a critical hit).
+- **Weapon powers** (`ItemData.weapon_params`): stun on the last combo hit, ward breaking, chill on hit,
+  extra Chain Lightning jumps, healing from undead, falling stars, ground shockwaves. The old legendaries got
+  powers too: Sunforged Blade burns, Starfall Blade calls stars, Shadowfang's crits poison, Titan's Greataxe
+  heals on kills, the Staff of the Archmage adds a Chain Lightning jump.
+- **Weaponsmith's Folio** (iron weapons and arrows) and **Master Weaponsmith's Folio** (mithril weapons and
+  arrows); the Arcane Codex also teaches the Tome of Embers.
+- Every class has a talent for the new weapons (Assassins shoot best, Barbarians love hammers, Knights love
+  spears and greatswords).
+- New poses: a spinning sweep, aiming a bow and a plunge; drawings for greatswords, the player's war hammer,
+  wands and tomes; pixel icons for bows, arrows, spears, hammers, greatswords and wands.
+- Co-op: guests use up arrows through the host (`ammo` request).
+- Tests: `test_m17a_data`, `test_m17a_combat`.
+
+### Changed
+- The guide's Combat page explains the new attacks and weapons.
+- Shield Bash only counts real shields (a wand or tome is not a shield).
+
 ## [0.16.0] — Milestone 16: The Lost Shards
 
 ### Added

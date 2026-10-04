@@ -83,6 +83,8 @@ const PLAYER_BOOTS := Color(0.35, 0.22, 0.14)
 ## Outfit items being drawn (ItemData), in ItemData.OUTFIT_SLOTS order.
 var _outfit: Array = []
 var _weapon_item: ItemData
+## A held swing is waiting for release_attack() (Milestone 17a).
+var _hold_pending := false
 
 
 ## The chosen body: {skin, hair, style, beard} (CharacterLook). Empty = defaults.
@@ -396,7 +398,7 @@ const OUTFIT_LOOKS := [
 	&"fur_mantle",
 	&"gloves", &"gauntlets", &"bracers", &"wraps",
 	&"boots", &"fur_boots", &"greaves",
-	&"buckler", &"kite", &"aegis",
+	&"buckler", &"kite", &"aegis", &"wand", &"tome",
 	&"pendant",
 ]
 
@@ -588,26 +590,55 @@ func _build_weapon() -> void:
 		&"unarmed":
 			pass
 		&"hammer":
-			_part(_weapon, Vector3(0, 0, 0.25), Vector3(0.07, 0.07, 0.5), wood)
-			_part(_weapon, Vector3(0, 0, 0.52), Vector3(0.12, 0.3, 0.14), steel * 0.7)
+			if _weapon_item:
+				# The player's two-handed war hammer: long haft, big head.
+				_part(_weapon, Vector3(0, 0, 0.4), Vector3(0.07, 0.07, 1.0), wood)
+				_part(_weapon, Vector3(0, 0, 0.9), Vector3(0.22, 0.42, 0.24), steel * 0.8)
+				_part(_weapon, Vector3(0, 0, 1.04), Vector3(0.12, 0.12, 0.06), steel)
+			else:
+				_part(_weapon, Vector3(0, 0, 0.25), Vector3(0.07, 0.07, 0.5), wood)
+				_part(_weapon, Vector3(0, 0, 0.52), Vector3(0.12, 0.3, 0.14), steel * 0.7)
+		&"greatsword":
+			_part(_weapon, Vector3(0, 0, 0.14), Vector3(0.08, 0.08, 0.3), Color(0.3, 0.2, 0.12))
+			_part(_weapon, Vector3(0, 0, 0.32), Vector3(0.44, 0.07, 0.08), Color(0.7, 0.6, 0.3))
+			_part(_weapon, Vector3(0, 0, 0.9), Vector3(0.15, 0.05, 1.1), steel)
+			_part(_weapon, Vector3(0, 0, 1.5), Vector3(0.08, 0.04, 0.12), steel * 1.1)
 		&"hoe":
 			_part(_weapon, Vector3(0, 0, 0.4), Vector3(0.06, 0.06, 1.1), wood)
 			_part(_weapon, Vector3(0, -0.1, 0.92), Vector3(0.05, 0.25, 0.14), steel * 0.8)
 		&"bow":
-			_part(_weapon, Vector3(0, 0.25, 0.15), Vector3(0.05, 0.5, 0.05), wood)
-			_part(_weapon, Vector3(0, -0.25, 0.15), Vector3(0.05, 0.5, 0.05), wood)
-			_part(_weapon, Vector3(0, 0, 0.3), Vector3(0.04, 0.2, 0.04), wood)
-			_part(_weapon, Vector3(0, 0, 0.08), Vector3(0.02, 0.9, 0.02), Color(0.9, 0.9, 0.85))
+			# The player's bows are tinted by the item (mithril, star metal) and a bit bigger.
+			var bw := _weapon_item.icon_color if _weapon_item else wood
+			var big := 1.25 if _weapon_item else 1.0
+			_part(_weapon, Vector3(0, 0.27 * big, 0.17), Vector3(0.06, 0.52 * big, 0.06), bw)
+			_part(_weapon, Vector3(0, -0.27 * big, 0.17), Vector3(0.06, 0.52 * big, 0.06), bw)
+			_part(_weapon, Vector3(0, 0.56 * big, 0.08), Vector3(0.05, 0.1, 0.12), bw * 0.85)
+			_part(_weapon, Vector3(0, -0.56 * big, 0.08), Vector3(0.05, 0.1, 0.12), bw * 0.85)
+			_part(_weapon, Vector3(0, 0, 0.3), Vector3(0.05, 0.2, 0.05), wood)
+			_part(_weapon, Vector3(0, 0, 0.04), Vector3(0.02, 1.15 * big, 0.02), Color(0.9, 0.9, 0.85))
 		&"spear":
 			_part(_weapon, Vector3(0, 0, 0.5), Vector3(0.07, 0.07, 1.6), wood)
 			_part(_weapon, Vector3(0, 0, 1.36), Vector3(0.08, 0.04, 0.24), steel)
+			if _weapon_item and String(_weapon_item.id).contains("halberd"):
+				_part(_weapon, Vector3(0.16, 0, 1.12), Vector3(0.26, 0.04, 0.3), steel)  # axe blade
+				_part(_weapon, Vector3(-0.09, 0, 1.12), Vector3(0.12, 0.04, 0.08), steel * 0.8)  # back spike
 		_:
 			_part(_weapon, Vector3(0, 0, 0.5), Vector3(0.1, 0.1, 0.8), steel)
 	# Trail anchor at the business end of the weapon.
-	const TIPS := {&"sword": 0.95, &"axe": 0.8, &"dagger": 0.52, &"staff": 1.2, &"hammer": 0.6, &"hoe": 0.95, &"spear": 1.45, &"bow": 0.3}
+	const TIPS := {&"sword": 0.95, &"axe": 0.8, &"dagger": 0.52, &"staff": 1.2, &"hammer": 0.6, &"hoe": 0.95, &"spear": 1.45, &"bow": 0.3, &"greatsword": 1.5}
 	_tip = Node3D.new()
-	_tip.position = Vector3(0, 0, float(TIPS.get(_weapon_type, 0.4)))
+	_tip.position = Vector3(0, 0, float(TIPS.get(_weapon_type, 0.4)) + (0.4 if _weapon_type == &"hammer" and _weapon_item else 0.0))
 	_weapon.add_child(_tip)
+	# Caster off-hands (Milestone 17a): a wand or a book in the left hand.
+	var caster := _shield_item() if _class_id == &"player" else null
+	if caster and ItemData.CASTER_OFFHANDS.has(caster.weapon_type):
+		var cc := caster.icon_color
+		if caster.weapon_type == &"wand":
+			_part(_shield, Vector3(0, -0.02, 0.18), Vector3(0.05, 0.05, 0.42), Color(0.35, 0.24, 0.14))
+			_part(_shield, Vector3(0, -0.02, 0.42), Vector3(0.09, 0.09, 0.09), cc.lightened(0.3))
+		else:
+			_part(_shield, Vector3(0, -0.04, 0.12), Vector3(0.1, 0.3, 0.24), cc)
+			_part(_shield, Vector3(0.02, -0.04, 0.12), Vector3(0.08, 0.27, 0.2), Color(0.92, 0.88, 0.75))
 	if _has_shield:
 		var si := _shield_item() if _class_id == &"player" else null
 		var look := si.outfit_look if si else &""
@@ -676,7 +707,9 @@ func set_blocking(value: bool) -> void:
 	_blocking = value
 
 
-func play_attack(anim: StringName, windup: float, active: float, recovery: float) -> void:
+## `hold` (Milestone 17a): the swing stops at the end of the windup until
+## release_attack() is called (charged heavy attacks and drawing a bow).
+func play_attack(anim: StringName, windup: float, active: float, recovery: float, hold: bool = false) -> void:
 	if _attack_tween:
 		_attack_tween.kill()
 	# Poses: x = arm pitch (negative = raised forward/up), y = arm yaw, torso twist.
@@ -692,9 +725,25 @@ func play_attack(anim: StringName, windup: float, active: float, recovery: float
 		&"overhead":
 			ready_pose = Vector3(-3.0, 0.1, -0.2)
 			strike_pose = Vector3(-0.6, 0.0, 0.2)
+		&"spin":
+			ready_pose = Vector3(-1.6, 1.4, -0.9)
+			strike_pose = Vector3(-1.6, -1.4, 0.9)
+		&"aim":
+			# Bow: arm straight forward, pulled back while drawing.
+			ready_pose = Vector3(-1.55, 0.25, -0.35)
+			strike_pose = Vector3(-1.5, 0.0, 0.1)
+		&"plunge":
+			ready_pose = Vector3(-3.1, 0.0, -0.3)
+			strike_pose = Vector3(-0.3, 0.0, 0.4)
 	anim_event.emit("attack", [String(anim), windup, active, recovery])
 	_attack_tween = create_tween()
 	_attack_tween.tween_method(_set_attack_pose, Vector3(_attack_arm.x, _attack_arm.y, _attack_torso), ready_pose, windup).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_hold_pending = hold
+	if hold:
+		var tw := _attack_tween
+		_attack_tween.tween_callback(func() -> void:
+			if _hold_pending and tw.is_valid():
+				tw.pause())
 	_attack_tween.tween_callback(func() -> void: _set_trail(true))
 	_attack_tween.tween_method(_set_attack_pose, ready_pose, strike_pose, maxf(active, 0.05)).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
 	_attack_tween.tween_callback(func() -> void: _set_trail(false))
@@ -704,6 +753,13 @@ func play_attack(anim: StringName, windup: float, active: float, recovery: float
 func _set_attack_pose(v: Vector3) -> void:
 	_attack_arm = Vector2(v.x, v.y)
 	_attack_torso = v.z
+
+
+## Lets a held swing (see play_attack `hold`) continue to the strike.
+func release_attack() -> void:
+	_hold_pending = false
+	if _attack_tween and _attack_tween.is_valid():
+		_attack_tween.play()
 
 
 func cancel_attack() -> void:

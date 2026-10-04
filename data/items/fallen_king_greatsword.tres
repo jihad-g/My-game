@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/greatsword.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"fallen_king_greatsword"
+display_name = "Greatsword of the Fallen King"
+description = "King Aldric's own sword. It drinks the strength of the dead."
+category = 3
+rarity = 5
+max_stack = 1
+base_value = 1200
+icon_color = Color(0.85, 0.82, 0.7, 1)
+icon_glyph = "GS"
+equip_slot = 1
+required_level = 40
+stat_bonuses = {
+&"damage_bonus": 24,
+&"strength": 3
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"greatsword"
+weapon_params = {
+&"undead_heal": 0.1
+}

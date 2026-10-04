@@ -24,3 +24,6 @@ stat_bonuses = {
 }
 moveset = ExtResource("2_ms")
 weapon_type = &"dagger"
+weapon_params = {
+&"crit_poison": 1
+}

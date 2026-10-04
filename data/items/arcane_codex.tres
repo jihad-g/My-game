@@ -13,4 +13,4 @@ max_stack = 1
 base_value = 90
 icon_color = Color(0.6, 0.45, 1, 1)
 icon_glyph = "Bk"
-teaches_recipes = [&"arcane_dust", &"crystal_staff", &"crystal_ring", &"moonpetal_pendant"]
+teaches_recipes = [&"arcane_dust", &"crystal_staff", &"crystal_ring", &"moonpetal_pendant", &"embers_tome"]

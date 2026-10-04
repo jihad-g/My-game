@@ -15,6 +15,8 @@ var homing_target: Node3D
 var turn_rate := 6.0
 ## Played where the projectile starts (arrows, turret bolts); "" = silent (spells have their own cast sound).
 var launch_sound: StringName = &""
+## &"arrow" (Milestone 17a): a thin wooden shaft without a glow; "" = magic bolt.
+var style: StringName = &""
 ## What the projectile can hit (enemy projectiles use PLAYER instead of ENEMY).
 var mask := Layers.TERRAIN | Layers.ENEMY | Layers.PROP | Layers.BUILDING
 
@@ -27,6 +29,19 @@ func _ready() -> void:
 	if launch_sound != &"":
 		(func() -> void: Audio.play_at(launch_sound, global_position, -4.0)).call_deferred()
 	var b := BlockMesh.new()
+	if style == &"arrow":
+		_shape.radius = 0.2
+		b.box(Vector3.ZERO, Vector3(0.05, 0.05, 0.8), Color(0.5, 0.36, 0.2))
+		b.box(Vector3(0, 0, -0.42), Vector3(0.09, 0.09, 0.12), color)  # head (flies towards -Z)
+		b.box(Vector3(0, 0, 0.36), Vector3(0.14, 0.02, 0.14), Color(0.92, 0.9, 0.85))  # fletching
+		var arrow_mi := MeshInstance3D.new()
+		arrow_mi.mesh = b.commit()
+		arrow_mi.mesh.surface_set_material(0, Materials.vertex_color())
+		arrow_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(arrow_mi)
+		if velocity.length_squared() > 0.0:
+			look_at(global_position + velocity, Vector3.UP)
+		return
 	b.box(Vector3.ZERO, Vector3(0.35, 0.35, 0.35), color)
 	b.box(Vector3.ZERO, Vector3(0.22, 0.22, 0.6), color.lightened(0.4))
 	var mesh := b.commit()
@@ -74,7 +89,8 @@ func _physics_process(delta: float) -> void:
 			_impact(instance_from_id(rest.collider_id), rest.point)
 			return
 	global_position = from + motion
-	rotation.z += delta * 12.0
+	if style != &"arrow":
+		rotation.z += delta * 12.0
 	if _age >= lifetime:
 		_impact(null, global_position)
 
@@ -88,5 +104,5 @@ func _impact(target: Object, pos: Vector3) -> void:
 			on_hit.call(target, float(dealt) if dealt != null else 0.0)
 	if on_impact.is_valid():
 		on_impact.call(pos)
-	VFX.burst(get_parent(), pos, 1.2, Color(color.r, color.g, color.b, 0.8))
+	VFX.burst(get_parent(), pos, 0.6 if style == &"arrow" else 1.2, Color(color.r, color.g, color.b, 0.8))
 	queue_free()

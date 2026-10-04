@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"hammer_smash_2"
+display_name = "Hammer Backswing"
+damage = 24
+stamina_cost = 10
+windup = 0.3
+active = 0.1
+recovery = 0.5
+cancel_ratio = 0.5
+reach = 2.4
+arc_degrees = 110
+knockback = 7
+poise_damage = 35
+lunge_speed = 2
+move_multiplier = 0.25
+crit_chance_bonus = 0
+animation = &"slash_l"
+camera_shake = 0.25

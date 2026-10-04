@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/hammer.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"frostbite_warhammer"
+display_name = "Frostbite Warhammer"
+description = "A hammer of tundra ice that never melts."
+category = 3
+rarity = 4
+max_stack = 1
+base_value = 700
+icon_color = Color(0.7, 0.9, 1.0, 1)
+icon_glyph = "Hm"
+equip_slot = 1
+required_level = 34
+stat_bonuses = {
+&"damage_bonus": 18
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"hammer"
+weapon_params = {
+&"on_hit_chill": 3,
+&"combo_stun": 0.6
+}

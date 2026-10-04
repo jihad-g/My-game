@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MonsterData" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="MonsterData" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
 [ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
@@ -26,6 +26,13 @@ min_count = 1
 max_count = 2
 chance = 0.6
 
+[sub_resource type="Resource" id="Loot_3"]
+script = ExtResource("9_loot")
+item_id = &"starfall_bow"
+min_count = 1
+max_count = 1
+chance = 0.2
+
 [resource]
 script = ExtResource("1_md")
 id = &"starborn_colossus"
@@ -45,7 +52,7 @@ damage_multipliers = {
 }
 exposed_damage_multiplier = 1.5
 attacks = []
-loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2")]
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2"), SubResource("Loot_3")]
 xp_reward = 900
 respawn_time = 600.0
 style = 3

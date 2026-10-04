@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"riposte"
+display_name = "Riposte"
+damage = 14
+stamina_cost = 0
+windup = 0.08
+active = 0.1
+recovery = 0.35
+cancel_ratio = 0.4
+reach = 2.3
+arc_degrees = 60
+knockback = 6
+poise_damage = 60
+lunge_speed = 3
+move_multiplier = 0.2
+crit_chance_bonus = 0
+animation = &"thrust"
+camera_shake = 0.4

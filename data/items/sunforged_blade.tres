@@ -23,3 +23,6 @@ stat_bonuses = {
 }
 moveset = ExtResource("2_ms")
 weapon_type = &"sword"
+weapon_params = {
+&"on_hit_burn": 3
+}

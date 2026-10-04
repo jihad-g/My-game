@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"gs_heavy"
+display_name = "Greatsword Cleave"
+damage = 40
+stamina_cost = 28
+windup = 0.55
+active = 0.14
+recovery = 0.6
+cancel_ratio = 0.55
+reach = 2.8
+arc_degrees = 200
+knockback = 9
+poise_damage = 50
+lunge_speed = 2
+move_multiplier = 0.15
+crit_chance_bonus = 0.05
+animation = &"overhead"
+camera_shake = 0.42

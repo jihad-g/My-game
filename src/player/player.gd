@@ -108,6 +108,8 @@ var is_swimming := false
 ## Fastest fall speed of the current jump/fall (landing effects).
 var _fall_speed := 0.0
 var _moving_fast := false
+## Sprinting on the last movement frame (sprint attacks, Milestone 17a).
+var _sprinting := false
 var _lantern: OmniLight3D
 var _dash_dir := Vector3.ZERO
 var _dash_speed := 0.0
@@ -266,6 +268,11 @@ func _update_air(planar_speed: float) -> void:
 	if airborne:
 		_fall_speed = maxf(_fall_speed, -velocity.y)
 		return
+	if combat.plunging:
+		if is_swimming:
+			combat.cancel()
+		else:
+			combat.land_plunge(_fall_speed)
 	if _fall_speed > 6.0 and not is_swimming:
 		var s := clampf((_fall_speed - 6.0) / 10.0, 0.2, 1.0)
 		model.play_land(s)
@@ -394,6 +401,7 @@ func _move_normal(input: Vector3, delta: float) -> void:
 	var speed := walk_speed
 	var sprinting := _sprint_held() and input != Vector3.ZERO \
 		and not is_blocking and not combat.is_attacking() and stamina.current > 1.0
+	_sprinting = sprinting
 	if sprinting:
 		speed = sprint_speed
 		stamina.consume(sprint_cost_per_second * delta)
@@ -413,8 +421,17 @@ func _move_normal(input: Vector3, delta: float) -> void:
 
 
 func _consume_attack_requests() -> void:
+	# Plunging attack (Milestone 17a): attacking while falling slams on landing.
+	if (_want_light or _want_heavy) and not is_on_floor() and not is_swimming \
+			and velocity.y < -PlayerCombat.PLUNGE_MIN_FALL and not combat.is_attacking():
+		combat.start_plunge()
+		velocity.y -= 6.0
+		_want_light = false
+		_want_heavy = false
+		return
 	if _want_light:
-		combat.request(&"light")
+		# Sprint attack (Milestone 17a): a long lunge out of a sprint.
+		combat.request(&"sprint" if _sprinting else &"light")
 	elif _want_heavy:
 		combat.request(&"heavy")
 	_want_light = false
@@ -575,6 +592,7 @@ func receive_hit(info: DamageInfo) -> void:
 			Audio.play(&"parry", -2.0, 0.02)
 			if info.source and info.source.has_method("on_parried"):
 				info.source.on_parried()
+			combat.open_riposte()
 			return
 		var blocked := info.amount * character.block_reduction
 		var cost := blocked * block_stamina_per_damage * Skill.block_stamina_mult(character.skill_level(Skill.DEFENSE))
@@ -896,11 +914,14 @@ func equip_from_slot(index: int) -> bool:
 		return false
 	inventory.remove_from_slot(index, 1)
 	var old := equipment.equip(item)
+	var back: Array[StringName] = equipment.take_displaced()
 	if old != &"":
-		var left := inventory.add_item(old, 1)
+		back.push_front(old)
+	for b in back:
+		var left := inventory.add_item(b, 1)
 		if left > 0 and World.instance:
-			World.instance.spawn_pickup(old, left, global_position + Vector3(0, 1, 0), false)
-	Events.toast.emit("Equipped %s" % item.display_name, item.rarity_color())
+			World.instance.spawn_pickup(b, left, global_position + Vector3(0, 1, 0), false)
+	Events.toast.emit("Equipped %s%s" % [item.display_name, " (two-handed)" if item.is_two_handed() else ""], item.rarity_color())
 	return true
 
 
@@ -926,7 +947,7 @@ func _on_equipment_changed() -> void:
 	if moveset == null and character.class_data:
 		moveset = character.class_data.unarmed_moveset
 	combat.set_moveset(moveset)
-	model.set_weapon(equipment.weapon_type(), equipment.offhand() != null)
+	model.set_weapon(equipment.weapon_type(), equipment.has_shield())
 	model.set_outfit(equipment.outfit_ids(), weapon.id if weapon else &"")
 	character.recalculate()
 

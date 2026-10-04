@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="MonsterData" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="MonsterData" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
 [ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
@@ -20,6 +20,13 @@ min_count = 3
 max_count = 6
 chance = 1.0
 
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"fallen_king_greatsword"
+min_count = 1
+max_count = 1
+chance = 0.3
+
 [resource]
 script = ExtResource("1_md")
 id = &"bone_king"
@@ -39,7 +46,7 @@ damage_multipliers = {
 }
 exposed_damage_multiplier = 1.5
 attacks = []
-loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2")]
 xp_reward = 400
 respawn_time = 600.0
 style = 3

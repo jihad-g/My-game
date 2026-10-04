@@ -40,7 +40,11 @@ weapon_proficiency = {
 &"axe": 0.95,
 &"dagger": 0.9,
 &"staff": 0.85,
-&"shield": 1.0
+&"shield": 1.0,
+&"spear": 1.1,
+&"greatsword": 1.1,
+&"hammer": 1.0,
+&"bow": 0.9
 }
 unarmed_moveset = ExtResource("2_unarmed")
 block_reduction = 0.8

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/halberd.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"mithril_halberd"
+display_name = "Mithril Halberd"
+description = "An axe on a long pole. Its heavy attack sweeps all around you."
+category = 3
+rarity = 4
+max_stack = 1
+base_value = 520
+icon_color = Color(0.6, 0.88, 0.98, 1)
+icon_glyph = "Hb"
+equip_slot = 1
+required_level = 28
+stat_bonuses = {
+&"damage_bonus": 15
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"spear"
+weapon_params = {
+&"reach": 0.3
+}

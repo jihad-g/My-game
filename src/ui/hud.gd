@@ -414,6 +414,30 @@ func _build_target_frame() -> void:
 	v.add_child(_target_bar)
 
 
+var _ammo := Label.new()
+
+
+## "Arrows: N (Iron Arrow)" next to the ability bar while a bow is equipped.
+func _update_ammo() -> void:
+	var bow := player.combat.is_ranged()
+	_ammo.visible = bow
+	if not bow:
+		return
+	var best := player.combat.best_arrow()
+	if best == &"":
+		_ammo.text = "No arrows"
+		_ammo.add_theme_color_override(&"font_color", Color(1, 0.55, 0.45))
+		return
+	var n := 0
+	for s in player.inventory.slots:
+		if s != null:
+			var it: ItemData = ItemDB.get_item(s.id)
+			if it and it.is_arrow():
+				n += s.count
+	_ammo.text = "Arrows: %d\n%s" % [n, ItemDB.get_item(best).display_name]
+	_ammo.add_theme_color_override(&"font_color", Color(0.95, 0.88, 0.7))
+
+
 func _build_ability_bar() -> void:
 	var holder := HBoxContainer.new()
 	holder.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -455,6 +479,12 @@ func _build_ability_bar() -> void:
 		holder.add_child(b)
 		_ability_buttons.append(b)
 		_ability_cd.append(cd)
+	# Arrows left while a bow is in your hands (Milestone 17a).
+	_ammo.add_theme_font_size_override(&"font_size", 14)
+	_ammo.add_theme_color_override(&"font_color", Color(0.95, 0.88, 0.7))
+	_ammo.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_ammo.visible = false
+	holder.add_child(_ammo)
 
 
 func _bind_rpg() -> void:
@@ -905,6 +935,7 @@ func _process(delta: float) -> void:
 	if player == null:
 		return
 	_update_temperature()
+	_update_ammo()
 	_quest_t -= delta
 	if _quest_t <= 0.0 and world and world.quests:
 		_quest_t = 0.5

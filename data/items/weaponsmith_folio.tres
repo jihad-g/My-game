@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"weaponsmith_folio"
+display_name = "Weaponsmith's Folio"
+description = "Drawings of iron weapons. Use to learn the iron bow, staff, pike, warhammer, greatsword and arrows."
+category = 6
+rarity = 2
+max_stack = 1
+base_value = 90
+icon_color = Color(0.5, 0.42, 0.36, 1)
+icon_glyph = "Bk"
+teaches_recipes = [&"iron_staff", &"recurve_bow", &"iron_pike", &"iron_warhammer", &"iron_greatsword", &"iron_arrow"]

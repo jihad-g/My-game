@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"plunge"
+display_name = "Plunging Attack"
+damage = 22
+stamina_cost = 0
+windup = 0.15
+active = 0.08
+recovery = 0.35
+cancel_ratio = 0.5
+reach = 2.8
+arc_degrees = 360
+knockback = 7
+poise_damage = 50
+lunge_speed = 0
+move_multiplier = 0.2
+crit_chance_bonus = 0
+animation = &"plunge"
+camera_shake = 0.45

@@ -459,7 +459,7 @@ func broadcast_placed(entry: Dictionary) -> void:
 
 # --- Requests ------------------------------------------------------------------------------
 
-const ACTIONS := ["harvest", "pickup", "drop", "move", "use", "equip", "unequip", "craft", "place", "remove", "door", "place_object"]
+const ACTIONS := ["harvest", "pickup", "drop", "move", "use", "equip", "unequip", "craft", "place", "remove", "door", "place_object", "ammo"]
 
 
 func on_request(id: int, rid: int, action: String, args: Array) -> void:
@@ -638,8 +638,22 @@ func _act_equip(ps: PeerState, a: Array) -> Dictionary:
 	var old := ps.equipment.equip(item)
 	if old != &"":
 		give(ps, old, 1)
+	for b in ps.equipment.take_displaced():
+		give(ps, b, 1)
 	ps.dirty_inventory = true
 	return _ok("", {"item": String(item.id)})
+
+
+## A guest shot an arrow (Milestone 17a): one arrow of that kind is used up.
+func _act_ammo(ps: PeerState, a: Array) -> Dictionary:
+	var id := StringName(String(a[0])) if a.size() > 0 else &""
+	var item: ItemData = ItemDB.get_item(id) if ItemDB.has_item(id) else null
+	if item == null or not item.is_arrow():
+		return _no("Not an arrow")
+	if not ps.inventory.remove_item(id, 1):
+		return _no("No arrows")
+	ps.dirty_inventory = true
+	return _ok()
 
 
 func _act_unequip(ps: PeerState, a: Array) -> Dictionary:

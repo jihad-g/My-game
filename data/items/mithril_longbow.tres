@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/bow.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"mithril_longbow"
+display_name = "Mithril Longbow"
+description = "A tall bow with mithril tips. Full draws find weak spots."
+category = 3
+rarity = 3
+max_stack = 1
+base_value = 360
+icon_color = Color(0.6, 0.88, 0.98, 1)
+icon_glyph = "Bw"
+equip_slot = 1
+required_level = 26
+stat_bonuses = {
+&"damage_bonus": 12
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"bow"
+weapon_params = {
+&"draw_time": 0.7,
+&"range": 42,
+&"full_draw_crit": 0.15
+}

@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/bow.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"starfall_bow"
+display_name = "Starfall Bow"
+description = "A bow of star metal. The sky answers its arrows."
+category = 3
+rarity = 6
+max_stack = 1
+base_value = 2600
+icon_color = Color(0.82, 0.72, 1.0, 1)
+icon_glyph = "Bw"
+equip_slot = 1
+required_level = 50
+stat_bonuses = {
+&"damage_bonus": 22,
+&"dexterity": 4,
+&"crit_chance": 10
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"bow"
+weapon_params = {
+&"draw_time": 0.6,
+&"range": 48,
+&"full_draw_crit": 0.2,
+&"star_every": 5
+}

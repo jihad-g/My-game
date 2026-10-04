@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/staff.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"mithril_staff"
+display_name = "Mithril Staff"
+description = "A light mithril staff with three crystals."
+category = 3
+rarity = 3
+max_stack = 1
+base_value = 340
+icon_color = Color(0.6, 0.88, 0.98, 1)
+icon_glyph = "St"
+equip_slot = 1
+required_level = 24
+stat_bonuses = {
+&"spell_power": 28,
+&"max_mana": 40,
+&"mana_regen": 20,
+&"damage_bonus": 3
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"staff"

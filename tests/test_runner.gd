@@ -104,6 +104,8 @@ func _ready() -> void:
 	await _run_async(&"test_m15_wilds_ingame")
 	_run(&"test_m16_data")
 	await _run_async(&"test_m16_story")
+	_run(&"test_m17a_data")
+	await _run_async(&"test_m17a_combat")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5825,3 +5827,266 @@ func _ground_count(world: World, id: StringName) -> int:
 		if c is Pickup and c.visible and (c as Pickup).item_id == id:
 			n += (c as Pickup).count
 	return n
+
+
+# --- Milestone 17a: Heroes' Arsenal (weapons, arrows, new attacks) ----------------------------
+
+const M17A_WEAPONS := [&"wooden_shortbow", &"copper_staff", &"ash_spear", &"apprentice_wand", &"copper_waraxe",
+	&"stone_maul", &"iron_staff", &"recurve_bow", &"iron_pike", &"iron_warhammer", &"iron_greatsword", &"embers_tome",
+	&"mithril_staff", &"mithril_longbow", &"mithril_halberd", &"frostbite_warhammer", &"stormcaller_wand",
+	&"fallen_king_greatsword", &"starfall_bow", &"shardbreaker"]
+const M17A_ARROWS := [&"wooden_arrow", &"copper_arrow", &"fire_arrow", &"iron_arrow", &"mithril_arrow"]
+
+
+func test_m17a_data() -> void:
+	check(M17A_WEAPONS.size() == 20, "20 new weapons")
+	var missing := []
+	var types := {}
+	for id in M17A_WEAPONS:
+		var it: ItemData = ItemDB.get_item(id)
+		if it == null or not it.is_equippable():
+			missing.append(id)
+			continue
+		types[it.weapon_type] = true
+		if it.equip_slot == ItemData.EquipSlot.MAIN_HAND and it.moveset == null:
+			missing.append("%s (no moveset)" % id)
+		if ItemIcons.shape_of(it) in [&"lump", &"crate"]:
+			missing.append("%s (no icon)" % id)
+	check(missing.is_empty(), "every new weapon is equippable with a moveset and an icon %s" % [missing])
+	for t in [&"bow", &"spear", &"hammer", &"greatsword", &"wand", &"tome"]:
+		check(types.has(t), "new weapon type: %s" % t)
+	# Every new weapon can be obtained: a recipe, a shop, chest loot or a boss.
+	var sources := {}
+	for r in RecipeBook.all().values():
+		sources[(r as RecipeData).result_item] = true
+	for band in LootTables.GEAR:
+		for id in band:
+			sources[id] = true
+	for t in LootTables.TABLES.values():
+		for e in t.items:
+			sources[e[0]] = true
+	for stock in Economy.STOCK.values():
+		for e in stock:
+			sources[e[0]] = true
+	for f in DirAccess.get_files_at("res://data/enemies/"):
+		var d := load("res://data/enemies/" + f.trim_suffix(".remap")) as EnemyData
+		if d:
+			for l in d.loot:
+				sources[(l as LootEntry).item_id] = true
+	var unobtainable := M17A_WEAPONS.filter(func(id: StringName) -> bool: return not sources.has(id))
+	unobtainable.append_array(M17A_ARROWS.filter(func(id: StringName) -> bool: return not sources.has(id)))
+	check(unobtainable.is_empty(), "every new weapon and arrow can be found, bought or made %s" % [unobtainable])
+	for id in M17A_ARROWS:
+		var a: ItemData = ItemDB.get_item(id)
+		check(a != null and a.is_arrow() and a.max_stack >= 50 and RecipeBook.get_recipe(id) != null and RecipeBook.get_recipe(id).result_count >= 5,
+			"%s is a craftable arrow in stacks" % id)
+	# Two hands.
+	for id in [&"wooden_shortbow", &"iron_greatsword", &"stone_maul", &"shardbreaker"]:
+		check(ItemDB.get_item(id).is_two_handed(), "%s needs both hands" % id)
+	check(not ItemDB.get_item(&"ash_spear").is_two_handed() and not ItemDB.get_item(&"iron_sword").is_two_handed(), "spears and swords leave the off hand free")
+	var eq := Equipment.new()
+	eq.equip(ItemDB.get_item(&"iron_kite_shield"))
+	eq.equip(ItemDB.get_item(&"iron_greatsword"))
+	check(eq.offhand() == null and eq.take_displaced() == [&"iron_kite_shield"], "a greatsword takes off the shield")
+	eq.equip(ItemDB.get_item(&"embers_tome"))
+	check(eq.weapon() == null and eq.take_displaced() == [&"iron_greatsword"] and not eq.has_shield(), "a tome takes off the greatsword (and is no shield)")
+	eq.equip(ItemDB.get_item(&"iron_sword"))
+	eq.equip(ItemDB.get_item(&"iron_kite_shield"))
+	check(eq.take_displaced().is_empty() and eq.has_shield() and eq.weapon() != null, "sword and shield fit together")
+	# Movesets.
+	var bow: WeaponMoveset = ItemDB.get_item(&"recurve_bow").moveset
+	check(bow.ranged and bow.charge_time == 0.0, "bows shoot (no charged heavy)")
+	check(ItemDB.get_item(&"iron_warhammer").moveset.heavy_attack.stun > 0.0, "the war hammer's heavy attack stuns")
+	check(ItemDB.get_item(&"mithril_halberd").moveset.heavy_attack.arc_degrees >= 360.0, "the halberd's heavy attack sweeps all around")
+	var spear_reach := ItemDB.get_item(&"ash_spear").moveset.light_combo[0].reach
+	var sword_reach := ItemDB.get_item(&"iron_sword").moveset.light_combo[0].reach
+	check(spear_reach > sword_reach + 0.5, "spears reach further than swords (%.1f vs %.1f m)" % [spear_reach, sword_reach])
+	# Powers of special and legendary weapons.
+	for id in ItemDB.all_ids():
+		var it: ItemData = ItemDB.get_item(id)
+		if it and it.rarity == ItemData.Rarity.LEGENDARY and it.category == ItemData.Category.WEAPON:
+			check(not it.weapon_params.is_empty() and not it.param_lines().is_empty(), "legendary %s has a special power" % id)
+	check("\n".join(ItemDB.get_item(&"starfall_bow").effect_lines()).contains("falling star"), "tooltips explain weapon powers")
+	check("\n".join(ItemDB.get_item(&"iron_greatsword").effect_lines()).contains("Two-handed"), "tooltips say two-handed")
+	# Classes know the new weapons (Option A talents).
+	for c in ClassRegistry.all():
+		for t in [&"bow", &"spear", &"hammer", &"greatsword"]:
+			check(c.weapon_proficiency.has(t), "%s has a %s proficiency" % [c.id, t])
+	check(ClassRegistry.get_class_data(&"assassin").proficiency(&"bow") > ClassRegistry.get_class_data(&"wizard").proficiency(&"bow"), "assassins are the best archers")
+	check(ClassRegistry.get_class_data(&"barbarian").proficiency(&"hammer") > 1.0 and ClassRegistry.get_class_data(&"knight").proficiency(&"spear") > 1.0, "barbarians love hammers, knights love spears")
+
+
+func test_m17a_combat() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	var c := p.combat
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	var off := _clear_offset(world, 7.0)
+	# --- Bow: hold to draw, release to shoot ---
+	p.equipment.equip(ItemDB.get_item(&"wooden_shortbow"))
+	await _frames(2)
+	check(c.is_ranged() and p.model._weapon_type == &"bow", "the bow is in your hands")
+	c.request(&"light")
+	await _frames(3)
+	check(not c.is_attacking(), "no arrows, no shot")
+	p.inventory.add_item(&"wooden_arrow", 5)
+	p.inventory.add_item(&"iron_arrow", 2)
+	var target := _spawn_monster(world, &"skeleton_warrior", off)
+	target.apply_status(&"stunned", 30.0, {})
+	await _frames(3)
+	p.set_lock_target(target)
+	var hp0 := target.health.current
+	c.held_override = {&"light": true}
+	c.request(&"light")
+	await _frames(50)
+	check(c.is_holding() and c.last_draw >= 0.99, "holding the button draws the bow fully (%.2f)" % c.last_draw)
+	check(p.inventory.count_of(&"iron_arrow") == 2, "no arrow used while drawing")
+	c.held_override = {&"light": false}
+	await _frames(45)
+	check(p.inventory.count_of(&"iron_arrow") == 1 and p.inventory.count_of(&"wooden_arrow") == 5, "releasing shoots the best arrow (iron first)")
+	check(target.health.current < hp0, "the arrow hits (%.0f -> %.0f)" % [hp0, target.health.current])
+	# A quick tap shoots a weak arrow.
+	hp0 = target.health.current
+	var full_hit := 0.0
+	c.held_override = {&"light": true}
+	c.request(&"light")
+	await _frames(4)
+	c.held_override = {&"light": false}
+	await _frames(40)
+	check(c.last_draw < 0.5 and p.inventory.count_of(&"iron_arrow") == 0, "a quick tap shoots at once (draw %.2f)" % c.last_draw)
+	_kill(target, world)
+	# --- Charged heavy attack (greatsword) ---
+	p.equipment.equip(ItemDB.get_item(&"iron_greatsword"))
+	await _frames(2)
+	check(not c.is_ranged() and p.model._weapon_type == &"greatsword", "greatsword equipped")
+	var dummy := _spawn_monster(world, &"skeleton_warrior", off.normalized() * 1.8)
+	dummy.health.max_health = 50000.0
+	dummy.health.current = 50000.0
+	dummy.apply_status(&"stunned", 30.0, {})
+	await _frames(3)
+	p.set_lock_target(dummy)
+	p.stamina.refill()
+	hp0 = dummy.health.current
+	c.held_override = {&"heavy": true}
+	c.request(&"heavy")
+	await _frames(100)
+	check(c.is_holding() and c.last_charge >= 0.99, "holding heavy charges the swing (%.2f)" % c.last_charge)
+	check(dummy.health.current == hp0, "a charging swing has not landed yet")
+	c.held_override = {&"heavy": false}
+	await _frames(60)
+	check(dummy.health.current < hp0, "releasing lands the charged swing (%.0f -> %.0f)" % [hp0, dummy.health.current])
+	# The charge multiplies damage and poise (crits off for a fair comparison).
+	p.character.crit_chance = 0.0
+	c.last_charge = 0.0
+	var plain := c.build_damage(c.heavy_attack, dummy)
+	c.last_charge = 1.0
+	var charged := c.build_damage(c.heavy_attack, dummy)
+	c.last_charge = 0.0
+	check(charged.amount > plain.amount * 1.4 and charged.poise_damage > plain.poise_damage * 1.9,
+		"a full charge hits much harder (%.0f vs %.0f, poise %.0f vs %.0f)" % [charged.amount, plain.amount, charged.poise_damage, plain.poise_damage])
+	c.held_override = {}
+	# --- Sprint attack ---
+	await _frames(30)
+	p._sprinting = true
+	p._want_light = true
+	p._consume_attack_requests()
+	await _frames(2)
+	check(c.current == PlayerCombat.SPRINT_ATTACK, "attacking out of a sprint is a lunge")
+	await _frames(60)
+	# --- Riposte after a perfect parry ---
+	p.global_position = dummy.global_position - off.normalized() * 1.6
+	p.set_lock_target(dummy)
+	await _frames(2)
+	p.health.invulnerable = false
+	p.is_blocking = true
+	p._block_time = 0.02
+	var parried := DamageInfo.create(20.0, dummy)
+	parried.direction = -p.get_facing()
+	p.receive_hit(parried)
+	p.is_blocking = false
+	p.health.invulnerable = true
+	check(c.riposte_left > 0.0, "a perfect parry opens a riposte")
+	hp0 = dummy.health.current
+	c.request(&"light")
+	await _frames(2)
+	check(c.current == PlayerCombat.RIPOSTE_ATTACK, "the next light attack is a riposte")
+	await _frames(40)
+	check(dummy.health.current < hp0, "the riposte hits (%.0f -> %.0f)" % [hp0, dummy.health.current])
+	# --- War hammer: the heavy attack stuns ---
+	p.equipment.equip(ItemDB.get_item(&"iron_warhammer"))
+	await _frames(2)
+	dummy.status.remove(&"stunned")
+	p.stamina.refill()
+	p.set_lock_target(dummy)
+	c.request(&"heavy")
+	await _frames(70)
+	check(dummy.is_dead or dummy.status.has(&"stunned"), "the war hammer stuns")
+	_kill(dummy, world)
+	# --- Plunging attack: attack while falling ---
+	p.equipment.equip(ItemDB.get_item(&"iron_sword"))
+	var victim := _spawn_monster(world, &"skeleton_warrior", off.normalized() * 1.2)
+	victim.apply_status(&"stunned", 30.0, {})
+	await _frames(3)
+	hp0 = victim.health.current
+	p.global_position += Vector3(0, 7.0, 0)
+	var waited := 0
+	while p.velocity.y > -5.0 and waited < 120:
+		await get_tree().physics_frame
+		waited += 1
+	p._want_light = true
+	await _frames(2)
+	check(c.plunging, "attacking while falling readies a plunge")
+	waited = 0
+	while c.plunging and waited < 240:
+		await get_tree().physics_frame
+		waited += 1
+	check(not c.plunging and victim.health.current < hp0, "landing slams the enemy below (%.0f -> %.0f)" % [hp0, victim.health.current])
+	_kill(victim, world)
+	# --- Weapon powers ---
+	var m := _spawn_monster(world, &"skeleton_warrior", off.normalized() * 3.0)
+	m.health.max_health = 50000.0
+	m.health.current = 50000.0
+	await _frames(3)
+	p.equipment.equip(ItemDB.get_item(&"frostbite_warhammer"))
+	c._after_hit(m, DamageInfo.create(5.0, p), 5.0, false, null)
+	check(m.status.has(&"chilled"), "Frostbite Warhammer chills")
+	p.equipment.equip(ItemDB.get_item(&"fallen_king_greatsword"))
+	p.health.current = p.health.max_health * 0.5
+	var h0 := p.health.current
+	c._after_hit(m, DamageInfo.create(100.0, p), 100.0, false, null)
+	check(p.health.current > h0, "the Fallen King's sword heals on undead")
+	p.equipment.equip(ItemDB.get_item(&"shardbreaker"))
+	c.attack_direction = off.normalized()
+	m.health.invulnerable = false
+	hp0 = m.health.current
+	c._shockwave()
+	check(m.health.current < hp0, "Shardbreaker's shockwave runs along the ground")
+	hp0 = m.health.current
+	c.falling_star(m.global_position)
+	check(m.health.current < hp0, "a falling star burns the enemy")
+	p.equipment.equip(ItemDB.get_item(&"titans_greataxe"))
+	p.health.current = p.health.max_health * 0.5
+	h0 = p.health.current
+	_kill(m, world)
+	await _frames(2)
+	check(p.health.current > h0, "Titan's Greataxe heals on a kill")
+	# --- Equip from the inventory: two hands send the shield back ---
+	p.equipment.clear()
+	p.equipment.equip(ItemDB.get_item(&"iron_sword"))
+	p.equipment.equip(ItemDB.get_item(&"iron_kite_shield"))
+	p.character.level = maxi(p.character.level, 20)
+	p.inventory.add_item(&"iron_greatsword", 1)
+	var slot := -1
+	for i in p.inventory.slots.size():
+		if p.inventory.slots[i] != null and p.inventory.slots[i].id == &"iron_greatsword":
+			slot = i
+	p.equip_from_slot(slot)
+	check(p.equipment.weapon().id == &"iron_greatsword" and p.equipment.offhand() == null
+		and p.inventory.count_of(&"iron_kite_shield") == 1 and p.inventory.count_of(&"iron_sword") == 1,
+		"equipping a greatsword puts the sword and the shield back in your bag")
+	p.equipment.equip(ItemDB.get_item(&"embers_tome"))
+	await _frames(2)
+	check(not p.model._has_shield and p.equipment.offhand().id == &"embers_tome", "a tome is held, not used as a shield")
+	p.health.invulnerable = false

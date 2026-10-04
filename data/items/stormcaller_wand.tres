@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"stormcaller_wand"
+display_name = "Stormcaller Wand"
+description = "A wand that crackles with lightning."
+category = 3
+rarity = 5
+max_stack = 1
+base_value = 900
+icon_color = Color(0.75, 0.8, 1.0, 1)
+icon_glyph = "Wd"
+equip_slot = 2
+required_level = 36
+stat_bonuses = {
+&"spell_power": 25,
+&"max_mana": 30
+}
+weapon_type = &"wand"
+weapon_params = {
+&"chain_bonus": 1
+}
+armor_weight = 1
+outfit_look = &"wand"

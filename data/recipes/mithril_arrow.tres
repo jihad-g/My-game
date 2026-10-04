@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"mithril_arrow"
+result_item = &"mithril_arrow"
+result_count = 10
+ingredients = {
+&"stick": 4,
+&"mithril_ingot": 1,
+&"plant_fiber": 2
+}
+station = 1
+tier = 3
+source = 2
+source_hint = "Master Weaponsmith's Folio (vaults, dungeon bosses, royal merchants)"
+xp = 8
