@@ -2,9 +2,9 @@
 
 | File | Version | Platform |
 |---|---|---|
-| [Shardlands-v0.16.0-windows.zip](Shardlands-v0.16.0-windows.zip) | 0.16.0 (Milestone 16 - The Lost Shards) | Windows 10/11, 64-bit |
+| [Shardlands-v0.17.0-windows.zip](Shardlands-v0.17.0-windows.zip) | 0.17.0 (Milestone 17a - Heroes' Arsenal: new weapons and attacks) | Windows 10/11, 64-bit |
 
-Older builds are in the git history of this folder (v0.13.0: commit d8a28b4, v0.12.0: commit 6a42fc1).
+Older builds are in the git history of this folder (v0.16.0: commit 482c0c8, v0.13.0: commit d8a28b4, v0.12.0: commit 6a42fc1).
 
 ## Install on Windows
 

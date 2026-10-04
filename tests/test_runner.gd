@@ -5144,7 +5144,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.16"), "version 0.16 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.17"), "version 0.17 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
