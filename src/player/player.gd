@@ -18,7 +18,7 @@ enum State { NORMAL, DODGING, STAGGERED, DEAD, DASHING }
 @export var walk_speed: float = 5.0
 @export var sprint_speed: float = 8.0
 @export var acceleration: float = 40.0
-@export var turn_speed: float = 16.0
+@export var turn_speed: float = 24.0
 @export var gravity: float = 24.0
 @export var max_step_height: float = 0.6
 ## Movement multiplier while wading through water.
@@ -416,7 +416,7 @@ func _move_normal(input: Vector3, delta: float) -> void:
 	var accel := acceleration * delta
 	velocity.x = move_toward(velocity.x, target_vel.x, accel)
 	velocity.z = move_toward(velocity.z, target_vel.z, accel)
-	if sprinting and not combat.is_attacking():
+	if sprinting and not combat.is_attacking() and not (bool(Settings.get_value("face_mouse")) and not InputSetup.using_gamepad):
 		face_direction(input, false)
 
 
@@ -483,10 +483,15 @@ func get_facing() -> Vector3:
 
 
 func _update_facing(delta: float) -> void:
+	var follow_mouse := bool(Settings.get_value("face_mouse")) and not InputSetup.using_gamepad
 	if state == State.NORMAL and not combat.is_attacking():
 		var sprinting := _sprint_held() and Vector2(velocity.x, velocity.z).length() > walk_speed
-		if not sprinting:
+		if not sprinting or follow_mouse:
 			_facing = get_aim_direction()
+	elif state == State.NORMAL and combat.can_steer():
+		# Wind-ups, bow draws and charged swings keep turning towards the mouse.
+		_facing = get_aim_direction()
+		combat.attack_direction = _facing
 	var target_yaw := atan2(_facing.x, _facing.z)
 	model.rotation.y = lerp_angle(model.rotation.y, target_yaw, 1.0 - exp(-turn_speed * delta))
 

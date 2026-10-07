@@ -24,6 +24,8 @@ const DEFAULTS := {
 	"camera_rotate_speed": 1.0,
 	# Controls
 	"toggle_sprint": false,
+	## The character always turns to face the mouse (also while sprinting and winding up attacks).
+	"face_mouse": true,
 	# Accessibility
 	"ui_scale": 1.0, "colorblind_mode": 0, "high_contrast": false, "captions": false,
 	"reduce_flashing": false, "reduce_motion": false,

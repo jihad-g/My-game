@@ -2,6 +2,13 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [Unreleased]
+
+### Changed
+- The character now always faces the mouse: also while sprinting, during attack wind-ups, while drawing a bow
+  and while charging a heavy attack (the attack goes where the mouse is when it lands). Turning is faster.
+  New setting: *Character always faces the mouse* (on by default; gamepads still face the stick).
+
 ## [0.17.0] — Milestone 17a: Heroes' Arsenal (weapons and new attacks)
 
 ### Added

@@ -111,6 +111,12 @@ func is_holding() -> bool:
 	return _holding
 
 
+## True while the attack may still turn towards the aim (wind-up, drawing a
+## bow, charging a heavy attack) - the player keeps facing the mouse.
+func can_steer() -> bool:
+	return phase == Phase.WINDUP and current != null and current != RIPOSTE_ATTACK
+
+
 ## True during late recovery, when a dodge or next attack may cancel the swing.
 func can_cancel() -> bool:
 	return phase == Phase.NONE or (phase == Phase.RECOVERY and current != null

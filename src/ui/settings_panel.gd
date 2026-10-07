@@ -75,6 +75,7 @@ func _ready() -> void:
 	_toggle("Reduce motion (panel animations, camera shake)", "reduce_motion")
 	_toggle("Screen shake", "screen_shake")
 	_toggle("Toggle sprint (press once instead of holding)", "toggle_sprint")
+	_toggle("Character always faces the mouse", "face_mouse")
 
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
