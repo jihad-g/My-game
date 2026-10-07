@@ -2,7 +2,7 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
-## [Unreleased]
+## [0.17.1] — The character faces the mouse
 
 ### Changed
 - The character now always faces the mouse: also while sprinting, during attack wind-ups, while drawing a bow
