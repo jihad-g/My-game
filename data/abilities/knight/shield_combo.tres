@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"shield_combo"
+display_name = "Shield Combo"
+description = "Three fast hits with the shield. The last one knocks the enemy back."
+effect = &"shield_combo"
+unlock_level = 38
+cost_type = 2
+cost = 18
+cooldown = 9
+damage = 10
+damage_type = &"physical"
+radius = 2.4
+range = 0
+duration = 0
+power = 0
+required_mana_control = 0
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "SC"
+class_id = &"knight"
+passive = false
+animation = &""
+anim_time = 0.5

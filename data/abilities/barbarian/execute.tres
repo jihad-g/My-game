@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"execute"
+display_name = "Execute"
+description = "Big damage (x4) to an enemy below 25% health. Gives the Rage back if it kills."
+effect = &"execute"
+unlock_level = 40
+cost_type = 3
+cost = 30
+cooldown = 10
+damage = 24
+damage_type = &"physical"
+radius = 2.6
+range = 0
+duration = 0
+power = 4
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "Ex"
+class_id = &"barbarian"
+passive = false
+animation = &""
+anim_time = 0.5

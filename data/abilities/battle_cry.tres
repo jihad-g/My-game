@@ -20,3 +20,5 @@ duration = 8
 power = 40
 icon_color = Color(1, 0.3, 0.2, 1)
 icon_glyph = "BC"
+animation = &"roar"
+anim_time = 0.6

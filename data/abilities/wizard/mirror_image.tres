@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"mirror_image"
+display_name = "Mirror Image"
+description = "Two copies of you trick enemies for 8 s."
+effect = &"mirror_image"
+unlock_level = 58
+cost_type = 1
+cost = 30
+cooldown = 30
+damage = 0
+damage_type = &"physical"
+radius = 14
+range = 0
+duration = 8
+power = 2
+required_mana_control = 0
+icon_color = Color(0.75, 0.55, 1.0, 1)
+icon_glyph = "MI"
+class_id = &"wizard"
+passive = false
+animation = &"pray"
+anim_time = 0.5

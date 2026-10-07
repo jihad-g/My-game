@@ -22,3 +22,5 @@ icon_color = Color(0.6, 0.75, 1.0, 1)
 icon_glyph = "TS"
 class_id = &"knight"
 passive = false
+animation = &"roar"
+anim_time = 0.6

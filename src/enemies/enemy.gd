@@ -88,6 +88,36 @@ func on_pool_release() -> void:
 	if is_instance_valid(target) and target.get("lock_target") == self:
 		target.set_lock_target(null)
 	target = null
+	# Milestone 17b/c marks from player abilities must not follow a pooled enemy into its next life.
+	for m in [&"blind_until", &"sunder", &"sunder_until", &"tamed_until", &"spirit"]:
+		if has_meta(m):
+			remove_meta(m)
+	if not is_in_group(&"enemies"):
+		add_to_group(&"enemies")
+	remove_from_group(&"decoys")
+	remove_from_group(&"pets")
+	if model:
+		model.scale = Vector3.ONE
+
+
+## Milestone 17c: a tamed beast (Tame Beast, Spirit Wolf) fights for the player.
+func is_tamed() -> bool:
+	return int(get_meta(&"tamed_until", 0)) > Time.get_ticks_msec()
+
+
+func tame(seconds: float) -> void:
+	set_meta(&"tamed_until", Time.get_ticks_msec() + int(seconds * 1000.0))
+	remove_from_group(&"enemies")
+	add_to_group(&"pets")
+	target = null
+
+
+func untame() -> void:
+	if has_meta(&"tamed_until"):
+		remove_meta(&"tamed_until")
+	remove_from_group(&"pets")
+	if not is_in_group(&"enemies"):
+		add_to_group(&"enemies")
 
 
 ## True while performing a charge/rush (spikes punish it harder).
@@ -223,7 +253,8 @@ func receive_hit(info: DamageInfo) -> float:
 			info.tag = "Exposed"
 	# Spell combination: fire shatters frozen enemies.
 	if info.damage_type == &"fire" and status.has(&"frozen"):
-		info.amount *= 2.0
+		var src = info.source
+		info.amount *= 2.0 + ((src as Player).abilities.passive_power(&"shatter_mastery") if is_instance_valid(src) and src is Player else 0.0)
 		info.tag = "Shatter!"
 		status.remove(&"frozen")
 	var inc := status.incoming(info.damage_type)

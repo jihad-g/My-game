@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"rapid_shot"
+display_name = "Rapid Shot"
+description = "Shoot 5 arrows very fast (needs a bow and arrows)."
+effect = &"rapid_shot"
+unlock_level = 38
+cost_type = 2
+cost = 18
+cooldown = 10
+damage = 8
+damage_type = &"physical"
+radius = 0
+range = 30
+duration = 0
+power = 5
+required_mana_control = 0
+icon_color = Color(0.55, 0.85, 0.45, 1)
+icon_glyph = "RSh"
+class_id = &"assassin"
+passive = false
+animation = &""
+anim_time = 0.5

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"tome_light"
+display_name = "Tome: Light"
+description = "A small light follows you for 5 minutes - in caves and at night. Requires Mana Control 0."
+category = 6
+rarity = 1
+max_stack = 1
+base_value = 60
+icon_color = Color(1, 0.95, 0.7, 1)
+icon_glyph = "Bk"
+teaches_spell = &"light"

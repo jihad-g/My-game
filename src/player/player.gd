@@ -455,6 +455,8 @@ func _apply_gravity(delta: float) -> void:
 		velocity.y = maxf(velocity.y, -0.1)
 	else:
 		velocity.y -= gravity * delta
+		if abilities.has_buff(&"feather_fall") and velocity.y < -2.5:
+			velocity.y = -2.5  # Feather Fall (Milestone 17c)
 
 
 # --- Facing / aiming ----------------------------------------------------------------
@@ -570,10 +572,18 @@ func _move_dash(delta: float) -> void:
 		velocity.z *= 0.2
 
 
+## Acrobat (Milestone 17c): the next dodge may follow at once.
+var _acrobat_chain := false
+
+
 func _end_dodge() -> void:
 	state = State.NORMAL
 	health.invulnerable = false
 	_dodge_cooldown_left = dodge_cooldown
+	if abilities.has_passive(&"acrobat"):
+		_acrobat_chain = not _acrobat_chain
+		if _acrobat_chain:
+			_dodge_cooldown_left = 0.0
 	collision_mask |= Layers.ENEMY
 
 
@@ -602,6 +612,10 @@ func receive_hit(info: DamageInfo) -> void:
 	if abilities.has_buff(&"evasion") and randf() < abilities.buff_power(&"evasion", 0.5):
 		Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, true, "Evaded")
 		return
+	var blocked_by := abilities.block_hit(info)
+	if blocked_by != "":
+		Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, true, blocked_by)
+		return
 	if abilities.has_buff(&"shield_wall") and _is_in_front(info):
 		Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, true, "Shield Wall")
 		Audio.play(&"block", -3.0)
@@ -621,6 +635,7 @@ func receive_hit(info: DamageInfo) -> void:
 			* (1.0 - abilities.passive_power(&"bulwark"))
 		if stamina.current >= cost:
 			stamina.consume(cost, false)
+			abilities.on_blocked(info, blocked)
 			info.amount -= blocked
 			info.knockback *= 0.4
 			info.poise_damage *= 0.3
@@ -644,6 +659,9 @@ func receive_hit(info: DamageInfo) -> void:
 		info.amount = abilities.absorb(info.amount)
 		if info.amount < before and info.amount <= 0.0:
 			info.tag = "Absorbed"
+	if abilities.has_buff(&"undying") and info.amount >= health.current:
+		info.amount = maxf(health.current - 1.0, 0.0)
+		info.tag = "Undying"
 	var dealt := health.apply_damage(info)
 	if dealt > 0.0:
 		abilities.on_damage_taken(dealt)
@@ -654,7 +672,7 @@ func receive_hit(info: DamageInfo) -> void:
 		info.knockback = Vector3.ZERO
 		info.poise_damage = 0.0
 	_knockback += Vector3(info.knockback.x, 0, info.knockback.z)
-	if info.poise_damage >= 30.0 and state != State.DODGING:
+	if info.poise_damage >= 30.0 * (1.0 + abilities.passive_power(&"unbreakable")) and state != State.DODGING:
 		_stagger(0.45)
 	for e in info.status_effects:
 		afflict(StringName(e[0]), float(e[1]), e[2] if e.size() > 2 else {})

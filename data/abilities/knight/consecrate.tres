@@ -22,3 +22,5 @@ icon_color = Color(0.6, 0.75, 1.0, 1)
 icon_glyph = "Cs"
 class_id = &"knight"
 passive = false
+animation = &"kneel"
+anim_time = 0.6

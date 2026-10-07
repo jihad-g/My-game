@@ -22,3 +22,5 @@ icon_color = Color(1, 0.45, 0.3, 1)
 icon_glyph = "2W"
 class_id = &"barbarian"
 passive = false
+animation = &"flex"
+anim_time = 0.6

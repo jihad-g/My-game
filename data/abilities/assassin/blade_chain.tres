@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"blade_chain"
+display_name = "Blade Chain"
+description = "Teleport between up to 4 enemies and hit each one."
+effect = &"blade_chain"
+unlock_level = 56
+cost_type = 2
+cost = 24
+cooldown = 14
+damage = 18
+damage_type = &"physical"
+radius = 10
+range = 0
+duration = 0
+power = 4
+required_mana_control = 0
+icon_color = Color(0.55, 0.85, 0.45, 1)
+icon_glyph = "BC"
+class_id = &"assassin"
+passive = false
+animation = &""
+anim_time = 0.5

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"tome_earth_spike"
+display_name = "Tome: Earth Spike"
+description = "A spike of stone shoots out of the ground under an enemy and throws it off its feet. Requires Mana Control 12."
+category = 6
+rarity = 2
+max_stack = 1
+base_value = 204
+icon_color = Color(0.65, 0.55, 0.4, 1)
+icon_glyph = "Bk"
+teaches_spell = &"earth_spike"

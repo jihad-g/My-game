@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"absolute_zero"
+display_name = "Absolute Zero"
+description = "Freeze every enemy within 10 m for 3 s."
+effect = &"absolute_zero"
+unlock_level = 54
+cost_type = 1
+cost = 45
+cooldown = 35
+damage = 16
+damage_type = &"frost"
+radius = 10
+range = 0
+duration = 3
+power = 0
+required_mana_control = 0
+icon_color = Color(0.6, 0.9, 1, 1)
+icon_glyph = "AZ"
+class_id = &"wizard"
+passive = false
+animation = &"stomp"
+anim_time = 0.5

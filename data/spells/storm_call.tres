@@ -21,3 +21,5 @@ power = 8
 required_mana_control = 60
 icon_color = Color(0.75, 0.85, 1, 1)
 icon_glyph = "SC"
+animation = &"cast_up"
+anim_time = 0.8

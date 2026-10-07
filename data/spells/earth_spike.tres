@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"earth_spike"
+display_name = "Earth Spike"
+description = "A spike of stone shoots out of the ground under an enemy and throws it off its feet."
+effect = &"earth_spike"
+unlock_level = 1
+cost_type = 1
+cost = 20
+cooldown = 8
+damage = 26
+damage_type = &"physical"
+radius = 0
+range = 16
+duration = 1.0
+power = 0
+required_mana_control = 12
+icon_color = Color(0.65, 0.55, 0.4, 1)
+icon_glyph = "ES"
+class_id = &""
+passive = false
+animation = &"stomp"
+anim_time = 0.4

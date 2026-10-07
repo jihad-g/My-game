@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"tome_lightning_dash"
+display_name = "Tome: Lightning Dash"
+description = "Turn into lightning and dash 12 m, shocking every enemy you pass. Requires Mana Control 22."
+category = 6
+rarity = 3
+max_stack = 1
+base_value = 324
+icon_color = Color(0.8, 0.85, 1, 1)
+icon_glyph = "Bk"
+teaches_spell = &"lightning_dash"

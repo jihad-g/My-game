@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"shardfall"
+display_name = "Shardfall"
+description = "Call down a burning shard from the sky. Huge damage, and it leaves crystals behind."
+effect = &"shardfall"
+unlock_level = 1
+cost_type = 1
+cost = 70
+cooldown = 40
+damage = 120
+damage_type = &"fire"
+radius = 4
+range = 18
+duration = 0
+power = 0
+required_mana_control = 40
+icon_color = Color(0.8, 0.6, 1, 1)
+icon_glyph = "Sf"
+class_id = &""
+passive = false
+animation = &"cast_up"
+anim_time = 0.8

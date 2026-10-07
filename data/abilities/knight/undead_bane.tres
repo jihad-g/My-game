@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"undead_bane"
+display_name = "Undead Bane"
+description = "Passive: +25% damage against undead."
+effect = &"undead_bane"
+unlock_level = 42
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 0.25
+required_mana_control = 0
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "UB"
+class_id = &"knight"
+passive = true
+animation = &""
+anim_time = 0.5

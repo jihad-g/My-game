@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"glacial_spike"
+display_name = "Glacial Spike"
+description = "A big spike of ice that freezes the target for 2 s."
+effect = &"glacial_spike"
+unlock_level = 36
+cost_type = 1
+cost = 24
+cooldown = 9
+damage = 30
+damage_type = &"frost"
+radius = 0
+range = 20
+duration = 2
+power = 0
+required_mana_control = 0
+icon_color = Color(0.6, 0.9, 1, 1)
+icon_glyph = "GSp"
+class_id = &"wizard"
+passive = false
+animation = &"push"
+anim_time = 0.4

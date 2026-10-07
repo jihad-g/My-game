@@ -65,7 +65,7 @@ static func kingdom_quest(info: SettlementInfo) -> Dictionary:
 				"text": "Clear a dungeon of rank %s or higher" % PoiInfo.RANKS[rank]},
 			{"goal": "return", "hint": "giver", "text": "Return to the ruler of %s" % info.kingdom_name},
 		],
-		"rewards": {"xp": 900, "coins": 600, "rep": 20.0, "title_tier": 3},
+		"rewards": {"xp": 900, "coins": 600, "rep": 20.0, "title_tier": 3, "items": {&"tome_earth_wall": 1}},
 	}
 
 

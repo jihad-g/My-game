@@ -98,6 +98,10 @@ func start(id: StringName, extra: Dictionary = {}) -> bool:
 func _advance(id: StringName) -> void:
 	var q := definition(id)
 	var st: Dictionary = active[id]
+	# Milestone 17c: the Keepers' fall teaches the way home - a Tome of Recall.
+	if id == QuestBook.MAIN and String(current_step(id).get("goal", "")) == "keepers" and world and world.player:
+		world.player.give_or_drop(&"tome_recall", 1)
+		Events.toast.emit("The Great Shards hum together... you found a Tome: Recall", Color(0.75, 0.6, 1.0))
 	st.step = int(st.step) + 1
 	st.progress = 0
 	if int(st.step) >= (q.steps as Array).size():

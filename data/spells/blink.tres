@@ -21,3 +21,5 @@ power = 0
 required_mana_control = 10
 icon_color = Color(0.75, 0.55, 1, 1)
 icon_glyph = "Bk"
+animation = &"crouch"
+anim_time = 0.25

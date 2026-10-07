@@ -22,3 +22,5 @@ icon_color = Color(0.75, 0.55, 1.0, 1)
 icon_glyph = "TW"
 class_id = &"wizard"
 passive = false
+animation = &"cast_up"
+anim_time = 0.5

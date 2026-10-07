@@ -22,3 +22,5 @@ icon_color = Color(0.6, 0.75, 1.0, 1)
 icon_glyph = "Th"
 class_id = &"knight"
 passive = false
+animation = &"throw"
+anim_time = 0.35

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"flame_pillar"
+display_name = "Flame Pillar"
+description = "A pillar of fire at the cursor that throws enemies off their feet."
+effect = &"flame_pillar"
+unlock_level = 34
+cost_type = 1
+cost = 26
+cooldown = 10
+damage = 34
+damage_type = &"fire"
+radius = 2.4
+range = 16
+duration = 1.0
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.5, 0.2, 1)
+icon_glyph = "FP"
+class_id = &"wizard"
+passive = false
+animation = &"cast_up"
+anim_time = 0.45

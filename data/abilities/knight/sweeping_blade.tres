@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"sweeping_blade"
+display_name = "Sweeping Blade"
+description = "A full circle with your weapon that pushes enemies back."
+effect = &"sweeping_blade"
+unlock_level = 46
+cost_type = 2
+cost = 18
+cooldown = 8
+damage = 20
+damage_type = &"physical"
+radius = 3.2
+range = 0
+duration = 0
+power = 0
+required_mana_control = 0
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "SwB"
+class_id = &"knight"
+passive = false
+animation = &""
+anim_time = 0.5

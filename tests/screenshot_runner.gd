@@ -31,6 +31,10 @@ func _ready() -> void:
 		await _wilds_showcase()
 		get_tree().quit()
 		return
+	if "--only=poses" in OS.get_cmdline_user_args():
+		await _poses_showcase()
+		get_tree().quit()
+		return
 	if "--only=book" in OS.get_cmdline_user_args():
 		await _book_showcase()
 		get_tree().quit()
@@ -380,6 +384,57 @@ func _gear_showcase() -> void:
 	m2._select_class(&"assassin")
 	await _wait(20)
 	await _shot("41_class_picker")
+
+
+## Milestone 17c: ability poses, a two-handed stance and drawing a bow.
+func _poses_showcase() -> void:
+	var root := Node3D.new()
+	add_child(root)
+	var cam := Camera3D.new()
+	cam.position = Vector3(0, 1.5, 8.4)
+	cam.rotation_degrees = Vector3(-6, 0, 0)
+	cam.fov = 45.0
+	root.add_child(cam)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-45, 25, 0)
+	root.add_child(sun)
+	var env := WorldEnvironment.new()
+	env.environment = Environment.new()
+	env.environment.background_mode = Environment.BG_COLOR
+	env.environment.background_color = Color(0.34, 0.38, 0.48)
+	env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.environment.ambient_light_color = Color(0.75, 0.75, 0.8)
+	env.environment.ambient_light_energy = 0.7
+	root.add_child(env)
+	# [class, weapon, pose or attack]
+	var specs := [[&"barbarian", &"", &"roar"], [&"knight", &"", &"pray"], [&"wizard", &"", &"cast_up"],
+		[&"assassin", &"", &"crouch"], [&"barbarian", &"iron_greatsword", &""], [&"assassin", &"recurve_bow", &"aim"],
+		[&"knight", &"", &"guard"], [&"wizard", &"", &"push"]]
+	var models: Array[HumanoidModel] = []
+	for i in specs.size():
+		var s: Array = specs[i]
+		var eq := ClassPicker.starting_equipment(ClassRegistry.get_class_data(s[0]))
+		if s[1] != &"":
+			eq.equip(ItemDB.get_item(s[1]))
+		var m := HumanoidModel.new()
+		root.add_child(m)
+		m.position = Vector3(-5.25 + i * 1.5, 0, 0)
+		m.rotation.y = 0.7
+		m.set_appearance(ClassRegistry.get_class_data(s[0]))
+		m.set_body(CharacterLook.default_for(s[0]))
+		m.set_outfit(eq.outfit_ids(), eq.weapon().id if eq.weapon() else &"")
+		m.set_weapon(eq.weapon_type(), eq.has_shield())
+		models.append(m)
+	await _wait(5)
+	for i in specs.size():
+		var pose: StringName = specs[i][2]
+		if pose == &"aim":
+			models[i].play_attack(&"aim", 0.2, 0.1, 0.3, true)
+		elif pose != &"":
+			models[i].play_pose(pose, 3.0)
+	await _wait(40)
+	await _shot("80_ability_poses")
+	root.queue_free()
 
 
 ## Milestone 17b: the ability book and the 6 + 3 bar of a level 20 Knight at a campfire.

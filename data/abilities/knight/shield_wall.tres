@@ -22,3 +22,5 @@ icon_color = Color(0.6, 0.75, 1.0, 1)
 icon_glyph = "SW"
 class_id = &"knight"
 passive = false
+animation = &"guard"
+anim_time = 1.0

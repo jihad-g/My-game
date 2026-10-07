@@ -22,3 +22,5 @@ icon_color = Color(0.8, 0.85, 1, 1)
 icon_glyph = "BLt"
 class_id = &"wizard"
 passive = false
+animation = &"push"
+anim_time = 0.45

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"berserkers_wrath"
+display_name = "Berserker's Wrath"
+description = "Your next 3 hits are always critical hits."
+effect = &"berserkers_wrath"
+unlock_level = 48
+cost_type = 3
+cost = 30
+cooldown = 20
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 3
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "BW"
+class_id = &"barbarian"
+passive = false
+animation = &"flex"
+anim_time = 0.5

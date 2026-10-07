@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"earthquake"
+display_name = "Earthquake"
+description = "The ground shakes for 5 s. Enemies near you stumble and take damage."
+effect = &"earthquake"
+unlock_level = 44
+cost_type = 2
+cost = 30
+cooldown = 24
+damage = 8
+damage_type = &"physical"
+radius = 6
+range = 0
+duration = 5
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "Eq"
+class_id = &"barbarian"
+passive = false
+animation = &"stomp"
+anim_time = 0.6

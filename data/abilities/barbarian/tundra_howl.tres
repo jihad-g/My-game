@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"tundra_howl"
+display_name = "Tundra Howl"
+description = "The war cry of the tundra clans: +15% damage for 10 s."
+effect = &"tundra_howl"
+unlock_level = 36
+cost_type = 2
+cost = 15
+cooldown = 30
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 10
+power = 0.15
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "TH"
+class_id = &"barbarian"
+passive = false
+animation = &"roar"
+anim_time = 0.7

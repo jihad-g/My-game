@@ -2,7 +2,8 @@
 
 **Status:** the weapons (section 5) and the new attacks are **done in Milestone 17a (v0.17.0)**. The ability
 book, the 6-slot bar and the abilities for **levels 2–30 are done in Milestone 17b (v0.18.0)**. The abilities for
-levels 32–100 and the shared spells (section 6) are **NOT IMPLEMENTED yet** — they come in M17c–M17d.
+**levels 32–64, the 20 shared spells and the animations are done in Milestone 17c (v0.19.0)**. The abilities for
+levels 66–100 and the ultimates are **NOT IMPLEMENTED yet** — they come in M17d.
 Change, remove or add anything before we build it.
 
 What is in this list:
@@ -50,12 +51,12 @@ Rage · axes, war hammers, greatswords · crowds and raw power.
 | 26 | Blood Frenzy | Passive | +25% damage while your health is below 30%. |
 | 28 | Unstoppable | Active | For 6 s nothing can stagger you or knock you back. |
 | 30 | Second Wind | Active | Spend 40 Rage to heal 25% over 5 s. |
-| 32 | Iron Hide | Passive | +10 armour while you have more than 50 Rage. |
+| 32 | Iron Hide | Passive | 8% less damage taken while you have more than 50 Rage. |
 | 34 | Avalanche | Active | Three slams in a row, each one a step forward. |
-| 36 | Tundra Howl | Active | The war cry of the tundra clans. You and your friends near you get +15% damage for 10 s. |
+| 36 | Tundra Howl | Active | The war cry of the tundra clans: +15% damage for 10 s (friends in M18). |
 | 38 | Rampage | Active | Run forward for 4 s and knock down every enemy in your way. |
 | 40 | Execute | Active | Big damage to an enemy below 25% health. Gives all the Rage back if it kills. |
-| 42 | Bone Breaker | Passive | Heavy attacks lower the enemy's armour by 10% (stacks 3 times). |
+| 42 | Bone Breaker | Passive | Heavy attacks crack armour: the enemy takes 5% more damage from you (stacks 3 times). |
 | 44 | Earthquake | Active | The ground shakes for 5 s. Enemies near you stumble and take damage. |
 | 46 | Titan Grip | Passive | Two-handed weapons swing 10% faster. |
 | 48 | Berserker's Wrath | Active | Your next 3 hits are always critical hits. |
@@ -107,21 +108,21 @@ Mana · swords, shields, spears, greatswords · defence, holy light, protecting 
 | 26 | Pommel Strike | Active | A fast hit with the handle that stuns for 1 s. |
 | 28 | Bulwark | Passive | Blocking uses 20% less stamina. |
 | 30 | Charge of the Order | Active | A long 15 m charge that knocks enemies down. |
-| 32 | Oath of Protection | Active | Link to a friend: you take 30% of their damage. Alone: you take 15% less damage for 10 s. |
+| 32 | Oath of Protection | Active | You take 15% less damage for 10 s (linking to a friend comes with co-op in M18). |
 | 34 | Smite | Active | Holy lightning strikes your target from the sky. |
 | 36 | Retribution | Passive | Hits you block deal 10% of their damage back to the attacker. |
 | 38 | Shield Combo | Active | Three fast hits with the shield. The last one knocks the enemy back. |
-| 40 | Banner of the Realm | Active | Plant a banner for 15 s. You and friends near it get +armour and regenerate health. |
+| 40 | Banner of the Realm | Active | Plant a banner for 15 s. Near it you take 15% less damage and heal 1% every second. |
 | 42 | Undead Bane | Passive | +25% damage against undead. |
 | 44 | Divine Shield | Active | Nothing can hurt you for 2 s. (90-second cooldown) |
 | 46 | Sweeping Blade | Active | A full circle with your sword that pushes enemies back. |
 | 48 | Rally | Passive | Below 40% health you heal 2% every second for 5 s (once a minute). |
-| 50 | Holy Weapon | Active | For 15 s your weapon glows and deals holy damage. |
-| 52 | Hold the Line | Active | Stand still for 5 s: you block everything and send arrows and spells back. |
+| 50 | Holy Weapon | Active | For 15 s your weapon glows: +15% damage, +50% against undead. |
+| 52 | Hold the Line | Active | For 5 s you block every hit from every side, but you barely move. |
 | 54 | Discipline | Passive | Ability cooldowns are 10% faster. |
 | 56 | Hammer of Justice | Active | Throw a glowing hammer. It stuns the target for 3 s. |
 | 58 | Knight's Honour | Passive | +15% damage when only one enemy is near you (a fair duel). |
-| 60 | Aegis | Active | A dome of light for 6 s that stops arrows and spells. |
+| 60 | Aegis | Active | A dome of light for 6 s: attacks from outside it can't hurt you. |
 | 62 | Crusader Strike | Active | A hit that heals you by half the damage it deals. |
 | 64 | Unbreakable | Passive | +30% poise. |
 | 66 | Lance Charge | Active | A charge with a spear. The longer you run, the harder the hit. |
@@ -168,8 +169,8 @@ Mana · staffs, wands, tomes · fire, frost, lightning and arcane magic.
 | 34 | Flame Pillar | Active | A pillar of fire at the cursor that throws enemies into the air. |
 | 36 | Glacial Spike | Active | A big spike of ice that freezes the target for 2 s. |
 | 38 | Mana Siphon | Active | Take mana and health from an enemy. |
-| 40 | Elemental Weakness | Active | Mark a target: it takes +20% damage from the next element that hits it. |
-| 42 | Quick Cast | Passive | Spells cast 15% faster. |
+| 40 | Elemental Weakness | Active | Mark a target: it takes +20% damage from you for 8 s. |
+| 42 | Quick Cast | Passive | Spell and ability cooldowns are 15% shorter. |
 | 44 | Comet Shower | Active | 6 small comets fall around the cursor. |
 | 46 | Frozen Orb | Active | An orb that flies forward and shoots pieces of ice in all directions. |
 | 48 | Lightning Rod | Active | Place a rod. For 8 s lightning hits every enemy near it. |
@@ -225,12 +226,12 @@ Mana · daggers, bows · stealth, poison, critical hits and speed.
 | 34 | Paralytic Poison | Active | For 12 s your hits slow, and every 5th hit stuns. |
 | 36 | Ambush Mastery | Passive | Ambush hits from stealth deal ×2.5 instead of ×2. |
 | 38 | Rapid Shot | Active | Shoot 5 arrows very fast (needs a bow). |
-| 40 | Silent Kill | Passive | If you kill an enemy from stealth, you stay hidden. |
+| 40 | Silent Kill | Passive | If you kill an enemy with an ambush, you stay hidden for 3 more seconds. |
 | 42 | Shadow Dance | Active | For 6 s your attacks do not break stealth. |
 | 44 | Kidney Shot | Active | From behind: stun the target for 3 s. |
 | 46 | Explosive Trap | Active | Hide a trap on the ground. It explodes when an enemy steps on it. |
 | 48 | Night Hunter | Passive | +15% damage at night. |
-| 50 | Assassinate | Active | From stealth: kill a normal enemy below 30% health at once. Bosses take huge damage. |
+| 50 | Assassinate | Active | x3 damage; from stealth it kills a normal enemy below 30% health at once. |
 | 52 | Toxic Burst | Active | All poison on the target explodes at once. |
 | 54 | Acrobat | Passive | You can dodge twice in a row. |
 | 56 | Blade Chain | Active | Teleport between up to 4 enemies and hit each one. |
@@ -303,24 +304,24 @@ them as rewards. Wizards cast them stronger (their Mana Control talent). They go
 
 | # | Spell | Level | Where you get the tome | What it does |
 |---:|---|---:|---|---|
-| 1 | Light | 1 | Village shops | A small light follows you in caves and at night. Night-only creatures keep away. |
-| 2 | Haste | 4 | Village shops | +30% move speed for 8 s. |
+| 1 | Light | 1 | Village shops | A small light follows you for 5 minutes, in caves and at night. |
+| 2 | Haste | 4 | Village shops | +25% move speed for 8 s. |
 | 3 | Gust | 6 | Tower chests | A strong wind pushes enemies back and puts out fire. Gust into Miasma spreads the cloud. |
 | 4 | Root Snare | 8 | Hidden groves | Vines hold an enemy in place for 3 s. |
 | 5 | Stone Skin | 10 | Ruin chests | +armour for 10 s, but you move slower. |
-| 6 | Rejuvenate | 10 | Temples | Heal over time for 10 s. Friends near you heal too. |
-| 7 | Feather Fall | 12 | Tower wardens | No fall damage for 30 s, and you fall slowly. |
+| 6 | Rejuvenate | 10 | Temples | Heal 30% over 10 s (healing friends comes with co-op in M18). |
+| 7 | Feather Fall | 12 | Tower chests, royal merchants | You fall slowly for 30 s. |
 | 8 | Frost Path | 14 | Tundra treasure | Freeze water in front of you so you can walk over lakes and rivers. |
 | 9 | Earth Spike | 16 | Ruin chests | A spike of stone shoots out of the ground under an enemy. |
 | 10 | Spark Shield | 18 | Tower chests | For 10 s, enemies who hit you are shocked. |
-| 11 | Detect Treasure | 20 | Shipwrecks | For 60 s, chests and buried caches near you glow through walls. |
+| 11 | Detect Treasure | 20 | Shipwrecks | For 60 s, unopened chests near you shine with a beam of light. |
 | 12 | Tame Beast | 22 | Hidden groves | A wild animal (wolf, boar, deer) follows and helps you for 5 minutes. |
 | 13 | Summon Spirit Wolf | 24 | Tundra camps | A spirit wolf fights with you for 20 s and makes enemies attack it. |
 | 14 | Fire Ring | 26 | Grotto dungeons | A ring of fire around you for 6 s. |
 | 15 | Lightning Dash | 30 | Sanctum dungeons | Turn into lightning and dash 12 m, shocking enemies you pass. |
 | 16 | Drain Life | 32 | Crypt dungeons | Hold to take health from an enemy for 3 s. |
 | 17 | Earth Wall | 35 | Kingdom rulers (royal errand reward) | Raise a wall of stone for 10 s. It blocks enemies and arrows. |
-| 18 | Silence | 38 | Tower wardens | The target can't cast spells for 5 s. |
+| 18 | Silence | 38 | Towers, royal merchants | The target can't cast spells for 5 s. |
 | 19 | Recall | 40 | The main quest (after the Shard Keepers) | Teleport home to your bed after 5 s of casting. |
 | 20 | Shardfall | 50 | Dropped by the Starborn Colossus | Call down a burning shard from the sky. Huge damage, leaves crystals behind. |
 
@@ -338,5 +339,5 @@ nothing could be tested along the way. So I suggest building it in steps, and ev
 2. **M17b: The ability book.** ✅ Done (v0.18.0).
    - The 6+2 slot bar, choosing abilities at a bed or campfire, and passives.
    - Abilities for levels 2–30 (15 per class).
-3. **M17c: Abilities for levels 32–64** (17 per class) **and the 20 shared spells.**
+3. **M17c: Abilities for levels 32–64** ✅ Done (v0.19.0), with the animations (17 per class) **and the 20 shared spells.**
 4. **M17d: Abilities for levels 66–100** (18 per class), **the ultimates, and the new animations.**

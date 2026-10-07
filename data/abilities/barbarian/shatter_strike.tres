@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"shatter_strike"
+display_name = "Shatter Strike"
+description = "Smash an enemy. Frozen or chilled enemies take triple damage."
+effect = &"shatter_strike"
+unlock_level = 58
+cost_type = 2
+cost = 18
+cooldown = 8
+damage = 24
+damage_type = &"physical"
+radius = 2.6
+range = 0
+duration = 0
+power = 3
+required_mana_control = 0
+icon_color = Color(0.6, 0.9, 1, 1)
+icon_glyph = "SS"
+class_id = &"barbarian"
+passive = false
+animation = &""
+anim_time = 0.5

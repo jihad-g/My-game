@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"rejuvenate"
+display_name = "Rejuvenate"
+description = "Heal 30% of your health over 10 s. (Healing friends comes with co-op.)"
+effect = &"rejuvenate"
+unlock_level = 1
+cost_type = 1
+cost = 25
+cooldown = 20
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 10
+power = 30
+required_mana_control = 8
+icon_color = Color(0.4, 1, 0.5, 1)
+icon_glyph = "Rj"
+class_id = &""
+passive = false
+animation = &"pray"
+anim_time = 0.5

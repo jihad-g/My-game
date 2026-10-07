@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"elemental_weakness"
+display_name = "Elemental Weakness"
+description = "Mark a target: it takes +20% damage from you for 8 s."
+effect = &"elemental_weakness"
+unlock_level = 40
+cost_type = 1
+cost = 15
+cooldown = 15
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 16
+duration = 8
+power = 0.2
+required_mana_control = 0
+icon_color = Color(0.75, 0.55, 1.0, 1)
+icon_glyph = "EW"
+class_id = &"wizard"
+passive = false
+animation = &"point"
+anim_time = 0.4

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"fire_tornado"
+display_name = "Fire Tornado"
+description = "A tornado of fire that moves forward for 5 s."
+effect = &"fire_tornado"
+unlock_level = 60
+cost_type = 1
+cost = 40
+cooldown = 18
+damage = 10
+damage_type = &"fire"
+radius = 2.2
+range = 14
+duration = 5
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.5, 0.2, 1)
+icon_glyph = "FT"
+class_id = &"wizard"
+passive = false
+animation = &"push"
+anim_time = 0.5

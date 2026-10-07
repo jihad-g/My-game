@@ -10,6 +10,9 @@ var tick := 0.5
 var color := Color(1, 1, 1, 0.35)
 ## func(enemies: Array[Node]) -> void
 var on_tick: Callable
+## Milestone 17c: the zone stays on this node (Fire Ring) or moves (Fire Tornado).
+var follow: Node3D
+var velocity := Vector3.ZERO
 
 var _t := 0.0
 var _next := 0.0
@@ -38,6 +41,13 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_t += delta
+	if follow and is_instance_valid(follow):
+		global_position = follow.global_position
+	elif velocity != Vector3.ZERO:
+		var p := global_position + velocity * delta
+		if World.instance:
+			p.y = World.instance.get_ground_height(p)
+		global_position = p
 	_next -= delta
 	if _next <= 0.0:
 		_next = tick

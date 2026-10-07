@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"stone_skin"
+display_name = "Stone Skin"
+description = "For 10 s you take 30% less damage, but you move 20% slower."
+effect = &"stone_skin"
+unlock_level = 1
+cost_type = 1
+cost = 20
+cooldown = 25
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 10
+power = 0.7
+required_mana_control = 8
+icon_color = Color(0.65, 0.6, 0.55, 1)
+icon_glyph = "StS"
+class_id = &""
+passive = false
+animation = &"flex"
+anim_time = 0.5

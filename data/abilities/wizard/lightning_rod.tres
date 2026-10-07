@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"lightning_rod"
+display_name = "Lightning Rod"
+description = "Place a rod at the cursor. For 8 s lightning hits every enemy near it."
+effect = &"lightning_rod"
+unlock_level = 48
+cost_type = 1
+cost = 34
+cooldown = 20
+damage = 14
+damage_type = &"lightning"
+radius = 5
+range = 14
+duration = 8
+power = 0
+required_mana_control = 0
+icon_color = Color(0.8, 0.85, 1, 1)
+icon_glyph = "LR"
+class_id = &"wizard"
+passive = false
+animation = &"cast_up"
+anim_time = 0.5

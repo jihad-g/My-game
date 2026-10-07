@@ -332,6 +332,10 @@ func _perform_hit() -> void:
 		if is_enemy and bonus.is_empty():
 			bonus = player.abilities.consume_attack_bonus()
 		var info := build_damage(current, t, bonus if is_enemy else {})
+		if is_enemy and heavy and player.abilities.has_passive(&"bone_breaker"):
+			# Bone Breaker (Milestone 17c): heavy hits crack armour for 10 s (3 stacks).
+			t.set_meta(&"sunder", mini(int(t.get_meta(&"sunder", 0)) + 1, 3))
+			t.set_meta(&"sunder_until", Time.get_ticks_msec() + 10000)
 		if is_enemy and heavy and float(t.get("barrier") if t.get("barrier") != null else 0.0) > 0.0:
 			info.amount *= maxf(weapon_param(&"shield_break"), 1.0)
 		var dealt = t.receive_hit(info)
@@ -361,6 +365,8 @@ func _after_hit(t: Node, info: DamageInfo, dealt: float, heavy: bool, attack: At
 	var burn := weapon_param(&"on_hit_burn")
 	if burn > 0.0:
 		t.apply_status(&"burn", burn, {"dps": 4.0 * player.character.physical_mult, "source": player})
+	if info.is_crit and player.abilities.has_passive(&"bleeding_edge"):
+		t.apply_status(&"bleed", 6.0, {"dps": player.abilities.passive_power(&"bleeding_edge"), "source": player})
 	if info.is_crit and weapon_param(&"crit_poison") > 0.0:
 		t.apply_status(&"poison", 5.0, {"dps": 3.0, "source": player})
 	var heal := weapon_param(&"undead_heal")

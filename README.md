@@ -5,7 +5,12 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 17b — Heroes' Arsenal, part 2 (v0.18.0)**: the ability book (L). Every class now learns a new
+> Status: **Milestone 17c — Heroes' Arsenal, part 3 (v0.19.0)**: 68 more class abilities (levels 32–64), 20 shared
+> spells that any class can learn from tomes (Light, Haste, Tame Beast, Spirit Wolf, Frost Path, Recall,
+> Shardfall...), and animations: abilities and spells have their own poses, greatswords and war hammers are held
+> with both hands, and bows are drawn properly.
+>
+> Before that, **Milestone 17b — Heroes' Arsenal, part 2 (v0.18.0)**: the ability book (L). Every class now learns a new
 > ability every two levels - 15 new abilities per class up to level 30, 60 in total, including passives that are
 > always on. Put your favourite six on the bar (Z X C T V U) while resting at a bed or a campfire. A tome in your off
 > hand opens a third spell slot (N).
@@ -37,10 +42,12 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 > noticed. A Knight in shadow clothes with daggers plays like an Assassin; the class keeps a small talent, so
 > a Wizard is never a Knight's equal. Built on the beta (Milestone 13: tutorial, guide, settings and
 > accessibility, save recovery, crash reports, achievements, release builds - [`docs/RELEASE.md`](docs/RELEASE.md)).
-> Download a Windows build from [`releases/`](releases/) (v0.18.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
+> Download a Windows build from [`releases/`](releases/) (v0.19.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
 > performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
 > design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md). See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
+
+![Ability poses](docs/screenshots/ability_poses.png)
 
 ![The ability book](docs/screenshots/ability_book.png)
 

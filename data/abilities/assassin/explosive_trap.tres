@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"explosive_trap"
+display_name = "Explosive Trap"
+description = "Hide a trap at your feet. It explodes when an enemy steps on it."
+effect = &"explosive_trap"
+unlock_level = 46
+cost_type = 2
+cost = 15
+cooldown = 12
+damage = 40
+damage_type = &"physical"
+radius = 3
+range = 0
+duration = 60
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.5, 0.2, 1)
+icon_glyph = "ET"
+class_id = &"assassin"
+passive = false
+animation = &"kneel"
+anim_time = 0.4

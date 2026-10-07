@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"smite"
+display_name = "Smite"
+description = "Holy lightning strikes your target from the sky."
+effect = &"smite"
+unlock_level = 34
+cost_type = 1
+cost = 20
+cooldown = 8
+damage = 34
+damage_type = &"holy"
+radius = 0
+range = 16
+duration = 0
+power = 0
+required_mana_control = 0
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "Sm"
+class_id = &"knight"
+passive = false
+animation = &"cast_up"
+anim_time = 0.45

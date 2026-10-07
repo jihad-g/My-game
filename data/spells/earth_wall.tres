@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"earth_wall"
+display_name = "Earth Wall"
+description = "Raise a wall of stone at the cursor for 10 s. It blocks enemies and arrows."
+effect = &"earth_wall"
+unlock_level = 1
+cost_type = 1
+cost = 30
+cooldown = 20
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 12
+duration = 10
+power = 7
+required_mana_control = 26
+icon_color = Color(0.6, 0.55, 0.45, 1)
+icon_glyph = "EWl"
+class_id = &""
+passive = false
+animation = &"stomp"
+anim_time = 0.5

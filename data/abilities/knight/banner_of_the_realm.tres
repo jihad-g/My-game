@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"banner_of_the_realm"
+display_name = "Banner of the Realm"
+description = "Plant a banner for 15 s. Near it you take 15% less damage and heal 1% every second."
+effect = &"banner_of_the_realm"
+unlock_level = 40
+cost_type = 2
+cost = 20
+cooldown = 40
+damage = 0
+damage_type = &"physical"
+radius = 6
+range = 0
+duration = 15
+power = 0
+required_mana_control = 0
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "Bn"
+class_id = &"knight"
+passive = false
+animation = &"kneel"
+anim_time = 0.6

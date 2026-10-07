@@ -44,6 +44,11 @@ var _swim_blend := 0.0
 var _air_blend := 0.0
 var _cast_t := 0.0
 var _cast_len := 0.0
+## Milestone 17c: ability poses (play_pose) and the attack animation playing now.
+var _pose: StringName = &""
+var _pose_t := 0.0
+var _pose_len := 0.0
+var _anim: StringName = &""
 var _last_step_sign := 0.0
 var _look := 0.0
 var _was_swimming := false
@@ -607,15 +612,17 @@ func _build_weapon() -> void:
 			_part(_weapon, Vector3(0, 0, 0.4), Vector3(0.06, 0.06, 1.1), wood)
 			_part(_weapon, Vector3(0, -0.1, 0.92), Vector3(0.05, 0.25, 0.14), steel * 0.8)
 		&"bow":
-			# The player's bows are tinted by the item (mithril, star metal) and a bit bigger.
+			# The player's bows are tinted by the item (mithril, star metal), a bit bigger,
+			# and held in the left hand (Milestone 17c) so the right hand can draw.
 			var bw := _weapon_item.icon_color if _weapon_item else wood
 			var big := 1.25 if _weapon_item else 1.0
-			_part(_weapon, Vector3(0, 0.27 * big, 0.17), Vector3(0.06, 0.52 * big, 0.06), bw)
-			_part(_weapon, Vector3(0, -0.27 * big, 0.17), Vector3(0.06, 0.52 * big, 0.06), bw)
-			_part(_weapon, Vector3(0, 0.56 * big, 0.08), Vector3(0.05, 0.1, 0.12), bw * 0.85)
-			_part(_weapon, Vector3(0, -0.56 * big, 0.08), Vector3(0.05, 0.1, 0.12), bw * 0.85)
-			_part(_weapon, Vector3(0, 0, 0.3), Vector3(0.05, 0.2, 0.05), wood)
-			_part(_weapon, Vector3(0, 0, 0.04), Vector3(0.02, 1.15 * big, 0.02), Color(0.9, 0.9, 0.85))
+			var holder := _shield if _weapon_item else _weapon
+			_part(holder, Vector3(0, 0.27 * big, 0.17), Vector3(0.06, 0.52 * big, 0.06), bw)
+			_part(holder, Vector3(0, -0.27 * big, 0.17), Vector3(0.06, 0.52 * big, 0.06), bw)
+			_part(holder, Vector3(0, 0.56 * big, 0.08), Vector3(0.05, 0.1, 0.12), bw * 0.85)
+			_part(holder, Vector3(0, -0.56 * big, 0.08), Vector3(0.05, 0.1, 0.12), bw * 0.85)
+			_part(holder, Vector3(0, 0, 0.12), Vector3(0.05, 0.2, 0.08), wood)
+			_part(holder, Vector3(0, 0, 0.04), Vector3(0.02, 1.15 * big, 0.02), Color(0.9, 0.9, 0.85))
 		&"spear":
 			_part(_weapon, Vector3(0, 0, 0.5), Vector3(0.07, 0.07, 1.6), wood)
 			_part(_weapon, Vector3(0, 0, 1.36), Vector3(0.08, 0.04, 0.24), steel)
@@ -735,6 +742,7 @@ func play_attack(anim: StringName, windup: float, active: float, recovery: float
 		&"plunge":
 			ready_pose = Vector3(-3.1, 0.0, -0.3)
 			strike_pose = Vector3(-0.3, 0.0, 0.4)
+	_anim = anim
 	anim_event.emit("attack", [String(anim), windup, active, recovery])
 	_attack_tween = create_tween()
 	_attack_tween.tween_method(_set_attack_pose, Vector3(_attack_arm.x, _attack_arm.y, _attack_torso), ready_pose, windup).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
@@ -763,6 +771,7 @@ func release_attack() -> void:
 
 
 func cancel_attack() -> void:
+	_anim = &""
 	if _attack_tween:
 		_attack_tween.kill()
 	_set_trail(false)
@@ -824,6 +833,45 @@ func play_land(strength: float) -> void:
 	tw.tween_property(_root, "scale", Vector3.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
+## Milestone 17c: whole-body poses for abilities and spells, blended in and out
+## over `duration` seconds. Values: arm rotations (al/ar), forearm bends (fl/fr),
+## torso lean (tx) and body height (ry); "jump" makes an arc, "shake" trembles.
+const POSES := {
+	&"roar": {"al": Vector3(-0.5, 0.0, -1.3), "ar": Vector3(-0.5, 0.0, 1.3), "fl": -0.6, "fr": -0.6, "tx": -0.3},
+	&"pray": {"al": Vector3(-2.9, 0.3, 0.0), "ar": Vector3(-2.9, -0.3, 0.0), "fl": -0.1, "fr": -0.1, "tx": -0.15},
+	&"cast_up": {"al": Vector3(-1.0, 0.3, 0.0), "ar": Vector3(-3.0, 0.0, 0.15), "fl": -0.4, "fr": 0.0, "tx": -0.12},
+	&"push": {"al": Vector3(-1.6, 0.25, 0.0), "ar": Vector3(-1.6, -0.25, 0.0), "fl": 0.0, "fr": 0.0, "tx": 0.15},
+	&"stomp": {"al": Vector3(-0.3, 0.0, -0.7), "ar": Vector3(-0.3, 0.0, 0.7), "fl": -0.3, "fr": -0.3, "tx": 0.35, "ry": -0.18},
+	&"crouch": {"al": Vector3(-0.8, 0.4, 0.0), "ar": Vector3(-0.9, -0.4, 0.0), "fl": -1.0, "fr": -1.0, "tx": 0.45, "ry": -0.2},
+	&"channel": {"al": Vector3(-1.4, 0.4, 0.0), "ar": Vector3(-1.4, -0.4, 0.0), "fl": -0.6, "fr": -0.6, "tx": 0.05, "shake": true},
+	&"guard": {"al": Vector3(-1.4, 0.6, 0.0), "ar": Vector3(-1.2, -0.9, 0.0), "fl": -0.3, "fr": -0.2, "tx": 0.1},
+	&"throw": {"al": Vector3(-1.2, 0.0, -0.4), "ar": Vector3(-3.0, 0.3, 0.2), "fl": -0.2, "fr": -0.3, "tx": -0.25},
+	&"kneel": {"al": Vector3(-0.4, 0.0, -0.3), "ar": Vector3(-0.2, 0.0, 0.2), "fl": -0.4, "fr": -0.2, "tx": 0.5, "ry": -0.35},
+	&"leap": {"al": Vector3(-2.6, 0.2, 0.0), "ar": Vector3(-2.6, -0.2, 0.0), "fl": -0.2, "fr": -0.2, "tx": -0.2, "jump": 1.2},
+	&"flex": {"al": Vector3(-1.0, 0.0, -1.0), "ar": Vector3(-1.0, 0.0, 1.0), "fl": -2.0, "fr": -2.0, "tx": -0.1},
+	&"point": {"al": Vector3(-0.3, 0.2, -0.2), "ar": Vector3(-1.6, -0.1, 0.0), "fl": -0.3, "fr": 0.0, "tx": 0.05},
+}
+
+
+## Plays a pose from POSES for `duration` seconds (abilities and spells, Milestone 17c).
+func play_pose(pose: StringName, duration: float = 0.5) -> void:
+	if not POSES.has(pose):
+		return
+	anim_event.emit("pose", [String(pose), duration])
+	_pose = pose
+	_pose_len = maxf(duration, 0.2)
+	_pose_t = _pose_len
+
+
+func current_pose() -> StringName:
+	return _pose if _pose_t > 0.0 else &""
+
+
+## True for the player's two-handed melee weapons (greatswords, war hammers): both hands hold it.
+func _two_handed() -> bool:
+	return _weapon_item != null and _weapon_item.is_two_handed() and _weapon_type != &"bow"
+
+
 ## Both hands raised forward for `duration` seconds (spells).
 func play_cast(duration: float = 0.5) -> void:
 	anim_event.emit("cast", [duration])
@@ -882,16 +930,46 @@ func _process(delta: float) -> void:
 	_arm_l.rotation.z = lerpf(-0.04 - absf(breathe) * 2.0, -0.5, _air_blend)
 	_fore_l.rotation.x = -0.25 - 0.35 * m
 	_fore_r.rotation.x = -0.25 - 0.35 * m
-	if _blocking:
+	var two := _two_handed()
+	var bow_left := _weapon_type == &"bow" and _weapon_item != null
+	_shield.rotation.x = 0.0
+	if _blocking and two:
+		# Two-handed guard: the weapon held across, above the head.
+		_arm_l.rotation = Vector3(-1.75, 0.6, 0.0)
+		_arm_r.rotation = Vector3(-1.75, -0.5, 0.0)
+		_fore_l.rotation.x = -0.4
+		_fore_r.rotation.x = -0.4
+		_weapon.rotation = Vector3(0.0, -1.5, 0.0)
+	elif _blocking:
 		_arm_l.rotation = Vector3(-1.4, 0.6, 0.0)
 		_arm_r.rotation = Vector3(-1.2, -0.9, 0.0)
 		_fore_l.rotation.x = -0.3
 		_fore_r.rotation.x = -0.2
 		_weapon.rotation = Vector3(0.0, -1.2, 0.0)
+	elif _attack_arm != Vector2.ZERO and bow_left and _anim == &"aim":
+		# Drawing a bow: the left arm holds the bow out, the right hand pulls the string to the chest.
+		var pull := clampf(-_attack_arm.x / 1.55, 0.0, 1.0)
+		_arm_l.rotation = Vector3(-1.55 * pull, 0.2 * pull, 0.0)
+		_fore_l.rotation.x = 0.0
+		_arm_r.rotation = Vector3(-1.45 * pull, -0.55 * pull, 0.0)
+		_fore_r.rotation.x = -1.7 * pull
+		_shield.rotation.x = 1.55 * pull
+		_weapon.rotation = Vector3.ZERO
 	elif _attack_arm != Vector2.ZERO:
 		_arm_r.rotation = Vector3(_attack_arm.x, _attack_arm.y, 0.0)
 		_fore_r.rotation.x = -0.1
 		_weapon.rotation = Vector3.ZERO
+		if two:
+			# Both hands on the handle: the left arm follows the right one.
+			_arm_l.rotation = Vector3(_attack_arm.x + 0.15, _attack_arm.y + 0.7, 0.0)
+			_fore_l.rotation.x = -0.5
+	elif two and _air_blend < 0.5:
+		# Ready stance with a two-handed weapon held diagonally in front.
+		_arm_r.rotation = Vector3(-0.7 + swing * 0.2, -0.35, 0.0)
+		_arm_l.rotation = Vector3(-0.75 + swing * 0.2, 0.55, 0.0)
+		_fore_r.rotation.x = -0.9
+		_fore_l.rotation.x = -0.9
+		_weapon.rotation = Vector3(-0.2, -0.5, 0.0)
 	else:
 		_arm_r.rotation = Vector3(lerpf(swing * 0.8 - 0.25, -2.4, _air_blend), 0.0, lerpf(0.04, 0.5, _air_blend))
 		_weapon.rotation = Vector3(-0.9 + 0.25, 0.0, 0.0)
@@ -904,6 +982,23 @@ func _process(delta: float) -> void:
 		_arm_r.rotation = _arm_r.rotation.lerp(Vector3(-1.5 - shake, -0.35, 0.0), c)
 		_fore_l.rotation.x = lerpf(_fore_l.rotation.x, -0.5, c)
 		_fore_r.rotation.x = lerpf(_fore_r.rotation.x, -0.5, c)
+	# Ability poses (Milestone 17c).
+	if _pose_t > 0.0:
+		_pose_t -= delta
+		var pd: Dictionary = POSES[_pose]
+		var w := clampf(minf(_pose_t, _pose_len - _pose_t) / 0.12, 0.0, 1.0)
+		var sh := sin(_time * 40.0) * 0.05 if pd.get("shake", false) else 0.0
+		_arm_l.rotation = _arm_l.rotation.lerp((pd.al as Vector3) + Vector3(sh, 0, 0), w)
+		_arm_r.rotation = _arm_r.rotation.lerp((pd.ar as Vector3) - Vector3(sh, 0, 0), w)
+		_fore_l.rotation.x = lerpf(_fore_l.rotation.x, float(pd.fl), w)
+		_fore_r.rotation.x = lerpf(_fore_r.rotation.x, float(pd.fr), w)
+		_torso.rotation.x = lerpf(_torso.rotation.x, float(pd.tx), w)
+		var dy := float(pd.get("ry", 0.0)) * w
+		if pd.has("jump"):
+			dy += sin(clampf(1.0 - _pose_t / _pose_len, 0.0, 1.0) * PI) * float(pd.jump)
+		_root.position.y = dy
+		if _pose_t <= 0.0:
+			_root.position.y = 0.0
 	# Swimming: body flat, crawl strokes, flutter kicks.
 	var free_root := _dodge_tween == null or not _dodge_tween.is_running()
 	if free_root and (_swim_blend > 0.0 or _was_swimming):

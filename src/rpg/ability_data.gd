@@ -30,6 +30,10 @@ enum CostType { NONE, MANA, STAMINA, RAGE }
 ## Passive abilities are always on once learned; they never go on the bar.
 ## Their `effect` names the bonus and `power` its size (see PlayerAbilities.passive_power).
 @export var passive: bool = false
+## Milestone 17c: body pose played when it is used (HumanoidModel.POSES; "" = none / the
+## effect plays its own swing) and how long it lasts.
+@export var animation: StringName
+@export var anim_time: float = 0.5
 
 
 func cost_name() -> String:

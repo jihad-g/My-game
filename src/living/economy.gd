@@ -21,7 +21,7 @@ const STOCK := {
 		[&"stone_pickaxe", 1, 0], [&"wheat_seeds", 8, 0], [&"carrot_seeds", 8, 0], [&"sun_hat", 1, 0],
 		[&"padded_vest", 1, 0], [&"leather", 4, 1], [&"hearty_stew", 3, 2], [&"cooks_journal", 1, 2],
 		[&"shadow_hood", 1, 0], [&"wizard_hat", 1, 0], [&"raider_boots", 1, 1],
-		[&"wooden_shortbow", 1, 0], [&"wooden_arrow", 20, 0],
+		[&"wooden_shortbow", 1, 0], [&"wooden_arrow", 20, 0], [&"tome_light", 1, 0], [&"tome_haste", 1, 1],
 	],
 	&"blacksmith": [
 		[&"flint_knife", 1, 0], [&"rough_handaxe", 1, 0], [&"stone_pickaxe", 2, 0], [&"stone_hatchet", 2, 0],
@@ -45,7 +45,7 @@ const STOCK := {
 		[&"shadow_cloak", 1, 4], [&"moonpetal_pendant", 1, 4], [&"crystal_staff", 1, 3],
 		[&"horned_helm", 1, 0], [&"shadow_garb", 1, 1], [&"apprentice_wraps", 1, 1], [&"squire_plate", 1, 2],
 		[&"apprentice_wand", 1, 0], [&"copper_staff", 1, 0], [&"iron_staff", 1, 2], [&"embers_tome", 1, 3],
-		[&"master_weaponsmith_folio", 1, 3], [&"mithril_arrow", 20, 4],
+		[&"master_weaponsmith_folio", 1, 3], [&"mithril_arrow", 20, 4], [&"tome_feather_fall", 1, 1], [&"tome_silence", 1, 3],
 	],
 }
 

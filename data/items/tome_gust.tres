@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"tome_gust"
+display_name = "Tome: Gust"
+description = "A strong wind in front of you pushes enemies back and puts out fire. Gust into Miasma spreads the cloud. Requires Mana Control 5."
+category = 6
+rarity = 1
+max_stack = 1
+base_value = 120
+icon_color = Color(0.8, 0.95, 1, 1)
+icon_glyph = "Bk"
+teaches_spell = &"gust"

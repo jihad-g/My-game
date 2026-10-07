@@ -20,3 +20,5 @@ duration = 3
 power = 0
 icon_color = Color(0.45, 0.25, 0.65, 1)
 icon_glyph = "SS"
+animation = &"crouch"
+anim_time = 0.3

@@ -2,6 +2,29 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.19.0] — Milestone 17c: Heroes' Arsenal - abilities 32-64, shared spells and animations
+
+### Added
+- **68 new class abilities for levels 32–64** (17 per class, 20 of them passives), from the ability plan: e.g.
+  Avalanche, Execute, Earthquake, Undying Rage and Crushing Blow (Barbarian); Smite, Banner of the Realm, Divine
+  Shield, Hold the Line and Aegis (Knight); Flame Pillar, Comet Shower, Lightning Rod, Absolute Zero, Mirror
+  Image and Fire Tornado (Wizard); Shadow Dance, Explosive Trap, Assassinate, Blade Chain and Sniper Shot
+  (Assassin). Every class now has 35 abilities (levels 1–64).
+- **20 shared spells** any class can learn from tomes: Light, Haste, Gust, Root Snare, Stone Skin, Rejuvenate,
+  Feather Fall, Frost Path, Earth Spike, Spark Shield, Detect Treasure, Tame Beast, Summon Spirit Wolf, Fire
+  Ring, Lightning Dash, Drain Life, Earth Wall, Silence, Recall and Shardfall. Their tomes are sold in villages,
+  found in towers, temples, ruins, camps, shipwrecks, caches and dungeons, given by royal errands (Earth Wall)
+  and the main quest (Recall, when the Shard Keepers fall), and dropped by the Starborn Colossus (Shardfall).
+- **Animations**: 13 body poses for abilities and spells (roar, pray, cast up, push, stomp, crouch, channel,
+  guard, throw, kneel, leap, flex, point), sent to other players in co-op; **both hands** on greatswords and
+  war hammers (ready stance, swings, guard); **bows held in the left hand** with the right hand drawing the string.
+- **Tamed beasts and pets**: Tame Beast and the Spirit Wolf fight the enemies near you.
+- Tests: `test_m17c_data`, `test_m17c_spells`, `test_m17c_passives_and_poses`; screenshot runner `--only=poses`.
+
+### Changed
+- Spells and mana abilities can echo (Arcane Echo), overload (Overload) and have shorter cooldowns (Discipline,
+  Quick Cast). Chests are in a `loot_chests` group (Detect Treasure).
+
 ## [0.18.0] — Milestone 17b: Heroes' Arsenal - the ability book
 
 ### Added

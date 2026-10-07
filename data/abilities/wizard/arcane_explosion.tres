@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"arcane_explosion"
+display_name = "Arcane Explosion"
+description = "A burst around you that hurts and pushes enemies away."
+effect = &"arcane_explosion"
+unlock_level = 64
+cost_type = 1
+cost = 30
+cooldown = 10
+damage = 28
+damage_type = &"arcane"
+radius = 5
+range = 0
+duration = 0
+power = 0
+required_mana_control = 0
+icon_color = Color(0.75, 0.55, 1.0, 1)
+icon_glyph = "AEx"
+class_id = &"wizard"
+passive = false
+animation = &"stomp"
+anim_time = 0.4

@@ -22,3 +22,5 @@ icon_color = Color(0.6, 0.9, 1, 1)
 icon_glyph = "FA"
 class_id = &"wizard"
 passive = false
+animation = &"pray"
+anim_time = 0.5

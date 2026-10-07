@@ -21,3 +21,5 @@ power = 60
 required_mana_control = 25
 icon_color = Color(0.5, 0.7, 1, 1)
 icon_glyph = "AB"
+animation = &"pray"
+anim_time = 0.5

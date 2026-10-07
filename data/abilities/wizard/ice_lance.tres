@@ -22,3 +22,5 @@ icon_color = Color(0.6, 0.9, 1, 1)
 icon_glyph = "IL"
 class_id = &"wizard"
 passive = false
+animation = &"point"
+anim_time = 0.3

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"crushing_blow"
+display_name = "Crushing Blow"
+description = "A hit with triple poise damage. Good against big enemies and bosses."
+effect = &"crushing_blow"
+unlock_level = 64
+cost_type = 2
+cost = 22
+cooldown = 12
+damage = 30
+damage_type = &"physical"
+radius = 2.8
+range = 0
+duration = 0
+power = 150
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "CB"
+class_id = &"barbarian"
+passive = false
+animation = &""
+anim_time = 0.5

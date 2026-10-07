@@ -20,3 +20,5 @@ duration = 5
 power = 0
 icon_color = Color(0.8, 0.1, 0.1, 1)
 icon_glyph = "Bk"
+animation = &"flex"
+anim_time = 0.7

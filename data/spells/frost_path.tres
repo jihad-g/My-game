@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"frost_path"
+display_name = "Frost Path"
+description = "Freeze the water in front of you for 30 s so you can walk over lakes and rivers."
+effect = &"frost_path"
+unlock_level = 1
+cost_type = 1
+cost = 20
+cooldown = 10
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 10
+duration = 30
+power = 0
+required_mana_control = 10
+icon_color = Color(0.6, 0.9, 1, 1)
+icon_glyph = "FPa"
+class_id = &""
+passive = false
+animation = &"push"
+anim_time = 0.4

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"gust"
+display_name = "Gust"
+description = "A strong wind in front of you pushes enemies back and puts out fire. Gust into Miasma spreads the cloud."
+effect = &"gust"
+unlock_level = 1
+cost_type = 1
+cost = 15
+cooldown = 8
+damage = 6
+damage_type = &"physical"
+radius = 6
+range = 0
+duration = 0
+power = 0
+required_mana_control = 5
+icon_color = Color(0.8, 0.95, 1, 1)
+icon_glyph = "Gu"
+class_id = &""
+passive = false
+animation = &"push"
+anim_time = 0.4

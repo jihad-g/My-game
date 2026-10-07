@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"warpath"
+display_name = "Warpath"
+description = "Passive: each kill gives +5% move speed for 10 s (stacks 5 times)."
+effect = &"warpath"
+unlock_level = 52
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 0.05
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "Wp"
+class_id = &"barbarian"
+passive = true
+animation = &""
+anim_time = 0.5

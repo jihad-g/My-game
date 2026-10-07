@@ -105,19 +105,30 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 17c — Heroes' Arsenal: abilities 32–64, shared spells, animations  ✅
+
+- [x] 68 new class abilities for levels 32–64 (17 per class, 20 passives)
+- [x] 20 shared spells with tomes, and places to find every tome
+- [x] Ability and spell poses (13), sent to co-op players; two-handed weapon stances and swings; bows in the left hand
+- [x] Tamed beasts and a summoned spirit wolf that fight for you
+- [ ] NOT IMPLEMENTED: abilities for levels 66–100 and the ultimates (M17d)
+- [ ] NOT IMPLEMENTED: abilities that help friends (Oath of Protection link, Banner and Rejuvenate on friends) - co-op combat is M18
+- [ ] NOT IMPLEMENTED: Light keeping night-only creatures away
+- [ ] Known limitation: Tame Beast works on wolves, deer, rabbits and crabs (the Thornback Boar uses an older enemy type)
+- [ ] Known limitation: poses are blended key poses, not full animations; a pet's or a decoy's targets are only recalculated by monsters near it
+- [ ] Next: M17d — abilities for levels 66–100, the four ultimates and ability upgrades at level 30
+
 ## Milestone 17b — Heroes' Arsenal: the ability book  ✅
 
 - [x] Ability book (L) with Abilities and Spells pages; 15 new abilities per class (levels 2–30), 60 in total
 - [x] 15 passive abilities (always on)
 - [x] 6-slot ability bar (Z X C T V U), changed at a bed or a campfire, saved with the character
 - [x] Third spell slot (N) with the Tome of Embers
-- [ ] NOT IMPLEMENTED: abilities for levels 32–100 and the ultimates (M17c, M17d)
-- [ ] NOT IMPLEMENTED: the 20 shared spells (M17c)
+- [x] Abilities for levels 32–64 and the 20 shared spells (done in M17c)
 - [ ] NOT IMPLEMENTED: ability upgrades at level 30 (pick one of two per ability)
 - [ ] NOT IMPLEMENTED: Holy Light healing friends, Taunting Shout protecting friends (co-op combat is M18)
-- [ ] Known limitation: the new abilities use the existing poses (spin, thrust, overhead, plunge); their own animations come in M17d
+- [x] Ability poses (done in M17c)
 - [ ] Known limitation: Polymorph shrinks the enemy and stuns it instead of drawing a real chicken
-- [ ] Next: M17c — abilities for levels 32–64 and the 20 shared spells
 
 ## Milestone 17a — Heroes' Arsenal: weapons and new attacks  ✅
 
@@ -129,7 +140,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] The Tome of Embers' extra spell slot (done in Milestone 17b)
 - [ ] NOT IMPLEMENTED: arrows that fall with gravity, arrows you can pick up again, crossbows and throwing weapons
 - [ ] NOT IMPLEMENTED: a jump key (plunging attacks only happen when you walk off a ledge or a cliff)
-- [ ] NOT IMPLEMENTED: real two-handed body animations (both arms on the weapon) - planned for M17d
+- [x] Two-handed body animations (both arms on the weapon) - done in M17c
 - [ ] Known limitation: in co-op, a guest's arrows and new attacks only hit enemies on the guest's own screen (shared combat is Milestone 18)
 
 ## Milestone 16 — The Lost Shards  ✅

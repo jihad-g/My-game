@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"tome_shardfall"
+display_name = "Tome: Shardfall"
+description = "Call down a burning shard from the sky. Huge damage, and it leaves crystals behind. Requires Mana Control 40."
+category = 6
+rarity = 6
+max_stack = 1
+base_value = 540
+icon_color = Color(0.8, 0.6, 1, 1)
+icon_glyph = "Bk"
+teaches_spell = &"shardfall"

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"primal_roar"
+display_name = "Primal Roar"
+description = "A roar that makes enemies near you (not bosses) run away for 3 s."
+effect = &"primal_roar"
+unlock_level = 62
+cost_type = 2
+cost = 20
+cooldown = 25
+damage = 0
+damage_type = &"physical"
+radius = 8
+range = 0
+duration = 3
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "PR"
+class_id = &"barbarian"
+passive = false
+animation = &"roar"
+anim_time = 0.7

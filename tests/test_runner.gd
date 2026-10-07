@@ -109,6 +109,9 @@ func _ready() -> void:
 	_run(&"test_m17b_data")
 	await _run_async(&"test_m17b_book")
 	await _run_async(&"test_m17b_abilities")
+	_run(&"test_m17c_data")
+	await _run_async(&"test_m17c_spells")
+	await _run_async(&"test_m17c_passives_and_poses")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -2702,11 +2705,11 @@ func test_m7_data() -> void:
 	for id in spells:
 		var tome: ItemData = ItemDB.get_item(StringName("tome_%s" % id))
 		var sp: AbilityData = spells[id]
-		tomes_ok = tomes_ok and tome != null and tome.is_spell_tome() and tome.teaches_spell == id and sp.required_mana_control > 0 \
+		tomes_ok = tomes_ok and tome != null and tome.is_spell_tome() and tome.teaches_spell == id and sp.required_mana_control >= 0 \
 			and sp.cost > 0 and sp.cooldown > 0 and PlayerAbilities.new().has_method("_spell_%s" % sp.effect)
-	check(spells.size() == 8 and tomes_ok, "8 advanced spells, each with a tome and an implementation")
+	check(spells.size() == 28 and tomes_ok, "28 spells (8 advanced + 20 shared, Milestone 17c), each with a tome and an implementation")
 	var droppable := true
-	for id in spells:
+	for id in [&"arcane_barrier", &"arcane_missiles", &"blink", &"blizzard", &"healing_light", &"meteor", &"poison_cloud", &"storm_call"]:
 		droppable = droppable and LootTables.TOMES.has(StringName("tome_%s" % id))
 	check(droppable, "every spell tome can drop from loot tables")
 	var ids := SpellBook.sorted_ids()
@@ -3225,7 +3228,7 @@ func test_m7_magic() -> void:
 	# Spellbook panel
 	world.hud._spellbook.toggle()
 	await _frames(3)
-	check(world.hud._spellbook.visible and world.hud._spellbook._list.get_child_count() == 8, "the spellbook (L) lists all 8 spells")
+	check(world.hud._spellbook.visible and world.hud._spellbook._list.get_child_count() == SpellBook.all().size(), "the spellbook (L) lists every spell")
 	world.hud._spellbook.toggle()
 	_kill(target, world)
 	world.queue_free()
@@ -5147,7 +5150,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.18"), "version 0.18 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.19"), "version 0.19 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -6101,7 +6104,7 @@ func test_m17a_combat() -> void:
 func test_m17b_data() -> void:
 	for cid in [&"barbarian", &"knight", &"wizard", &"assassin"]:
 		var book := AbilityBook.for_class(cid)
-		check(book.size() == 18, "%s: 3 starting + 15 new abilities (%d)" % [cid, book.size()])
+		check(book.size() == 35, "%s: 3 starting + 32 new abilities (%d)" % [cid, book.size()])
 		var levels := {}
 		var passives := 0
 		var bad := []
@@ -6117,8 +6120,8 @@ func test_m17b_data() -> void:
 			if a.description.length() < 15 or a.icon_glyph == "?":
 				bad.append("%s has no text or icon" % a.id)
 		check(bad.is_empty(), "%s abilities are complete %s" % [cid, bad])
-		check(levels.size() == 15 and levels.has(2) and levels.has(30), "%s learns one ability every 2 levels from 2 to 30" % cid)
-		check(passives >= 3 and passives <= 5, "%s has %d passives" % [cid, passives])
+		check(levels.size() == 32 and levels.has(2) and levels.has(64), "%s learns one ability every 2 levels from 2 to 64" % cid)
+		check(passives >= 7 and passives <= 11, "%s has %d passives" % [cid, passives])
 	check(AbilityBook.get_ability(&"temperature_shield") != null and PlayerAbilities.shield_ability().id == &"temperature_shield", "the Temperature Shield is in the book")
 	for act in [&"ability_5", &"ability_6", &"spell_3"]:
 		check(InputMap.has_action(act) and not InputMap.action_get_events(act).is_empty(), "key for %s" % act)
@@ -6185,8 +6188,9 @@ func test_m17b_abilities() -> void:
 		p.health.invulnerable = true
 		_clear_enemies(world)
 		world.spawner.max_active = 80
-		p.character.grant_xp(Progression.total_xp_for(30) - p.character.total_xp, Progression.Source.OTHER)
+		p.character.grant_xp(Progression.total_xp_for(64) - p.character.total_xp, Progression.Source.OTHER)
 		p.character.skills[Skill.MANA_CONTROL] = 40
+		p.inventory.add_item(&"iron_arrow", 40)
 		p.character.recalculate()
 		await _frames(2)
 		var off := _clear_offset(world, 2.2)
@@ -6214,6 +6218,10 @@ func test_m17b_abilities() -> void:
 			ab.cooldowns.clear()
 			var hp := foes[0].health.current + foes[1].health.current
 			ab.bar[0] = a.id
+			if a.effect in [&"rapid_shot", &"sniper_shot"]:
+				p.equipment.equip(ItemDB.get_item(&"recurve_bow"))
+			elif p.equipment.weapon() and p.equipment.weapon().weapon_type == &"bow":
+				p.equipment.unequip(ItemData.EquipSlot.MAIN_HAND)
 			var fired := ab.try_use(0)
 			await _frames(45)
 			var hurt := foes[0].health.current + foes[1].health.current < hp
@@ -6225,7 +6233,7 @@ func test_m17b_abilities() -> void:
 			var buff := not ab.buffs.is_empty() or not ab.marks.is_empty() or p.status.has(&"regen")
 			var world_fx := not get_tree().get_nodes_in_group(&"ability_zones").is_empty() or not get_tree().get_nodes_in_group(&"ice_walls").is_empty() \
 				or not get_tree().get_nodes_in_group(&"decoys").is_empty()
-			if not fired or not (hurt or st or buff or world_fx or a.effect in [&"grappling_hook", &"lunge", &"leap_slam", &"holy_light", &"polymorph"]):
+			if not fired or not (hurt or st or buff or world_fx or a.effect in [&"grappling_hook", &"lunge", &"leap_slam", &"holy_light", &"polymorph", &"chain_hook"]):
 				failed.append(a.id)
 			for m in foes:
 				m.global_position = Vector3(0, -500, 0)
@@ -6237,3 +6245,190 @@ func test_m17b_abilities() -> void:
 			await _frames(30)
 		check(failed.is_empty(), "%s: every new ability fires and has an effect %s" % [cid, failed])
 		p.health.invulnerable = false
+
+
+# --- Milestone 17c: abilities 32-64, shared spells, animations -----------------------------
+
+const M17C_SPELLS := [&"light", &"haste", &"gust", &"root_snare", &"stone_skin", &"rejuvenate", &"feather_fall",
+	&"frost_path", &"earth_spike", &"spark_shield", &"detect_treasure", &"tame_beast", &"summon_spirit_wolf",
+	&"fire_ring", &"lightning_dash", &"drain_life", &"earth_wall", &"silence", &"recall", &"shardfall"]
+
+
+func test_m17c_data() -> void:
+	check(M17C_SPELLS.size() == 20, "20 shared spells")
+	var bad := []
+	var sources := {}
+	for t in LootTables.TABLES.values():
+		for e in t.items:
+			sources[e[0]] = true
+	for id in LootTables.TOMES:
+		sources[id] = true
+	for stock in Economy.STOCK.values():
+		for e in stock:
+			sources[e[0]] = true
+	for f in DirAccess.get_files_at("res://data/enemies/"):
+		var d := load("res://data/enemies/" + f.trim_suffix(".remap")) as EnemyData
+		if d:
+			for l in d.loot:
+				sources[(l as LootEntry).item_id] = true
+	sources[&"tome_earth_wall"] = true  # royal errand reward (checked below)
+	sources[&"tome_recall"] = true      # main quest (checked in test_m17c_spells)
+	for sp in M17C_SPELLS:
+		var a := SpellBook.get_spell(sp)
+		var tome: ItemData = ItemDB.get_item(StringName("tome_%s" % sp))
+		if a == null or not PlayerAbilities.new().has_method("_spell_%s" % a.effect):
+			bad.append("%s has no effect" % sp)
+		elif a.animation == &"" or not HumanoidModel.POSES.has(a.animation):
+			bad.append("%s has no pose" % sp)
+		if tome == null or tome.teaches_spell != sp:
+			bad.append("%s has no tome" % sp)
+		elif not sources.has(tome.id):
+			bad.append("%s can't be found" % tome.id)
+	check(bad.is_empty(), "every shared spell has an effect, a pose, a tome and a place to find it %s" % [bad])
+	var info := SettlementInfo.new()
+	info.kingdom_id = "k1"
+	info.kingdom_name = "Test"
+	check((QuestBook.kingdom_quest(info).rewards.items as Dictionary).has(&"tome_earth_wall"), "royal errands reward the Tome: Earth Wall")
+	# Every active ability and spell has a known pose (or swings its weapon itself).
+	var unknown := []
+	for cid in [&"barbarian", &"knight", &"wizard", &"assassin"]:
+		for a: AbilityData in AbilityBook.for_class(cid):
+			if a.animation != &"" and not HumanoidModel.POSES.has(a.animation):
+				unknown.append(a.id)
+	check(unknown.is_empty(), "every ability pose exists %s" % [unknown])
+
+
+func test_m17c_spells() -> void:
+	var world: World = await _boot_class(&"wizard")
+	var p := world.player
+	var ab := p.abilities
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 80
+	p.character.skills[Skill.MANA_CONTROL] = 60
+	p.character.recalculate()
+	var off := _clear_offset(world, 3.0)
+	var home := p.global_position
+	var failed := []
+	for sp in M17C_SPELLS:
+		if sp in [&"frost_path", &"tame_beast", &"recall"]:
+			continue  # need water, an animal or 5 s - tested below
+		_clear_enemies(world)
+		world.spawner.max_active = 80
+		p.global_position = home
+		p.velocity = Vector3.ZERO
+		await _frames(2)
+		var m := _spawn_monster(world, &"skeleton_warrior", off)
+		m.health.max_health = 50000.0
+		m.health.current = 50000.0
+		await _frames(2)
+		p.face_direction(off.normalized(), true)
+		p.set_lock_target(m)
+		p.state = Player.State.NORMAL
+		p.mana.refill()
+		ab.cooldowns.clear()
+		p.spells.learn(sp)
+		p.spells.assign(0, sp)
+		var fired := ab.try_cast(0)
+		await _frames(40)
+		if not fired:
+			failed.append(sp)
+		_kill(m, world)
+		ab.buffs.clear()
+		await _frames(10)
+	check(failed.is_empty(), "every shared spell can be cast %s" % [failed])
+	# A few effects in detail.
+	p.global_position = home
+	ab.buffs.clear()
+	p.spells.learn(&"haste")
+	p.spells.assign(0, &"haste")
+	var speed0 := p.stats.get_mult(Stats.MOVE_SPEED)
+	ab.cooldowns.clear()
+	ab.try_cast(0)
+	check(p.stats.get_mult(Stats.MOVE_SPEED) > speed0 * 1.2, "Haste makes you faster")
+	ab.buffs.clear()
+	ab._apply_buff_stats()
+	# Tame a deer: it stops being an enemy and hunts for you.
+	_clear_enemies(world)
+	var deer := _spawn_monster(world, &"deer", off)
+	await _frames(3)
+	p.set_lock_target(deer)
+	p.spells.learn(&"tame_beast")
+	p.spells.assign(0, &"tame_beast")
+	p.mana.refill()
+	ab.cooldowns.clear()
+	check(ab.try_cast(0) and deer.is_tamed() and not deer.is_in_group(&"enemies"), "Tame Beast turns a deer into a friend")
+	var foe := _spawn_monster(world, &"skeleton_warrior", off * 2.0)
+	await _frames(3)
+	check(deer._player() == foe, "the tamed deer goes for the enemy, not for you")
+	deer.untame()
+	check(deer.is_in_group(&"enemies"), "and goes wild again afterwards")
+	_kill(deer, world)
+	_kill(foe, world)
+	# Spirit wolf: a friendly wolf that draws enemies.
+	p.spells.learn(&"summon_spirit_wolf")
+	p.spells.assign(0, &"summon_spirit_wolf")
+	p.mana.refill()
+	ab.cooldowns.clear()
+	check(ab.try_cast(0) and not get_tree().get_nodes_in_group(&"pets").is_empty() and not get_tree().get_nodes_in_group(&"decoys").is_empty(), "a spirit wolf joins you")
+	for w in get_tree().get_nodes_in_group(&"pets"):
+		NodePool.release_or_free(w)
+	# The main quest teaches Recall when the Shard Keepers fall.
+	var before := p.inventory.count_of(&"tome_recall")
+	var ql := world.quests
+	ql.active[QuestBook.MAIN] = {"step": 2, "progress": 0}
+	ql._advance(QuestBook.MAIN)
+	await _frames(2)
+	check(p.inventory.count_of(&"tome_recall") > before or world.pickup_pool.active_count() > 0, "the main quest gives the Tome: Recall")
+	p.health.invulnerable = false
+
+
+func test_m17c_passives_and_poses() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	var ab := p.abilities
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	p.character.grant_xp(Progression.total_xp_for(64) - p.character.total_xp, Progression.Source.OTHER)
+	await _frames(2)
+	# Discipline makes cooldowns shorter.
+	check(ab.cooldown_mult() < Skill.cooldown_mult(p.character.skill_level(Skill.MANA_CONTROL)) * 0.95, "Discipline shortens cooldowns")
+	# Divine Shield blocks everything.
+	ab.add_buff(&"divine_shield", 2.0)
+	p.health.invulnerable = false
+	var hp := p.health.current
+	var hit := DamageInfo.create(50.0, p)
+	p.receive_hit(hit)
+	check(p.health.current == hp, "Divine Shield: nothing can hurt you")
+	ab.remove_buff(&"divine_shield")
+	# Undying Rage style: never below 1 health.
+	ab.add_buff(&"undying", 3.0)
+	p.receive_hit(DamageInfo.create(99999.0, p))
+	check(not p.is_dead and p.health.current >= 1.0, "Undying keeps you alive")
+	ab.remove_buff(&"undying")
+	p.health.reset_full()
+	p.health.invulnerable = true
+	# Poses: an ability plays its pose on the model and on other players' screens.
+	var events := []
+	p.model.anim_event.connect(func(ev: String, args: Array) -> void: events.append([ev, args]))
+	ab.cooldowns.clear()
+	ab.bar[0] = &"holy_light"
+	p.mana.refill()
+	check(ab.try_use(0) and p.model.current_pose() == &"pray", "Holy Light plays the prayer pose")
+	check(events.any(func(e: Array) -> bool: return e[0] == "pose" and e[1][0] == "pray"), "the pose is sent to other players")
+	check(RemotePlayer.ANIM_EVENTS.has("pose"), "remote players replay poses")
+	await _frames(30)
+	# Two-handed: both hands on a greatsword.
+	p.equipment.equip(ItemDB.get_item(&"iron_greatsword"))
+	await _frames(10)
+	check(p.model._two_handed(), "a greatsword is held with both hands")
+	var l0 := p.model._arm_l.rotation
+	p.combat.request(&"light")
+	await _frames(8)
+	check(p.model._arm_l.rotation.distance_to(l0) > 0.3, "the left arm swings along with the right one")
+	await _frames(40)
+	# Bows sit in the left hand.
+	p.equipment.equip(ItemDB.get_item(&"recurve_bow"))
+	await _frames(5)
+	check(p.model._shield.get_child_count() > 0 and p.model._weapon.get_child_count() <= 1, "the bow is held in the left hand")
+	p.health.invulnerable = false

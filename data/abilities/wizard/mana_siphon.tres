@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"mana_siphon"
+display_name = "Mana Siphon"
+description = "Take mana and health from an enemy."
+effect = &"mana_siphon"
+unlock_level = 38
+cost_type = 1
+cost = 5
+cooldown = 12
+damage = 20
+damage_type = &"arcane"
+radius = 0
+range = 14
+duration = 0
+power = 0.5
+required_mana_control = 0
+icon_color = Color(0.75, 0.55, 1.0, 1)
+icon_glyph = "MSi"
+class_id = &"wizard"
+passive = false
+animation = &"channel"
+anim_time = 0.6

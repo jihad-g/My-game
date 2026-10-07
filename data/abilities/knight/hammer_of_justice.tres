@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"hammer_of_justice"
+display_name = "Hammer of Justice"
+description = "Throw a glowing hammer. It stuns the target for 3 s."
+effect = &"hammer_of_justice"
+unlock_level = 56
+cost_type = 1
+cost = 18
+cooldown = 15
+damage = 18
+damage_type = &"holy"
+radius = 0
+range = 16
+duration = 3
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.95, 0.6, 1)
+icon_glyph = "HJ"
+class_id = &"knight"
+passive = false
+animation = &"throw"
+anim_time = 0.35

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"hold_the_line"
+display_name = "Hold the Line"
+description = "Stand firm for 5 s: you block every hit from every side, but you barely move."
+effect = &"hold_the_line"
+unlock_level = 52
+cost_type = 2
+cost = 20
+cooldown = 30
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 5
+power = 0
+required_mana_control = 0
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "HtL"
+class_id = &"knight"
+passive = false
+animation = &"guard"
+anim_time = 1.2

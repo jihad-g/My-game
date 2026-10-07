@@ -22,3 +22,5 @@ icon_color = Color(1, 0.5, 0.2, 1)
 icon_glyph = "FWl"
 class_id = &"wizard"
 passive = false
+animation = &"push"
+anim_time = 0.45

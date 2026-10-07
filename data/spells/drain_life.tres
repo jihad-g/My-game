@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"drain_life"
+display_name = "Drain Life"
+description = "Take health from an enemy for 3 s."
+effect = &"drain_life"
+unlock_level = 1
+cost_type = 1
+cost = 25
+cooldown = 12
+damage = 8
+damage_type = &"arcane"
+radius = 0
+range = 12
+duration = 3
+power = 0.6
+required_mana_control = 24
+icon_color = Color(0.6, 0.2, 0.4, 1)
+icon_glyph = "DL"
+class_id = &""
+passive = false
+animation = &"channel"
+anim_time = 3.0

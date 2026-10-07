@@ -296,6 +296,24 @@ func _set_ai(new_ai: AI, time: float = 0.0) -> void:
 # --- Targets ------------------------------------------------------------------------------
 
 func _player() -> Node3D:
+	# Milestone 17c: a tamed beast hunts the enemies near the player and stays close to them.
+	if has_meta(&"tamed_until"):
+		if is_tamed():
+			var owner_p := get_tree().get_first_node_in_group(&"player") as Node3D
+			if owner_p:
+				home_position = owner_p.global_position
+			var best: Node3D = null
+			var bd := 14.0
+			for e in get_tree().get_nodes_in_group(&"enemies"):
+				var n := e as Node3D
+				if n == null or n == self or n.get("is_dead") or not n.is_visible_in_tree():
+					continue
+				var d := n.global_position.distance_to(global_position)
+				if d < bd:
+					bd = d
+					best = n
+			return best
+		untame()
 	# Milestone 17b: blinded monsters (Smoke Bomb, Blind Powder) lose you; a Shadow Clone draws them.
 	if int(get_meta(&"blind_until", 0)) > Time.get_ticks_msec() and not is_taunted():
 		return null

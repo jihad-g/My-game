@@ -190,7 +190,7 @@ func recalculate(reset: bool = false) -> void:
 
 	var new_max_health := (Skill.max_health(def, c.base_health, c.health_per_defense) + _eq(&"max_health")) * (1.0 + _passive(&"max_health_pct") / 100.0)
 	var new_max_stamina := c.base_stamina + Skill.bonus_stamina(strength, eff(Skill.STRENGTH)) + _eq(&"max_stamina")
-	var new_max_mana := Skill.max_mana(mc, c.base_mana, c.mana_per_point) + _eq(&"max_mana")
+	var new_max_mana := (Skill.max_mana(mc, c.base_mana, c.mana_per_point) + _eq(&"max_mana")) * (1.0 + _passive(&"archmages_wisdom") / 100.0)
 	if health:
 		var grow := new_max_health - health.max_health
 		health.max_health = new_max_health

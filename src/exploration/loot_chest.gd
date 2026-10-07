@@ -15,6 +15,7 @@ var _lid: Node3D
 
 
 func _ready() -> void:
+	add_to_group(&"loot_chests")  # Detect Treasure (Milestone 17c)
 	collision_layer = Layers.INTERACTABLE | Layers.BUILDING
 	collision_mask = 0
 	var cs := CollisionShape3D.new()

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"retribution"
+display_name = "Retribution"
+description = "Passive: hits you block deal 10% of their damage back to the attacker."
+effect = &"retribution"
+unlock_level = 36
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 0.1
+required_mana_control = 0
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "Rt"
+class_id = &"knight"
+passive = true
+animation = &""
+anim_time = 0.5
