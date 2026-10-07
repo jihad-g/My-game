@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"fire_wall"
+display_name = "Fire Wall"
+description = "A line of fire for 6 s. Enemies who walk through it burn."
+effect = &"fire_wall"
+unlock_level = 14
+cost_type = 1
+cost = 24
+cooldown = 14
+damage = 8
+damage_type = &"fire"
+radius = 1.5
+range = 8
+duration = 6
+power = 0
+icon_color = Color(1, 0.5, 0.2, 1)
+icon_glyph = "FWl"
+class_id = &"wizard"
+passive = false

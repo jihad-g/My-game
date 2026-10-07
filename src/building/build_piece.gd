@@ -39,6 +39,8 @@ func setup(p_data: BuildPieceData) -> void:
 	data = p_data
 	health = data.get_max_health()
 	add_to_group(&"build_pieces")
+	if data.behavior == BuildPieceData.Behavior.BED:
+		add_to_group(&"rest_spots")  # change the ability bar here (Milestone 17b)
 	name = "%s_%d_%d_%s" % [data.id, cell.x, cell.y, slot]
 	collision_layer = Layers.BUILDING
 	if data.behavior in [BuildPieceData.Behavior.DOOR, BuildPieceData.Behavior.CHEST, BuildPieceData.Behavior.BED,

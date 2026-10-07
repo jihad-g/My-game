@@ -1,20 +1,28 @@
 class_name SpellBook
 extends RefCounted
-## Advanced spells the player has learned from tomes (Milestone 7) and the two
-## spell slots (keys Y and H). Any class can learn spells; casting needs the
+## Advanced spells the player has learned from tomes (Milestone 7) and the
+## spell slots (keys Y and H, plus N while a tome is held - Milestone 17b). Any class can learn spells; casting needs the
 ## spell's Mana Control requirement and its damage scales with spell power,
 ## so Wizards are by far the best casters.
 
 signal changed
 
 const DIR := "res://data/spells/"
-const SLOTS := 2
+const SLOTS := 3
+const SLOT_KEYS := ["Y", "H", "N"]
 
 static var _all: Dictionary = {}
 
 var known: Array[StringName] = []
 ## Spell id per slot (&"" = empty).
-var slots: Array[StringName] = [&"", &""]
+var slots: Array[StringName] = [&"", &"", &""]
+## The third slot only works while an off-hand tome is held (weapon_params spell_slot).
+var extra_slot := false
+
+
+## Number of slots that can be used right now.
+func usable_slots() -> int:
+	return SLOTS if extra_slot else SLOTS - 1
 
 
 static func all() -> Dictionary:
@@ -51,7 +59,7 @@ func learn(id: StringName) -> bool:
 	if knows(id) or get_spell(id) == null:
 		return false
 	known.append(id)
-	for i in SLOTS:
+	for i in usable_slots():
 		if slots[i] == &"":
 			slots[i] = id
 			break
@@ -71,7 +79,7 @@ func assign(slot: int, id: StringName) -> void:
 
 
 func get_slot(slot: int) -> AbilityData:
-	if slot < 0 or slot >= SLOTS or slots[slot] == &"":
+	if slot < 0 or slot >= usable_slots() or slots[slot] == &"":
 		return null
 	return get_spell(slots[slot])
 
@@ -87,7 +95,7 @@ func from_save(d: Dictionary) -> void:
 		if get_spell(StringName(id)):
 			known.append(StringName(id))
 	var sl: Array = d.get("slots", [])
-	slots = [&"", &""]
+	slots = [&"", &"", &""]
 	for i in mini(sl.size(), SLOTS):
 		if knows(StringName(sl[i])):
 			slots[i] = StringName(sl[i])

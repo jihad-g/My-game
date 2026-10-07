@@ -32,6 +32,8 @@ Elemental damage applies [b]status effects[/b] (burning, poisoned, chilled, wet.
 [b]Elites[/b] carry special affixes (shielded, molten, vampiric...). [b]Bosses[/b] have phases - watch for new attacks when their health bar drops."""],
 	["Character", """Four [b]classes[/b]: Barbarian (strength, rage), Knight (defence, shields), Wizard (spells, mana) and Assassin (speed, critical hits). A Wizard is never as strong physically as the fighters.
 
+[b]Ability book (L)[/b]: every class learns a new ability every two levels. [b]Active[/b] abilities go on your bar - six slots on Z, X, C, T, V and U; [b]passive[/b] abilities are always on. New abilities fill empty slots by themselves; to change your bar, rest next to a [b]bed or a campfire[/b] and pick abilities in the book. Spells use Y and H, and N while you hold a tome.
+
 Each level gives [b]skill points[/b] (2, plus 1 every 5 levels) for Strength, Defense, Dexterity, Mana Control and Crafting. Your class makes some skills grow faster. You can't max everything - choose.
 
 [b]Abilities[/b] unlock at levels 1, 5 and 15. [b]Spells[/b] are learned from tomes found in towers and dungeons; equip them in the spellbook.

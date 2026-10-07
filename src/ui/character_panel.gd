@@ -171,16 +171,22 @@ func refresh() -> void:
 	lines.append("Cold protection %+d°C · Heat protection %+d°C" % [roundi(player.temperature.insulation), roundi(player.temperature.cooling)])
 	var eq := player.equipment
 	lines.append("Outfit: %s · enemies notice you at %d%% range · dodge costs %d%%" % [eq.outfit_style(),
-		roundi(eq.notice_mult() * 100.0), roundi(eq.dodge_cost_mult() * 100.0)])
+		roundi(player.notice_mult() * 100.0), roundi(player.dodge_cost_mult() * 100.0)])
 	var shield_req := c.temperature_shield_requirement() if c else 0
 	lines.append("Temperature Shield: %s" % ("available" if ch.can_use_temperature_shield() else "needs Mana Control %d" % shield_req))
 	_stats_label.text = "\n".join(lines)
-	var ab := PackedStringArray(["Abilities:"])
-	for i in 4:
+	var ab := PackedStringArray(["Ability bar (change it in the ability book, L, at a bed or campfire):"])
+	for i in PlayerAbilities.SLOTS:
 		var a := player.abilities.get_slot(i)
 		if a == null:
 			continue
-		var key: String = ["Z", "X", "C", "T"][i]
+		var key: String = PlayerAbilities.SLOT_KEYS[i]
 		var state := "ready" if player.abilities.is_unlocked(a) else player.abilities.lock_reason(a)
 		ab.append("[%s] %s (%s) — %s" % [key, a.display_name, state, a.description])
+	var passives := PackedStringArray()
+	for a in player.abilities.class_abilities():
+		if (a as AbilityData).passive and player.abilities.is_unlocked(a):
+			passives.append((a as AbilityData).display_name)
+	if not passives.is_empty():
+		ab.append("Passives: %s" % ", ".join(passives))
 	_abilities_label.text = "\n".join(ab)

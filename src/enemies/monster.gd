@@ -296,6 +296,12 @@ func _set_ai(new_ai: AI, time: float = 0.0) -> void:
 # --- Targets ------------------------------------------------------------------------------
 
 func _player() -> Node3D:
+	# Milestone 17b: blinded monsters (Smoke Bomb, Blind Powder) lose you; a Shadow Clone draws them.
+	if int(get_meta(&"blind_until", 0)) > Time.get_ticks_msec() and not is_taunted():
+		return null
+	for d in get_tree().get_nodes_in_group(&"decoys"):
+		if d is Node3D and (d as Node3D).global_position.distance_to(global_position) < 14.0:
+			return d
 	var p := get_tree().get_first_node_in_group(&"player") as Node3D
 	if p == null or p.get("is_dead") or p.get("frozen"):
 		return null

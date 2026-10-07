@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"blood_frenzy"
+display_name = "Blood Frenzy"
+description = "Passive: +25% damage while your health is below 30%."
+effect = &"blood_frenzy"
+unlock_level = 26
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 0.25
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "BF"
+class_id = &"barbarian"
+passive = true

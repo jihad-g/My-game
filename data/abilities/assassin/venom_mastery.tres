@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"venom_mastery"
+display_name = "Venom Mastery"
+description = "Passive: your poison stacks 4 times instead of 3."
+effect = &"venom_mastery"
+unlock_level = 18
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 4
+icon_color = Color(0.55, 0.85, 0.45, 1)
+icon_glyph = "VM"
+class_id = &"assassin"
+passive = true

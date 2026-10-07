@@ -5,7 +5,12 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 17a — Heroes' Arsenal, part 1 (v0.17.0)**: six new weapon types and 20 new weapons. Shoot
+> Status: **Milestone 17b — Heroes' Arsenal, part 2 (v0.18.0)**: the ability book (L). Every class now learns a new
+> ability every two levels - 15 new abilities per class up to level 30, 60 in total, including passives that are
+> always on. Put your favourite six on the bar (Z X C T V U) while resting at a bed or a campfire. A tome in your off
+> hand opens a third spell slot (N).
+>
+> Before that, **Milestone 17a — Heroes' Arsenal, part 1 (v0.17.0)**: six new weapon types and 20 new weapons. Shoot
 > bows (hold to draw, release to shoot, craft arrows), keep enemies away with spears, stun them with war
 > hammers, swing greatswords, and hold a wand or tome as a caster. New attacks: hold heavy to charge it, lunge
 > out of a sprint, slam down while falling, and riposte after a perfect parry. Legendary weapons now have
@@ -32,10 +37,12 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 > noticed. A Knight in shadow clothes with daggers plays like an Assassin; the class keeps a small talent, so
 > a Wizard is never a Knight's equal. Built on the beta (Milestone 13: tutorial, guide, settings and
 > accessibility, save recovery, crash reports, achievements, release builds - [`docs/RELEASE.md`](docs/RELEASE.md)).
-> Download a Windows build from [`releases/`](releases/) (v0.17.1). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
+> Download a Windows build from [`releases/`](releases/) (v0.18.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
 > performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
 > design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md). See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
+
+![The ability book](docs/screenshots/ability_book.png)
 
 ![New weapons](docs/screenshots/arsenal_weapons.png)
 

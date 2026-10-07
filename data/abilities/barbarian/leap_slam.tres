@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"leap_slam"
+display_name = "Leap Slam"
+description = "Jump up to 10 m towards the cursor and slam down: damage and slow around you."
+effect = &"leap_slam"
+unlock_level = 8
+cost_type = 2
+cost = 22
+cooldown = 9
+damage = 22
+damage_type = &"physical"
+radius = 3.0
+range = 10
+duration = 3
+power = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "LS"
+class_id = &"barbarian"
+passive = false

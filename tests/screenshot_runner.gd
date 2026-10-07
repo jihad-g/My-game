@@ -31,6 +31,10 @@ func _ready() -> void:
 		await _wilds_showcase()
 		get_tree().quit()
 		return
+	if "--only=book" in OS.get_cmdline_user_args():
+		await _book_showcase()
+		get_tree().quit()
+		return
 	if "--only=arsenal" in OS.get_cmdline_user_args():
 		await _arsenal_showcase()
 		get_tree().quit()
@@ -376,6 +380,37 @@ func _gear_showcase() -> void:
 	m2._select_class(&"assassin")
 	await _wait(20)
 	await _shot("41_class_picker")
+
+
+## Milestone 17b: the ability book and the 6 + 3 bar of a level 20 Knight at a campfire.
+func _book_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var frames := 0
+	while world.chunk_manager.pending_count() > 0 and frames < 1500:
+		await get_tree().process_frame
+		frames += 1
+	world.hud._help.visible = false
+	world.hud.story.visible = false
+	var p := world.player
+	p.health.invulnerable = true
+	p.character.grant_xp(Progression.total_xp_for(20) - p.character.total_xp, Progression.Source.OTHER)
+	p.spells.learn(&"healing_light")
+	p.spells.learn(&"blink")
+	var fire := (load("res://scenes/world/campfire.tscn") as PackedScene).instantiate() as Node3D
+	world.add_child(fire)
+	fire.global_position = p.global_position + Vector3(1.6, 0, 1.0)
+	await _wait(20)
+	p.abilities.assign(4, &"judgement")
+	await _wait(10)
+	await _shot("70_ability_bar")
+	world.hud._spellbook.toggle()
+	await _wait(10)
+	await _shot("71_ability_book")
+	world.queue_free()
 
 
 ## Milestone 17a: the new weapons in the hands of the shared body, and their icons.

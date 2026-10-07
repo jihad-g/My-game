@@ -105,6 +105,20 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 17b — Heroes' Arsenal: the ability book  ✅
+
+- [x] Ability book (L) with Abilities and Spells pages; 15 new abilities per class (levels 2–30), 60 in total
+- [x] 15 passive abilities (always on)
+- [x] 6-slot ability bar (Z X C T V U), changed at a bed or a campfire, saved with the character
+- [x] Third spell slot (N) with the Tome of Embers
+- [ ] NOT IMPLEMENTED: abilities for levels 32–100 and the ultimates (M17c, M17d)
+- [ ] NOT IMPLEMENTED: the 20 shared spells (M17c)
+- [ ] NOT IMPLEMENTED: ability upgrades at level 30 (pick one of two per ability)
+- [ ] NOT IMPLEMENTED: Holy Light healing friends, Taunting Shout protecting friends (co-op combat is M18)
+- [ ] Known limitation: the new abilities use the existing poses (spin, thrust, overhead, plunge); their own animations come in M17d
+- [ ] Known limitation: Polymorph shrinks the enemy and stuns it instead of drawing a real chicken
+- [ ] Next: M17c — abilities for levels 32–64 and the 20 shared spells
+
 ## Milestone 17a — Heroes' Arsenal: weapons and new attacks  ✅
 
 - [x] Six new weapon types: bow, spear, war hammer, greatsword, wand and tome (off hand)
@@ -112,12 +126,11 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Two-handed weapons (bow, greatsword, war hammer) and caster off-hands
 - [x] Charged heavy attack, sprint attack, plunging attack, riposte after a perfect parry
 - [x] Weapon powers and legendary powers (stun, ward break, chill, burn, poison, undead healing, falling stars, shockwave, heal on kill)
-- [ ] NOT IMPLEMENTED: the Tome of Embers' extra spell slot (needs the new 6 + 2 ability bar from Milestone 17b; for now it gives spell power and mana)
+- [x] The Tome of Embers' extra spell slot (done in Milestone 17b)
 - [ ] NOT IMPLEMENTED: arrows that fall with gravity, arrows you can pick up again, crossbows and throwing weapons
 - [ ] NOT IMPLEMENTED: a jump key (plunging attacks only happen when you walk off a ledge or a cliff)
 - [ ] NOT IMPLEMENTED: real two-handed body animations (both arms on the weapon) - planned for M17d
 - [ ] Known limitation: in co-op, a guest's arrows and new attacks only hit enemies on the guest's own screen (shared combat is Milestone 18)
-- [ ] Next: M17b — the ability book: a 6 + 2 slot bar, passives, and the class abilities for levels 2–30 (see docs/ARSENAL_PLAN.md)
 
 ## Milestone 16 — The Lost Shards  ✅
 

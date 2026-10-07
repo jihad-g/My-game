@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"holy_light"
+display_name = "Holy Light"
+description = "Heal 15% of your health. Friends near you also heal."
+effect = &"holy_light"
+unlock_level = 18
+cost_type = 1
+cost = 25
+cooldown = 20
+damage = 0
+damage_type = &"physical"
+radius = 8
+range = 0
+duration = 0
+power = 15
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "HL"
+class_id = &"knight"
+passive = false

@@ -2,7 +2,7 @@ class_name CameraRig
 extends Node3D
 ## Top-down / isometric tactical camera.
 ##
-## - Follows a target smoothly (or pans freely with the arrow keys; V recenters)
+## - Follows a target smoothly (or pans freely with the arrow keys; Home recenters)
 ## - Q/E or middle-mouse drag rotates (yaw); PageUp/PageDown or MMB drag pitches
 ## - Mouse wheel zooms
 ## - Provides the mouse aim point on the ground for the player

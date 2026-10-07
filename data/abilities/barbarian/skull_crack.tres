@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"skull_crack"
+display_name = "Skull Crack"
+description = "An overhead hit with big poise damage. Stuns for 2 s if the enemy staggers."
+effect = &"skull_crack"
+unlock_level = 24
+cost_type = 2
+cost = 18
+cooldown = 10
+damage = 22
+damage_type = &"physical"
+radius = 2.6
+range = 0
+duration = 2
+power = 90
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "SC"
+class_id = &"barbarian"
+passive = false

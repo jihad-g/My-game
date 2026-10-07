@@ -251,6 +251,15 @@ func receive_hit(info: DamageInfo) -> float:
 func apply_status(id: StringName, duration: float, params: Dictionary) -> void:
 	if is_dead:
 		return
+	# The player's passives (Milestone 17b): Ignite (longer burns), Venom Mastery (more poison stacks).
+	var src = params.get("source")
+	if is_instance_valid(src) and src is Player:
+		var ab: PlayerAbilities = (src as Player).abilities
+		if id == &"burn":
+			duration *= 1.0 + ab.passive_power(&"ignite")
+		elif id == &"poison" and ab.has_passive(&"venom_mastery"):
+			params = params.duplicate()
+			params["max_stacks"] = roundi(ab.passive_power(&"venom_mastery"))
 	status.apply(id, duration, params)
 
 

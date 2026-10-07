@@ -106,6 +106,9 @@ func _ready() -> void:
 	await _run_async(&"test_m16_story")
 	_run(&"test_m17a_data")
 	await _run_async(&"test_m17a_combat")
+	_run(&"test_m17b_data")
+	await _run_async(&"test_m17b_book")
+	await _run_async(&"test_m17b_abilities")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -3109,7 +3112,7 @@ func test_m7_magic() -> void:
 			if st != null and st.id == id:
 				p.use_slot(i)
 				break
-	check(p.spells.knows(&"blink") and p.spells.knows(&"meteor") and p.spells.slots == [&"blink", &"meteor"]
+	check(p.spells.knows(&"blink") and p.spells.knows(&"meteor") and p.spells.slots.slice(0, 2) == [&"blink", &"meteor"]
 		and p.inventory.count_of(&"tome_blink") == 0, "reading tomes teaches spells and fills the spell slots")
 	p.inventory.add_item(&"tome_blink", 1)
 	for i in p.inventory.capacity:
@@ -3118,7 +3121,7 @@ func test_m7_magic() -> void:
 			p.use_slot(i)
 	check(p.inventory.count_of(&"tome_blink") == 1, "a tome you already know isn't used up")
 	p.spells.assign(0, &"meteor")
-	check(p.spells.slots == [&"meteor", &"blink"], "assigning a spell to the other slot swaps them")
+	check(p.spells.slots.slice(0, 2) == [&"meteor", &"blink"], "assigning a spell to the other slot swaps them")
 	# Requirements
 	ch.skills[Skill.MANA_CONTROL] = 5
 	ch.recalculate()
@@ -5144,7 +5147,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.17"), "version 0.17 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.18"), "version 0.18 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -6090,3 +6093,147 @@ func test_m17a_combat() -> void:
 	await _frames(2)
 	check(not p.model._has_shield and p.equipment.offhand().id == &"embers_tome", "a tome is held, not used as a shield")
 	p.health.invulnerable = false
+
+
+
+# --- Milestone 17b: the ability book --------------------------------------------------------
+
+func test_m17b_data() -> void:
+	for cid in [&"barbarian", &"knight", &"wizard", &"assassin"]:
+		var book := AbilityBook.for_class(cid)
+		check(book.size() == 18, "%s: 3 starting + 15 new abilities (%d)" % [cid, book.size()])
+		var levels := {}
+		var passives := 0
+		var bad := []
+		for a: AbilityData in book:
+			if a.class_id != &"":
+				levels[a.unlock_level] = true
+			if a.passive:
+				passives += 1
+				if a.cost > 0.0:
+					bad.append("%s costs something" % a.id)
+			elif not PlayerAbilities.new().has_method("_ability_%s" % a.effect):
+				bad.append("%s has no effect" % a.id)
+			if a.description.length() < 15 or a.icon_glyph == "?":
+				bad.append("%s has no text or icon" % a.id)
+		check(bad.is_empty(), "%s abilities are complete %s" % [cid, bad])
+		check(levels.size() == 15 and levels.has(2) and levels.has(30), "%s learns one ability every 2 levels from 2 to 30" % cid)
+		check(passives >= 3 and passives <= 5, "%s has %d passives" % [cid, passives])
+	check(AbilityBook.get_ability(&"temperature_shield") != null and PlayerAbilities.shield_ability().id == &"temperature_shield", "the Temperature Shield is in the book")
+	for act in [&"ability_5", &"ability_6", &"spell_3"]:
+		check(InputMap.has_action(act) and not InputMap.action_get_events(act).is_empty(), "key for %s" % act)
+	check(ItemDB.get_item(&"embers_tome").weapon_params.has(&"spell_slot"), "the Tome of Embers opens a spell slot")
+
+
+func test_m17b_book() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	var ab := p.abilities
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	# A new character: three starting abilities on Z X C, the shield on T, V and U empty.
+	check(ab.bar == [&"shield_bash", &"guardian", &"rallying_charge", &"temperature_shield", &"", &""], "default bar %s" % [ab.bar])
+	# Level up: new abilities are learned and fill the empty slots.
+	p.character.grant_xp(Progression.total_xp_for(6) - p.character.total_xp, Progression.Source.OTHER)
+	await _frames(2)
+	check(p.character.level >= 6 and ab.bar[4] == &"shield_wall" and ab.bar[5] == &"lunge", "Shield Wall and Lunge fill V and U %s" % [ab.bar])
+	check(ab.has_passive(&"steadfast") and not ab.has_passive(&"valor"), "Steadfast (level 4) is on, Valor (level 22) not yet")
+	# Passive stats.
+	var before := p.character.parry_window
+	p.character.grant_xp(Progression.total_xp_for(16) - p.character.total_xp, Progression.Source.OTHER)
+	await _frames(2)
+	check(p.character.parry_window > before * 1.4, "Riposte Master widens the parry window (%.2f -> %.2f)" % [before, p.character.parry_window])
+	# The bar only changes at a bed or a campfire.
+	check(ab.bar_lock_reason() != "" and not ab.assign(0, &"judgement"), "away from rest you can't change the bar")
+	var fire: Node3D = load("res://scenes/world/campfire.tscn").instantiate() if ResourceLoader.exists("res://scenes/world/campfire.tscn") else Campfire.new()
+	world.add_child(fire)
+	fire.global_position = p.global_position + Vector3(2, 0, 0)
+	await _frames(2)
+	check(ab.bar_lock_reason() == "", "next to a campfire you can")
+	check(ab.assign(0, &"judgement") and ab.bar[0] == &"judgement", "Judgement goes on Z")
+	check(ab.assign(1, &"judgement") and ab.bar[1] == &"judgement" and ab.bar[0] == &"guardian", "moving it to X swaps the slots %s" % [ab.bar])
+	check(not ab.assign(2, &"valor") and not ab.assign(2, &"steadfast"), "passives and unlearned abilities can't go on the bar")
+	fire.queue_free()
+	# Saved with the character.
+	var saved := ab.to_save()
+	ab.reset_bar()
+	ab.from_save(saved)
+	check(ab.bar[1] == &"judgement" and ab.bar[0] == &"guardian", "the bar is saved")
+	ab.from_save({"rage": 0.0})
+	check(ab.bar[0] == &"shield_bash" and ab.bar[3] == &"temperature_shield", "old saves get the default bar")
+	# The tome's third spell slot.
+	p.spells.learn(&"blink")
+	p.spells.learn(&"meteor")
+	p.spells.learn(&"healing_light")
+	check(p.spells.usable_slots() == 2 and p.spells.get_slot(2) == null, "two spell slots without a tome")
+	p.equipment.equip(ItemDB.get_item(&"embers_tome"))
+	await _frames(1)
+	p.spells.assign(2, &"healing_light")
+	check(p.spells.usable_slots() == 3 and p.spells.get_slot(2) != null and p.spells.get_slot(2).id == &"healing_light", "a tome opens spell slot N")
+	p.equipment.unequip(ItemData.EquipSlot.OFF_HAND)
+	await _frames(1)
+	check(p.spells.get_slot(2) == null, "and it closes when the tome is put away")
+	p.health.invulnerable = false
+
+
+## Every new active ability of every class fires and does something.
+func test_m17b_abilities() -> void:
+	for cid in [&"barbarian", &"knight", &"wizard", &"assassin"]:
+		var world: World = await _boot_class(cid)
+		var p := world.player
+		var ab := p.abilities
+		p.health.invulnerable = true
+		_clear_enemies(world)
+		world.spawner.max_active = 80
+		p.character.grant_xp(Progression.total_xp_for(30) - p.character.total_xp, Progression.Source.OTHER)
+		p.character.skills[Skill.MANA_CONTROL] = 40
+		p.character.recalculate()
+		await _frames(2)
+		var off := _clear_offset(world, 2.2)
+		var home := p.global_position
+		var failed := []
+		for a: AbilityData in ab.class_abilities():
+			if a.passive or a.class_id == &"":
+				continue
+			# Fresh, sturdy targets right in front of you.
+			_clear_enemies(world)
+			world.spawner.max_active = 80
+			var foes: Array[Monster] = []
+			for k in 2:
+				var m := _spawn_monster(world, &"skeleton_warrior", off + Vector3(0, 0, k * 0.8 - 0.4))
+				m.health.max_health = 50000.0
+				m.health.current = 50000.0
+				foes.append(m)
+			await _frames(2)
+			p.face_direction(off.normalized(), true)
+			p.set_lock_target(foes[0])
+			p.state = Player.State.NORMAL
+			p.mana.refill()
+			p.stamina.refill()
+			ab.set_rage(100.0)
+			ab.cooldowns.clear()
+			var hp := foes[0].health.current + foes[1].health.current
+			ab.bar[0] = a.id
+			var fired := ab.try_use(0)
+			await _frames(45)
+			var hurt := foes[0].health.current + foes[1].health.current < hp
+			var st := false
+			for m in foes:
+				for s in [&"stunned", &"slowed", &"weakened", &"chilled", &"shocked", &"bleed", &"burn", &"taunted", &"silenced"]:
+					if m.status.has(s):
+						st = true
+			var buff := not ab.buffs.is_empty() or not ab.marks.is_empty() or p.status.has(&"regen")
+			var world_fx := not get_tree().get_nodes_in_group(&"ability_zones").is_empty() or not get_tree().get_nodes_in_group(&"ice_walls").is_empty() \
+				or not get_tree().get_nodes_in_group(&"decoys").is_empty()
+			if not fired or not (hurt or st or buff or world_fx or a.effect in [&"grappling_hook", &"lunge", &"leap_slam", &"holy_light", &"polymorph"]):
+				failed.append(a.id)
+			for m in foes:
+				m.global_position = Vector3(0, -500, 0)
+				_kill(m, world)
+			ab.buffs.clear()
+			ab.marks.clear()
+			p.global_position = home
+			p.velocity = Vector3.ZERO
+			await _frames(30)
+		check(failed.is_empty(), "%s: every new ability fires and has an effect %s" % [cid, failed])
+		p.health.invulnerable = false

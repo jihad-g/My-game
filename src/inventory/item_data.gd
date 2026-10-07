@@ -47,6 +47,7 @@ const PARAM_TEXT := {
 	&"kill_heal": "Each kill heals you by %d%% of your health",
 	&"arrow_damage": "+%d arrow damage",
 	&"arrow_burn": "Arrows set enemies on fire (%.0f s)",
+	&"spell_slot": "Opens a third spell slot (N)",
 }
 
 ## Human-readable names for stat_bonuses keys.

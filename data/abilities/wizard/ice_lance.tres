@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"ice_lance"
+display_name = "Ice Lance"
+description = "A piece of ice. Double damage on chilled or frozen enemies."
+effect = &"ice_lance"
+unlock_level = 8
+cost_type = 1
+cost = 10
+cooldown = 1.5
+damage = 20
+damage_type = &"frost"
+radius = 0
+range = 22
+duration = 0
+power = 0
+icon_color = Color(0.6, 0.9, 1, 1)
+icon_glyph = "IL"
+class_id = &"wizard"
+passive = false

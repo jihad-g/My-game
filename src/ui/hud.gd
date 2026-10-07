@@ -446,24 +446,25 @@ func _build_ability_bar() -> void:
 	holder.offset_bottom = -104
 	holder.add_theme_constant_override(&"separation", 8)
 	_root.add_child(holder)
-	for i in 6:
-		if i == 4:
+	# Milestone 17b: 6 ability slots (Z X C T V U), then 3 spell slots (Y H, N with a tome).
+	for i in PlayerAbilities.SLOTS + SpellBook.SLOTS:
+		if i == PlayerAbilities.SLOTS:
 			var gap := Control.new()
 			gap.custom_minimum_size.x = 14
 			holder.add_child(gap)
 		var b := Button.new()
-		b.custom_minimum_size = Vector2(54, 54)
+		b.custom_minimum_size = Vector2(50, 50)
 		b.focus_mode = Control.FOCUS_NONE
 		b.add_theme_font_size_override(&"font_size", 18)
 		var idx := i
 		b.pressed.connect(func() -> void:
 			if player:
-				if idx < 4:
+				if idx < PlayerAbilities.SLOTS:
 					player.abilities.try_use(idx)
 				else:
-					player.abilities.try_cast(idx - 4))
+					player.abilities.try_cast(idx - PlayerAbilities.SLOTS))
 		var key := Label.new()
-		key.text = ["Z", "X", "C", "T", "Y", "H"][i]
+		key.text = (PlayerAbilities.SLOT_KEYS + SpellBook.SLOT_KEYS)[i]
 		key.position = Vector2(4, 1)
 		key.add_theme_font_size_override(&"font_size", 11)
 		key.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -528,58 +529,57 @@ func _on_level_up(level: int) -> void:
 	_banner.modulate.a = 1.0
 	tw.tween_interval(2.5)
 	tw.tween_property(_banner, "modulate:a", 0.0, 1.0)
-	var unlocked := PackedStringArray()
-	for i in 3:
-		var a := player.abilities.get_slot(i)
-		if a and a.unlock_level == level:
-			unlocked.append(a.display_name)
-	if not unlocked.is_empty():
-		show_toast("New ability: %s" % ", ".join(unlocked), UITheme.GOLD)
 	_refresh_abilities()
 
 
 func _refresh_abilities() -> void:
 	if player == null:
 		return
-	for i in 4:
-		var a := player.abilities.get_slot(i)
+	var ab := player.abilities
+	for i in PlayerAbilities.SLOTS:
+		var a := ab.get_slot(i)
 		var b := _ability_buttons[i]
 		if a == null:
-			b.visible = false
+			b.text = ""
+			b.modulate = Color(0.45, 0.45, 0.5, 0.7)
+			b.tooltip_text = "Ability slot %s: empty\nPut an ability here in the ability book (L) while resting at a bed or campfire." % PlayerAbilities.SLOT_KEYS[i]
+			_ability_cd[i].text = ""
 			continue
-		b.visible = true
 		b.text = a.icon_glyph
-		var unlocked := player.abilities.is_unlocked(a)
+		var unlocked := ab.is_unlocked(a)
 		b.modulate = a.icon_color.lerp(Color.WHITE, 0.35) if unlocked else Color(0.4, 0.4, 0.45)
-		var cost := player.abilities.effective_cost(a)
+		var cost := ab.effective_cost(a)
+		var shield := a == PlayerAbilities.shield_ability()
 		b.tooltip_text = "%s\n%s\nCost: %d %s · Cooldown %ss%s" % [a.display_name, a.description, roundi(cost),
-			"mana" if i == 3 else a.cost_name(), a.cooldown,
-			"" if unlocked else "\n" + player.abilities.lock_reason(a)]
-		var cd := player.abilities.cooldown_left(a)
+			"mana" if shield else a.cost_name(), a.cooldown,
+			"" if unlocked else "\n" + ab.lock_reason(a)]
+		var cd := ab.cooldown_left(a)
 		if cd >= 0.05:
 			_ability_cd[i].text = "%.1f" % cd
 		elif unlocked:
 			_ability_cd[i].text = ""
 		else:
-			_ability_cd[i].text = "Lv%d" % a.unlock_level if i < 3 else "MC"
-	# Spell slots (Milestone 7)
+			_ability_cd[i].text = "MC" if shield else "Lv%d" % a.unlock_level
+	# Spell slots (Milestone 7; the third one needs a tome, Milestone 17b)
 	for k in SpellBook.SLOTS:
-		var b := _ability_buttons[4 + k]
+		var idx := PlayerAbilities.SLOTS + k
+		var b := _ability_buttons[idx]
+		b.visible = k < player.spells.usable_slots()
 		var sp := player.spells.get_slot(k)
 		if sp == null:
 			b.text = "+"
 			b.modulate = Color(0.55, 0.5, 0.65)
-			b.tooltip_text = "Spell slot %s: empty\nLearn spells from tomes. Spellbook: L" % ["Y", "H"][k]
-			_ability_cd[4 + k].text = ""
+			b.tooltip_text = "Spell slot %s: empty\nLearn spells from tomes. Ability book: L" % SpellBook.SLOT_KEYS[k]
+			_ability_cd[idx].text = ""
 			continue
 		b.text = sp.icon_glyph
-		var why := player.abilities.spell_block_reason(sp)
+		var why := ab.spell_block_reason(sp)
 		var castable := why == "" or why == "Not enough mana"
 		b.modulate = sp.icon_color.lerp(Color.WHITE, 0.35) if castable else Color(0.4, 0.4, 0.45)
 		b.tooltip_text = "%s\n%s\nCost: %d mana · Cooldown %ss · Mana Control %d" % [sp.display_name, sp.description,
-			roundi(player.abilities.effective_cost(sp)), sp.cooldown, sp.required_mana_control]
-		var cd := player.abilities.cooldown_left(sp)
-		_ability_cd[4 + k].text = "%.1f" % cd if cd >= 0.05 else ("" if castable else "MC")
+			roundi(ab.effective_cost(sp)), sp.cooldown, sp.required_mana_control]
+		var cd := ab.cooldown_left(sp)
+		_ability_cd[idx].text = "%.1f" % cd if cd >= 0.05 else ("" if castable else "MC")
 
 
 func _build_prompt_and_toasts() -> void:

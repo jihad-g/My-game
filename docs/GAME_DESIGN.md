@@ -769,7 +769,7 @@ textures on any surface, so large areas look flat up close.
 | Charged heavy, sprint, plunging attacks and ripostes | ✅ | M17a |
 | Status effects and elemental combos | ✅ | Weather doesn't make everyone wet (only the player in rain) |
 | Classes (4) and abilities (3 each) | ✅ | |
-| More abilities / ability upgrades / talents | ❌ | |
+| More abilities / ability upgrades / talents | 🟡 | M17b: ability book, 15 new abilities per class (levels 2–30), passives, 6-slot bar; levels 32–100 and upgrades not yet |
 | Respec (reset skill points) | ✅ | Draught of Forgetting (Milestone 15) |
 | Spells (8), spellbook, tomes | ✅ | No spell upgrades |
 | Levels 1–100, skills, perks | ✅ | Levels 75–100 are very slow (only S-rank content) |
@@ -1126,7 +1126,11 @@ framework, spawn rules, POI ranks), so it is cheap and makes every other system 
 
 **Done: Milestone 17a — "Heroes' Arsenal" part 1.** Six new weapon types (bow, spear, war hammer, greatsword,
 wand, tome), 20 new weapons, arrows, two-handed weapons, charged heavy / sprint / plunging attacks, ripostes,
-and weapon and legendary powers (ideas 9a–9f, 7a–7d, part of 8d). Next: M17b, the ability book.
+and weapon and legendary powers (ideas 9a–9f, 7a–7d, part of 8d).
+
+**Done: Milestone 17b — "Heroes' Arsenal" part 2.** The ability book (L): 60 new class abilities for levels 2–30
+(ideas 5a–5h and the list in ARSENAL_PLAN.md), 15 passives, a 6-slot bar changed at a bed or a campfire, and a
+third spell slot with a tome. Next: M17c, abilities for levels 32–64 and the 20 shared spells.
 
 **Done: Milestone 16 — "The Lost Shards".** Quest system and journal, the main quest, royal errands with
 dialogue choices, 12 lore pages, kingdom histories, class backstories and the chronicle.

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"time_warp"
+display_name = "Time Warp"
+description = "A circle at the cursor that slows enemies inside for 5 s."
+effect = &"time_warp"
+unlock_level = 10
+cost_type = 1
+cost = 25
+cooldown = 18
+damage = 0
+damage_type = &"physical"
+radius = 4.5
+range = 16
+duration = 5
+power = 0
+icon_color = Color(0.75, 0.55, 1.0, 1)
+icon_glyph = "TW"
+class_id = &"wizard"
+passive = false

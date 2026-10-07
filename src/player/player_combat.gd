@@ -582,7 +582,7 @@ func build_physical(base: float, target: Node, poise: float, knockback: float,
 	var amount := (base + (float(weapon.stat_bonuses.get(&"damage_bonus", 0.0)) if weapon else 0.0))
 	amount *= ch.physical_mult * ch.weapon_mult(weapon_type) * player.abilities.outgoing_mult()
 	amount *= player.stats.get_mult(Stats.ATTACK_DAMAGE) * _rng.randf_range(0.92, 1.08)
-	amount *= float(bonus.get("mult", 1.0))
+	amount *= float(bonus.get("mult", 1.0)) * player.abilities.target_mult(target)
 	var info := DamageInfo.create(amount, player, damage_type)
 	var strength := ch.skill_level(Skill.STRENGTH)
 	info.poise_damage = poise * Skill.poise_mult(strength, ch.eff(Skill.STRENGTH))

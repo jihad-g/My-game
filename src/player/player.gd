@@ -126,6 +126,7 @@ func _ready() -> void:
 	model.footstep.connect(_on_footstep)
 	combat.player = self
 	abilities.player = self
+	character.passive_source = abilities.passive_power
 	character.equipment = equipment
 	equipment.changed.connect(_on_equipment_changed)
 	health.died.connect(_on_died)
@@ -153,8 +154,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if World.instance and ((World.instance.build_mode and World.instance.build_mode.active)
 			or (World.instance.blueprints and World.instance.blueprints.placer.active)):
-		if event.is_action_pressed(&"attack_light") or event.is_action_pressed(&"attack_heavy"):
-			return  # clicks belong to build mode
+		if event.is_action_pressed(&"attack_light") or event.is_action_pressed(&"attack_heavy") \
+				or event.is_action_pressed(&"ability_6"):
+			return  # clicks (and U = repair) belong to build mode
 	if event.is_action_pressed(&"attack_light"):
 		_want_light = true
 	elif event.is_action_pressed(&"attack_heavy"):
@@ -171,10 +173,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		abilities.try_use(2)
 	elif event.is_action_pressed(&"ability_shield"):
 		abilities.try_use(3)
+	elif event.is_action_pressed(&"ability_5"):
+		abilities.try_use(4)
+	elif event.is_action_pressed(&"ability_6"):
+		abilities.try_use(5)
 	elif event.is_action_pressed(&"spell_1"):
 		abilities.try_cast(0)
 	elif event.is_action_pressed(&"spell_2"):
 		abilities.try_cast(1)
+	elif event.is_action_pressed(&"spell_3"):
+		abilities.try_cast(2)
 	else:
 		for i in InputSetup.HOTBAR_ACTIONS.size():
 			if event.is_action_pressed(InputSetup.HOTBAR_ACTIONS[i]):
@@ -499,7 +507,7 @@ func _update_facing(delta: float) -> void:
 # --- Dodge ------------------------------------------------------------------------
 
 func _start_dodge(input: Vector3) -> void:
-	if not stamina.try_consume(dodge_cost * Skill.dodge_cost_mult(character.skill_level(Skill.DEXTERITY)) * equipment.dodge_cost_mult()):
+	if not stamina.try_consume(dodge_cost * Skill.dodge_cost_mult(character.skill_level(Skill.DEXTERITY)) * dodge_cost_mult()):
 		Events.toast.emit("Not enough stamina to dodge", Color(1, 0.85, 0.4))
 		return
 	combat.cancel()
@@ -578,7 +586,7 @@ func _update_blocking(delta: float) -> void:
 	is_blocking = wants
 	if is_blocking:
 		_block_time += delta
-	model.set_blocking(is_blocking)
+	model.set_blocking(is_blocking or abilities.has_buff(&"shield_wall"))
 
 
 # --- Taking damage ------------------------------------------------------------------
@@ -590,6 +598,15 @@ func receive_hit(info: DamageInfo) -> void:
 	if health.invulnerable:
 		Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, true, "Dodged")
 		return
+	# Ability buffs (Milestone 17b): Evasion, Shield Wall, Spear Wall, Frost Armour.
+	if abilities.has_buff(&"evasion") and randf() < abilities.buff_power(&"evasion", 0.5):
+		Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, true, "Evaded")
+		return
+	if abilities.has_buff(&"shield_wall") and _is_in_front(info):
+		Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, true, "Shield Wall")
+		Audio.play(&"block", -3.0)
+		return
+	abilities.on_hit_received(info)
 	if is_blocking and _is_in_front(info):
 		if _block_time <= character.parry_window:
 			Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, false, "Parry!")
@@ -600,7 +617,8 @@ func receive_hit(info: DamageInfo) -> void:
 			combat.open_riposte()
 			return
 		var blocked := info.amount * character.block_reduction
-		var cost := blocked * block_stamina_per_damage * Skill.block_stamina_mult(character.skill_level(Skill.DEFENSE))
+		var cost := blocked * block_stamina_per_damage * Skill.block_stamina_mult(character.skill_level(Skill.DEFENSE)) \
+			* (1.0 - abilities.passive_power(&"bulwark"))
 		if stamina.current >= cost:
 			stamina.consume(cost, false)
 			info.amount -= blocked
@@ -632,6 +650,9 @@ func receive_hit(info: DamageInfo) -> void:
 	if is_dead:
 		return
 	info.knockback *= Skill.knockback_taken_mult(character.skill_level(Skill.STRENGTH), character.skill_level(Skill.DEFENSE))
+	if abilities.has_buff(&"unstoppable"):
+		info.knockback = Vector3.ZERO
+		info.poise_damage = 0.0
 	_knockback += Vector3(info.knockback.x, 0, info.knockback.z)
 	if info.poise_damage >= 30.0 and state != State.DODGING:
 		_stagger(0.45)
@@ -899,6 +920,8 @@ func setup_class(class_data: ClassData, fresh: bool) -> void:
 			inventory.add_item(StringName(id), int(class_data.starting_items[id]))
 	_on_equipment_changed()
 	character.recalculate(fresh)
+	if fresh or abilities.bar.size() != PlayerAbilities.SLOTS:
+		abilities.reset_bar()
 
 
 ## Equips the item in inventory slot `index`; the replaced item goes back to the inventory.
@@ -953,6 +976,10 @@ func _on_equipment_changed() -> void:
 		moveset = character.class_data.unarmed_moveset
 	combat.set_moveset(moveset)
 	model.set_weapon(equipment.weapon_type(), equipment.has_shield())
+	# A tome in the off hand opens the third spell slot (N, Milestone 17b).
+	var oh := equipment.offhand()
+	spells.extra_slot = oh != null and float(oh.weapon_params.get(&"spell_slot", 0.0)) > 0.0
+	spells.changed.emit()
 	model.set_outfit(equipment.outfit_ids(), weapon.id if weapon else &"")
 	character.recalculate()
 
@@ -1012,7 +1039,7 @@ func read_spell_tome(index: int) -> bool:
 	_take_one(index)
 	var mc := character.skill_level(Skill.MANA_CONTROL)
 	var note := "" if mc >= sp.required_mana_control else " (needs Mana Control %d to cast)" % sp.required_mana_control
-	Events.toast.emit("Learned spell: %s%s. Spellbook: L" % [sp.display_name, note], Color(0.75, 0.6, 1.0))
+	Events.toast.emit("Learned spell: %s%s. Ability book: L" % [sp.display_name, note], Color(0.75, 0.6, 1.0))
 	Events.spell_learned.emit(sp.id)
 	return true
 
@@ -1031,7 +1058,12 @@ func is_stealthed() -> bool:
 ## How far away enemies notice you, as a multiplier on their sight range
 ## (Milestone 14): light armour < 1, heavy armour > 1.
 func notice_mult() -> float:
-	return equipment.notice_mult()
+	return equipment.notice_mult(1.0 - abilities.passive_power(&"heavy_armour"))
+
+
+## Gear and passives on the stamina cost of a dodge (Light Feet, Heavy Armour Training).
+func dodge_cost_mult() -> float:
+	return equipment.dodge_cost_mult(1.0 - abilities.passive_power(&"heavy_armour")) * (1.0 - abilities.passive_power(&"light_feet"))
 
 
 func _consume(item: ItemData) -> void:

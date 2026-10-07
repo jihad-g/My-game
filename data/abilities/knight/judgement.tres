@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"judgement"
+display_name = "Judgement"
+description = "A holy overhead strike. The target is marked and takes +15% damage for 8 s."
+effect = &"judgement"
+unlock_level = 8
+cost_type = 1
+cost = 15
+cooldown = 10
+damage = 18
+damage_type = &"holy"
+radius = 2.6
+range = 0
+duration = 8
+power = 0.15
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "Jd"
+class_id = &"knight"
+passive = false

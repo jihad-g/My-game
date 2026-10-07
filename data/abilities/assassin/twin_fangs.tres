@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"twin_fangs"
+display_name = "Twin Fangs"
+description = "A fast flurry of 6 hits on the enemies in front of you."
+effect = &"twin_fangs"
+unlock_level = 30
+cost_type = 2
+cost = 18
+cooldown = 9
+damage = 7
+damage_type = &"physical"
+radius = 2.4
+range = 0
+duration = 0
+power = 6
+icon_color = Color(0.55, 0.85, 0.45, 1)
+icon_glyph = "TF"
+class_id = &"assassin"
+passive = false

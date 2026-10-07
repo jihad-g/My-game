@@ -2,6 +2,37 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.18.0] — Milestone 17b: Heroes' Arsenal - the ability book
+
+### Added
+- **Ability book (L)** with two pages: Abilities and Spells. Every class learns a **new ability every two levels**
+  (levels 2–30 in this milestone): 15 new abilities per class, 60 in total (`AbilityBook`, `data/abilities/<class>/`).
+  - Barbarian: Cleave, Thick Skin, Rage Fuel, Leap Slam, Ground Stomp, Intimidating Shout, Hamstring, Reckless
+    Swing, Earthshatter, Bloodlust, Savage Throw, Skull Crack, Blood Frenzy, Unstoppable, Second Wind.
+  - Knight: Shield Wall, Steadfast, Lunge, Judgement, Taunting Shout, Shield Throw, Heavy Armour Training,
+    Riposte Master, Holy Light, Spear Wall, Valor, Consecrate, Pommel Strike, Bulwark, Charge of the Order.
+  - Wizard: Arcane Orb, Mana Flow, Flame Wave, Ice Lance, Time Warp, Spark, Fire Wall, Frost Armour, Mana Shield,
+    Static Field, Elemental Focus, Polymorph, Ice Wall, Ignite, Ball Lightning.
+  - Assassin: Smoke Bomb, Light Feet, Death Mark, Throwing Knives, Backstab Mastery, Garrote, Caltrops, Evasion,
+    Venom Mastery, Fan of Knives, Opportunist, Grappling Hook, Blind Powder, Shadow Clone, Twin Fangs.
+- **Passive abilities** (15) that are always on: more health, block, parry window, mana regeneration, backstab
+  damage, elemental damage, longer burns, more poison stacks, cheaper dodges and blocks, and more.
+- **A 6-slot ability bar** on Z, X, C, T, V and U. New abilities fill empty slots by themselves; to change the bar,
+  rest next to a **bed or a campfire**. The bar is saved with your character.
+- **Third spell slot (N)** while a tome with a spell slot (the Tome of Embers) is in your off hand.
+- Ground areas for abilities (`AbilityZone`), marks (Judgement, Death Mark), a Shadow Clone decoy that draws
+  monsters, blinding (monsters lose you), an Ice Wall that blocks the way.
+- Level-up messages name every ability you learned.
+- Tests: `test_m17b_data`, `test_m17b_book`, `test_m17b_abilities` (every new ability fires and has an effect).
+  Screenshot runner `--only=book`.
+
+### Changed
+- **Keys:** abilities 5 and 6 are V and U, spell 3 is N; *camera recenter* moved from V to Home and the
+  *Blueprints* screen from N to P. (U still repairs in build mode.)
+- The Temperature Shield is a normal ability on the bar (T by default) and can be moved.
+- Barbarian abilities that cost Rage now take their Rage when used.
+- The Spellbook is now the Spells page of the ability book.
+
 ## [0.17.1] — The character faces the mouse
 
 ### Changed

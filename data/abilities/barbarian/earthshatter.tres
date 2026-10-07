@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"earthshatter"
+display_name = "Earthshatter"
+description = "A line of rocks bursts out of the ground in front of you and throws enemies off their feet."
+effect = &"earthshatter"
+unlock_level = 18
+cost_type = 2
+cost = 24
+cooldown = 12
+damage = 26
+damage_type = &"physical"
+radius = 1.6
+range = 8
+duration = 1.2
+power = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "Es"
+class_id = &"barbarian"
+passive = false

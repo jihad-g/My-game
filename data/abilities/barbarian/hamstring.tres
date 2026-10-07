@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"hamstring"
+display_name = "Hamstring"
+description = "A low cut that slows the target for 6 s."
+effect = &"hamstring"
+unlock_level = 14
+cost_type = 2
+cost = 10
+cooldown = 6
+damage = 14
+damage_type = &"physical"
+radius = 2.6
+range = 0
+duration = 6
+power = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "Hm"
+class_id = &"barbarian"
+passive = false

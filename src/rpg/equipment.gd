@@ -125,15 +125,16 @@ func weight_counts() -> Dictionary:
 
 
 ## Multiplier on how far away enemies notice you (1.0 = normal).
-func notice_mult() -> float:
+## `heavy_scale` shrinks the heavy-armour part (Heavy Armour Training, M17b).
+func notice_mult(heavy_scale: float = 1.0) -> float:
 	var w := weight_counts()
-	return clampf(1.0 + NOTICE_LIGHT * w[ItemData.ArmorWeight.LIGHT] + NOTICE_HEAVY * w[ItemData.ArmorWeight.HEAVY], 0.6, 1.5)
+	return clampf(1.0 + NOTICE_LIGHT * w[ItemData.ArmorWeight.LIGHT] + NOTICE_HEAVY * heavy_scale * w[ItemData.ArmorWeight.HEAVY], 0.6, 1.5)
 
 
 ## Multiplier on the stamina cost of a dodge roll.
-func dodge_cost_mult() -> float:
+func dodge_cost_mult(heavy_scale: float = 1.0) -> float:
 	var w := weight_counts()
-	return clampf(1.0 + DODGE_LIGHT * w[ItemData.ArmorWeight.LIGHT] + DODGE_HEAVY * w[ItemData.ArmorWeight.HEAVY], 0.7, 1.5)
+	return clampf(1.0 + DODGE_LIGHT * w[ItemData.ArmorWeight.LIGHT] + DODGE_HEAVY * heavy_scale * w[ItemData.ArmorWeight.HEAVY], 0.7, 1.5)
 
 
 ## Short name of the overall outfit style: "Light", "Medium", "Heavy" or "Mixed".

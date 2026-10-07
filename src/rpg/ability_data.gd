@@ -25,6 +25,11 @@ enum CostType { NONE, MANA, STAMINA, RAGE }
 @export var required_mana_control: int = 0
 @export var icon_color: Color = Color.WHITE
 @export var icon_glyph: String = "?"
+## Milestone 17b (ability book): the class that learns it (&"" = from ClassData.abilities or universal).
+@export var class_id: StringName
+## Passive abilities are always on once learned; they never go on the bar.
+## Their `effect` names the bonus and `power` its size (see PlayerAbilities.passive_power).
+@export var passive: bool = false
 
 
 func cost_name() -> String:

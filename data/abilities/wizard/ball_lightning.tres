@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"ball_lightning"
+display_name = "Ball Lightning"
+description = "A slow ball of lightning that zaps every enemy near it as it flies."
+effect = &"ball_lightning"
+unlock_level = 30
+cost_type = 1
+cost = 28
+cooldown = 10
+damage = 8
+damage_type = &"lightning"
+radius = 3.5
+range = 16
+duration = 0
+power = 0
+icon_color = Color(0.8, 0.85, 1, 1)
+icon_glyph = "BLt"
+class_id = &"wizard"
+passive = false

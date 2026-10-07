@@ -1,6 +1,6 @@
 class_name BlueprintPanel
 extends PanelContainer
-## Blueprints screen (N, Milestone 8).
+## Blueprints screen (P, Milestone 8; was N before Milestone 17b).
 ##   left:   built-in and saved designs; capture your base; import from the clipboard
 ##   right:  preview, size, pieces, total materials with what you have (inventory +
 ##           chests nearby) and what's missing, warnings; place / export / delete

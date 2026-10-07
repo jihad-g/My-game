@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"reckless_swing"
+display_name = "Reckless Swing"
+description = "A huge hit (x2.5), but you take 20% more damage for 3 s."
+effect = &"reckless_swing"
+unlock_level = 16
+cost_type = 2
+cost = 20
+cooldown = 8
+damage = 20
+damage_type = &"physical"
+radius = 2.8
+range = 0
+duration = 3
+power = 2.5
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "RS"
+class_id = &"barbarian"
+passive = false

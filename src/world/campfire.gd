@@ -22,6 +22,7 @@ var _t := 0.0
 func _ready() -> void:
 	add_to_group(&"heat_sources")
 	add_to_group(&"crafting_stations")
+	add_to_group(&"rest_spots")  # change the ability bar here (Milestone 17b)
 	set_meta(&"station_id", &"campfire")
 	collision_layer = Layers.INTERACTABLE
 	collision_mask = 0

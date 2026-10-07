@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"caltrops"
+display_name = "Caltrops"
+description = "Throw spikes on the ground. Enemies on them are slowed and bleed for 6 s."
+effect = &"caltrops"
+unlock_level = 14
+cost_type = 2
+cost = 12
+cooldown = 14
+damage = 4
+damage_type = &"physical"
+radius = 3.5
+range = 10
+duration = 6
+power = 0
+icon_color = Color(0.55, 0.85, 0.45, 1)
+icon_glyph = "Ca"
+class_id = &"assassin"
+passive = false

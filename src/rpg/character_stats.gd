@@ -30,6 +30,8 @@ var unspent_points: int = 0
 var xp_by_source: Dictionary = {}
 var equipment: Equipment
 ## Extra temperature protection from abilities (Magic Temperature Shield).
+## Passive abilities (Milestone 17b): func(effect: StringName) -> float, set by the player.
+var passive_source: Callable
 var ability_insulation: float = 0.0
 var ability_cooling: float = 0.0
 
@@ -182,11 +184,11 @@ func recalculate(reset: bool = false) -> void:
 	crit_mult = Skill.crit_damage_mult(dex)
 	attack_speed = Skill.attack_speed_mult(dex, eff(Skill.DEXTERITY)) * (1.0 + _eq(&"attack_speed") / 100.0)
 	move_speed = Skill.move_speed_mult(dex, eff(Skill.DEXTERITY)) * (1.0 + _eq(&"move_speed") / 100.0)
-	backstab_mult = c.backstab_multiplier + Skill.backstab_bonus(dex, eff(Skill.DEXTERITY)) + _eq(&"backstab") / 100.0
-	block_reduction = minf(c.block_reduction + Skill.block_bonus(def) + _eq(&"block") / 100.0, 1.0)
-	parry_window = c.parry_window + _eq(&"parry") / 1000.0
+	backstab_mult = c.backstab_multiplier + Skill.backstab_bonus(dex, eff(Skill.DEXTERITY)) + (_eq(&"backstab") + _passive(&"backstab_mastery")) / 100.0
+	block_reduction = minf(c.block_reduction + Skill.block_bonus(def) + (_eq(&"block") + _passive(&"steadfast")) / 100.0, 1.0)
+	parry_window = (c.parry_window + _eq(&"parry") / 1000.0) * (1.0 + _passive(&"riposte_master"))
 
-	var new_max_health := Skill.max_health(def, c.base_health, c.health_per_defense) + _eq(&"max_health")
+	var new_max_health := (Skill.max_health(def, c.base_health, c.health_per_defense) + _eq(&"max_health")) * (1.0 + _passive(&"max_health_pct") / 100.0)
 	var new_max_stamina := c.base_stamina + Skill.bonus_stamina(strength, eff(Skill.STRENGTH)) + _eq(&"max_stamina")
 	var new_max_mana := Skill.max_mana(mc, c.base_mana, c.mana_per_point) + _eq(&"max_mana")
 	if health:
@@ -203,7 +205,7 @@ func recalculate(reset: bool = false) -> void:
 		stamina.current = new_max_stamina if reset else minf(stamina.current, new_max_stamina)
 		stamina.stamina_changed.emit(stamina.current, stamina.max_stamina)
 	if mana:
-		mana.regen_per_second = Skill.mana_regen(mc, eff(Skill.MANA_CONTROL)) * (1.0 + _eq(&"mana_regen") / 100.0)
+		mana.regen_per_second = Skill.mana_regen(mc, eff(Skill.MANA_CONTROL)) * (1.0 + (_eq(&"mana_regen") + _passive(&"mana_flow")) / 100.0)
 		mana.set_max(new_max_mana)
 		if reset:
 			mana.refill()
@@ -213,6 +215,10 @@ func recalculate(reset: bool = false) -> void:
 	if stats:
 		stats.set_source(&"character", {Stats.MOVE_SPEED: move_speed, Stats.ATTACK_SPEED: attack_speed})
 	recalculated.emit()
+
+
+func _passive(effect: StringName) -> float:
+	return float(passive_source.call(effect)) if passive_source.is_valid() else 0.0
 
 
 func _eq(stat: StringName) -> float:

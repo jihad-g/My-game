@@ -23,3 +23,6 @@ stat_bonuses = {
 weapon_type = &"tome"
 armor_weight = 1
 outfit_look = &"tome"
+weapon_params = {
+&"spell_slot": 1
+}

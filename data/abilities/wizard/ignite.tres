@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"ignite"
+display_name = "Ignite"
+description = "Passive: burning you cause lasts 50% longer."
+effect = &"ignite"
+unlock_level = 28
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 0.5
+icon_color = Color(1, 0.5, 0.2, 1)
+icon_glyph = "Ig"
+class_id = &"wizard"
+passive = true

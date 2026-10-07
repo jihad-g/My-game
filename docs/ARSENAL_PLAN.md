@@ -1,7 +1,8 @@
 # Heroes' Arsenal — the big list (plan)
 
-**Status:** the weapons (section 5) and the new attacks are **done in Milestone 17a (v0.17.0)**. The abilities
-(sections 1–4) and the shared spells (section 6) are **NOT IMPLEMENTED yet** — they come in M17b–M17d.
+**Status:** the weapons (section 5) and the new attacks are **done in Milestone 17a (v0.17.0)**. The ability
+book, the 6-slot bar and the abilities for **levels 2–30 are done in Milestone 17b (v0.18.0)**. The abilities for
+levels 32–100 and the shared spells (section 6) are **NOT IMPLEMENTED yet** — they come in M17c–M17d.
 Change, remove or add anything before we build it.
 
 What is in this list:
@@ -39,7 +40,7 @@ Rage · axes, war hammers, greatswords · crowds and raw power.
 | 6 | Rage Fuel | Passive | You get Rage when enemies hit you. |
 | 8 | Leap Slam | Active | Jump to a spot up to 10 m away and slam down. Damage and slow around you. |
 | 10 | Ground Stomp | Active | Stomp the ground. Enemies near you are stunned for 1 s. |
-| 12 | Intimidating Shout | Active | Enemies near you deal 20% less damage for 8 s. |
+| 12 | Intimidating Shout | Active | Enemies near you deal 25% less damage for 8 s. |
 | 14 | Hamstring | Active | A low cut that slows the target by 50% for 6 s. |
 | 16 | Reckless Swing | Active | A huge hit (×2.5), but you take 20% more damage for 3 s. |
 | 18 | Earthshatter | Active | A line of rocks bursts out of the ground in front of you and throws enemies into the air. |
@@ -97,10 +98,10 @@ Mana · swords, shields, spears, greatswords · defence, holy light, protecting 
 | 8 | Judgement | Active | A holy overhead strike. The target is marked and takes +15% damage for 8 s. |
 | 10 | Taunting Shout | Active | Every enemy within 12 m attacks you. |
 | 12 | Shield Throw | Active | Throw your shield. It bounces between 3 enemies and comes back. |
-| 14 | Heavy Armour Training | Passive | Heavy armour slows you 50% less. |
+| 14 | Heavy Armour Training | Passive | Heavy armour's extra dodge cost and noise are halved. |
 | 16 | Riposte Master | Passive | The time window for a perfect parry is 50% longer. |
-| 18 | Holy Light | Active | Heal 15% of your health. Friends near you also heal. |
-| 20 | Spear Wall | Active | Hold your weapon forward. Enemies who charge at you are stunned. |
+| 18 | Holy Light | Active | Heal 15% of your health. (Healing friends nearby comes with real co-op in M18.) |
+| 20 | Spear Wall | Active | For 4 s, enemies that hit you from the front are stunned and take damage. |
 | 22 | Valor | Passive | +2% damage for each enemy near you (up to +10%). |
 | 24 | Consecrate | Active | Holy ground for 6 s. Hurts enemies; undead take double. |
 | 26 | Pommel Strike | Active | A fast hit with the handle that stuns for 1 s. |
@@ -148,19 +149,19 @@ Mana · staffs, wands, tomes · fire, frost, lightning and arcane magic.
 
 | Lv | Ability | Type | What it does |
 |---:|---|---|---|
-| 2 | Arcane Orb | Active | A slow orb that goes through enemies and then explodes. |
+| 2 | Arcane Orb | Active | A slow orb that explodes on the first enemy or wall it touches, hitting everything around. |
 | 4 | Mana Flow | Passive | +10% mana regeneration. |
 | 6 | Flame Wave | Active | A cone of fire in front of you. |
 | 8 | Ice Lance | Active | A piece of ice that goes through enemies. Double damage on chilled enemies. |
 | 10 | Time Warp | Active | A circle that slows enemies and their arrows for 5 s. |
 | 12 | Spark | Active | A very fast, weak lightning bolt (almost no cooldown). |
 | 14 | Fire Wall | Active | A line of fire for 6 s. Enemies who walk through it burn. |
-| 16 | Frost Armour | Active | For 15 s: +armour, and enemies who hit you are chilled. |
+| 16 | Frost Armour | Active | For 15 s: 20% less damage taken, and enemies who hit you are chilled. |
 | 18 | Mana Shield | Active | For 10 s, damage takes your mana instead of your health. |
 | 20 | Static Field | Active | The ground is filled with lightning for 5 s. Enemies standing on it are shocked. |
 | 22 | Elemental Focus | Passive | +5% fire, frost and lightning damage. |
 | 24 | Polymorph | Active | Turn an enemy into a chicken for 4 s (not bosses). |
-| 26 | Ice Wall | Active | A wall of ice that blocks the way for 6 s. |
+| 26 | Ice Wall | Active | A wall of ice at the cursor that blocks the way for 6 s. |
 | 28 | Ignite | Passive | Burning lasts 50% longer. |
 | 30 | Ball Lightning | Active | A slow ball of lightning that zaps every enemy near it. |
 | 32 | Arcane Echo | Passive | 10% chance that a spell is cast twice. |
@@ -205,7 +206,7 @@ Mana · daggers, bows · stealth, poison, critical hits and speed.
 
 | Lv | Ability | Type | What it does |
 |---:|---|---|---|
-| 2 | Smoke Bomb | Active | A cloud of smoke. Enemies inside can't see you and forget you. |
+| 2 | Smoke Bomb | Active | A cloud of smoke: enemies inside lose you and deal 25% less damage. |
 | 4 | Light Feet | Passive | Dodging uses 15% less stamina. |
 | 6 | Death Mark | Active | Mark a target. After 6 s it takes 30% of all the damage it took again. |
 | 8 | Throwing Knives | Active | Throw 3 knives in a fan. |
@@ -217,7 +218,7 @@ Mana · daggers, bows · stealth, poison, critical hits and speed.
 | 20 | Fan of Knives | Active | Knives fly out in every direction around you. |
 | 22 | Opportunist | Passive | +20% damage against stunned or slowed enemies. |
 | 24 | Grappling Hook | Active | Shoot a hook and pull yourself to a wall, tree or enemy. |
-| 26 | Blind Powder | Active | Throw powder in the target's eyes: it misses all attacks for 3 s. |
+| 26 | Blind Powder | Active | Enemies in front lose you and deal 25% less damage for 5 s. |
 | 28 | Shadow Clone | Active | Leave a copy of yourself that enemies attack for 5 s. |
 | 30 | Twin Fangs | Active | A fast flurry of 6 dagger hits. |
 | 32 | Bleeding Edge | Passive | Critical hits make the enemy bleed. |
@@ -284,7 +285,7 @@ There are 6 new weapon types:
 | 10 | Iron Pike | Spear | 14 | Uncommon | Knight | +0.4 m reach. |
 | 11 | Iron Warhammer | War hammer | 14 | Uncommon | Barbarian | Heavy attacks deal x2.5 to magic wards. |
 | 12 | Iron Greatsword | Greatsword | 16 | Uncommon | Knight, Barbarian | Very wide swings. |
-| 13 | Tome of Embers | Tome | 18 | Rare | Wizard | +15 spell power, +25 mana. The +1 spell slot comes with the new ability bar in M17b. |
+| 13 | Tome of Embers | Tome | 18 | Rare | Wizard | +15 spell power, +25 mana. Opens a third spell slot (N). |
 | 14 | Mithril Longbow | Bow | 26 | Rare | Assassin | Charged shots are +15% critical chance. |
 | 15 | Mithril Halberd | Spear | 28 | Very Rare | Knight | The heavy attack sweeps in a full circle. |
 | 16 | Frostbite Warhammer | War hammer | 34 | Very Rare | Barbarian | Every hit chills. |
@@ -334,7 +335,7 @@ nothing could be tested along the way. So I suggest building it in steps, and ev
 1. **M17a: Weapons.** ✅ Done (v0.17.0).
    - The 6 new weapon types, all 20 weapons and arrows.
    - The new attacks: charged heavy, sprint attack, plunging attack and riposte.
-2. **M17b: The ability book.**
+2. **M17b: The ability book.** ✅ Done (v0.18.0).
    - The 6+2 slot bar, choosing abilities at a bed or campfire, and passives.
    - Abilities for levels 2–30 (15 per class).
 3. **M17c: Abilities for levels 32–64** (17 per class) **and the 20 shared spells.**

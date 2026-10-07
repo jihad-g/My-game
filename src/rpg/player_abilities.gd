@@ -1,16 +1,26 @@
 class_name PlayerAbilities
 extends Node
-## Class abilities (3 per class, unlocked by level) + the universal Magic
-## Temperature Shield, plus the Barbarian's Rage resource and ability buffs.
+## Class abilities + the universal Magic Temperature Shield, plus the
+## Barbarian's Rage resource and ability buffs.
 ##
-## Slots: 0-2 = class abilities (keys Z / X / C), 3 = Temperature Shield (T).
+## Milestone 17b (ability book): every class learns a new ability every two
+## levels (AbilityBook). Active abilities go on a 6-slot bar - keys Z, X, C, T,
+## V, U - that you change in the ability book (L) while resting at a bed or a
+## campfire; passive abilities are always on once learned. By default the bar
+## holds the three starting abilities (Z, X, C) and the Temperature Shield (T);
+## newly learned actives fill empty slots by themselves.
 ## Tuning lives in AbilityData resources; behaviour in _ability_<effect>().
 
 signal cooldowns_changed
 signal rage_changed(value: float)
 signal buffs_changed
+## The ability bar changed (Milestone 17b).
+signal bar_changed
 
-const SHIELD_ABILITY := preload("res://data/abilities/temperature_shield.tres")
+## The universal Magic Temperature Shield. Loaded at run time: a preload here
+## would run while the ability scripts are still compiling and give an empty resource.
+static func shield_ability() -> AbilityData:
+	return AbilityBook.get_ability(&"temperature_shield")
 const MAX_RAGE := 100.0
 
 var player: Player
@@ -25,28 +35,167 @@ var barrier: float = 0.0
 var _barrier_fx: MeshInstance3D
 
 
+const SLOTS := 6
+const SLOT_KEYS := ["Z", "X", "C", "T", "V", "U"]
+## How close a bed or campfire must be to change the bar.
+const REST_RANGE := 6.0
+
+## Ability id per bar slot (&"" = empty).
+var bar: Array[StringName] = []
+## Death Mark / Judgement marks: target instance id -> {"until", "mult", "stored", "kind"}.
+var marks: Dictionary = {}
+
+
+## Every ability of the class in learning order (starting abilities included).
 func class_abilities() -> Array:
 	var c := player.character.class_data
-	return c.abilities if c else []
+	return AbilityBook.for_class(c.id) if c else []
+
+
+## The class book plus the universal Temperature Shield.
+func book() -> Array:
+	return class_abilities() + [shield_ability()]
 
 
 func get_slot(slot: int) -> AbilityData:
-	if slot == 3:
-		return SHIELD_ABILITY
-	var list := class_abilities()
-	return list[slot] if slot >= 0 and slot < list.size() else null
+	_ensure_bar()
+	if slot < 0 or slot >= SLOTS or bar[slot] == &"":
+		return null
+	return AbilityBook.get_ability(bar[slot])
+
+
+## The default bar: the class's three starting abilities, then the Temperature Shield on T.
+func default_bar() -> Array[StringName]:
+	var out: Array[StringName] = [&"", &"", &"", shield_ability().id, &"", &""]
+	var c := player.character.class_data
+	if c:
+		for i in mini(3, c.abilities.size()):
+			out[i] = (c.abilities[i] as AbilityData).id
+	return out
+
+
+func _ensure_bar() -> void:
+	if bar.size() != SLOTS:
+		bar = default_bar()
+
+
+func reset_bar() -> void:
+	bar = default_bar()
+	_known_level = player.character.level
+	fill_bar()
+	bar_changed.emit()
+
+
+## Puts learned actives that are not on the bar into empty slots. Returns how many.
+func fill_bar() -> int:
+	_ensure_bar()
+	var n := 0
+	for a in class_abilities():
+		var ab := a as AbilityData
+		if ab.passive or not is_unlocked(ab) or bar.has(ab.id):
+			continue
+		var free := bar.find(&"")
+		if free < 0:
+			break
+		bar[free] = ab.id
+		n += 1
+	if n > 0:
+		bar_changed.emit()
+	return n
+
+
+## Why the bar can't be changed right now ("" = it can): you must rest at a bed or a campfire.
+func bar_lock_reason() -> String:
+	if player == null or not player.is_inside_tree():
+		return ""
+	for g in [&"rest_spots"]:
+		for n in get_tree().get_nodes_in_group(g):
+			if n is Node3D and (n as Node3D).global_position.distance_to(player.global_position) <= REST_RANGE:
+				return ""
+	return "Rest at a bed or a campfire to change your ability bar"
+
+
+## Puts a learned active ability into a slot (swapping if it is in another slot).
+## `force` skips the bed/campfire rule (new characters, tests).
+func assign(slot: int, id: StringName, force: bool = false) -> bool:
+	_ensure_bar()
+	if slot < 0 or slot >= SLOTS:
+		return false
+	if not force and bar_lock_reason() != "":
+		Events.toast.emit(bar_lock_reason(), Color(1, 0.8, 0.5))
+		return false
+	if id != &"":
+		var a := AbilityBook.get_ability(id)
+		if a == null or a.passive or not (book().has(a)) or not is_unlocked(a):
+			return false
+		var other := bar.find(id)
+		if other >= 0:
+			bar[other] = bar[slot]
+	bar[slot] = id
+	bar_changed.emit()
+	return true
+
+
+func is_learned(a: AbilityData) -> bool:
+	return a != null and book().has(a) and is_unlocked(a)
+
+
+## Learned passive with this effect? Returns its power (0 if not learned).
+func passive_power(effect: StringName) -> float:
+	if player == null or player.character == null or player.character.class_data == null:
+		return 0.0
+	var t := 0.0
+	for a in class_abilities():
+		var ab := a as AbilityData
+		if ab.passive and ab.effect == effect and player.character.level >= ab.unlock_level:
+			t += ab.power
+	return t
+
+
+func has_passive(effect: StringName) -> bool:
+	return passive_power(effect) > 0.0
+
+
+var _known_level := 0
+
+
+func _ready() -> void:
+	Events.enemy_killed.connect(_on_kill_for_buffs)
+	Events.level_up.connect(func(level: int) -> void:
+		if player and player.character:
+			on_level_up(level))
+
+
+## Called when the character reaches `level`: announces every ability learned
+## since the last level up, fills empty bar slots and applies new passives.
+func on_level_up(level: int) -> PackedStringArray:
+	var names := PackedStringArray()
+	var c := player.character.class_data
+	if c == null:
+		return names
+	var prev := _known_level if _known_level > 0 and _known_level < level else level - 1
+	_known_level = level
+	for a in class_abilities():
+		var ab := a as AbilityData
+		if ab.unlock_level > prev and ab.unlock_level <= level:
+			names.append("%s%s" % [ab.display_name, " (passive)" if ab.passive else ""])
+	fill_bar()
+	if names.size() > 0:
+		player.character.recalculate()
+		Events.toast.emit("New ability: %s - ability book (L)" % ", ".join(names), UITheme.GOLD)
+	return names
 
 
 func is_unlocked(a: AbilityData) -> bool:
 	if a == null:
 		return false
-	if a == SHIELD_ABILITY:
+	if a == shield_ability():
 		return player.character.can_use_temperature_shield()
 	return player.character.level >= a.unlock_level
 
 
 func lock_reason(a: AbilityData) -> String:
-	if a == SHIELD_ABILITY and not is_unlocked(a):
+	if a == shield_ability() and not is_unlocked(a):
 		return "Needs Mana Control %d" % player.character.class_data.temperature_shield_requirement()
 	if a and player.character.level < a.unlock_level:
 		return "Unlocks at level %d" % a.unlock_level
@@ -58,7 +207,7 @@ func cooldown_left(a: AbilityData) -> float:
 
 
 func effective_cost(a: AbilityData) -> float:
-	if a == SHIELD_ABILITY:
+	if a == shield_ability():
 		return player.character.ability_mana_cost(player.character.class_data.temperature_shield_cost)
 	if a.cost_type == AbilityData.CostType.MANA:
 		return player.character.ability_mana_cost(a.cost)
@@ -90,7 +239,7 @@ func try_use(slot: int) -> bool:
 		return false
 	var cost := effective_cost(a)
 	if not _can_pay(a, cost):
-		Events.toast.emit("Not enough %s" % ("mana" if a == SHIELD_ABILITY else a.cost_name()), Color(1, 0.8, 0.5))
+		Events.toast.emit("Not enough %s" % ("mana" if a == shield_ability() else a.cost_name()), Color(1, 0.8, 0.5))
 		return false
 	var fn := "_ability_%s" % a.effect
 	if not has_method(fn) or not call(fn, a):
@@ -103,7 +252,7 @@ func try_use(slot: int) -> bool:
 
 
 func _can_pay(a: AbilityData, cost: float) -> bool:
-	if a == SHIELD_ABILITY:
+	if a == shield_ability():
 		return player.mana.has(cost)
 	match a.cost_type:
 		AbilityData.CostType.MANA:
@@ -116,7 +265,7 @@ func _can_pay(a: AbilityData, cost: float) -> bool:
 
 
 func _pay(a: AbilityData, cost: float) -> void:
-	if a == SHIELD_ABILITY:
+	if a == shield_ability():
 		player.mana.try_spend(cost)
 		return
 	match a.cost_type:
@@ -125,7 +274,7 @@ func _pay(a: AbilityData, cost: float) -> void:
 		AbilityData.CostType.STAMINA:
 			player.stamina.consume(cost, false)
 		AbilityData.CostType.RAGE:
-			pass  # rage abilities consume rage themselves
+			set_rage(rage - cost)
 
 
 func _process(delta: float) -> void:
@@ -162,6 +311,29 @@ func add_rage(amount: float) -> void:
 		set_rage(rage + amount)
 
 
+## Optional strength of a buff (Evasion chance, Frost Armour multiplier...).
+var buff_powers: Dictionary = {}
+
+
+func buff_power(id: StringName, default: float = 0.0) -> float:
+	return float(buff_powers.get(id, default))
+
+
+## Ability reactions when an enemy hit reaches the player (Milestone 17b):
+## Spear Wall stuns frontal attackers, Frost Armour chills them.
+func on_hit_received(info: DamageInfo) -> void:
+	var src := info.source as Node3D
+	if src == null or not is_instance_valid(src) or not src.is_in_group(&"enemies"):
+		return
+	if has_buff(&"spear_wall") and player._is_in_front(info) and src.global_position.distance_to(player.global_position) < 4.0:
+		var a := _find(&"spear_wall")
+		if src.has_method("apply_status"):
+			src.apply_status(&"stunned", a.power if a else 1.5, {})
+		_physical_hit(src, a.damage if a else 18.0, 30.0, 5.0, "Spear Wall")
+	if has_buff(&"frost_armour") and src.has_method("apply_status"):
+		src.apply_status(&"chilled", 3.0, {})
+
+
 func add_buff(id: StringName, duration: float) -> void:
 	buffs[id] = duration
 	_apply_buff_stats()
@@ -184,6 +356,10 @@ func _on_buff_ended(id: StringName) -> void:
 			_barrier_fx = null
 		&"stealth":
 			player.model.set_ghost(false)
+		&"shield_wall":
+			player.model.set_blocking(player.is_blocking)
+		&"bloodlust":
+			buff_powers.erase(&"bloodlust_stacks")
 		&"temperature_shield":
 			player.character.ability_insulation = 0.0
 			player.character.ability_cooling = 0.0
@@ -199,6 +375,8 @@ func _apply_buff_stats() -> void:
 		mults[Stats.MOVE_SPEED] = 0.6
 	if has_buff(&"stealth"):
 		mults[Stats.MOVE_SPEED] = 1.15
+	if has_buff(&"bloodlust"):
+		mults[Stats.ATTACK_SPEED] = float(mults.get(Stats.ATTACK_SPEED, 1.0)) * (1.0 + 0.1 * minf(buff_power(&"bloodlust_stacks"), 5.0))
 	player.stats.set_source(&"abilities", mults)
 
 
@@ -217,7 +395,32 @@ func outgoing_mult() -> float:
 		m *= 1.15
 	if has_buff(&"blessing"):
 		m *= 1.1
+	# Passives (Milestone 17b).
+	if player.health.get_ratio() < 0.3:
+		m *= 1.0 + passive_power(&"blood_frenzy")
+	var valor := passive_power(&"valor")
+	if valor > 0.0:
+		var near := 0
+		for e in get_tree().get_nodes_in_group(&"enemies"):
+			var n := e as Node3D
+			if n and not n.get("is_dead") and n.is_visible_in_tree() and n.global_position.distance_to(player.global_position) < 6.0:
+				near += 1
+		m *= 1.0 + valor * mini(near, 5)
 	return m * player.status.outgoing_mult()
+
+
+## Extra damage against this target from passives and marks (Opportunist, Judgement).
+func target_mult(target: Node) -> float:
+	var m := 1.0
+	var op := passive_power(&"opportunist")
+	if op > 0.0 and target.get("status") is StatusEffects:
+		var st := target.get("status") as StatusEffects
+		if st.has(&"stunned") or st.has(&"slowed") or st.has(&"chilled") or st.has(&"frozen"):
+			m *= 1.0 + op
+	var mk: Dictionary = marks.get(target.get_instance_id(), {})
+	if not mk.is_empty() and float(mk.until) > Time.get_ticks_msec() / 1000.0:
+		m *= 1.0 + float(mk.get("mult", 0.0))
+	return m
 
 
 ## Multiplier on incoming damage from buffs.
@@ -231,6 +434,10 @@ func incoming_mult() -> float:
 		m *= 0.8
 	if has_buff(&"blessing"):
 		m *= 0.9
+	if has_buff(&"frost_armour"):
+		m *= buff_power(&"frost_armour", 0.8)
+	if has_buff(&"reckless"):
+		m *= 1.2
 	return m
 
 
@@ -254,6 +461,7 @@ func consume_attack_bonus() -> Dictionary:
 ## Called after a player hit landed on an enemy.
 func on_hit_dealt(target: Node, dealt: float) -> void:
 	add_rage(8.0)
+	_store_mark_damage(target, dealt)
 	if has_buff(&"berserk") and dealt > 0.0:
 		player.health.heal(dealt * 0.1)
 	if has_buff(&"poison_blade") and target.has_method("apply_status"):
@@ -262,7 +470,7 @@ func on_hit_dealt(target: Node, dealt: float) -> void:
 
 
 func on_damage_taken(dealt: float) -> void:
-	add_rage(dealt * 0.8)
+	add_rage(dealt * 0.8 * (1.0 + passive_power(&"rage_fuel")))
 	if has_buff(&"stealth"):
 		remove_buff(&"stealth")
 
@@ -310,6 +518,8 @@ func _spell_damage(a: AbilityData) -> float:
 		m *= 1.15
 	if World.instance and World.instance.events:
 		m *= World.instance.events.spell_mult()  # aurora
+	if a.damage_type in [&"fire", &"frost", &"lightning"]:
+		m *= 1.0 + passive_power(&"elemental_focus")
 	return a.damage * m * player.stats.get_mult(Stats.ATTACK_DAMAGE) * player.status.outgoing_mult()
 
 
@@ -320,6 +530,7 @@ func _spell_hit(target: Node, a: AbilityData, amount: float, tag: String = "") -
 	info.direction = dir.normalized()
 	info.hit_position = (target as Node3D).global_position + Vector3(0, 1.2, 0)
 	info.tag = tag
+	info.amount *= target_mult(target)
 	var dealt = target.receive_hit(info)
 	return float(dealt) if dealt != null else 0.0
 
@@ -564,7 +775,7 @@ func _ability_temperature_shield(a: AbilityData) -> bool:
 
 
 # --- Advanced spells (Milestone 7) -------------------------------------------------------
-# Learned from tomes (SpellBook), cast from the two spell slots (Y / H). Any
+# Learned from tomes (SpellBook), cast from the spell slots (Y / H, N with a tome). Any
 # class may cast them if its Mana Control skill is high enough; damage scales
 # with spell power, so Wizards hit hardest. Elemental combos (see
 # StatusEffects): Shatter (fire on frozen x2), Conducted (lightning on wet
@@ -586,7 +797,10 @@ func spell_block_reason(a: AbilityData) -> String:
 func try_cast(slot: int) -> bool:
 	var a := player.spells.get_slot(slot)
 	if a == null:
-		Events.toast.emit("Spell slot %d is empty. Learn spells from tomes (spellbook: L)" % (slot + 1), Color(0.85, 0.8, 1.0))
+		if slot >= player.spells.usable_slots():
+			Events.toast.emit("Spell slot N needs a tome in your off hand", Color(0.85, 0.8, 1.0))
+		else:
+			Events.toast.emit("Spell slot %s is empty. Learn spells from tomes (ability book: L)" % SpellBook.SLOT_KEYS[slot], Color(0.85, 0.8, 1.0))
 		return false
 	if player.is_dead or player.frozen or cooldown_left(a) > 0.0:
 		return false
@@ -607,8 +821,14 @@ func try_cast(slot: int) -> bool:
 	return true
 
 
-## Absorbs damage with the Arcane Barrier. Returns what gets through.
+## Absorbs damage with the Arcane Barrier (and Mana Shield). Returns what gets through.
 func absorb(amount: float) -> float:
+	if has_buff(&"mana_shield") and amount > 0.0:
+		var paid := minf(player.mana.current, amount)
+		player.mana.try_spend(paid)
+		amount -= paid
+		if player.mana.current <= 0.5:
+			remove_buff(&"mana_shield")
 	if barrier <= 0.0 or not has_buff(&"arcane_barrier"):
 		return amount
 	var taken := minf(barrier, amount)
@@ -829,17 +1049,731 @@ func _spell_storm_call(a: AbilityData) -> bool:
 	return true
 
 
+# --- Milestone 17b: shared helpers for the ability book --------------------------------------
+
+func _parent() -> Node:
+	return player.get_parent()
+
+
+## Enemies in a cone in front of you (aim direction).
+func _front(radius: float, arc: float) -> Array[Node]:
+	var dir := player.get_aim_direction()
+	player.face_direction(dir, true)
+	return _enemies_in(radius, arc, Vector3.INF, dir)
+
+
+## Living enemies within `radius` of `pos` (any height difference under 3 m).
+func _enemies_near(pos: Vector3, radius: float) -> Array[Node]:
+	var out: Array[Node] = []
+	for e in get_tree().get_nodes_in_group(&"enemies"):
+		var n := e as Node3D
+		if n == null or n.get("is_dead") or not n.is_visible_in_tree() or not n.has_method("receive_hit"):
+			continue
+		var d := n.global_position - pos
+		if Vector2(d.x, d.z).length() <= radius and absf(d.y) < 3.0:
+			out.append(n)
+	return out
+
+
+func _status(t: Node, id: StringName, duration: float, params: Dictionary = {}) -> void:
+	if is_instance_valid(t) and t.has_method("apply_status") and not t.get("is_dead"):
+		t.apply_status(id, duration, params)
+
+
+## Flying projectile from the player's chest. `on_hit(t)` deals the damage.
+func _shoot(dir: Vector3, speed: float, max_range: float, color: Color, on_hit: Callable, style: StringName = &"") -> Projectile:
+	var p := Projectile.new()
+	p.style = style
+	p.color = color
+	p.velocity = dir * speed
+	p.lifetime = max_range / speed
+	p.exclude = [player.get_rid()]
+	p.mask = Layers.TERRAIN | Layers.ENEMY | Layers.PROP
+	p.info_builder = func(_t: Node) -> DamageInfo:
+		return DamageInfo.create(0.0, player)  # the real hit happens in on_hit
+	p.on_hit = func(t: Node, _d: float) -> void:
+		if is_instance_valid(t) and t.is_in_group(&"enemies"):
+			on_hit.call(t)
+	_parent().add_child(p)
+	p.global_position = player.global_position + Vector3(0, 1.2, 0) + dir * 0.7
+	return p
+
+
+## Aim direction, tilted towards the aimed enemy's body (projectiles reach enemies above or below).
+func _aim_flight(max_range: float) -> Vector3:
+	var dir := player.get_aim_direction()
+	var tgt := _aim_target(max_range)
+	if tgt:
+		var f := (tgt.global_position + Vector3(0, 0.8, 0) - (player.global_position + Vector3(0, 1.2, 0))).normalized()
+		player.face_direction(Vector3(f.x, 0, f.z), true)
+		return f
+	player.face_direction(dir, true)
+	return dir
+
+
+func _zone(pos: Vector3, radius: float, duration: float, tick: float, color: Color, on_tick: Callable) -> AbilityZone:
+	var z := AbilityZone.new()
+	z.radius = radius
+	z.duration = duration
+	z.tick = tick
+	z.color = color
+	z.on_tick = on_tick
+	_parent().add_child(z)
+	if World.instance:
+		pos.y = World.instance.get_ground_height(pos)
+	z.global_position = pos
+	return z
+
+
+## Marks a target (Judgement, Death Mark). `kind` &"judgement" adds `mult` damage taken;
+## &"death" stores the damage you deal and repeats `mult` of it when the mark ends.
+func mark(t: Node, kind: StringName, duration: float, mult: float) -> void:
+	marks[t.get_instance_id()] = {"until": Time.get_ticks_msec() / 1000.0 + duration, "mult": mult if kind == &"judgement" else 0.0,
+		"kind": kind, "stored": 0.0, "share": mult}
+	VFX.ring(_parent(), (t as Node3D).global_position, 1.2, Color(1, 0.9, 0.4, 0.8) if kind == &"judgement" else Color(0.6, 0.1, 0.6, 0.8), 0.4)
+	if kind == &"death":
+		var wr: WeakRef = weakref(t)
+		var key := t.get_instance_id()
+		get_tree().create_timer(duration, false).timeout.connect(func() -> void:
+			var mk: Dictionary = marks.get(key, {})
+			marks.erase(key)
+			var tgt: Node = wr.get_ref()
+			if mk.is_empty() or tgt == null or tgt.get("is_dead"):
+				return
+			var extra := float(mk.stored) * float(mk.share)
+			if extra > 0.0:
+				var info := DamageInfo.create(extra, player, &"true")
+				info.tag = "Death Mark"
+				info.hit_position = (tgt as Node3D).global_position + Vector3(0, 1.4, 0)
+				tgt.receive_hit(info)
+				VFX.burst(_parent(), info.hit_position, 1.4, Color(0.6, 0.1, 0.6, 0.8)))
+
+
+## Death Mark bookkeeping (called from on_hit_dealt).
+func _store_mark_damage(t: Node, dealt: float) -> void:
+	var mk: Dictionary = marks.get(t.get_instance_id(), {})
+	if not mk.is_empty() and mk.kind == &"death":
+		mk.stored = float(mk.stored) + dealt
+
+
+func _blind(t: Node, duration: float) -> void:
+	if not is_instance_valid(t):
+		return
+	t.set_meta(&"blind_until", Time.get_ticks_msec() + int(duration * 1000.0))
+	if t.has_method("lose_target"):
+		t.lose_target(player)
+	_status(t, &"weakened", duration)
+
+
+func _on_kill_for_buffs(enemy: Node, _id: StringName, _pos: Vector3) -> void:
+	if player == null or enemy.get_meta(&"killed_by_npc", false):
+		return
+	if has_buff(&"bloodlust"):
+		player.health.heal(player.health.max_health * buff_power(&"bloodlust", 8.0) / 100.0)
+		buff_powers[&"bloodlust_stacks"] = buff_power(&"bloodlust_stacks") + 1.0
+		_apply_buff_stats()
+
+
+# --- Barbarian (Milestone 17b) -----------------------------------------------------------------
+
+## Cleave: wide swing in front; +power rage per enemy hit.
+func _ability_cleave(a: AbilityData) -> bool:
+	player.model.play_attack(&"spin", 0.08, 0.1, 0.3)
+	var hit := 0
+	for t in _front(a.radius, 200.0):
+		_physical_hit(t, a.damage, 25.0, 4.0, "Cleave")
+		hit += 1
+	add_rage(a.power * hit)
+	VFX.ring(_parent(), player.global_position, a.radius, Color(1, 0.6, 0.4, 0.6), 0.25)
+	return true
+
+
+## Leap Slam: jump towards the cursor (up to range) and slam: damage + slow around you.
+func _ability_leap_slam(a: AbilityData) -> bool:
+	var target := cast_point(a.range)
+	var to := target - player.global_position
+	to.y = 0.0
+	var dist := clampf(to.length(), 1.0, a.range)
+	var dir := to.normalized() if to.length() > 0.1 else player.get_facing()
+	player.model.play_attack(&"plunge", 0.2, 0.1, 0.3)
+	player.start_ability_dash(dir, dist, 0.35, func(_t: Node) -> void: pass)
+	get_tree().create_timer(0.37, false).timeout.connect(func() -> void:
+		if player.is_dead:
+			return
+		VFX.ring(_parent(), player.global_position, a.radius, Color(0.8, 0.6, 0.4, 0.8), 0.35)
+		VFX.dust(_parent(), player.global_position, Color(0.6, 0.55, 0.5), 12)
+		Events.camera_shake.emit(0.4)
+		for t in _enemies_near(player.global_position, a.radius):
+			_physical_hit(t, a.damage, 35.0, 6.0, "Leap Slam")
+			_status(t, &"slowed", a.duration))
+	return true
+
+
+## Ground Stomp: stuns enemies around you.
+func _ability_ground_stomp(a: AbilityData) -> bool:
+	VFX.ring(_parent(), player.global_position, a.radius, Color(0.8, 0.7, 0.5, 0.8), 0.35)
+	VFX.dust(_parent(), player.global_position, Color(0.6, 0.55, 0.5), 10)
+	Events.camera_shake.emit(0.35)
+	for t in _enemies_near(player.global_position, a.radius):
+		_physical_hit(t, a.damage, 30.0, 3.0, "Stomp")
+		_status(t, &"stunned", a.duration)
+	return true
+
+
+## Intimidating Shout: enemies around you are weakened (deal 25% less) for `duration`.
+func _ability_intimidating_shout(a: AbilityData) -> bool:
+	VFX.ring(_parent(), player.global_position, a.radius, Color(1, 0.3, 0.2, 0.6), 0.45)
+	for t in _enemies_near(player.global_position, a.radius):
+		_status(t, &"weakened", a.duration)
+	return true
+
+
+## Hamstring: a cut that slows the target.
+func _ability_hamstring(a: AbilityData) -> bool:
+	player.model.play_attack(&"slash_l", 0.06, 0.08, 0.25)
+	for t in _front(a.radius, 90.0):
+		_physical_hit(t, a.damage, 10.0, 1.0, "Hamstring")
+		_status(t, &"slowed", a.duration)
+	return true
+
+
+## Reckless Swing: x power damage, but you take +20% damage for `duration`.
+func _ability_reckless_swing(a: AbilityData) -> bool:
+	player.model.play_attack(&"overhead", 0.15, 0.1, 0.35)
+	add_buff(&"reckless", a.duration)
+	for t in _front(a.radius, 110.0):
+		_physical_hit(t, a.damage * a.power, 45.0, 7.0, "Reckless")
+	Events.camera_shake.emit(0.35)
+	return true
+
+
+## Earthshatter: a line of rocks in front of you; enemies on it are hurt and thrown off their feet.
+func _ability_earthshatter(a: AbilityData) -> bool:
+	var dir := player.get_aim_direction()
+	player.face_direction(dir, true)
+	player.model.play_attack(&"overhead", 0.12, 0.1, 0.35)
+	var start := player.global_position
+	for i in 6:
+		var p := start + dir * (1.2 + i * a.range / 6.0)
+		get_tree().create_timer(0.05 * i, false).timeout.connect(func() -> void:
+			VFX.debris(_parent(), p + Vector3(0, 0.3, 0), Color(0.55, 0.5, 0.45), 6, 5.0))
+	Events.camera_shake.emit(0.4)
+	for t in _enemies_near(start, a.range + 1.0):
+		var to := (t as Node3D).global_position - start
+		to.y = 0.0
+		var along := to.dot(dir)
+		if along > 0.3 and along < a.range + 0.8 and (to - dir * along).length() < a.radius:
+			_physical_hit(t, a.damage, 60.0, 4.0, "Earthshatter")
+			if t.has_method("stagger"):
+				t.stagger(a.duration)
+	return true
+
+
+## Bloodlust: for `duration`, kills heal power% and add attack speed.
+func _ability_bloodlust(a: AbilityData) -> bool:
+	buff_powers[&"bloodlust"] = a.power
+	buff_powers[&"bloodlust_stacks"] = 0.0
+	add_buff(&"bloodlust", a.duration)
+	VFX.burst(_parent(), player.global_position + Vector3(0, 1, 0), 1.6, Color(0.9, 0.1, 0.1, 0.6))
+	return true
+
+
+## Savage Throw: your weapon flies out and back - two hits.
+func _ability_savage_throw(a: AbilityData) -> bool:
+	player.model.play_attack(&"overhead", 0.08, 0.08, 0.3)
+	_shoot(_aim_flight(a.range), 26.0, a.range, Color(0.75, 0.75, 0.8), func(t: Node) -> void:
+		_physical_hit(t, a.damage, 20.0, 3.0, "Savage Throw")
+		var wr: WeakRef = weakref(t)
+		get_tree().create_timer(0.35, false).timeout.connect(func() -> void:
+			var tt: Node = wr.get_ref()
+			if tt and not tt.get("is_dead"):
+				_physical_hit(tt, a.damage, 10.0, 2.0, "Return")), &"arrow")
+	return true
+
+
+## Skull Crack: big poise damage; stuns for `duration` if the enemy staggers.
+func _ability_skull_crack(a: AbilityData) -> bool:
+	player.model.play_attack(&"overhead", 0.12, 0.1, 0.35)
+	for t in _front(a.radius, 80.0):
+		var poise_before = t.get("poise")
+		_physical_hit(t, a.damage, a.power, 5.0, "Skull Crack")
+		var poise_after = t.get("poise")
+		if poise_before != null and poise_after != null and (float(poise_after) <= 0.0 or float(poise_after) > float(poise_before)):
+			_status(t, &"stunned", a.duration)
+	return true
+
+
+## Unstoppable: no stagger or knockback for `duration`.
+func _ability_unstoppable(a: AbilityData) -> bool:
+	add_buff(&"unstoppable", a.duration)
+	VFX.burst(_parent(), player.global_position + Vector3(0, 1, 0), 1.4, Color(1, 0.6, 0.2, 0.6))
+	return true
+
+
+## Second Wind: heal power% of max health over `duration` (costs rage).
+func _ability_second_wind(a: AbilityData) -> bool:
+	player.afflict(&"regen", a.duration, {"hps": player.health.max_health * a.power / 100.0 / a.duration})
+	VFX.burst(_parent(), player.global_position + Vector3(0, 1, 0), 1.4, Color(0.4, 1, 0.5, 0.6))
+	return true
+
+
+# --- Knight (Milestone 17b) ---------------------------------------------------------------------
+
+## Shield Wall: block every frontal hit for `duration`.
+func _ability_shield_wall(a: AbilityData) -> bool:
+	add_buff(&"shield_wall", a.duration)
+	player.model.set_blocking(true)
+	VFX.ring(_parent(), player.global_position, 1.6, Color(0.6, 0.75, 1.0, 0.7), 0.4)
+	return true
+
+
+## Lunge: dash `range` m forward, hitting enemies in the way.
+func _ability_lunge(a: AbilityData) -> bool:
+	player.model.play_attack(&"thrust", 0.04, 0.1, 0.25)
+	player.start_ability_dash(player.get_aim_direction(), a.range, 0.2, func(hit: Node) -> void:
+		_physical_hit(hit, a.damage, 25.0, 4.0, "Lunge"))
+	return true
+
+
+## Judgement: holy strike that marks the target (+power damage taken for `duration`).
+func _ability_judgement(a: AbilityData) -> bool:
+	player.model.play_attack(&"overhead", 0.12, 0.1, 0.3)
+	var hit := false
+	for t in _front(a.radius, 90.0):
+		var info := player.combat.build_physical(a.damage, t, 25.0, 4.0, 0.0, &"holy")
+		info.tag = "Judgement"
+		var dealt = t.receive_hit(info)
+		on_hit_dealt(t, float(dealt) if dealt != null else 0.0)
+		mark(t, &"judgement", a.duration, a.power)
+		hit = true
+	if not hit:
+		Events.toast.emit("No enemy in front of you", Color(1, 0.8, 0.5))
+	return hit
+
+
+## Taunting Shout: every enemy within radius attacks you for `duration`.
+func _ability_taunting_shout(a: AbilityData) -> bool:
+	VFX.ring(_parent(), player.global_position, a.radius, Color(1, 0.6, 0.3, 0.6), 0.5)
+	for t in _enemies_near(player.global_position, a.radius):
+		if t.has_method("taunt"):
+			t.taunt(player, a.duration)
+		_status(t, &"taunted", a.duration)
+	return true
+
+
+## Shield Throw: hits up to `power` enemies in a chain (`radius` between jumps).
+func _ability_shield_throw(a: AbilityData) -> bool:
+	var first := _aim_target(a.range)
+	if first == null:
+		Events.toast.emit("No target in range", Color(1, 0.8, 0.5))
+		return false
+	var hit: Array[Node3D] = []
+	var points := PackedVector3Array([player.global_position + Vector3(0, 1.2, 0)])
+	var cur: Node3D = first
+	for i in int(a.power):
+		if cur == null:
+			break
+		hit.append(cur)
+		points.append(cur.global_position + Vector3(0, 1.0, 0))
+		_physical_hit(cur, a.damage * (1.0 - 0.15 * i), 20.0, 3.0, "Shield Throw")
+		var nxt: Node3D = null
+		var best := a.radius
+		for n in _enemies_near(cur.global_position, a.radius):
+			var d := (n as Node3D).global_position.distance_to(cur.global_position)
+			if not hit.has(n) and d < best:
+				best = d
+				nxt = n
+		cur = nxt
+	points.append(player.global_position + Vector3(0, 1.2, 0))
+	VFX.bolt(_parent(), points, Color(0.75, 0.8, 0.95, 0.9), 0.35)
+	return true
+
+
+## Holy Light: heal power% (friends nearby heal too in co-op - NOT IMPLEMENTED until M18).
+func _ability_holy_light(a: AbilityData) -> bool:
+	player.health.heal(player.health.max_health * a.power / 100.0)
+	VFX.burst(_parent(), player.global_position + Vector3(0, 1.2, 0), 2.0, Color(1, 0.95, 0.6, 0.7))
+	VFX.ring(_parent(), player.global_position, a.radius, Color(1, 0.95, 0.6, 0.5), 0.5)
+	return true
+
+
+## Spear Wall: for `duration`, frontal attackers are stunned (power s) and take damage.
+func _ability_spear_wall(a: AbilityData) -> bool:
+	add_buff(&"spear_wall", a.duration)
+	player.model.play_attack(&"thrust", 0.05, 0.1, 0.3)
+	VFX.ring(_parent(), player.global_position + player.get_facing() * 1.2, 1.2, Color(0.8, 0.8, 0.9, 0.7), 0.4)
+	return true
+
+
+## Consecrate: holy ground around you; undead take double.
+func _ability_consecrate(a: AbilityData) -> bool:
+	var dmg := a.damage * player.character.physical_mult
+	_zone(player.global_position, a.radius, a.duration, 1.0, Color(1, 0.95, 0.55), func(ts: Array[Node]) -> void:
+		for t in ts:
+			var info := DamageInfo.create(dmg * (2.0 if PlayerCombat.is_undead(t) else 1.0), player, &"holy")
+			info.tag = "Consecrate"
+			info.hit_position = (t as Node3D).global_position + Vector3(0, 1, 0)
+			t.receive_hit(info))
+	return true
+
+
+## Pommel Strike: quick hit that stuns for `duration`.
+func _ability_pommel_strike(a: AbilityData) -> bool:
+	player.model.play_attack(&"thrust", 0.04, 0.08, 0.2)
+	var hit := false
+	for t in _front(a.radius, 80.0):
+		_physical_hit(t, a.damage, 20.0, 2.0, "Pommel")
+		_status(t, &"stunned", a.duration)
+		hit = true
+	return hit or true
+
+
+## Charge of the Order: long charge that knocks everyone in the way down.
+func _ability_charge_of_the_order(a: AbilityData) -> bool:
+	player.start_ability_dash(player.get_aim_direction(), a.range, 0.6, func(hit: Node) -> void:
+		_physical_hit(hit, a.damage, 60.0, 8.0, "Charge")
+		if hit.has_method("stagger"):
+			hit.stagger(a.duration))
+	VFX.burst(_parent(), player.global_position + Vector3(0, 1, 0), 1.4, Color(1, 0.9, 0.5, 0.6))
+	return true
+
+
+# --- Wizard (Milestone 17b) ---------------------------------------------------------------------
+
+## Arcane Orb: slow orb that explodes on impact (radius).
+func _ability_arcane_orb(a: AbilityData) -> bool:
+	var amount := _spell_damage(a)
+	var p := _shoot(_aim_flight(a.range), 11.0, a.range, Color(0.75, 0.45, 1.0), func(_t: Node) -> void: pass)
+	p.on_impact = func(pos: Vector3) -> void:
+		VFX.burst(_parent(), pos, a.radius, Color(0.75, 0.45, 1.0, 0.7))
+		for t in _enemies_near(pos, a.radius):
+			_spell_hit(t, a, amount, "Arcane Orb")
+	return true
+
+
+## Flame Wave: a cone of fire; burns.
+func _ability_flame_wave(a: AbilityData) -> bool:
+	var amount := _spell_damage(a)
+	var dir := player.get_aim_direction()
+	for i in 4:
+		VFX.burst(_parent(), player.global_position + Vector3(0, 1, 0) + dir * (1.5 + i * 1.3), 0.6 + i * 0.3, Color(1, 0.5, 0.15, 0.7))
+	for t in _front(a.radius, 70.0):
+		_spell_hit(t, a, amount, "Flame Wave")
+		_status(t, &"burn", a.duration, {"dps": a.power * player.character.spell_mult, "source": player})
+	ignite_clouds(player.global_position + dir * a.radius * 0.5, a.radius * 0.6, amount * 2.0)
+	return true
+
+
+## Ice Lance: frost shard; x2 on chilled or frozen enemies.
+func _ability_ice_lance(a: AbilityData) -> bool:
+	var amount := _spell_damage(a)
+	_shoot(_aim_flight(a.range), 28.0, a.range, Color(0.6, 0.9, 1.0), func(t: Node) -> void:
+		var st = t.get("status")
+		var cold: bool = st is StatusEffects and ((st as StatusEffects).has(&"chilled") or (st as StatusEffects).has(&"frozen"))
+		_spell_hit(t, a, amount * (2.0 if cold else 1.0), "Shattering Lance" if cold else "Ice Lance")
+		_status(t, &"chilled", 3.0))
+	return true
+
+
+## Time Warp: enemies in the circle are slowed for `duration`.
+func _ability_time_warp(a: AbilityData) -> bool:
+	_zone(cast_point(a.range), a.radius, a.duration, 0.4, Color(0.75, 0.55, 1.0), func(ts: Array[Node]) -> void:
+		for t in ts:
+			_status(t, &"slowed", 0.6)
+			_status(t, &"chilled", 0.6))
+	return true
+
+
+## Spark: fast, weak lightning bolt that shocks.
+func _ability_spark(a: AbilityData) -> bool:
+	var amount := _spell_damage(a)
+	_shoot(_aim_flight(a.range), 40.0, a.range, Color(0.8, 0.85, 1.0), func(t: Node) -> void:
+		_spell_hit(t, a, amount, "Spark")
+		_status(t, &"shocked", 2.0))
+	return true
+
+
+## Fire Wall: a line of burning patches across the aim for `duration`.
+func _ability_fire_wall(a: AbilityData) -> bool:
+	var dmg := _spell_damage(a)
+	var center := cast_point(12.0)
+	var dir := player.get_aim_direction()
+	var side := Vector3(-dir.z, 0, dir.x)
+	for i in 5:
+		var pos := center + side * (i - 2) * (a.range / 5.0)
+		_zone(pos, a.radius, a.duration, 0.5, Color(1, 0.45, 0.1), func(ts: Array[Node]) -> void:
+			for t in ts:
+				_spell_hit(t, a, dmg * 0.25, "Fire Wall")
+				_status(t, &"burn", 3.0, {"dps": dmg * 0.15, "source": player}))
+	return true
+
+
+## Frost Armour: 20% less damage taken; attackers are chilled.
+func _ability_frost_armour(a: AbilityData) -> bool:
+	buff_powers[&"frost_armour"] = a.power
+	add_buff(&"frost_armour", a.duration)
+	VFX.burst(_parent(), player.global_position + Vector3(0, 1, 0), 1.6, Color(0.6, 0.9, 1.0, 0.6))
+	return true
+
+
+## Mana Shield: damage takes mana instead of health for `duration`.
+func _ability_mana_shield(a: AbilityData) -> bool:
+	add_buff(&"mana_shield", a.duration)
+	VFX.burst(_parent(), player.global_position + Vector3(0, 1, 0), 1.6, Color(0.5, 0.6, 1.0, 0.6))
+	return true
+
+
+## Static Field: lightning ground that shocks and hurts enemies on it.
+func _ability_static_field(a: AbilityData) -> bool:
+	var dmg := _spell_damage(a)
+	_zone(cast_point(a.range), a.radius, a.duration, 0.5, Color(0.8, 0.85, 1.0), func(ts: Array[Node]) -> void:
+		for t in ts:
+			_spell_hit(t, a, dmg * 0.3, "Static")
+			_status(t, &"shocked", 1.0))
+	return true
+
+
+## Polymorph: the target becomes a harmless chicken for `duration` (not bosses).
+func _ability_polymorph(a: AbilityData) -> bool:
+	var t := _aim_target(a.range)
+	if t == null:
+		Events.toast.emit("No target in range", Color(1, 0.8, 0.5))
+		return false
+	if t.has_method("is_boss") and t.is_boss():
+		Events.toast.emit("Bosses can't be polymorphed", Color(1, 0.8, 0.5))
+		return false
+	_status(t, &"stunned", a.duration)
+	if t.has_method("lose_target"):
+		t.lose_target(player)
+	var model = t.get("model")
+	if model is Node3D:
+		var m := model as Node3D
+		var tw := m.create_tween()
+		tw.tween_property(m, "scale", Vector3(0.35, 0.35, 0.35), 0.15)
+		tw.tween_interval(a.duration)
+		tw.tween_property(m, "scale", Vector3.ONE, 0.15)
+	VFX.burst(_parent(), t.global_position + Vector3(0, 0.8, 0), 1.2, Color(1, 0.95, 0.8, 0.8))
+	Events.damage_dealt.emit(t.global_position + Vector3(0, 1.6, 0), 0.0, false, false, "Cluck!")
+	return true
+
+
+## Ice Wall: a wall of ice (power m wide) at the cursor that blocks the way for `duration`.
+func _ability_ice_wall(a: AbilityData) -> bool:
+	var pos := cast_point(a.range)
+	if World.instance:
+		pos.y = World.instance.get_ground_height(pos)
+	var dir := player.get_aim_direction()
+	var wall := StaticBody3D.new()
+	wall.collision_layer = Layers.BUILDING
+	wall.collision_mask = 0
+	wall.add_to_group(&"ice_walls")
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(a.power, 2.2, 0.7)
+	shape.shape = box
+	shape.position.y = 1.1
+	wall.add_child(shape)
+	var b := BlockMesh.new()
+	b.box(Vector3(0, 1.1, 0), Vector3(a.power, 2.2, 0.7), Color(0.65, 0.88, 1.0))
+	var mi := MeshInstance3D.new()
+	mi.mesh = b.commit()
+	mi.mesh.surface_set_material(0, Materials.vertex_color())
+	mi.transparency = 0.25
+	wall.add_child(mi)
+	_parent().add_child(wall)
+	wall.global_position = pos
+	wall.rotation.y = atan2(dir.x, dir.z)
+	VFX.burst(_parent(), pos + Vector3(0, 1, 0), 2.0, Color(0.7, 0.9, 1.0, 0.7))
+	get_tree().create_timer(a.duration, false).timeout.connect(func() -> void:
+		if is_instance_valid(wall):
+			VFX.debris(wall.get_parent(), wall.global_position + Vector3(0, 1, 0), Color(0.7, 0.9, 1.0), 10, 4.0)
+			wall.queue_free())
+	return true
+
+
+## Ball Lightning: a slow ball that zaps enemies within radius as it flies.
+func _ability_ball_lightning(a: AbilityData) -> bool:
+	var amount := _spell_damage(a)
+	var p := _shoot(_aim_flight(a.range), 7.0, a.range, Color(0.8, 0.85, 1.0), func(t: Node) -> void:
+		_spell_hit(t, a, amount * 2.0, "Ball Lightning"))
+	var wr: WeakRef = weakref(p)
+	for i in int(a.range / 7.0 / 0.4):
+		get_tree().create_timer(0.2 + i * 0.4, false).timeout.connect(func() -> void:
+			var pp := wr.get_ref() as Node3D
+			if pp == null or not pp.is_inside_tree():
+				return
+			for t in _enemies_near(pp.global_position, a.radius):
+				VFX.bolt(_parent(), PackedVector3Array([pp.global_position, (t as Node3D).global_position + Vector3(0, 1, 0)]), Color(0.8, 0.85, 1.0, 1.0), 0.15)
+				_spell_hit(t, a, amount * 0.5, "Zap")
+				_status(t, &"shocked", 1.5))
+	return true
+
+
+# --- Assassin (Milestone 17b) -------------------------------------------------------------------
+
+## Smoke Bomb: enemies in the cloud lose you and are weakened.
+func _ability_smoke_bomb(a: AbilityData) -> bool:
+	VFX.burst(_parent(), player.global_position + Vector3(0, 0.8, 0), a.radius, Color(0.3, 0.3, 0.32, 0.7), 0.6)
+	player.set_lock_target(null)
+	_zone(player.global_position, a.radius, a.duration, 0.5, Color(0.35, 0.35, 0.38), func(ts: Array[Node]) -> void:
+		for t in ts:
+			_blind(t, 1.0))
+	for t in _enemies_near(player.global_position, a.radius):
+		_blind(t, a.duration)
+	return true
+
+
+## Death Mark: after `duration`, the target takes `power` of the damage you dealt it again.
+func _ability_death_mark(a: AbilityData) -> bool:
+	var t := _aim_target(a.range)
+	if t == null:
+		Events.toast.emit("No target in range", Color(1, 0.8, 0.5))
+		return false
+	mark(t, &"death", a.duration, a.power)
+	Events.damage_dealt.emit(t.global_position + Vector3(0, 2.0, 0), 0.0, false, false, "Marked")
+	return true
+
+
+## Throwing Knives: `power` knives in a fan.
+func _ability_throwing_knives(a: AbilityData) -> bool:
+	var dir := _aim_flight(a.range)
+	player.model.play_attack(&"thrust", 0.04, 0.08, 0.2)
+	var n := int(a.power)
+	for i in n:
+		var ang := (i - (n - 1) / 2.0) * 0.18
+		_shoot(dir.rotated(Vector3.UP, ang), 30.0, a.range, Color(0.75, 0.75, 0.8), func(t: Node) -> void:
+			_physical_hit(t, a.damage, 6.0, 1.0, "Knife"), &"arrow")
+	return true
+
+
+## Garrote: bleed and silence; x1.5 bleed from behind.
+func _ability_garrote(a: AbilityData) -> bool:
+	player.model.play_attack(&"thrust", 0.05, 0.08, 0.25)
+	var hit := false
+	for t in _front(a.radius, 80.0):
+		var behind := t.has_method("get_facing") and (t.get_facing() as Vector3).dot(((t as Node3D).global_position - player.global_position).normalized()) > 0.4
+		_physical_hit(t, a.damage, 8.0, 0.5, "Garrote")
+		for k in (3 if behind else 2):
+			_status(t, &"bleed", 6.0, {"dps": a.power, "source": player})
+		_status(t, &"silenced", a.duration)
+		hit = true
+	return hit or true
+
+
+## Caltrops: spikes at the cursor that slow and bleed enemies on them.
+func _ability_caltrops(a: AbilityData) -> bool:
+	_zone(cast_point(a.range), a.radius, a.duration, 0.5, Color(0.55, 0.55, 0.6), func(ts: Array[Node]) -> void:
+		for t in ts:
+			_status(t, &"slowed", 0.8)
+			_status(t, &"bleed", 3.0, {"dps": a.damage, "source": player}))
+	return true
+
+
+## Evasion: dodge `power` of all hits for `duration`.
+func _ability_evasion(a: AbilityData) -> bool:
+	buff_powers[&"evasion"] = a.power
+	add_buff(&"evasion", a.duration)
+	player.model.set_ghost(true)
+	get_tree().create_timer(0.3, false).timeout.connect(func() -> void:
+		if not has_buff(&"stealth"):
+			player.model.set_ghost(false))
+	return true
+
+
+## Fan of Knives: knives in every direction.
+func _ability_fan_of_knives(a: AbilityData) -> bool:
+	player.model.play_spin(0.35)
+	for k in 12:
+		var d := Vector3(cos(k * TAU / 12.0), 0, sin(k * TAU / 12.0))
+		VFX.bolt(_parent(), PackedVector3Array([player.global_position + Vector3(0, 1, 0), player.global_position + Vector3(0, 1, 0) + d * a.radius]), Color(0.8, 0.8, 0.85, 0.9), 0.15)
+	for t in _enemies_near(player.global_position, a.radius):
+		_physical_hit(t, a.damage, 8.0, 2.0, "Fan of Knives")
+	return true
+
+
+## Grappling Hook: pull yourself up to `range` m towards the cursor.
+func _ability_grappling_hook(a: AbilityData) -> bool:
+	var target := cast_point(a.range)
+	var to := target - player.global_position
+	to.y = 0.0
+	if to.length() < 1.5:
+		return false
+	var dist := minf(to.length(), a.range)
+	VFX.bolt(_parent(), PackedVector3Array([player.global_position + Vector3(0, 1.2, 0), target + Vector3(0, 0.5, 0)]), Color(0.5, 0.4, 0.3, 1.0), 0.3)
+	player.start_ability_dash(to.normalized(), dist, 0.3, func(_t: Node) -> void: pass)
+	return true
+
+
+## Blind Powder: enemies in front lose you and are weakened for `duration`.
+func _ability_blind_powder(a: AbilityData) -> bool:
+	var dir := player.get_aim_direction()
+	VFX.burst(_parent(), player.global_position + Vector3(0, 1, 0) + dir * 1.5, 1.4, Color(0.85, 0.8, 0.6, 0.7))
+	for t in _front(a.radius, 100.0):
+		_blind(t, a.duration)
+	return true
+
+
+## Shadow Clone: a copy of you that enemies near it attack for `duration`.
+func _ability_shadow_clone(a: AbilityData) -> bool:
+	var decoy := Node3D.new()
+	decoy.add_to_group(&"decoys")
+	var m := HumanoidModel.new()
+	decoy.add_child(m)
+	m.set_appearance(player.character.class_data)
+	m.set_body(player.look)
+	var w := player.equipment.weapon()
+	m.set_outfit(player.equipment.outfit_ids(), w.id if w else &"")
+	m.set_weapon(player.equipment.weapon_type(), player.equipment.has_shield())
+	_parent().add_child(decoy)
+	decoy.global_position = player.global_position
+	m.rotation.y = player.model.rotation.y
+	m.set_ghost(true)
+	for t in _enemies_near(player.global_position, a.radius):
+		if t.has_method("lose_target"):
+			t.lose_target(player)
+	VFX.burst(_parent(), player.global_position + Vector3(0, 1, 0), 1.4, Color(0.2, 0.15, 0.3, 0.7))
+	get_tree().create_timer(a.duration, false).timeout.connect(func() -> void:
+		if is_instance_valid(decoy):
+			VFX.burst(decoy.get_parent(), decoy.global_position + Vector3(0, 1, 0), 1.2, Color(0.2, 0.15, 0.3, 0.7))
+			decoy.queue_free())
+	return true
+
+
+## Twin Fangs: `power` quick hits on the enemies in front.
+func _ability_twin_fangs(a: AbilityData) -> bool:
+	for i in int(a.power):
+		get_tree().create_timer(0.02 + i * 0.1, false).timeout.connect(func() -> void:
+			if player.is_dead:
+				return
+			player.model.play_attack(&"slash_r" if i % 2 == 0 else &"slash_l", 0.02, 0.04, 0.06)
+			for t in _enemies_in(a.radius, 90.0):
+				_physical_hit(t, a.damage, 4.0, 0.5, "Twin Fangs"))
+	return true
+
+
 # --- Save / load --------------------------------------------------------------------------
 
 func to_save() -> Dictionary:
-	return {"rage": rage, "shield": buff_time(&"temperature_shield")}
+	_ensure_bar()
+	return {"rage": rage, "shield": buff_time(&"temperature_shield"), "bar": bar.map(func(x: StringName) -> String: return String(x))}
 
 
 func from_save(data: Dictionary) -> void:
 	set_rage(float(data.get("rage", 0.0)))
+	var saved: Array = data.get("bar", [])
+	if saved.size() == SLOTS:
+		bar.clear()
+		for x in saved:
+			var id := StringName(String(x))
+			bar.append(id if id == &"" or AbilityBook.get_ability(id) != null else &"")
+	else:
+		bar = default_bar()  # saves from before Milestone 17b
+	_known_level = player.character.level
+	fill_bar()
+	bar_changed.emit()
 	var shield := float(data.get("shield", 0.0))
 	if shield > 0.0:
 		add_buff(&"temperature_shield", shield)
-		player.character.ability_insulation = SHIELD_ABILITY.power
-		player.character.ability_cooling = SHIELD_ABILITY.power
+		player.character.ability_insulation = shield_ability().power
+		player.character.ability_cooling = shield_ability().power
 		player.character.recalculate()

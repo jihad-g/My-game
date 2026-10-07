@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"bloodlust"
+display_name = "Bloodlust"
+description = "For 10 s, each kill heals you by 8% and gives +10% attack speed."
+effect = &"bloodlust"
+unlock_level = 20
+cost_type = 2
+cost = 15
+cooldown = 30
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 10
+power = 8
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "BL"
+class_id = &"barbarian"
+passive = false

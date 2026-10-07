@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"ice_wall"
+display_name = "Ice Wall"
+description = "A wall of ice at the cursor that blocks the way for 6 s."
+effect = &"ice_wall"
+unlock_level = 26
+cost_type = 1
+cost = 20
+cooldown = 16
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 12
+duration = 6
+power = 5
+icon_color = Color(0.6, 0.9, 1, 1)
+icon_glyph = "IW"
+class_id = &"wizard"
+passive = false

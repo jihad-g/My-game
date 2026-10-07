@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"shield_throw"
+display_name = "Shield Throw"
+description = "Throw your shield. It bounces between 3 enemies and comes back."
+effect = &"shield_throw"
+unlock_level = 12
+cost_type = 2
+cost = 16
+cooldown = 9
+damage = 16
+damage_type = &"physical"
+radius = 7
+range = 14
+duration = 0
+power = 3
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "Th"
+class_id = &"knight"
+passive = false

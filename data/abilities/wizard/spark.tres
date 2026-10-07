@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"spark"
+display_name = "Spark"
+description = "A very fast, weak lightning bolt that shocks."
+effect = &"spark"
+unlock_level = 12
+cost_type = 1
+cost = 4
+cooldown = 0.5
+damage = 10
+damage_type = &"lightning"
+radius = 0
+range = 20
+duration = 0
+power = 0
+icon_color = Color(0.8, 0.85, 1, 1)
+icon_glyph = "Sp"
+class_id = &"wizard"
+passive = false

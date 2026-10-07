@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"pommel_strike"
+display_name = "Pommel Strike"
+description = "A fast hit with the handle that stuns for 1 s."
+effect = &"pommel_strike"
+unlock_level = 26
+cost_type = 2
+cost = 8
+cooldown = 5
+damage = 8
+damage_type = &"physical"
+radius = 2.3
+range = 0
+duration = 1.0
+power = 0
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "PS"
+class_id = &"knight"
+passive = false

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"cleave"
+display_name = "Cleave"
+description = "A wide swing that hits every enemy in front of you. +5 Rage for each enemy hit."
+effect = &"cleave"
+unlock_level = 2
+cost_type = 2
+cost = 14
+cooldown = 4
+damage = 18
+damage_type = &"physical"
+radius = 3.0
+range = 0
+duration = 0
+power = 5
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "Cv"
+class_id = &"barbarian"
+passive = false

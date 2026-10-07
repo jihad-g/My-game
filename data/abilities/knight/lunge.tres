@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"lunge"
+display_name = "Lunge"
+description = "A fast thrust that moves you 5 m forward and hits everyone in the way."
+effect = &"lunge"
+unlock_level = 6
+cost_type = 2
+cost = 12
+cooldown = 6
+damage = 16
+damage_type = &"physical"
+radius = 0
+range = 5
+duration = 0
+power = 0
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "Lg"
+class_id = &"knight"
+passive = false

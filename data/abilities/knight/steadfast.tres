@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"steadfast"
+display_name = "Steadfast"
+description = "Passive: +10% block strength."
+effect = &"steadfast"
+unlock_level = 4
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 10
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "Sf"
+class_id = &"knight"
+passive = true

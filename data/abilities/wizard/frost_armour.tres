@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"frost_armour"
+display_name = "Frost Armour"
+description = "For 15 s: 20% less damage taken, and enemies who hit you are chilled."
+effect = &"frost_armour"
+unlock_level = 16
+cost_type = 1
+cost = 20
+cooldown = 25
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 15
+power = 0.8
+icon_color = Color(0.6, 0.9, 1, 1)
+icon_glyph = "FA"
+class_id = &"wizard"
+passive = false

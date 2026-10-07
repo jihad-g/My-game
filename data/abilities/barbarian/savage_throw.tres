@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"savage_throw"
+display_name = "Savage Throw"
+description = "Throw your weapon. It hits on the way out and again on the way back."
+effect = &"savage_throw"
+unlock_level = 22
+cost_type = 2
+cost = 16
+cooldown = 8
+damage = 18
+damage_type = &"physical"
+radius = 0
+range = 14
+duration = 0
+power = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "ST"
+class_id = &"barbarian"
+passive = false
