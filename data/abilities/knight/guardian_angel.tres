@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"guardian_angel"
+display_name = "Guardian Angel"
+description = "A spirit knight fights with you for 20 s. While it lives, you take 20% less damage."
+effect = &"guardian_angel"
+unlock_level = 88
+cost_type = 1
+cost = 35
+cooldown = 60
+damage = 0
+damage_type = &"holy"
+radius = 0
+range = 0
+duration = 20
+power = 0.2
+required_mana_control = 0
+icon_color = Color(1, 0.95, 0.6, 1)
+icon_glyph = "GA"
+class_id = &"knight"
+passive = false
+animation = &"summon"
+anim_time = 0.7
+ultimate = false

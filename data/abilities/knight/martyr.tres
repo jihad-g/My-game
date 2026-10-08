@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"martyr"
+display_name = "Martyr"
+description = "Passive: once every 10 minutes, you survive a killing hit with 30% health."
+effect = &"martyr"
+unlock_level = 92
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 0.3
+required_mana_control = 0
+icon_color = Color(1, 0.95, 0.6, 1)
+icon_glyph = "Ma"
+class_id = &"knight"
+passive = true
+animation = &""
+anim_time = 0.5
+ultimate = false

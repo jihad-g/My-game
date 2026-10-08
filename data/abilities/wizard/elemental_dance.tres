@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"elemental_dance"
+display_name = "Elemental Dance"
+description = "Passive: each time your next spell uses a different element (fire, frost, lightning, arcane): +10% spell damage, up to +30%. Using the same element again resets it."
+effect = &"elemental_dance"
+unlock_level = 68
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 0.1
+required_mana_control = 0
+icon_color = Color(0.75, 0.55, 1.0, 1)
+icon_glyph = "ED"
+class_id = &"wizard"
+passive = true
+animation = &""
+anim_time = 0.5
+ultimate = false

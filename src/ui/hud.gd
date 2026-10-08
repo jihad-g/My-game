@@ -495,9 +495,9 @@ func _bind_rpg() -> void:
 	_set_bar(_mana_bar, _mana_label, player.mana.current, player.mana.max_mana)
 	ch.xp_changed.connect(_on_xp_changed)
 	_on_xp_changed(ch.xp, ch.xp_needed(), ch.level)
-	player.abilities.rage_changed.connect(func(v: float) -> void: _set_bar(_rage_bar, _rage_label, v, PlayerAbilities.MAX_RAGE))
+	player.abilities.rage_changed.connect(func(v: float) -> void: _set_bar(_rage_bar, _rage_label, v, player.abilities.max_rage()))
 	_rage_row.visible = ch.class_data != null and ch.class_data.uses_rage
-	_set_bar(_rage_bar, _rage_label, player.abilities.rage, PlayerAbilities.MAX_RAGE)
+	_set_bar(_rage_bar, _rage_label, player.abilities.rage, player.abilities.max_rage())
 	Events.level_up.connect(_on_level_up)
 	Events.xp_gained.connect(func(amount: int, source: int) -> void:
 		show_toast("+%d XP (%s)" % [amount, Progression.SOURCE_NAMES[source]], Color(1, 0.9, 0.5)))

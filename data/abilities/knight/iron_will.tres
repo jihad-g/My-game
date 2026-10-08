@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"iron_will"
+display_name = "Iron Will"
+description = "Passive: bad effects on you (poison, burning, chill and others) last 20% shorter."
+effect = &"iron_will"
+unlock_level = 82
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 0.2
+required_mana_control = 0
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "IW"
+class_id = &"knight"
+passive = true
+animation = &""
+anim_time = 0.5
+ultimate = false

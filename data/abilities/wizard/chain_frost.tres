@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"chain_frost"
+display_name = "Chain Frost"
+description = "A frost bolt that jumps between 5 enemies and chills each one."
+effect = &"chain_frost"
+unlock_level = 70
+cost_type = 1
+cost = 35
+cooldown = 12
+damage = 24
+damage_type = &"frost"
+radius = 8
+range = 18
+duration = 0
+power = 4
+required_mana_control = 0
+icon_color = Color(0.6, 0.9, 1, 1)
+icon_glyph = "CF"
+class_id = &"wizard"
+passive = false
+animation = &"push"
+anim_time = 0.5
+ultimate = false

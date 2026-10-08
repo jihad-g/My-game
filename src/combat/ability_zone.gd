@@ -12,6 +12,9 @@ var color := Color(1, 1, 1, 0.35)
 var on_tick: Callable
 ## Milestone 17c: the zone stays on this node (Fire Ring) or moves (Fire Tornado).
 var follow: Node3D
+## Milestone 17d: the zone ends when the node it follows dies or is gone (a summon's aura);
+## otherwise it just stays where that happened (Pillar of Light).
+var end_with_follow := false
 var velocity := Vector3.ZERO
 
 var _t := 0.0
@@ -41,8 +44,14 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_t += delta
-	if follow and is_instance_valid(follow):
-		global_position = follow.global_position
+	if follow != null:
+		if is_instance_valid(follow) and follow.is_inside_tree() and not follow.get("is_dead"):
+			global_position = follow.global_position
+		else:
+			follow = null
+			if end_with_follow:
+				queue_free()
+				return
 	elif velocity != Vector3.ZERO:
 		var p := global_position + velocity * delta
 		if World.instance:

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"black_hole"
+display_name = "Black Hole"
+description = "A black hole pulls enemies in and hurts them for 4 s."
+effect = &"black_hole"
+unlock_level = 90
+cost_type = 1
+cost = 60
+cooldown = 40
+damage = 10
+damage_type = &"arcane"
+radius = 7
+range = 16
+duration = 4
+power = 0.5
+required_mana_control = 0
+icon_color = Color(0.75, 0.55, 1.0, 1)
+icon_glyph = "BH"
+class_id = &"wizard"
+passive = false
+animation = &"cast_up"
+anim_time = 0.5
+ultimate = false

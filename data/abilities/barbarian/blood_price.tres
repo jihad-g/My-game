@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"blood_price"
+display_name = "Blood Price"
+description = "Passive: when you don't have enough Rage, Rage abilities take health instead (0.3% of your max health for each missing point). They never take you below 1 health."
+effect = &"blood_price"
+unlock_level = 66
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 0.3
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "BP"
+class_id = &"barbarian"
+passive = true
+animation = &""
+anim_time = 0.5
+ultimate = false

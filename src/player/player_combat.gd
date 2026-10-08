@@ -320,7 +320,7 @@ func get_move_multiplier() -> float:
 func _perform_hit() -> void:
 	var space := player.get_world_3d().direct_space_state
 	var origin := player.global_position + Vector3(0, 0.9, 0)
-	var targets := HitQuery.query_arc(space, origin, attack_direction, current.reach + weapon_param(&"reach"),
+	var targets := HitQuery.query_arc(space, origin, attack_direction, current.reach + weapon_param(&"reach") + player.abilities.reach_bonus(),
 		current.arc_degrees, Layers.ENEMY | Layers.PROP, [player.get_rid()])
 	var hit_enemy := false
 	var bonus := _bonus
@@ -604,7 +604,10 @@ func build_physical(base: float, target: Node, poise: float, knockback: float,
 		if target_facing.dot(info.direction) > 0.5:
 			info.amount *= ch.backstab_mult
 			info.tag = "Backstab" if info.tag == "" else info.tag + " Backstab"
-	if bonus.get("crit", false) or _rng.randf() < ch.crit_chance + crit_bonus:
+	# Cold Blood (Milestone 17d): the first hit on an unhurt enemy is a critical hit.
+	var cold := player.abilities.has_passive(&"cold_blood") and target.get("health") is HealthComponent \
+		and (target.get("health") as HealthComponent).get_ratio() >= 0.999 and target.is_in_group(&"enemies")
+	if cold or bonus.get("crit", false) or _rng.randf() < ch.crit_chance + crit_bonus:
 		info.is_crit = true
 		info.amount *= ch.crit_mult
 	return info

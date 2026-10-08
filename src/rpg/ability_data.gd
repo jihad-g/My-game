@@ -34,6 +34,8 @@ enum CostType { NONE, MANA, STAMINA, RAGE }
 ## effect plays its own swing) and how long it lasts.
 @export var animation: StringName
 @export var anim_time: float = 0.5
+## Milestone 17d: the class's level-100 ultimate (no level-30 upgrade, long cooldown).
+@export var ultimate: bool = false
 
 
 func cost_name() -> String:

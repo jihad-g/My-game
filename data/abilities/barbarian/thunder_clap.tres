@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"thunder_clap"
+display_name = "Thunder Clap"
+description = "A shockwave of thunder around you. Enemies are shocked; wet enemies are also stunned for 2 s."
+effect = &"thunder_clap"
+unlock_level = 86
+cost_type = 2
+cost = 25
+cooldown = 14
+damage = 22
+damage_type = &"lightning"
+radius = 6
+range = 0
+duration = 2
+power = 0
+required_mana_control = 0
+icon_color = Color(0.8, 0.85, 1, 1)
+icon_glyph = "TC"
+class_id = &"barbarian"
+passive = false
+animation = &"stomp"
+anim_time = 0.5
+ultimate = false

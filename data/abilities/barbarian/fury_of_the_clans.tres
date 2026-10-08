@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"fury_of_the_clans"
+display_name = "Fury of the Clans"
+description = "6 fast hits in a row in front of you. The last one is a slam that hits everything around you."
+effect = &"fury_of_the_clans"
+unlock_level = 98
+cost_type = 3
+cost = 45
+cooldown = 20
+damage = 16
+damage_type = &"physical"
+radius = 2.8
+range = 0
+duration = 0
+power = 6
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "FC"
+class_id = &"barbarian"
+passive = false
+animation = &""
+anim_time = 0.5
+ultimate = false

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"sunfire"
+display_name = "Sunfire"
+description = "A beam of sunlight from the sky burns the target area for 3 s."
+effect = &"sunfire"
+unlock_level = 84
+cost_type = 1
+cost = 45
+cooldown = 20
+damage = 30
+damage_type = &"fire"
+radius = 3.5
+range = 18
+duration = 3
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.5, 0.2, 1)
+icon_glyph = "Sf"
+class_id = &"wizard"
+passive = false
+animation = &"cast_up"
+anim_time = 0.5
+ultimate = false

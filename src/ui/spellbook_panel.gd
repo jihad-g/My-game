@@ -49,7 +49,8 @@ func _build_abilities_page() -> Control:
 	v.add_theme_constant_override(&"separation", 6)
 	var info := Label.new()
 	info.text = "You learn a new ability every two levels. Active abilities go on your bar; passive abilities are always on.\n" \
-		+ "Choose your bar while resting at a bed or a campfire - new abilities fill empty slots by themselves."
+		+ "Choose your bar while resting at a bed or a campfire - new abilities fill empty slots by themselves.\n" \
+		+ "From level 30 you can give every active ability one of two upgrades (also at a bed or a campfire)."
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD
 	info.custom_minimum_size.x = 760
 	info.add_theme_font_size_override(&"font_size", 12)
@@ -169,10 +170,24 @@ func _refresh_abilities() -> void:
 		var cost := "" if a.passive else "\n%d %s · %ss cooldown" % [roundi(ab.effective_cost(a)),
 			"mana" if a == PlayerAbilities.shield_ability() else a.cost_name(), a.cooldown]
 		var lvl := "Universal" if a == PlayerAbilities.shield_ability() else "Level %d" % a.unlock_level
-		text.text = "%s  -  %s · %s · %s\n%s%s" % [a.display_name, lvl, kind, when, a.description, cost]
+		if a.ultimate:
+			kind = "ULTIMATE"
+		# Milestone 17d: show the chosen upgrade and the upgraded cost and cooldown.
+		var up := ab.upgrade_option(a.id)
+		if not a.passive and a != PlayerAbilities.shield_ability():
+			var e := ab.effective(a)
+			cost = "\n%d %s · %ss cooldown" % [roundi(ab.effective_cost(a)), a.cost_name(), snappedf(e.cooldown * 1.0, 0.1)]
+		var up_text := "" if up.is_empty() else "\nUpgrade: %s - %s" % [up.name, up.text]
+		text.text = "%s  -  %s · %s · %s\n%s%s%s" % [a.display_name, lvl, kind, when, a.description, up_text, cost]
 		text.add_theme_font_size_override(&"font_size", 12)
-		text.add_theme_color_override(&"font_color", Color.WHITE if learned else UITheme.TEXT_DIM)
-		row.add_child(text)
+		text.add_theme_color_override(&"font_color", (UITheme.GOLD if a.ultimate else Color.WHITE) if learned else UITheme.TEXT_DIM)
+		var col := VBoxContainer.new()
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_child(text)
+		row.add_child(col)
+		var opts := AbilityUpgrades.options(a)
+		if learned and not opts.is_empty() and ab.upgrades_unlocked():
+			col.add_child(_upgrade_row(a, opts, can_change))
 		if a.passive:
 			var on := Label.new()
 			on.text = "Always on" if learned else ""
@@ -192,6 +207,43 @@ func _refresh_abilities() -> void:
 				ab.assign(slot, id)
 				refresh())
 			row.add_child(b)
+
+
+## Two upgrade buttons for an ability (Milestone 17d). The chosen one is marked.
+func _upgrade_row(a: AbilityData, opts: Array, can_change: bool) -> HBoxContainer:
+	var ab := player.abilities
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override(&"separation", 6)
+	var l := Label.new()
+	l.text = "Upgrade:"
+	l.add_theme_font_size_override(&"font_size", 11)
+	l.add_theme_color_override(&"font_color", UITheme.GOLD)
+	h.add_child(l)
+	for i in opts.size():
+		var o: Dictionary = opts[i]
+		var chosen := ab.upgrade_of(a.id) == i
+		var b := Button.new()
+		b.text = ("✓ " if chosen else "") + String(o.name)
+		b.tooltip_text = "%s: %s" % [o.name, o.text]
+		b.disabled = chosen or not can_change
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_font_size_override(&"font_size", 11)
+		if chosen:
+			b.add_theme_color_override(&"font_disabled_color", UITheme.GOLD)
+		var idx := i
+		var id := a.id
+		b.pressed.connect(func() -> void:
+			ab.choose_upgrade(id, idx)
+			refresh())
+		h.add_child(b)
+	var hint := Label.new()
+	hint.text = String(opts[0].name) + ": " + String(opts[0].text) + "   " + String(opts[1].name) + ": " + String(opts[1].text)
+	hint.add_theme_font_size_override(&"font_size", 10)
+	hint.add_theme_color_override(&"font_color", UITheme.TEXT_DIM)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD
+	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(hint)
+	return h
 
 
 func _refresh_spells() -> void:

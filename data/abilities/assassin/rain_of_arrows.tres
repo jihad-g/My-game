@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"rain_of_arrows"
+display_name = "Rain of Arrows"
+description = "Arrows rain on the target area for 4 s (needs a bow and an arrow)."
+effect = &"rain_of_arrows"
+unlock_level = 84
+cost_type = 2
+cost = 25
+cooldown = 20
+damage = 12
+damage_type = &"physical"
+radius = 4.5
+range = 26
+duration = 4
+power = 0
+required_mana_control = 0
+icon_color = Color(0.55, 0.85, 0.45, 1)
+icon_glyph = "RA"
+class_id = &"assassin"
+passive = false
+animation = &"cast_up"
+anim_time = 0.5
+ultimate = false

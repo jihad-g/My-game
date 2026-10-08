@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"ascension"
+display_name = "Ascension"
+description = "Float above the ground for 10 s. Your spells and abilities cost no mana."
+effect = &"ascension"
+unlock_level = 98
+cost_type = 1
+cost = 50
+cooldown = 90
+damage = 0
+damage_type = &"arcane"
+radius = 0
+range = 0
+duration = 10
+power = 0
+required_mana_control = 0
+icon_color = Color(0.75, 0.55, 1.0, 1)
+icon_glyph = "As"
+class_id = &"wizard"
+passive = false
+animation = &"wings"
+anim_time = 0.7
+ultimate = false

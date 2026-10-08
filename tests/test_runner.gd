@@ -112,6 +112,10 @@ func _ready() -> void:
 	_run(&"test_m17c_data")
 	await _run_async(&"test_m17c_spells")
 	await _run_async(&"test_m17c_passives_and_poses")
+	_run(&"test_m17d_data")
+	await _run_async(&"test_m17d_abilities")
+	await _run_async(&"test_m17d_upgrades")
+	await _run_async(&"test_m17d_passives")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5150,7 +5154,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.19"), "version 0.19 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.20"), "version 0.20 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -5164,7 +5168,7 @@ func test_m13_release() -> void:
 	check(csv.size() == Achievements.LIST.size() + 1, "Steam achievement list matches the game (%d)" % (csv.size() - 1))
 	check(FileAccess.file_exists("res://platform/steam/app_build.vdf") and FileAccess.file_exists("res://platform/steam/rich_presence.vdf"), "SteamPipe build scripts")
 	var symbols_ok := true
-	for ch in "→★✕⚠●↺♛":
+	for ch in "→★✕⚠●↺♛✓":
 		var c := ch.unicode_at(0)
 		symbols_ok = symbols_ok and (ThemeDB.fallback_font.has_char(c) or ThemeDB.fallback_font.fallbacks.any(func(f: Font) -> bool: return f.has_char(c)))
 	check(symbols_ok, "UI symbols render on every platform (bundled fallback font)")
@@ -6104,7 +6108,7 @@ func test_m17a_combat() -> void:
 func test_m17b_data() -> void:
 	for cid in [&"barbarian", &"knight", &"wizard", &"assassin"]:
 		var book := AbilityBook.for_class(cid)
-		check(book.size() == 35, "%s: 3 starting + 32 new abilities (%d)" % [cid, book.size()])
+		check(book.size() == 53, "%s: 3 starting + 50 new abilities (%d)" % [cid, book.size()])
 		var levels := {}
 		var passives := 0
 		var bad := []
@@ -6120,8 +6124,8 @@ func test_m17b_data() -> void:
 			if a.description.length() < 15 or a.icon_glyph == "?":
 				bad.append("%s has no text or icon" % a.id)
 		check(bad.is_empty(), "%s abilities are complete %s" % [cid, bad])
-		check(levels.size() == 32 and levels.has(2) and levels.has(64), "%s learns one ability every 2 levels from 2 to 64" % cid)
-		check(passives >= 7 and passives <= 11, "%s has %d passives" % [cid, passives])
+		check(levels.size() == 50 and levels.has(2) and levels.has(100), "%s learns one ability every 2 levels from 2 to 100" % cid)
+		check(passives >= 12 and passives <= 18, "%s has %d passives" % [cid, passives])
 	check(AbilityBook.get_ability(&"temperature_shield") != null and PlayerAbilities.shield_ability().id == &"temperature_shield", "the Temperature Shield is in the book")
 	for act in [&"ability_5", &"ability_6", &"spell_3"]:
 		check(InputMap.has_action(act) and not InputMap.action_get_events(act).is_empty(), "key for %s" % act)
@@ -6197,8 +6201,8 @@ func test_m17b_abilities() -> void:
 		var home := p.global_position
 		var failed := []
 		for a: AbilityData in ab.class_abilities():
-			if a.passive or a.class_id == &"":
-				continue
+			if a.passive or a.class_id == &"" or a.unlock_level > 64:
+				continue  # levels 66-100: test_m17d_abilities
 			# Fresh, sturdy targets right in front of you.
 			_clear_enemies(world)
 			world.spawner.max_active = 80
@@ -6432,3 +6436,307 @@ func test_m17c_passives_and_poses() -> void:
 	await _frames(5)
 	check(p.model._shield.get_child_count() > 0 and p.model._weapon.get_child_count() <= 1, "the bow is held in the left hand")
 	p.health.invulnerable = false
+
+
+# --- Milestone 17d: abilities 66-100, ultimates, level-30 upgrades ----------------------------
+
+func test_m17d_data() -> void:
+	var bad := []
+	for cid in [&"barbarian", &"knight", &"wizard", &"assassin"]:
+		var ults := []
+		var new := 0
+		for a: AbilityData in AbilityBook.for_class(cid):
+			if a.unlock_level < 66:
+				continue
+			new += 1
+			if a.ultimate:
+				ults.append(a.id)
+				if a.unlock_level != 100 or a.cooldown < 300.0 or a.passive:
+					bad.append("%s: an ultimate is a level-100 active with a long cooldown" % a.id)
+			if a.passive:
+				if a.cost > 0.0 or not AbilityUpgrades.options(a).is_empty():
+					bad.append("%s: passives cost nothing and have no upgrades" % a.id)
+			else:
+				if not PlayerAbilities.new().has_method("_ability_%s" % a.effect):
+					bad.append("%s has no effect" % a.id)
+				if a.animation != &"" and not HumanoidModel.POSES.has(a.animation):
+					bad.append("%s has an unknown pose" % a.id)
+			if a.description.length() < 15 or a.icon_glyph == "?":
+				bad.append("%s has no text or icon" % a.id)
+		check(new == 18, "%s: 18 abilities for levels 66-100 (%d)" % [cid, new])
+		check(ults.size() == 1, "%s: one ultimate %s" % [cid, ults])
+		# Every active ability below 100 has two upgrades; the starting ones are special.
+		for a: AbilityData in AbilityBook.for_class(cid):
+			var opts := AbilityUpgrades.options(a)
+			if not a.passive and not a.ultimate and opts.size() != 2:
+				bad.append("%s has %d upgrades" % [a.id, opts.size()])
+		for a in ClassRegistry.get_class_data(cid).abilities:
+			if not AbilityUpgrades.SPECIAL.has((a as AbilityData).id):
+				bad.append("%s has no special upgrades" % (a as AbilityData).id)
+	check(bad.is_empty(), "the level 66-100 abilities are complete %s" % [bad])
+	check(AbilityUpgrades.SPECIAL.size() == 12, "12 starting abilities have special upgrades")
+	for pose in [&"beam", &"wings", &"summon", &"ultimate"]:
+		check(HumanoidModel.POSES.has(pose), "new pose %s" % pose)
+	check(AbilityUpgrades.options(PlayerAbilities.shield_ability()).is_empty(), "the Temperature Shield has no upgrades")
+
+
+## Every new active ability (levels 66-100) fires and does something.
+func test_m17d_abilities() -> void:
+	for cid in [&"barbarian", &"knight", &"wizard", &"assassin"]:
+		var world: World = await _boot_class(cid)
+		var p := world.player
+		var ab := p.abilities
+		p.health.invulnerable = true
+		_clear_enemies(world)
+		world.spawner.max_active = 80
+		p.character.grant_xp(Progression.total_xp_for(100) - p.character.total_xp, Progression.Source.OTHER)
+		p.character.skills[Skill.MANA_CONTROL] = 60
+		p.inventory.add_item(&"iron_arrow", 40)
+		p.character.recalculate()
+		await _frames(2)
+		check(p.character.level == 100, "%s reaches level 100" % cid)
+		var off := _clear_offset(world, 2.2)
+		var home := p.global_position
+		var failed := []
+		for a: AbilityData in ab.class_abilities():
+			if a.passive or a.unlock_level < 66:
+				continue
+			_clear_enemies(world)
+			for pet in get_tree().get_nodes_in_group(&"pets"):
+				NodePool.release_or_free(pet)
+			world.spawner.max_active = 80
+			var foes: Array[Monster] = []
+			for k in 2:
+				var m := _spawn_monster(world, &"skeleton_warrior", off + Vector3(0, 0, k * 0.8 - 0.4))
+				m.health.max_health = 50000.0
+				m.health.current = 50000.0
+				foes.append(m)
+			await _frames(2)
+			p.face_direction(off.normalized(), true)
+			p.set_lock_target(foes[0])
+			p.state = Player.State.NORMAL
+			p.mana.refill()
+			p.stamina.refill()
+			ab.set_rage(100.0)
+			ab.cooldowns.clear()
+			# Some abilities need something first.
+			if a.effect == &"judgement_day":
+				ab.mark(foes[0], &"judgement", 8.0, 0.15)
+			if a.effect == &"neurotoxin":
+				for m in foes:
+					m.apply_status(&"poison", 6.0, {"dps": 1.0})
+			if a.effect in [&"venom_arrow", &"rain_of_arrows"]:
+				p.equipment.equip(ItemDB.get_item(&"recurve_bow"))
+			elif p.equipment.weapon() and p.equipment.weapon().weapon_type == &"bow":
+				p.equipment.unequip(ItemData.EquipSlot.MAIN_HAND)
+			var hp := foes[0].health.current + foes[1].health.current
+			ab.bar[0] = a.id
+			var fired := ab.try_use(0)
+			await _frames(45)
+			var hurt := foes[0].health.current + foes[1].health.current < hp
+			var st := false
+			for m in foes:
+				for s in [&"stunned", &"slowed", &"weakened", &"chilled", &"frozen", &"shocked", &"bleed", &"burn", &"taunted", &"silenced", &"poison"]:
+					if m.status.has(s) and not (a.effect == &"neurotoxin" and s == &"poison"):
+						st = true
+			var buff := not ab.buffs.is_empty() or not ab.marks.is_empty()
+			var world_fx := not get_tree().get_nodes_in_group(&"ability_zones").is_empty() \
+				or not get_tree().get_nodes_in_group(&"pets").is_empty() or not get_tree().get_nodes_in_group(&"decoys").is_empty()
+			if not fired or not (hurt or st or buff or world_fx or a.effect in [&"umbral_leap"]):
+				failed.append("%s (fired %s)" % [a.id, fired])
+			for m in foes:
+				m.global_position = Vector3(0, -500, 0)
+				_kill(m, world)
+			for b in ab.buffs.keys():
+				ab.remove_buff(b)
+			ab.marks.clear()
+			p.global_position = home
+			p.velocity = Vector3.ZERO
+			await _frames(30)
+		check(failed.is_empty(), "%s: every level 66-100 ability fires and has an effect %s" % [cid, failed])
+		check(p.model.scale.is_equal_approx(Vector3.ONE), "%s: the hero is normal size again" % cid)
+		p.health.invulnerable = false
+
+
+func test_m17d_upgrades() -> void:
+	var world: World = await _boot_class(&"wizard")
+	var p := world.player
+	var ab := p.abilities
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	p.character.grant_xp(Progression.total_xp_for(28) - p.character.total_xp, Progression.Source.OTHER)
+	await _frames(2)
+	check(not ab.choose_upgrade(&"firebolt", 0, true), "no upgrades before level 30")
+	p.character.grant_xp(Progression.total_xp_for(30) - p.character.total_xp, Progression.Source.OTHER)
+	await _frames(2)
+	check(ab.upgrades_unlocked(), "upgrades unlock at level 30")
+	check(ab.upgrade_lock_reason() != "" and not ab.choose_upgrade(&"firebolt", 0), "away from a bed or campfire you can't choose")
+	check(not ab.choose_upgrade(&"comet_shower", 0, true), "abilities you haven't learned can't be upgraded")
+	# Swift: a shorter cooldown and a lower cost.
+	var spark := AbilityBook.get_ability(&"ice_lance")
+	var cd0 := spark.cooldown
+	var cost0 := ab.effective_cost(spark)
+	check(ab.choose_upgrade(&"ice_lance", 1, true), "choose Swift for Ice Lance")
+	check(is_equal_approx(ab.effective(spark).cooldown, cd0 * 0.7) and ab.effective_cost(spark) < cost0, "Swift: -30% cooldown, cheaper")
+	check(spark.cooldown == cd0, "the ability's own data is not changed")
+	ab.cooldowns.clear()
+	ab.bar[0] = &"ice_lance"
+	p.mana.refill()
+	ab.try_use(0)
+	check(absf(ab.cooldown_left(spark) - cd0 * 0.7 * ab.cooldown_mult()) < 0.1, "the shorter cooldown is used")
+	# Empowered: more damage.
+	check(ab.choose_upgrade(&"ice_lance", 0, true) and ab.effective(spark).damage > spark.damage * 1.25, "Empowered: +30% damage")
+	# A special upgrade: Split Bolt shoots three bolts.
+	check(ab.choose_upgrade(&"firebolt", 0, true) and ab.upgrade_tag(&"firebolt") == &"split", "Split Bolt chosen")
+	var before := p.get_parent().get_children().filter(func(n: Node) -> bool: return n is Projectile).size()
+	ab.cooldowns.clear()
+	ab.bar[0] = &"firebolt"
+	p.mana.refill()
+	ab.try_use(0)
+	await _frames(1)
+	var bolts := p.get_parent().get_children().filter(func(n: Node) -> bool: return n is Projectile).size() - before
+	check(bolts == 3, "Split Bolt shoots 3 bolts (%d)" % bolts)
+	# Burning Ground leaves fire where the bolt lands.
+	ab.choose_upgrade(&"firebolt", 1, true)
+	var off := _clear_offset(world, 4.0)
+	var m := _spawn_monster(world, &"skeleton_warrior", off)
+	m.health.max_health = 5000.0
+	m.health.current = 5000.0
+	await _frames(2)
+	p.set_lock_target(m)
+	ab.cooldowns.clear()
+	p.mana.refill()
+	ab.try_use(0)
+	await _frames(40)
+	check(not get_tree().get_nodes_in_group(&"ability_zones").is_empty(), "Burning Ground leaves a fire zone")
+	_kill(m, world)
+	# Next to a campfire the player can choose; the book shows the buttons.
+	var fire: Node3D = load("res://scenes/world/campfire.tscn").instantiate() if ResourceLoader.exists("res://scenes/world/campfire.tscn") else Campfire.new()
+	world.add_child(fire)
+	fire.global_position = p.global_position + Vector3(2, 0, 0)
+	await _frames(2)
+	check(ab.choose_upgrade(&"frost_nova", 1), "at a campfire you can choose an upgrade")
+	var panel := SpellbookPanel.new()
+	world.add_child(panel)
+	panel.bind(p)
+	panel.toggle()
+	await _frames(2)
+	var texts := []
+	for b in panel.find_children("*", "Button", true, false):
+		texts.append((b as Button).text)
+	check(texts.has("✓ Deep Freeze") and texts.has("Wide Nova"), "the ability book shows the upgrade buttons")
+	panel.queue_free()
+	fire.queue_free()
+	# Saved with the character; old saves have none.
+	var saved := ab.to_save()
+	ab.upgrades.clear()
+	ab.from_save(saved)
+	check(ab.upgrade_of(&"frost_nova") == 1 and ab.upgrade_of(&"firebolt") == 1 and ab.upgrade_of(&"ice_lance") == 0, "upgrades are saved")
+	ab.from_save({"rage": 0.0})
+	check(ab.upgrades.is_empty(), "old saves have no upgrades")
+	p.health.invulnerable = false
+
+
+func test_m17d_passives() -> void:
+	var world: World = await _boot_class(&"barbarian")
+	var p := world.player
+	var ab := p.abilities
+	_clear_enemies(world)
+	var hp64 := 0.0
+	p.character.grant_xp(Progression.total_xp_for(64) - p.character.total_xp, Progression.Source.OTHER)
+	await _frames(2)
+	hp64 = p.health.max_health
+	var speed64 := p.stats.get_mult(Stats.MOVE_SPEED)
+	p.character.grant_xp(Progression.total_xp_for(100) - p.character.total_xp, Progression.Source.OTHER)
+	await _frames(2)
+	check(p.health.max_health > hp64 * 1.12, "Mountain's Endurance: more health (%.0f -> %.0f)" % [hp64, p.health.max_health])
+	check(p.stats.get_mult(Stats.MOVE_SPEED) < speed64, "... but a little slower")
+	# Rage Overflow: 150 Rage.
+	ab.set_rage(999.0)
+	check(is_equal_approx(ab.rage, 150.0), "Rage Overflow: Rage goes up to 150")
+	# Blood Price: no Rage, the ability costs health.
+	ab.set_rage(0.0)
+	ab.cooldowns.clear()
+	ab.bar[0] = &"execute"
+	p.health.reset_full()
+	var h0 := p.health.current
+	check(ab.try_use(0) and p.health.current < h0, "Blood Price: Execute without Rage costs health")
+	# Last Stand: once every 3 minutes a killing hit leaves you at 20%.
+	p.health.reset_full()
+	p.receive_hit(DamageInfo.create(999999.0, p))
+	check(not p.is_dead and p.health.current >= p.health.max_health * 0.19, "Last Stand saves you")
+	p.receive_hit(DamageInfo.create(999999.0, p))
+	check(p.is_dead, "... but only once every 3 minutes")
+	world = await _boot_class(&"assassin")
+	p = world.player
+	ab = p.abilities
+	_clear_enemies(world)
+	var crit0 := p.character.crit_mult
+	p.character.grant_xp(Progression.total_xp_for(100) - p.character.total_xp, Progression.Source.OTHER)
+	await _frames(2)
+	check(p.character.crit_mult >= crit0 + 0.19, "Lethality: +20% critical damage")
+	# Cold Blood: the first hit on an unhurt enemy is a critical hit.
+	var off := _clear_offset(world, 2.0)
+	var m := _spawn_monster(world, &"skeleton_warrior", off)
+	await _frames(2)
+	check(p.combat.build_physical(5.0, m, 0.0, 0.0).is_crit, "Cold Blood: a critical hit on an unhurt enemy")
+	_kill(m, world)
+	# Swift Death resets Shadow Step.
+	ab.cooldowns[&"shadow_step"] = 10.0
+	var m2 := _spawn_monster(world, &"skeleton_warrior", off)
+	await _frames(2)
+	_kill(m2, world)
+	await _frames(2)
+	check(ab.cooldown_left(AbilityBook.get_ability(&"shadow_step")) <= 0.0, "Swift Death: a kill resets Shadow Step")
+	# Deadly Precision counts bosses and elites as tough.
+	check(not PlayerAbilities.is_tough(m2), "a plain skeleton is not tough")
+	world = await _boot_class(&"knight")
+	p = world.player
+	ab = p.abilities
+	_clear_enemies(world)
+	p.character.grant_xp(Progression.total_xp_for(100) - p.character.total_xp, Progression.Source.OTHER)
+	await _frames(2)
+	# Iron Will and Heavenly Ward: shorter bad effects and stuns.
+	p.afflict(&"poison", 10.0, {"dps": 0.1})
+	check(p.status.time_left(&"poison") < 8.5 * p.status.duration_mult + 0.01, "Iron Will: poison is shorter")
+	p.status.clear()
+	# Phalanx: full speed while blocking.
+	ab.add_buff(&"phalanx", 5.0)
+	check(ab.has_buff(&"phalanx"), "Phalanx is on")
+	ab.remove_buff(&"phalanx")
+	# Martyr: a killing hit leaves you at 30%.
+	p.health.reset_full()
+	p.receive_hit(DamageInfo.create(999999.0, p))
+	check(not p.is_dead and p.health.current >= p.health.max_health * 0.29, "Martyr saves you")
+	# Paladin's Oath gives armour.
+	var armor0 := p.character.armor
+	ab.cooldowns.clear()
+	ab.bar[0] = &"paladins_oath"
+	p.mana.refill()
+	p.state = Player.State.NORMAL
+	var cast := ab.try_use(0)
+	check(cast and p.character.armor > armor0 * 1.2, "Paladin's Oath: +30 percent armour")
+	for b in ab.buffs.keys():
+		ab.remove_buff(b)
+	check(is_equal_approx(p.character.armor, armor0), "and the armour goes back")
+	world = await _boot_class(&"wizard")
+	p = world.player
+	ab = p.abilities
+	_clear_enemies(world)
+	p.character.grant_xp(Progression.total_xp_for(100) - p.character.total_xp, Progression.Source.OTHER)
+	p.character.skills[Skill.MANA_CONTROL] = 60
+	p.character.recalculate()
+	await _frames(2)
+	# Clearcasting: after 10 spells the next one is free.
+	ab.bar[0] = &"spark"
+	for i in 10:
+		ab.cooldowns.clear()
+		p.mana.refill()
+		ab.try_use(0)
+	check(ab.has_buff(&"clearcast") and ab.effective_cost(AbilityBook.get_ability(&"spark")) == 0.0, "Clearcasting: the 11th spell is free")
+	# Elemental Dance: a different element in a row deals more damage.
+	ab._dance_last = &"fire"
+	ab._dance_count = 0
+	var frost := AbilityBook.get_ability(&"ice_lance")
+	var fire := AbilityBook.get_ability(&"flame_wave")
+	check(ab._spell_damage(frost) > ab._spell_damage(fire) * frost.damage / fire.damage * 1.05, "Elemental Dance: a new element hits harder")

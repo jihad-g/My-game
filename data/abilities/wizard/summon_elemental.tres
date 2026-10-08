@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"summon_elemental"
+display_name = "Summon Elemental"
+description = "A spirit beast of the element you used last (fire, frost or lightning) fights with you for 20 s and burns, chills or shocks enemies near it."
+effect = &"summon_elemental"
+unlock_level = 80
+cost_type = 1
+cost = 50
+cooldown = 60
+damage = 10
+damage_type = &"fire"
+radius = 3.5
+range = 0
+duration = 20
+power = 0
+required_mana_control = 0
+icon_color = Color(0.75, 0.55, 1.0, 1)
+icon_glyph = "SE"
+class_id = &"wizard"
+passive = false
+animation = &"summon"
+anim_time = 0.7
+ultimate = false

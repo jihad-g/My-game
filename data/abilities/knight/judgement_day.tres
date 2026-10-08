@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"judgement_day"
+display_name = "Judgement Day"
+description = "Every enemy near you that is marked by Judgement explodes with holy light, hurting it and the enemies around it."
+effect = &"judgement_day"
+unlock_level = 94
+cost_type = 1
+cost = 35
+cooldown = 30
+damage = 40
+damage_type = &"holy"
+radius = 12
+range = 0
+duration = 0
+power = 3
+required_mana_control = 0
+icon_color = Color(1, 0.95, 0.6, 1)
+icon_glyph = "JD"
+class_id = &"knight"
+passive = false
+animation = &"cast_up"
+anim_time = 0.5
+ultimate = false

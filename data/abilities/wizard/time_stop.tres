@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"time_stop"
+display_name = "Time Stop"
+description = "Time stops around you for 2 s: enemies can't act. Bosses are only slowed."
+effect = &"time_stop"
+unlock_level = 86
+cost_type = 1
+cost = 60
+cooldown = 75
+damage = 0
+damage_type = &"arcane"
+radius = 12
+range = 0
+duration = 2
+power = 0
+required_mana_control = 0
+icon_color = Color(0.75, 0.55, 1.0, 1)
+icon_glyph = "TS"
+class_id = &"wizard"
+passive = false
+animation = &"channel"
+anim_time = 0.7
+ultimate = false

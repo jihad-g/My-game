@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"avatar_of_war"
+display_name = "Avatar of War"
+description = "Grow bigger for 15 s: +25% damage and longer reach."
+effect = &"avatar_of_war"
+unlock_level = 88
+cost_type = 3
+cost = 50
+cooldown = 75
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 15
+power = 0.25
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "AW"
+class_id = &"barbarian"
+passive = false
+animation = &"flex"
+anim_time = 0.5
+ultimate = false

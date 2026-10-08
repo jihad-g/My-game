@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"warlords_challenge"
+display_name = "Warlord's Challenge"
+description = "Challenge one enemy (or a boss) for 12 s. You and it deal +25% damage to each other, and other enemies near you lose interest in you."
+effect = &"warlords_challenge"
+unlock_level = 96
+cost_type = 3
+cost = 20
+cooldown = 40
+damage = 0
+damage_type = &"physical"
+radius = 15
+range = 14
+duration = 12
+power = 0.25
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "WC"
+class_id = &"barbarian"
+passive = false
+animation = &"point"
+anim_time = 0.5
+ultimate = false

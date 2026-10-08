@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"living_bomb"
+display_name = "Living Bomb"
+description = "The target explodes after 4 s and sets enemies near it on fire."
+effect = &"living_bomb"
+unlock_level = 74
+cost_type = 1
+cost = 30
+cooldown = 12
+damage = 40
+damage_type = &"fire"
+radius = 4
+range = 18
+duration = 4
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.5, 0.2, 1)
+icon_glyph = "LB"
+class_id = &"wizard"
+passive = false
+animation = &"point"
+anim_time = 0.5
+ultimate = false

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"nights_embrace"
+display_name = "Night's Embrace"
+description = "ULTIMATE. For 15 s: you are invisible, every hit is an Ambush and every kill teleports you to the next enemy."
+effect = &"nights_embrace"
+unlock_level = 100
+cost_type = 2
+cost = 50
+cooldown = 300
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 15
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.8, 0.25, 1)
+icon_glyph = "NE"
+class_id = &"assassin"
+passive = false
+animation = &"ultimate"
+anim_time = 1.0
+ultimate = true

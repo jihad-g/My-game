@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"steam_blast"
+display_name = "Steam Blast"
+description = "Fire and frost together: a steam explosion that burns enemies and blinds them for 4 s."
+effect = &"steam_blast"
+unlock_level = 92
+cost_type = 1
+cost = 40
+cooldown = 14
+damage = 34
+damage_type = &"fire"
+radius = 4
+range = 16
+duration = 4
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.5, 0.2, 1)
+icon_glyph = "SB"
+class_id = &"wizard"
+passive = false
+animation = &"push"
+anim_time = 0.5
+ultimate = false

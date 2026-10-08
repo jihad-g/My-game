@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"lance_charge"
+display_name = "Lance Charge"
+description = "Charge forward 16 m. The longer you run before a hit, the harder it hits (up to x2.5). Best with a spear."
+effect = &"lance_charge"
+unlock_level = 66
+cost_type = 2
+cost = 25
+cooldown = 14
+damage = 20
+damage_type = &"physical"
+radius = 0
+range = 16
+duration = 0
+power = 1.5
+required_mana_control = 0
+icon_color = Color(0.6, 0.75, 1.0, 1)
+icon_glyph = "LC"
+class_id = &"knight"
+passive = false
+animation = &""
+anim_time = 0.5
+ultimate = false

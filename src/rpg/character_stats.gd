@@ -34,6 +34,9 @@ var equipment: Equipment
 var passive_source: Callable
 var ability_insulation: float = 0.0
 var ability_cooling: float = 0.0
+## Milestone 17d: armour from abilities (Royal Guard flat, Juggernaut / Paladin's Oath percent).
+var ability_armor: float = 0.0
+var ability_armor_pct: float = 0.0
 
 # Derived values (read-only for other systems; refreshed by recalculate()).
 var armor: float = 0.0
@@ -176,12 +179,12 @@ func recalculate(reset: bool = false) -> void:
 	var mc := skill_level(Skill.MANA_CONTROL)
 	var def := skill_level(Skill.DEFENSE)
 	var dex := skill_level(Skill.DEXTERITY)
-	armor = c.base_armor + Skill.skill_armor(def, eff(Skill.DEFENSE)) + _eq(&"armor")
+	armor = (c.base_armor + Skill.skill_armor(def, eff(Skill.DEFENSE)) + _eq(&"armor") + ability_armor) * (1.0 + ability_armor_pct)
 	damage_reduction = Skill.damage_reduction(armor)
 	physical_mult = Skill.physical_damage_mult(strength, eff(Skill.STRENGTH), c.physical_power) * (1.0 + _eq(&"physical_damage") / 100.0)
 	spell_mult = Skill.spell_power_mult(mc, eff(Skill.MANA_CONTROL), c.spell_power) * (1.0 + _eq(&"spell_power") / 100.0)
 	crit_chance = Skill.crit_chance(dex, eff(Skill.DEXTERITY)) + c.crit_bonus + _eq(&"crit_chance") / 100.0
-	crit_mult = Skill.crit_damage_mult(dex)
+	crit_mult = Skill.crit_damage_mult(dex) + _passive(&"lethality")
 	attack_speed = Skill.attack_speed_mult(dex, eff(Skill.DEXTERITY)) * (1.0 + _eq(&"attack_speed") / 100.0)
 	move_speed = Skill.move_speed_mult(dex, eff(Skill.DEXTERITY)) * (1.0 + _eq(&"move_speed") / 100.0)
 	backstab_mult = c.backstab_multiplier + Skill.backstab_bonus(dex, eff(Skill.DEXTERITY)) + (_eq(&"backstab") + _passive(&"backstab_mastery")) / 100.0

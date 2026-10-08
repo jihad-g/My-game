@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"battle_trance"
+display_name = "Battle Trance"
+description = "Passive: your Rage does not drop for 20 s after a fight."
+effect = &"battle_trance"
+unlock_level = 74
+cost_type = 0
+cost = 0
+cooldown = 0
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 0
+power = 20
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "BT"
+class_id = &"barbarian"
+passive = true
+animation = &""
+anim_time = 0.5
+ultimate = false

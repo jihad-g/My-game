@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"javelin_hurl"
+display_name = "Javelin Hurl"
+description = "Throw a heavy spear. The target is pinned to the ground and can't move for 2 s."
+effect = &"javelin_hurl"
+unlock_level = 72
+cost_type = 2
+cost = 18
+cooldown = 12
+damage = 30
+damage_type = &"physical"
+radius = 0
+range = 22
+duration = 2
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.45, 0.3, 1)
+icon_glyph = "JH"
+class_id = &"barbarian"
+passive = false
+animation = &"throw"
+anim_time = 0.5
+ultimate = false

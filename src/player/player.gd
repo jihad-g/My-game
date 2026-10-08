@@ -415,7 +415,7 @@ func _move_normal(input: Vector3, delta: float) -> void:
 		stamina.consume(sprint_cost_per_second * delta)
 		hunger.activity_multiplier = 2.0
 	speed *= stats.get_mult(Stats.MOVE_SPEED)
-	if is_blocking:
+	if is_blocking and not abilities.has_buff(&"phalanx"):  # Phalanx (Milestone 17d): full speed
 		speed *= block_move_multiplier
 	if _in_water:
 		speed *= water_speed_multiplier
@@ -659,6 +659,9 @@ func receive_hit(info: DamageInfo) -> void:
 		info.amount = abilities.absorb(info.amount)
 		if info.amount < before and info.amount <= 0.0:
 			info.tag = "Absorbed"
+	# Last Stand / Martyr (Milestone 17d): once in a while a killing hit leaves you alive.
+	if info.amount >= health.current and not abilities.has_buff(&"undying"):
+		abilities.cheat_death(info)
 	if abilities.has_buff(&"undying") and info.amount >= health.current:
 		info.amount = maxf(health.current - 1.0, 0.0)
 		info.tag = "Undying"
@@ -684,6 +687,11 @@ func afflict(id: StringName, duration: float, params: Dictionary = {}) -> bool:
 	if is_dead:
 		return false
 	status.duration_mult = Skill.status_duration_mult(character.skill_level(Skill.DEFENSE))
+	# Milestone 17d: Iron Will (bad effects) and Heavenly Ward (stuns) make them shorter.
+	if StatusEffects.is_harmful(id) and id != &"wet":
+		duration *= 1.0 - abilities.passive_power(&"iron_will")
+		if id == &"stunned":
+			duration *= 1.0 - abilities.passive_power(&"heavenly_ward")
 	return status.apply(id, duration, params)
 
 
@@ -734,7 +742,7 @@ func _stagger(duration: float) -> void:
 	is_blocking = false
 	model.set_blocking(false)
 	state = State.STAGGERED
-	_stagger_left = duration
+	_stagger_left = duration * (1.0 - abilities.passive_power(&"heavenly_ward"))  # Milestone 17d
 	model.play_stagger()
 
 

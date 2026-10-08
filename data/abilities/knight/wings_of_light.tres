@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"wings_of_light"
+display_name = "Wings of Light"
+description = "Jump high on wings of light to a spot up to 14 m away and crash down with holy damage. Enemies are slowed."
+effect = &"wings_of_light"
+unlock_level = 98
+cost_type = 1
+cost = 30
+cooldown = 20
+damage = 40
+damage_type = &"holy"
+radius = 4.5
+range = 14
+duration = 2
+power = 0
+required_mana_control = 0
+icon_color = Color(1, 0.95, 0.6, 1)
+icon_glyph = "WL"
+class_id = &"knight"
+passive = false
+animation = &"wings"
+anim_time = 0.7
+ultimate = false

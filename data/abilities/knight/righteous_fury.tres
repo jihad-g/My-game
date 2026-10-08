@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/rpg/ability_data.gd" id="1_ab"]
+
+[resource]
+script = ExtResource("1_ab")
+id = &"righteous_fury"
+display_name = "Righteous Fury"
+description = "For 10 s every hit you land heals you by 2% of your health."
+effect = &"righteous_fury"
+unlock_level = 76
+cost_type = 1
+cost = 25
+cooldown = 30
+damage = 0
+damage_type = &"physical"
+radius = 0
+range = 0
+duration = 10
+power = 2
+required_mana_control = 0
+icon_color = Color(1, 0.95, 0.6, 1)
+icon_glyph = "RF"
+class_id = &"knight"
+passive = false
+animation = &"pray"
+anim_time = 0.5
+ultimate = false

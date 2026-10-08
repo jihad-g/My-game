@@ -850,6 +850,11 @@ const POSES := {
 	&"leap": {"al": Vector3(-2.6, 0.2, 0.0), "ar": Vector3(-2.6, -0.2, 0.0), "fl": -0.2, "fr": -0.2, "tx": -0.2, "jump": 1.2},
 	&"flex": {"al": Vector3(-1.0, 0.0, -1.0), "ar": Vector3(-1.0, 0.0, 1.0), "fl": -2.0, "fr": -2.0, "tx": -0.1},
 	&"point": {"al": Vector3(-0.3, 0.2, -0.2), "ar": Vector3(-1.6, -0.1, 0.0), "fl": -0.3, "fr": 0.0, "tx": 0.05},
+	# Milestone 17d.
+	&"beam": {"al": Vector3(-1.55, 0.2, 0.0), "ar": Vector3(-1.55, -0.2, 0.0), "fl": 0.0, "fr": 0.0, "tx": 0.12, "shake": true},
+	&"wings": {"al": Vector3(-2.3, 0.0, -1.0), "ar": Vector3(-2.3, 0.0, 1.0), "fl": -0.2, "fr": -0.2, "tx": -0.3, "jump": 1.6},
+	&"summon": {"al": Vector3(-2.8, 0.0, -0.45), "ar": Vector3(-2.8, 0.0, 0.45), "fl": -0.35, "fr": -0.35, "tx": -0.25, "shake": true},
+	&"ultimate": {"al": Vector3(-2.5, 0.0, -1.2), "ar": Vector3(-2.5, 0.0, 1.2), "fl": -0.6, "fr": -0.6, "tx": -0.4, "ry": 0.08, "jump": 0.6, "shake": true},
 }
 
 
