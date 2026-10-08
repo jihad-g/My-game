@@ -3,14 +3,14 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.19.0** (Milestone 17c). The Windows build is `releases/Shardlands-v0.19.0-windows.zip`.
+- Current version: **v0.20.0** (Milestone 17d). The Windows build is `releases/Shardlands-v0.20.0-windows.zip`.
 
 ## How to work with the owner
 - Act as a technical co-founder. Write complete, working code, and every milestone must run.
 - Mark anything unfinished as **NOT IMPLEMENTED** in the docs.
 - After each milestone, report what changed, how to run and test it, known limitations and the next step. Then wait for the owner to say "do it".
 - Use **simple English**. English is not the owner's first language.
-- **Don't run the whole test suite** (about 1,600 tests, 5+ minutes). Only run the test groups that match what you changed (the owner asked for this).
+- **Never run any tests without the owner's permission.** Ask first. When allowed, only run the test groups that match what you changed (the whole suite is about 1,700 tests, 5+ minutes).
 - After each milestone:
   - update `docs/TODO.md`, `docs/CHANGELOG.md`, `README.md`, `docs/GAME_DESIGN.md` and `docs/ARSENAL_PLAN.md`;
   - bump `config/version` in `project.godot` and the version check in `tests/test_runner.gd` (`test_m13_release`);
@@ -33,7 +33,7 @@
 - Screenshots: `xvfb-run -a godot --path . --rendering-method gl_compatibility res://tests/screenshot_runner.tscn -- --only=<arsenal|book|poses|gear|story|...> --out=DIR`
 - Docs: `godot --headless --path . res://tools/balance_report.tscn -- --out=docs/BALANCE.md` and `godot --headless --path . -s tools/gen_rpg_tables.gd`
 
-## What is done (milestones 1–17c)
+## What is done (milestones 1–17d)
 - **M1–M13:** world generation and streaming, survival, 4 classes and skills, crafting and building, villages and kingdoms with NPCs, shops and reputation, POIs and E–S dungeons, bosses, status effects, raids, blueprints, art and audio, co-op multiplayer (host plus guests), balance, tutorial, settings, save recovery, beta release.
 - **M14 Outfits:** one shared body for every class; the look comes from gear; gear sets; a souls-like character creation screen.
 - **M15 Living Wilds:** wild creatures in every biome, treasure spots, item quality, respec.
@@ -56,6 +56,12 @@
   - two-handed stances and swings, and bows held in the left hand;
   - tamed beasts and pets (`Enemy.tame()`, `Monster._player()`), decoys, `AbilityZone` ground areas.
 
+- **M17d:**
+  - abilities for levels 66–100 and four level-100 ultimates (`AbilityData.ultimate`), so each class has 53;
+  - ability upgrades from level 30 in `src/rpg/ability_upgrades.gd` (`PlayerAbilities.choose_upgrade`,
+    `effective()`, `upgrade_tag()`), chosen in the book at a bed or campfire and saved;
+  - summons tinted with `_tint`, 4 new poses (beam, wings, summon, ultimate), `AbilityZone.end_with_follow`.
+
 ## Main code locations
 - Combat: `src/player/player_combat.gd`, `src/player/player.gd`
 - Abilities, spells and their effects: `src/rpg/player_abilities.gd` (`_ability_<effect>`, `_spell_<effect>`)
@@ -65,11 +71,12 @@
 - Items, loot and shops: `src/inventory/item_data.gd`, `src/exploration/loot_tables.gd`, `src/living/economy.gd`
 - Full list of abilities, weapons and spells: `docs/ARSENAL_PLAN.md`
 
-## Next step: M17d (last part of "Heroes' Arsenal")
-- Abilities for levels **66–100**: 18 per class, listed in `docs/ARSENAL_PLAN.md`.
-- The four **ultimates** at level 100.
-- **Ability upgrades at level 30:** pick one of two upgrades per ability (idea 5i).
+## Next step: M18 "Flow of Battle" (plan: `docs/M18_PLAN.md`, wait for the owner's answers and "do it")
+- M18a: a compact animation system (clips, layers, cross-fades) and quick, smooth movement.
+- M18b: hack and slash: combo chains, finishers, hit-stop, knockdowns, crowds of fodder enemies.
+- M18c: spells that look like magic: a VFX library v2 and a look for each element.
+- M18d: smoother world generation: no pop-in, smoother hills, blended biome borders, smooth streaming.
 
 ## After that
-- **M18 "Together in Danger":** real co-op combat, plus abilities that help friends.
-- **M19 "World Polish":** textures, more animations, horses, boats and waystones, gamepad menus, translations, Steam.
+- **M19 "Together in Danger":** real co-op combat, plus abilities that help friends.
+- **M20 "World Polish":** textures, horses, boats and waystones, gamepad menus, translations, Steam.

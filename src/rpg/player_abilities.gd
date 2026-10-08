@@ -1703,7 +1703,7 @@ func _ability_shield_throw(a: AbilityData) -> bool:
 	return true
 
 
-## Holy Light: heal power% (friends nearby heal too in co-op - NOT IMPLEMENTED until M18).
+## Holy Light: heal power% (friends nearby heal too in co-op - NOT IMPLEMENTED until real co-op, M19).
 func _ability_holy_light(a: AbilityData) -> bool:
 	player.health.heal(player.health.max_health * a.power / 100.0)
 	VFX.burst(_parent(), player.global_position + Vector3(0, 1.2, 0), 2.0, Color(1, 0.95, 0.6, 0.7))

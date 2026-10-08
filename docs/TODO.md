@@ -105,18 +105,33 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 17d — Heroes' Arsenal: abilities 66–100, ultimates, upgrades  ✅
+
+- [x] 72 new class abilities for levels 66–100 (18 per class, 24 passives); every class has 53 abilities
+- [x] Four ultimates at level 100 (Wrath of the Ancients, Paladin's Oath, Shard Nova, Night's Embrace)
+- [x] Ability upgrades from level 30: two choices per active ability, chosen at a bed or campfire, saved
+- [x] 12 special upgrades for the starting abilities; Empowered / Swift for the others
+- [x] New summons (ghost warriors, spirit knight, elemental beast, living shadow) and 4 new poses
+- [x] Fixed: Explosive Trap now explodes; Comet Shower's first comet hits the aimed spot
+- [ ] NOT IMPLEMENTED: Cleansing Light and other abilities helping friends (real co-op is M19)
+- [ ] NOT IMPLEMENTED: Arcane Beam you hold down (it fires for 3 s by itself); Summon Elemental lets you pick the element (it uses the last element you cast)
+- [ ] NOT IMPLEMENTED: real hit-by-hit copies for Living Shadow (it repeats your hits as damage; the shadow only follows you)
+- [ ] Known limitation: summons use existing monster bodies with a coloured glow (ghost warriors are brute bodies, the elemental is a wolf body)
+- [ ] Known limitation: ultimates and the strongest passives are not balance-tested in long fights yet
+- [ ] Next: M18 — "Flow of Battle": smooth movement and animation, hack-and-slash combat, better spell effects and smoother world generation (plan: `docs/M18_PLAN.md`)
+
 ## Milestone 17c — Heroes' Arsenal: abilities 32–64, shared spells, animations  ✅
 
 - [x] 68 new class abilities for levels 32–64 (17 per class, 20 passives)
 - [x] 20 shared spells with tomes, and places to find every tome
 - [x] Ability and spell poses (13), sent to co-op players; two-handed weapon stances and swings; bows in the left hand
 - [x] Tamed beasts and a summoned spirit wolf that fight for you
-- [ ] NOT IMPLEMENTED: abilities for levels 66–100 and the ultimates (M17d)
-- [ ] NOT IMPLEMENTED: abilities that help friends (Oath of Protection link, Banner and Rejuvenate on friends) - co-op combat is M18
+- [x] Abilities for levels 66–100 and the ultimates (done in M17d)
+- [ ] NOT IMPLEMENTED: abilities that help friends (Oath of Protection link, Banner and Rejuvenate on friends) - co-op combat is M19
 - [ ] NOT IMPLEMENTED: Light keeping night-only creatures away
 - [ ] Known limitation: Tame Beast works on wolves, deer, rabbits and crabs (the Thornback Boar uses an older enemy type)
 - [ ] Known limitation: poses are blended key poses, not full animations; a pet's or a decoy's targets are only recalculated by monsters near it
-- [ ] Next: M17d — abilities for levels 66–100, the four ultimates and ability upgrades at level 30
+- [x] M17d done (v0.20.0)
 
 ## Milestone 17b — Heroes' Arsenal: the ability book  ✅
 
@@ -125,8 +140,8 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] 6-slot ability bar (Z X C T V U), changed at a bed or a campfire, saved with the character
 - [x] Third spell slot (N) with the Tome of Embers
 - [x] Abilities for levels 32–64 and the 20 shared spells (done in M17c)
-- [ ] NOT IMPLEMENTED: ability upgrades at level 30 (pick one of two per ability)
-- [ ] NOT IMPLEMENTED: Holy Light healing friends, Taunting Shout protecting friends (co-op combat is M18)
+- [x] Ability upgrades at level 30 (done in M17d)
+- [ ] NOT IMPLEMENTED: Holy Light healing friends, Taunting Shout protecting friends (co-op combat is M19)
 - [x] Ability poses (done in M17c)
 - [ ] Known limitation: Polymorph shrinks the enemy and stuns it instead of drawing a real chicken
 
@@ -359,7 +374,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 - [x] Crafting system (Milestone 4)
 - [x] Recipe sources — books (cave caches, boars), discovery, shops (M5), dungeons, bosses, temples, towers, vaults (M6)
-- [ ] More abilities per class / ability upgrades at higher levels (current unlocks: 1, 5, 15)
+- [x] More abilities per class and ability upgrades (Milestone 17b–d: 53 abilities per class, upgrades from level 30)
 - [x] Item quality (Fine/Masterwork, Milestone 15); gear drops from monsters, chests and bosses (M6)
 - [x] Basic NPCs (dialogue, shops) (Milestone 5)
 - [x] Respec (Draught of Forgetting, Milestone 15)

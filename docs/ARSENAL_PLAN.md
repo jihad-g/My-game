@@ -1,10 +1,10 @@
 # Heroes' Arsenal — the big list (plan)
 
-**Status:** the weapons (section 5) and the new attacks are **done in Milestone 17a (v0.17.0)**. The ability
-book, the 6-slot bar and the abilities for **levels 2–30 are done in Milestone 17b (v0.18.0)**. The abilities for
-**levels 32–64, the 20 shared spells and the animations are done in Milestone 17c (v0.19.0)**. The abilities for
-levels 66–100 and the ultimates are **NOT IMPLEMENTED yet** — they come in M17d.
-Change, remove or add anything before we build it.
+**Status:** everything in this list is built. The weapons (section 5) and the new attacks were **done in Milestone
+17a (v0.17.0)**. The ability book, the 6-slot bar and the abilities for **levels 2–30 in Milestone 17b (v0.18.0)**.
+The abilities for **levels 32–64, the 20 shared spells and the animations in Milestone 17c (v0.19.0)**. The
+abilities for **levels 66–100, the four ultimates and the level-30 upgrades in Milestone 17d (v0.20.0)**.
+The texts below for levels 66–100 are what the game really does (a few changed while building them).
 
 What is in this list:
 - **50 new abilities for every class** (200 in total). Each class also keeps its 3 abilities from today,
@@ -53,7 +53,7 @@ Rage · axes, war hammers, greatswords · crowds and raw power.
 | 30 | Second Wind | Active | Spend 40 Rage to heal 25% over 5 s. |
 | 32 | Iron Hide | Passive | 8% less damage taken while you have more than 50 Rage. |
 | 34 | Avalanche | Active | Three slams in a row, each one a step forward. |
-| 36 | Tundra Howl | Active | The war cry of the tundra clans: +15% damage for 10 s (friends in M18). |
+| 36 | Tundra Howl | Active | The war cry of the tundra clans: +15% damage for 10 s (friends in M19). |
 | 38 | Rampage | Active | Run forward for 4 s and knock down every enemy in your way. |
 | 40 | Execute | Active | Big damage to an enemy below 25% health. Gives all the Rage back if it kills. |
 | 42 | Bone Breaker | Passive | Heavy attacks crack armour: the enemy takes 5% more damage from you (stacks 3 times). |
@@ -68,24 +68,24 @@ Rage · axes, war hammers, greatswords · crowds and raw power.
 | 60 | Undying Rage | Active | For 4 s your health can't go below 1. (2-minute cooldown) |
 | 62 | Primal Roar | Active | A roar that makes weak enemies run away for 3 s. |
 | 64 | Crushing Blow | Active | A hit with triple poise damage. Good against big enemies and bosses. |
-| 66 | Blood Price | Passive | With no Rage left, abilities cost health instead. |
-| 68 | Storm of Steel | Active | A moving Whirlwind for 4 s that pulls enemies in. |
-| 70 | Mountain's Endurance | Passive | +15% max health, but 5% slower. |
-| 72 | Javelin Hurl | Active | Throw a heavy spear that pins the target to the ground (rooted 2 s). |
+| 66 | Blood Price | Passive | When you don't have enough Rage, Rage abilities take health instead (0.3% of your max health for each missing point). They never take you below 1 health. |
+| 68 | Storm of Steel | Active | Spin for 4 s while you move. Every spin hits everything around you and pulls enemies closer. |
+| 70 | Mountain's Endurance | Passive | +15% max health, but you move 5% slower. |
+| 72 | Javelin Hurl | Active | Throw a heavy spear. The target is pinned to the ground and can't move for 2 s. |
 | 74 | Battle Trance | Passive | Your Rage does not drop for 20 s after a fight. |
 | 76 | Ancestral Spirits | Active | Two ghost warriors of the clans fight with you for 15 s. |
 | 78 | Bloodthirst | Passive | You heal by 3% of all the damage you deal. |
-| 80 | Juggernaut | Active | For 8 s: +30% armour, you can't be knocked back and you walk through enemies. |
+| 80 | Juggernaut | Active | For 8 s: +30% armour, nothing can knock you back and you walk through enemies. |
 | 82 | Wounding Strikes | Passive | Critical hits make the enemy bleed. |
-| 84 | Rend | Active | A deep cut that makes the enemy bleed for 8 s. |
-| 86 | Thunder Clap | Active | A shockwave around you. Wet enemies are stunned for 2 s. |
+| 84 | Rend | Active | A deep cut in front of you. The enemy bleeds hard for 8 s. |
+| 86 | Thunder Clap | Active | A shockwave of thunder around you. Enemies are shocked; wet enemies are also stunned for 2 s. |
 | 88 | Avatar of War | Active | Grow bigger for 15 s: +25% damage and longer reach. |
 | 90 | Last Stand | Passive | Once every 3 minutes, a killing hit leaves you at 20% health instead. |
-| 92 | Earth Splitter | Active | A huge crack in the ground throws enemies into the air and leaves burning ground behind. |
+| 92 | Earth Splitter | Active | A huge crack in the ground in front of you throws enemies into the air and leaves burning ground for 5 s. |
 | 94 | Rage Overflow | Passive | Your Rage can go up to 150 instead of 100. |
-| 96 | Warlord's Challenge | Active | Challenge one enemy (or boss). You and it deal +25% damage to each other, and other enemies leave you alone. |
-| 98 | Fury of the Clans | Active | 6 fast hits in a row. The last one is a slam. |
-| 100 | **Wrath of the Ancients** (ultimate) | Active | 20 s: you are huge, every hit makes a shockwave and Rage never runs out. (5-minute cooldown) |
+| 96 | Warlord's Challenge | Active | Challenge one enemy (or a boss) for 12 s. You and it deal +25% damage to each other, and other enemies near you lose interest in you. |
+| 98 | Fury of the Clans | Active | 6 fast hits in a row in front of you. The last one is a slam that hits everything around you. |
+| 100 | **Wrath of the Ancients** (ultimate) | Active | For 20 s you are huge, every hit sends out a shockwave and your Rage never runs out. (5-minute cooldown) |
 
 ## 2. Knight — 50 new abilities
 
@@ -101,14 +101,14 @@ Mana · swords, shields, spears, greatswords · defence, holy light, protecting 
 | 12 | Shield Throw | Active | Throw your shield. It bounces between 3 enemies and comes back. |
 | 14 | Heavy Armour Training | Passive | Heavy armour's extra dodge cost and noise are halved. |
 | 16 | Riposte Master | Passive | The time window for a perfect parry is 50% longer. |
-| 18 | Holy Light | Active | Heal 15% of your health. (Healing friends nearby comes with real co-op in M18.) |
+| 18 | Holy Light | Active | Heal 15% of your health. (Healing friends nearby comes with real co-op in M19.) |
 | 20 | Spear Wall | Active | For 4 s, enemies that hit you from the front are stunned and take damage. |
 | 22 | Valor | Passive | +2% damage for each enemy near you (up to +10%). |
 | 24 | Consecrate | Active | Holy ground for 6 s. Hurts enemies; undead take double. |
 | 26 | Pommel Strike | Active | A fast hit with the handle that stuns for 1 s. |
 | 28 | Bulwark | Passive | Blocking uses 20% less stamina. |
 | 30 | Charge of the Order | Active | A long 15 m charge that knocks enemies down. |
-| 32 | Oath of Protection | Active | You take 15% less damage for 10 s (linking to a friend comes with co-op in M18). |
+| 32 | Oath of Protection | Active | You take 15% less damage for 10 s (linking to a friend comes with co-op in M19). |
 | 34 | Smite | Active | Holy lightning strikes your target from the sky. |
 | 36 | Retribution | Passive | Hits you block deal 10% of their damage back to the attacker. |
 | 38 | Shield Combo | Active | Three fast hits with the shield. The last one knocks the enemy back. |
@@ -125,24 +125,24 @@ Mana · swords, shields, spears, greatswords · defence, holy light, protecting 
 | 60 | Aegis | Active | A dome of light for 6 s: attacks from outside it can't hurt you. |
 | 62 | Crusader Strike | Active | A hit that heals you by half the damage it deals. |
 | 64 | Unbreakable | Passive | +30% poise. |
-| 66 | Lance Charge | Active | A charge with a spear. The longer you run, the harder the hit. |
-| 68 | Sanctuary | Active | For 4 s enemies can't enter a circle around you. |
-| 70 | Spreading Light | Passive | Judgement also marks one more enemy nearby. |
-| 72 | Vengeance | Active | Your next hit deals extra damage equal to 30% of the damage you took in the last 10 s. |
-| 74 | Heavenly Ward | Passive | Stuns and fear from bosses last half as long. |
-| 76 | Righteous Fury | Active | For 10 s every hit heals you by 2%. |
-| 78 | Royal Guard | Passive | +10 armour near a village of a kingdom that likes you. |
-| 80 | Cleansing Light | Active | Removes all bad effects from you and your friends, and hurts undead nearby. |
-| 82 | Iron Will | Passive | Bad effects (poison, burning, chill) last 20% shorter. |
-| 84 | Pillar of Light | Active | A beam from the sky follows your target for 4 s. |
+| 66 | Lance Charge | Active | Charge forward 16 m. The longer you run before a hit, the harder it hits (up to x2.5). Best with a spear. |
+| 68 | Sanctuary | Active | For 4 s enemies can't enter a circle of light around you. |
+| 70 | Spreading Light | Passive | Judgement also marks one more enemy near the target. |
+| 72 | Vengeance | Active | A strike that adds 30% of all the damage you took in the last 10 s. |
+| 74 | Heavenly Ward | Passive | Stuns and knockdowns on you last half as long. |
+| 76 | Righteous Fury | Active | For 10 s every hit you land heals you by 2% of your health. |
+| 78 | Royal Guard | Passive | +10 armour while you are in a kingdom village that is at least Friendly with you. |
+| 80 | Cleansing Light | Active | Removes all bad effects from you and burns undead near you with holy light. (Friends: with real co-op in M19.) |
+| 82 | Iron Will | Passive | Bad effects on you (poison, burning, chill and others) last 20% shorter. |
+| 84 | Pillar of Light | Active | A beam of light from the sky follows your target for 4 s and burns everything near it. |
 | 86 | Knight's Resolve | Passive | Shield Wall and Hold the Line last 2 s longer. |
-| 88 | Guardian Angel | Active | A spirit knight fights with you for 20 s and blocks hits for you. |
+| 88 | Guardian Angel | Active | A spirit knight fights with you for 20 s. While it lives, you take 20% less damage. |
 | 90 | Phalanx | Active | For 6 s you can walk at full speed while blocking. |
 | 92 | Martyr | Passive | Once every 10 minutes, you survive a killing hit with 30% health. |
-| 94 | Judgement Day | Active | Every marked enemy near you explodes with holy light. |
-| 96 | Champion's Presence | Passive | Enemies near you deal 10% less damage. |
-| 98 | Wings of Light | Active | Jump high on wings of light and crash down with holy damage. |
-| 100 | **Paladin's Oath** (ultimate) | Active | 20 s: holy weapon, +30% armour, every hit heals and a light around you hurts enemies. (5-minute cooldown) |
+| 94 | Judgement Day | Active | Every enemy near you that is marked by Judgement explodes with holy light, hurting it and the enemies around it. |
+| 96 | Champion's Presence | Passive | Enemies near you deal 10% less damage to you. |
+| 98 | Wings of Light | Active | Jump high on wings of light to a spot up to 14 m away and crash down with holy damage. Enemies are slowed. |
+| 100 | **Paladin's Oath** (ultimate) | Active | For 20 s: a holy weapon, +30% armour, every hit heals you and a light around you burns enemies. (5-minute cooldown) |
 
 ## 3. Wizard — 50 new abilities
 
@@ -182,24 +182,24 @@ Mana · staffs, wands, tomes · fire, frost, lightning and arcane magic.
 | 60 | Fire Tornado | Active | A tornado of fire that moves forward. |
 | 62 | Shatter Mastery | Passive | Shattering a frozen enemy deals ×2.5 instead of ×2. |
 | 64 | Arcane Explosion | Active | A burst around you that pushes enemies away. |
-| 66 | Gravity Well | Active | Pull all enemies to one point for 3 s. |
-| 68 | Elemental Dance | Passive | Each time you use a different element in a row: +10% damage (up to +30%). |
-| 70 | Chain Frost | Active | A frost bolt that jumps between 5 enemies and chills them. |
-| 72 | Arcane Beam | Active | Hold to shoot a beam for 3 s. The damage grows the longer it hits. |
+| 66 | Gravity Well | Active | Pull every enemy near the target point to its centre for 3 s. |
+| 68 | Elemental Dance | Passive | Each time your next spell uses a different element (fire, frost, lightning, arcane): +10% spell damage, up to +30%. Using the same element again resets it. |
+| 70 | Chain Frost | Active | A frost bolt that jumps between 5 enemies and chills each one. |
+| 72 | Arcane Beam | Active | Shoot a beam forward for 3 s (you move slowly). The damage grows the longer it hits. |
 | 74 | Living Bomb | Active | The target explodes after 4 s and sets enemies near it on fire. |
-| 76 | Counterspell | Active | Stop an enemy's spell. It can't cast for 3 s. |
-| 78 | Permafrost | Passive | Chilled enemies have 10% less armour. |
-| 80 | Summon Elemental | Active | A fire, frost or storm elemental (your choice) fights with you for 20 s. |
+| 76 | Counterspell | Active | Stop the target's spell. It can't cast for 3 s. |
+| 78 | Permafrost | Passive | Chilled and frozen enemies take 10% more damage from you. |
+| 80 | Summon Elemental | Active | A spirit beast of the element you used last (fire, frost or lightning) fights with you for 20 s and burns, chills or shocks enemies near it. |
 | 82 | Arcane Mastery | Passive | +15% arcane damage. |
-| 84 | Sunfire | Active | A beam of sunlight from the sky burns the area. |
-| 86 | Time Stop | Active | Time stops around you for 2 s (bosses are only slowed). |
-| 88 | Clearcasting | Passive | After every 10 spells, the next spell is free. |
-| 90 | Black Hole | Active | A black hole pulls in enemies and hurts them for 4 s. |
-| 92 | Steam Blast | Active | Fire and frost together: a steam explosion that blinds and burns. |
+| 84 | Sunfire | Active | A beam of sunlight from the sky burns the target area for 3 s. |
+| 86 | Time Stop | Active | Time stops around you for 2 s: enemies can't act. Bosses are only slowed. |
+| 88 | Clearcasting | Passive | After every 10 mana abilities or spells, the next one costs no mana. |
+| 90 | Black Hole | Active | A black hole pulls enemies in and hurts them for 4 s. |
+| 92 | Steam Blast | Active | Fire and frost together: a steam explosion that burns enemies and blinds them for 4 s. |
 | 94 | Mana Overflow | Passive | When your mana is full, your spells deal +15% damage. |
-| 96 | Starfall | Active | Stars fall from the sky over an area for 5 s. |
-| 98 | Ascension | Active | Float above the ground for 10 s. Your spells cost no mana. |
-| 100 | **Shard Nova** (ultimate) | Active | Release the power of the shards: a huge burst of fire, frost, lightning and arcane. (5-minute cooldown) |
+| 96 | Starfall | Active | Stars fall from the sky over the target area for 5 s. |
+| 98 | Ascension | Active | Float above the ground for 10 s. Your spells and abilities cost no mana. |
+| 100 | **Shard Nova** (ultimate) | Active | Release the power of the shards: four huge waves of fire, frost, lightning and arcane magic around you. (5-minute cooldown) |
 
 ## 4. Assassin — 50 new abilities
 
@@ -231,7 +231,7 @@ Mana · daggers, bows · stealth, poison, critical hits and speed.
 | 44 | Kidney Shot | Active | From behind: stun the target for 3 s. |
 | 46 | Explosive Trap | Active | Hide a trap on the ground. It explodes when an enemy steps on it. |
 | 48 | Night Hunter | Passive | +15% damage at night. |
-| 50 | Assassinate | Active | x3 damage; from stealth it kills a normal enemy below 30% health at once. |
+| 50 | Assassinate | Active | X3 damage; from stealth it kills a normal enemy below 30% health at once. |
 | 52 | Toxic Burst | Active | All poison on the target explodes at once. |
 | 54 | Acrobat | Passive | You can dodge twice in a row. |
 | 56 | Blade Chain | Active | Teleport between up to 4 enemies and hit each one. |
@@ -241,22 +241,22 @@ Mana · daggers, bows · stealth, poison, critical hits and speed.
 | 64 | Smoke Walker | Passive | You move 20% faster inside smoke. |
 | 66 | Hunter's Net | Active | Throw a net. The target can't move for 3 s. |
 | 68 | Lethality | Passive | +20% critical damage. |
-| 70 | Vendetta | Active | The target takes +20% damage from you for 15 s. |
+| 70 | Vendetta | Active | Mark the target: it takes +20% damage from you for 15 s. |
 | 72 | Shadow Realm | Active | Step into the shadows: for 2 s nothing can see or hurt you. |
-| 74 | Venom Arrow | Active | An arrow that leaves a poison cloud where it lands (needs a bow). |
+| 74 | Venom Arrow | Active | Shoot an arrow that leaves a poison cloud where it lands (needs a bow and an arrow). |
 | 76 | Swift Death | Passive | A kill resets the cooldown of Shadow Step. |
 | 78 | Blade Dance | Active | Spin forward with your daggers for 3 s, hitting everything you pass. |
 | 80 | Phantom Blades | Active | 3 ghost daggers fly around you for 10 s and hit enemies who come close. |
 | 82 | Cold Blood | Passive | Your first hit on an enemy with full health is always a critical hit. |
-| 84 | Rain of Arrows | Active | Arrows rain on an area for 4 s (needs a bow). |
-| 86 | Deadly Precision | Passive | Your hits ignore 15% of the enemy's armour. |
-| 88 | Umbral Leap | Active | Teleport up to 20 m from shadow to shadow. |
-| 90 | Living Shadow | Active | Your shadow fights with you for 10 s and copies your attacks. |
-| 92 | Neurotoxin | Active | Poisoned enemies move 50% slower and deal 20% less damage. |
+| 84 | Rain of Arrows | Active | Arrows rain on the target area for 4 s (needs a bow and an arrow). |
+| 86 | Deadly Precision | Passive | Your hits find the weak spots: +15% damage against elites, bosses and enemies that resist your damage type. |
+| 88 | Umbral Leap | Active | Teleport up to 20 m through the shadows and stay hidden for 1.5 s. |
+| 90 | Living Shadow | Active | Your shadow fights with you for 10 s. It copies your attacks: every hit you land is repeated at half damage. |
+| 92 | Neurotoxin | Active | Poisoned enemies near you are slowed and deal 25% less damage for 8 s. |
 | 94 | Ghost | Passive | +10% move speed in stealth. At night, stealth has no time limit. |
-| 96 | Thousand Cuts | Active | 20 tiny hits in 2 s. Each one can be a critical hit. |
-| 98 | Eclipse | Active | The area goes dark for 8 s. Inside it you are invisible. |
-| 100 | **Night's Embrace** (ultimate) | Active | 15 s: invisible, every hit is an Ambush and every kill teleports you to the next enemy. (5-minute cooldown) |
+| 96 | Thousand Cuts | Active | 20 tiny hits in 2 s on the enemies in front of you. Each one can be a critical hit. |
+| 98 | Eclipse | Active | The area around you goes dark for 8 s. While you are inside it you are invisible. |
+| 100 | **Night's Embrace** (ultimate) | Active | For 15 s: you are invisible, every hit is an Ambush and every kill teleports you to the next enemy. (5-minute cooldown) |
 
 ---
 
@@ -309,7 +309,7 @@ them as rewards. Wizards cast them stronger (their Mana Control talent). They go
 | 3 | Gust | 6 | Tower chests | A strong wind pushes enemies back and puts out fire. Gust into Miasma spreads the cloud. |
 | 4 | Root Snare | 8 | Hidden groves | Vines hold an enemy in place for 3 s. |
 | 5 | Stone Skin | 10 | Ruin chests | +armour for 10 s, but you move slower. |
-| 6 | Rejuvenate | 10 | Temples | Heal 30% over 10 s (healing friends comes with co-op in M18). |
+| 6 | Rejuvenate | 10 | Temples | Heal 30% over 10 s (healing friends comes with co-op in M19). |
 | 7 | Feather Fall | 12 | Tower chests, royal merchants | You fall slowly for 30 s. |
 | 8 | Frost Path | 14 | Tundra treasure | Freeze water in front of you so you can walk over lakes and rivers. |
 | 9 | Earth Spike | 16 | Ruin chests | A spike of stone shoots out of the ground under an enemy. |
@@ -340,4 +340,30 @@ nothing could be tested along the way. So I suggest building it in steps, and ev
    - The 6+2 slot bar, choosing abilities at a bed or campfire, and passives.
    - Abilities for levels 2–30 (15 per class).
 3. **M17c: Abilities for levels 32–64** ✅ Done (v0.19.0), with the animations (17 per class) **and the 20 shared spells.**
-4. **M17d: Abilities for levels 66–100** (18 per class), **the ultimates, and the new animations.**
+4. **M17d: Abilities for levels 66–100** ✅ Done (v0.20.0), with **the ultimates, the level-30 upgrades and 4 new poses.**
+
+## 7. Ability upgrades (from level 30)
+
+From level 30 every active ability can get **one of two upgrades**. You choose (and can change) them in the
+ability book (L) while resting at a bed or a campfire. Ultimates, passives and the Temperature Shield have none.
+
+Every active ability except the starting ones gets:
+- **Empowered:** +30% damage, +25% duration and +15% area (only what the ability has).
+- **Swift:** -30% cooldown and -25% cost.
+
+The 12 starting abilities have special upgrades:
+
+| Ability | Upgrade A | Upgrade B |
+|---|---|---|
+| Whirlwind | Cyclone: one more spin | Bloody Spin: every spin makes enemies bleed |
+| Battle Cry | Long Cry: lasts 50% longer | Terrifying Cry: enemies near you are stunned for 1 s |
+| Berserk | Endless Fury: lasts 4 s longer | Blood Rage: hits heal 20% of the damage instead of 10% |
+| Shield Bash | Wide Bash: a much wider area | Concussion: the stun lasts 1 s longer |
+| Guardian Stance | Fortress: 60% less damage instead of 50% | Mobile Guard: no slow |
+| Rallying Charge | Long Charge: 50% further | Healing Charge: heals twice as much |
+| Firebolt | Split Bolt: 3 bolts in a fan | Burning Ground: fire on the ground for 3 s |
+| Frost Nova | Wide Nova: 40% bigger | Deep Freeze: +30% damage, frozen 1.5 s longer |
+| Chain Lightning | Forked: 2 more jumps | Overcharge: no damage drop per jump |
+| Shadow Step | Shadow Strike: stab the target on arrival | Fading Step: hidden for 1.5 s |
+| Poison Blade | Deadly Venom: +50% poison damage | Long Coating: lasts 60% longer |
+| Vanish | Deep Shadows: stealth lasts 50% longer | Smoke Escape: a smoke cloud and heal 10% |

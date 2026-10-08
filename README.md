@@ -5,7 +5,14 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **Milestone 17c — Heroes' Arsenal, part 3 (v0.19.0)**: 68 more class abilities (levels 32–64), 20 shared
+> Status: **Milestone 17d — Heroes' Arsenal, part 4 (v0.20.0)**: the ability books are complete. 72 more class
+> abilities for levels 66–100 (Storm of Steel, Sanctuary, Black Hole, Thousand Cuts...), a level-100 **ultimate**
+> for every class (Wrath of the Ancients, Paladin's Oath, Shard Nova, Night's Embrace) and **ability upgrades**:
+> from level 30 every active ability gets one of two upgrades (Firebolt can split into three bolts or leave
+> burning ground). Next: Milestone 18 "Flow of Battle" - smoother movement and animation, hack-and-slash combat,
+> better spell effects and smoother worlds ([`docs/M18_PLAN.md`](docs/M18_PLAN.md)).
+>
+> Before that, **Milestone 17c — Heroes' Arsenal, part 3 (v0.19.0)**: 68 more class abilities (levels 32–64), 20 shared
 > spells that any class can learn from tomes (Light, Haste, Tame Beast, Spirit Wolf, Frost Path, Recall,
 > Shardfall...), and animations: abilities and spells have their own poses, greatswords and war hammers are held
 > with both hands, and bows are drawn properly.
@@ -42,7 +49,7 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 > noticed. A Knight in shadow clothes with daggers plays like an Assassin; the class keeps a small talent, so
 > a Wizard is never a Knight's equal. Built on the beta (Milestone 13: tutorial, guide, settings and
 > accessibility, save recovery, crash reports, achievements, release builds - [`docs/RELEASE.md`](docs/RELEASE.md)).
-> Download a Windows build from [`releases/`](releases/) (v0.19.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
+> Download a Windows build from [`releases/`](releases/) (v0.20.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
 > performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
 > design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md). See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.

@@ -2,6 +2,44 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.20.0] — Milestone 17d: Heroes' Arsenal - abilities 66-100, ultimates and upgrades
+
+### Added
+- **72 new class abilities for levels 66–100** (18 per class, 24 of them passives). Every class now has its full
+  book of 53 abilities (levels 1–100):
+  - Barbarian: Blood Price, Storm of Steel, Mountain's Endurance, Javelin Hurl, Battle Trance, Ancestral Spirits,
+    Bloodthirst, Juggernaut, Wounding Strikes, Rend, Thunder Clap, Avatar of War, Last Stand, Earth Splitter, Rage
+    Overflow, Warlord's Challenge, Fury of the Clans.
+  - Knight: Lance Charge, Sanctuary, Spreading Light, Vengeance, Heavenly Ward, Righteous Fury, Royal Guard,
+    Cleansing Light, Iron Will, Pillar of Light, Knight's Resolve, Guardian Angel, Phalanx, Martyr, Judgement
+    Day, Champion's Presence, Wings of Light.
+  - Wizard: Gravity Well, Elemental Dance, Chain Frost, Arcane Beam, Living Bomb, Counterspell, Permafrost, Summon
+    Elemental, Arcane Mastery, Sunfire, Time Stop, Clearcasting, Black Hole, Steam Blast, Mana Overflow, Starfall,
+    Ascension.
+  - Assassin: Hunter's Net, Lethality, Vendetta, Shadow Realm, Venom Arrow, Swift Death, Blade Dance, Phantom
+    Blades, Cold Blood, Rain of Arrows, Deadly Precision, Umbral Leap, Living Shadow, Neurotoxin, Ghost, Thousand
+    Cuts, Eclipse.
+- **Four ultimates at level 100** (5-minute cooldown): Wrath of the Ancients (Barbarian), Paladin's Oath (Knight),
+  Shard Nova (Wizard) and Night's Embrace (Assassin). They show in gold in the ability book.
+- **Ability upgrades from level 30** (idea 5i): every active ability can get one of two upgrades, chosen in the
+  ability book (L) at a bed or a campfire, saved with the character (`AbilityUpgrades`).
+  - The 12 starting abilities have special upgrades, e.g. Firebolt: *Split Bolt* (3 bolts) or *Burning Ground*;
+    Chain Lightning: *Forked* or *Overcharge*; Vanish: *Deep Shadows* or *Smoke Escape*.
+  - Every other active ability: *Empowered* (+30% damage, +25% duration, +15% area) or *Swift* (-30% cooldown,
+    -25% cost).
+- **New summons**: ghost warriors, a spirit knight, an elemental beast and your living shadow fight for you.
+- **New poses**: beam, wings, summon and ultimate (17 in total).
+- Tests: `test_m17d_data`, `test_m17d_abilities`, `test_m17d_upgrades`, `test_m17d_passives`.
+
+### Changed
+- Rage can go up to 150 (Rage Overflow); the HUD bar follows it.
+- Armour from abilities (Royal Guard, Juggernaut, Paladin's Oath); critical damage from Lethality.
+- Areas that follow a summon end when the summon is gone; areas that follow an enemy stay where it died.
+
+### Fixed
+- Explosive Trap never exploded (the trap could not find itself).
+- Comet Shower could miss a single enemy completely: the first comet now always lands on the aimed spot.
+
 ## [0.19.0] — Milestone 17c: Heroes' Arsenal - abilities 32-64, shared spells and animations
 
 ### Added

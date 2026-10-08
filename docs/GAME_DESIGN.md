@@ -144,7 +144,9 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 - Barbarian has **Rage** (built by fighting, spent by Berserk).
 - Every class can use the **Magic Temperature Shield** (T): 10 minutes of cold/heat protection, needs
   Mana Control +2 above the class start; the Wizard pays the least mana.
-- Respec with the Draught of Forgetting (Milestone 15); no ability upgrades, no fourth ability. See the catalogue for every ability.
+- Respec with the Draught of Forgetting (Milestone 15). Since Milestone 17b–d every class learns a new ability every
+  two levels (53 in total, a level-100 ultimate at the end), and from level 30 every active ability can get one of
+  two upgrades (Milestone 17d). See the catalogue and ARSENAL_PLAN.md for every ability.
 - **What a class is (Milestone 14):** every class has the same body. A class decides its starting outfit and
   weapon, its starting skill points, how fast each skill grows (skill efficiency), its physical and spell
   power, its weapon skill and its three abilities. Anything you wear can be worn by any class, so a Knight in
@@ -769,7 +771,7 @@ textures on any surface, so large areas look flat up close.
 | Charged heavy, sprint, plunging attacks and ripostes | ✅ | M17a |
 | Status effects and elemental combos | ✅ | Weather doesn't make everyone wet (only the player in rain) |
 | Classes (4) and abilities (3 each) | ✅ | |
-| More abilities / ability upgrades / talents | 🟡 | M17b–c: ability book, 32 new abilities per class (levels 2–64), passives, 6-slot bar, 20 shared spells; levels 66–100 and upgrades not yet |
+| More abilities / ability upgrades / talents | ✅ | M17b–d: ability book, 50 new abilities per class (levels 2–100), passives, ultimates, upgrades from level 30, 6-slot bar, 20 shared spells; no talent trees |
 | Respec (reset skill points) | ✅ | Draught of Forgetting (Milestone 15) |
 | Spells (8), spellbook, tomes | ✅ | No spell upgrades |
 | Levels 1–100, skills, perks | ✅ | Levels 75–100 are very slow (only S-rank content) |
@@ -1104,6 +1106,19 @@ New abilities at levels 25, 40 and 60, plus an upgrade choice for each old abili
 - **14d. Roads (M).** Dirt roads between villages and capitals, with travelling traders walking them.
 - **14e. Glider from high places (S).** Glide down from mountain tops; fits the big vertical world.
 
+### 15 — Flow of battle (feel) — Milestone 18, see M18_PLAN.md
+
+- **15a. Compact animation system (L).** Keyframe clips, three blended layers (legs, upper body, extras), body
+  masks, cross-fades, events on exact frames and root motion.
+- **15b. Locomotion blend (M).** Walk, run and sprint by speed with no foot sliding, leaning and turning in place.
+- **15c. Snappy movement and dodge v2 (S).** Quick speed-up and stop, dodge that cancels attack recovery.
+- **15d. Combo chains and finishers (M).** 3–4 different swings per weapon, hold to chain, aim assist.
+- **15e. Hit-stop, hit reactions and knockdowns (M).** Freeze frames, directional flinch, knock-down and get-up.
+- **15f. Crowds of fodder enemies (M).** Packs of weak enemies, topple deaths, loot bursts, AI level of detail.
+- **15g. VFX library v2 (L).** Particles, trails, ground marks, lightning arcs, light flashes and one look per element.
+- **15h. Smooth world (L).** Fade-in chunks and props, horizon impostors, smoother hills, blended biome
+  borders, camera-first streaming.
+
 ---
 
 ## 9. Suggested next milestones
@@ -1132,6 +1147,9 @@ and weapon and legendary powers (ideas 9a–9f, 7a–7d, part of 8d).
 (ideas 5a–5h and the list in ARSENAL_PLAN.md), 15 passives, a 6-slot bar changed at a bed or a campfire, and a
 third spell slot with a tome.
 
+**Done: Milestone 17d — "Heroes' Arsenal" part 4.** 72 abilities for levels 66–100, the four ultimates and the
+level-30 upgrades (5i). Every class now has 53 abilities. Next: Milestone 18 "Flow of Battle" (plan in M18_PLAN.md).
+
 **Done: Milestone 17c — "Heroes' Arsenal" part 3.** 68 abilities for levels 32–64, the 20 shared spells
 (ideas 6a–6g and more), ability poses, two-handed stances and bows in the left hand (ideas 2a–2b). Next: M17d,
 abilities for levels 66–100, the ultimates and level-30 upgrades (5i).
@@ -1153,15 +1171,26 @@ The quest system is also needed for later content (kingdom quests, events).
 **Why third:** new abilities and weapons are more valuable when there are more enemy types to use them
 on (M15) and story goals to reach (M16). Animations come together with the moves they show.
 
-### Milestone 18 — "Together in Danger" (real co-op)
+### Milestone 18 — "Flow of Battle" (movement, animation, hack and slash, smoother worlds)
+**Full plan:** [M18_PLAN.md](M18_PLAN.md).
+**Goal:** the game should feel smooth and fun in the first 10 seconds: fast, fluid movement, readable and
+punchy hack-and-slash combat (combo chains, hit-stop, crowds of enemies that fall over), animations that blend
+instead of snapping, spell effects that look like magic, and a world that streams in without pops or seams.
+**Ideas:** 2c and 2e (hit reactions, monster moves), 15a–15h (new, below).
+**Why now:** after M17 the game has a huge amount of content, but it is all played through the same basic
+movement and simple key poses. Making every step, swing and spell feel good multiplies the value of the 212
+abilities, every weapon and every enemy. It is also needed before co-op: M19 syncs the final animation and combat
+events once, instead of twice.
+
+### Milestone 19 — "Together in Danger" (real co-op)
 **Goal:** friends can fight, raid, and clear dungeons together.
 **Ideas:** 13a, 13b, 13c, 5c (Shield Wall), 6b (group heal), 2f (emotes).
 **Why fourth:** shared combat is a large networking job. It is better to do it after combat content has
 grown (M17), so the sync work covers the final set of abilities, enemies and bosses at once.
 
-### Milestone 19 — "World Polish" (look, feel and reach)
+### Milestone 20 — "World Polish" (look, feel and reach)
 **Goal:** a richer look and a bigger audience.
-**Ideas:** 1a–1f (code-made textures), 2c–2g (more animations), 12a–12c (multi-storey building,
+**Ideas:** 1a–1f (code-made textures), 2f–2g (more animations; 2c–2e move to M18), 12a–12c (multi-storey building,
 decorations), 14a–14c (horse, boat, waystones), gamepad menus, translations, Steam release checks.
 **Why last:** visual polish and travel are best done when content is stable, and the release work
 (Steam, gamepad menus, languages) should happen right before a 1.0 launch.
