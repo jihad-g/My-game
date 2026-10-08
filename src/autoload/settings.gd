@@ -26,6 +26,10 @@ const DEFAULTS := {
 	"movement_feel": 0,
 	## Milestone 18a: a fixed isometric camera (no rotating), like classic action RPGs.
 	"fixed_camera": false,
+	## Milestone 18b: hit-stop strength (0 = off), aim assist and hold-to-chain attacks.
+	"hit_stop": 1.0,
+	"aim_assist": true,
+	"hold_to_chain": true,
 	# Controls
 	"toggle_sprint": false,
 	## The character always turns to face the mouse (also while sprinting and winding up attacks).

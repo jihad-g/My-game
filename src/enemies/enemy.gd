@@ -34,6 +34,21 @@ var _desired_velocity := Vector3.ZERO
 var _rng := RandomNumberGenerator.new()
 var _taunt_left := 0.0
 var _env_check := 0.0
+# Milestone 18b (hack and slash).
+## Seconds lying on the ground after a knock-down, and getting up.
+const GET_UP_TIME := 0.4
+var _down_left := 0.0
+var _down_tween: Tween
+## When the poise last broke (bosses can only be knocked down right after).
+var _poise_break_ms := -100000
+## Hit-stop left.
+var _freeze_left := 0.0
+## Far from every player: think less often (AI level of detail).
+const FAR_DISTANCE := 42.0
+var _far := false
+var _think_acc := 0.0
+var _think_skip := 0
+var _puffed := false
 
 
 func _ready() -> void:
@@ -98,6 +113,12 @@ func on_pool_release() -> void:
 	remove_from_group(&"pets")
 	if model:
 		model.scale = Vector3.ONE
+		model.rotation.x = 0.0
+	if _down_tween:
+		_down_tween.kill()
+	_down_left = 0.0
+	_freeze_left = 0.0
+	_puffed = false
 
 
 ## Milestone 17c: a tamed beast (Tame Beast, Spirit Wolf) fights for the player.
@@ -171,8 +192,19 @@ func _physics_process(delta: float) -> void:
 		velocity.z = move_toward(velocity.z, 0.0, 20.0 * delta)
 		_apply_gravity(delta)
 		move_and_slide()
+		# Milestone 18b: the body goes up in a puff of dust.
+		if _death_time > 2.3 and not _puffed:
+			_puffed = true
+			if is_inside_tree():
+				VFX.dust(get_parent(), global_position + Vector3(0, 0.4, 0), Color(0.75, 0.72, 0.68, 0.85), 10)
+				VFX.burst(get_parent(), global_position + Vector3(0, 0.6, 0), 0.9, Color(0.85, 0.82, 0.78, 0.5))
 		if _death_time > 2.5:
 			NodePool.release_or_free(self)
+		return
+	# Hit-stop (Milestone 18b): hold still for a moment.
+	if _freeze_left > 0.0:
+		_freeze_left -= delta
+		velocity = Vector3.ZERO
 		return
 
 	# No terrain collision here yet (chunk still generating): wait instead of falling through.
@@ -181,9 +213,11 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		return
 	_taunt_left -= delta
+	_down_left = maxf(_down_left - delta, 0.0)
 	_env_check -= delta
 	if _env_check <= 0.0:
 		_env_check = 0.5
+		_far = _far_from_players()
 		if World.instance and World.instance.dungeon == null and World.instance.is_in_water(global_position):
 			if status.has(&"wet"):
 				status.effects[&"wet"].time = maxf(float(status.effects[&"wet"].time), 4.0)
@@ -192,8 +226,17 @@ func _physics_process(delta: float) -> void:
 	if _stagger_left > 0.0 or status.is_stunned():
 		_stagger_left -= delta
 		_desired_velocity = Vector3.ZERO
+	elif _far and target == null and not _is_boss_enemy():
+		# Milestone 18b AI level of detail: far away and idle, think every 4th frame.
+		_think_acc += delta
+		_think_skip = (_think_skip + 1) % 4
+		if _think_skip == 0:
+			_think(_think_acc)
+			_think_acc = 0.0
+			_desired_velocity *= status.speed_mult()
 	else:
-		_think(delta)
+		_think(delta + _think_acc)
+		_think_acc = 0.0
 		_desired_velocity *= status.speed_mult()
 
 	var accel := 30.0 * delta
@@ -272,11 +315,80 @@ func receive_hit(info: DamageInfo) -> float:
 	_knockback += Vector3(info.knockback.x, 0, info.knockback.z)
 	poise -= info.poise_damage
 	if poise <= 0.0 and not is_dead:
+		_poise_break_ms = Time.get_ticks_msec()
 		stagger(0.7)
+	elif not is_dead and _down_left <= 0.0:
+		_flinch(info)
 	if info.source is Node3D and not is_dead:
 		target = info.source
 	_on_hit_reaction(info)
 	return dealt
+
+
+# --- Milestone 18b: hit feel ------------------------------------------------------------------
+
+## Hit-stop: freeze body and animation for `seconds`.
+func freeze(seconds: float) -> void:
+	if is_dead or seconds <= 0.0:
+		return
+	_freeze_left = maxf(_freeze_left, seconds)
+	if model and model.has_method("freeze"):
+		model.freeze(seconds)
+
+
+## A short flinch away from the side the hit came from.
+func _flinch(info: DamageInfo) -> void:
+	if model == null or not model.has_method("play_flinch"):
+		return
+	var dir := info.direction
+	dir.y = 0.0
+	var side := 0.0
+	if dir.length_squared() > 0.0001:
+		# From the attacker to us, compared with our facing: a hit from our right pushes us to the left.
+		side = signf(_facing.cross(-dir.normalized()).y)
+	model.play_flinch(clampf(info.poise_damage / 30.0, 0.3, 1.2), side)
+
+
+func _is_boss_enemy() -> bool:
+	return has_method("is_boss") and call("is_boss")
+
+
+## Knocks the enemy down for `seconds` (it falls, lies there and gets up). Bosses
+## only fall right after their poise broke; enemies immune to stuns never fall.
+## Returns true if it fell.
+func knock_down(seconds: float) -> bool:
+	if is_dead or seconds <= 0.0 or _down_left > 0.0 or model == null:
+		return false
+	if _is_boss_enemy() and Time.get_ticks_msec() - _poise_break_ms > 400:
+		return false
+	if status.immune.has(&"stunned"):
+		return false
+	_down_left = seconds + GET_UP_TIME
+	stagger(seconds + GET_UP_TIME)
+	if _down_tween:
+		_down_tween.kill()
+	_down_tween = create_tween()
+	_down_tween.tween_property(model, "rotation:x", -1.35, 0.22).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	_down_tween.tween_interval(seconds)
+	_down_tween.tween_property(model, "rotation:x", 0.0, GET_UP_TIME).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	VFX.dust(get_parent(), global_position, Color(0.7, 0.65, 0.55, 0.8), 6)
+	Events.damage_dealt.emit(global_position + Vector3(0, 1.8, 0), 0.0, false, false, "Knocked down")
+	return true
+
+
+func is_knocked_down() -> bool:
+	return _down_left > 0.0
+
+
+## True when no player is within FAR_DISTANCE.
+func _far_from_players() -> bool:
+	for p in get_tree().get_nodes_in_group(&"player"):
+		if (p as Node3D).global_position.distance_to(global_position) < FAR_DISTANCE:
+			return false
+	for p in get_tree().get_nodes_in_group(&"remote_players"):
+		if (p as Node3D).global_position.distance_to(global_position) < FAR_DISTANCE:
+			return false
+	return true
 
 
 func apply_status(id: StringName, duration: float, params: Dictionary) -> void:

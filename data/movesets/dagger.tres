@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WeaponMoveset" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="WeaponMoveset" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://src/rpg/weapon_moveset.gd" id="1_ms"]
 [ext_resource type="Script" path="res://src/combat/attack_data.gd" id="2_atk"]
@@ -7,9 +7,10 @@
 [ext_resource type="Resource" path="res://data/attacks/dagger_stab_3.tres" id="l2"]
 [ext_resource type="Resource" path="res://data/attacks/dagger_stab_4.tres" id="l3"]
 [ext_resource type="Resource" path="res://data/attacks/dagger_lunge.tres" id="h"]
+[ext_resource type="Resource" path="res://data/attacks/dagger_lunge_finisher.tres" id="fin"]
 
 [resource]
 script = ExtResource("1_ms")
 id = &"dagger"
-light_combo = Array[ExtResource("2_atk")]([ExtResource("l0"), ExtResource("l1"), ExtResource("l2"), ExtResource("l3")])
+light_combo = Array[ExtResource("2_atk")]([ExtResource("l0"), ExtResource("l1"), ExtResource("l2"), ExtResource("l3"), ExtResource("fin")])
 heavy_attack = ExtResource("h")

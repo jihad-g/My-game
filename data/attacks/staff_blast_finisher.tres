@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"staff_blast_finisher"
+display_name = "Arcane Burst Finisher"
+damage = 14
+damage_type = &"arcane"
+stamina_cost = 10
+windup = 0.2
+active = 0.1
+recovery = 0.4
+cancel_ratio = 0.5
+reach = 3.0
+arc_degrees = 360
+knockback = 7
+poise_damage = 25
+lunge_speed = 0.5
+move_multiplier = 0.2
+crit_chance_bonus = 0
+animation = &"overhead"
+camera_shake = 0.28
+stun = 0
+finisher = true
+knockdown = 0.8
+hitstop = 0.08

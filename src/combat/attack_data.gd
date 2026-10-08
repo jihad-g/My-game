@@ -30,6 +30,13 @@ extends Resource
 @export var camera_shake: float = 0.15
 ## Seconds every enemy hit is stunned (war hammers, Milestone 17a). 0 = none.
 @export var stun: float = 0.0
+## Milestone 18b (hack and slash): the last hit of a combo chain - a bigger hit with a ring, a
+## stronger shake and a longer hit-stop.
+@export var finisher: bool = false
+## Seconds a hit enemy lies on the ground (0 = none). Bosses only fall when their poise breaks.
+@export var knockdown: float = 0.0
+## Freeze on hit, in seconds (0 = chosen from the attack's weight).
+@export var hitstop: float = 0.0
 
 
 func total_duration() -> float:

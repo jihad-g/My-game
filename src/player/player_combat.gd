@@ -80,6 +80,11 @@ var _charge_time := 0.0
 var _charged_announced := false
 var _bonus := {}
 var _is_last_of_combo := false
+## Milestone 18b: hit-stop left (the swing freezes for a moment when it lands).
+var _hitstop_left := 0.0
+## Aim assist: how far to the side (degrees) and how far ahead (m beyond the reach) it looks.
+const ASSIST_ARC := 60.0
+const ASSIST_EXTRA := 1.8
 
 
 func _ready() -> void:
@@ -150,6 +155,14 @@ func open_riposte() -> void:
 
 func physics_update(delta: float) -> void:
 	riposte_left = maxf(riposte_left - delta, 0.0)
+	# Milestone 18b: hold the attack button to keep chaining (Settings → Gameplay).
+	if _buffered == &"" and not is_ranged() and bool(Settings.get_value("hold_to_chain")) and _held(&"light") \
+			and player.state == Player.State.NORMAL and not player.is_blocking and not _holding and player.input_allowed() \
+			and (phase == Phase.NONE or phase == Phase.RECOVERY):
+		request(&"light")
+	if _hitstop_left > 0.0:
+		_hitstop_left -= delta
+		return
 	_buffer_left -= delta
 	if _buffer_left <= 0.0:
 		_buffered = &""
@@ -194,7 +207,7 @@ func _start(kind: StringName) -> void:
 		if phase == Phase.NONE and _combo_timer <= 0.0:
 			combo_index = 0
 		attack = light_combo[combo_index % light_combo.size()]
-		_is_last_of_combo = light_combo.size() > 1 and combo_index % light_combo.size() == light_combo.size() - 1
+		_is_last_of_combo = light_combo.size() > 1 and (combo_index % light_combo.size() == light_combo.size() - 1 or attack.finisher)
 		combo_index = (combo_index + 1) % light_combo.size()
 		if is_ranged():
 			if best_arrow() == &"":
@@ -214,15 +227,51 @@ func _start(kind: StringName) -> void:
 	_charge_time = 0.0
 	_charged_announced = false
 	last_charge = 0.0
-	attack_direction = player.get_aim_direction()
+	attack_direction = assisted_direction(attack)
 	player.face_direction(attack_direction, true)
 	var speed := _speed_mult()
 	player.model.play_attack(attack.animation, _windup(attack) / speed, attack.active / speed, attack.recovery / speed, hold)
+	if attack.finisher and attack.animation == &"spin":
+		player.model.play_spin((_windup(attack) + attack.active) / speed + 0.1)
 	if not is_ranged():
 		Audio.play(&"swing_heavy" if attack.windup > 0.35 else &"swing", -5.0)
 	if _bonus.has("tag"):
 		Events.damage_dealt.emit(player.global_position + Vector3(0, 2.4, 0), 0.0, false, false, String(_bonus.tag) + "!")
 	attack_started.emit(attack)
+
+
+## Milestone 18b aim assist: the swing turns to the nearest enemy in a cone in
+## front of the aim (unless you locked on, aim with a bow, or turned it off).
+func assisted_direction(attack: AttackData) -> Vector3:
+	var aim := player.get_aim_direction()
+	if is_ranged() or not bool(Settings.get_value("aim_assist")) or is_instance_valid(player.lock_target):
+		return aim
+	var reach := (attack.reach if attack else 2.0) + weapon_param(&"reach") + ASSIST_EXTRA
+	var best: Node3D = null
+	var best_score := INF
+	for e in get_tree().get_nodes_in_group(&"enemies"):
+		var n := e as Node3D
+		if n == null or n.get("is_dead") or not n.is_visible_in_tree():
+			continue
+		var to := n.global_position - player.global_position
+		if absf(to.y) > 2.5:
+			continue
+		to.y = 0.0
+		var d := to.length()
+		if d > reach or d < 0.05:
+			continue
+		var ang := rad_to_deg(aim.angle_to(to / d))
+		if ang > ASSIST_ARC * 0.5:
+			continue
+		var score := d + ang * 0.05
+		if score < best_score:
+			best_score = score
+			best = n
+	if best == null:
+		return aim
+	var dir := best.global_position - player.global_position
+	dir.y = 0.0
+	return dir.normalized()
 
 
 ## A bow's windup is its draw time (weapon_params draw_time).
@@ -311,7 +360,7 @@ func _enter_active() -> void:
 
 ## Forward motion applied by the player during windup/active (commitment).
 func get_lunge_velocity() -> Vector3:
-	if current == null or phase == Phase.RECOVERY or _holding:
+	if current == null or phase == Phase.RECOVERY or _holding or _hitstop_left > 0.0:
 		return Vector3.ZERO
 	return attack_direction * current.lunge_speed
 
@@ -348,7 +397,10 @@ func _perform_hit() -> void:
 			hit_enemy = true
 			player.abilities.on_hit_dealt(t, float(dealt) if dealt != null else 0.0)
 			_after_hit(t, info, float(dealt) if dealt != null else 0.0, heavy, current)
+	if current.finisher:
+		_finisher_fx()
 	if hit_enemy:
+		_apply_hitstop(heavy, targets.filter(func(t: Node) -> bool: return t.is_in_group(&"enemies")))
 		Events.camera_shake.emit(current.camera_shake * (1.0 + last_charge * 0.6))
 		_count_special(targets.filter(func(t: Node) -> bool: return t.is_in_group(&"enemies")).front())
 	if heavy and weapon_param(&"heavy_shockwave") > 0.0:
@@ -364,6 +416,12 @@ func _after_hit(t: Node, info: DamageInfo, dealt: float, heavy: bool, attack: At
 		stun = maxf(stun, weapon_param(&"combo_stun"))
 	if stun > 0.0:
 		t.apply_status(&"stunned", stun, {})
+	# Milestone 18b: finishers and heavy hits knock enemies down (bosses only when their poise broke).
+	var down := attack.knockdown if attack else 0.0
+	if heavy and last_charge >= 1.0:
+		down = maxf(down, 1.2)
+	if down > 0.0 and t.has_method("knock_down") and not t.get("is_dead"):
+		t.knock_down(down)
 	var chill := weapon_param(&"on_hit_chill")
 	if chill > 0.0:
 		t.apply_status(&"chilled", chill, {})
@@ -616,3 +674,30 @@ func build_physical(base: float, target: Node, poise: float, knockback: float,
 		info.is_crit = true
 		info.amount *= ch.crit_mult
 	return info
+
+
+# --- Milestone 18b: hit feel -------------------------------------------------------------
+
+## Freezes the swing and the enemies it hit for a moment (Settings "hit_stop", 0 = off).
+func _apply_hitstop(heavy: bool, enemies: Array) -> void:
+	var scale := clampf(float(Settings.get_value("hit_stop")), 0.0, 1.5)
+	if scale <= 0.0 or current == null:
+		return
+	var t := current.hitstop
+	if t <= 0.0:
+		t = 0.045 + (0.035 if heavy else 0.0) + 0.04 * last_charge
+	t *= scale
+	_hitstop_left = maxf(_hitstop_left, t)
+	player.model.freeze(t)
+	for e in enemies:
+		if e.has_method("freeze"):
+			e.freeze(t)
+
+
+## The finisher's ring and dust where it lands.
+func _finisher_fx() -> void:
+	var c := player.global_position + attack_direction * minf(current.reach * 0.5, 1.5)
+	var r := current.reach + weapon_param(&"reach")
+	VFX.ring(player.get_parent(), c if current.arc_degrees < 300.0 else player.global_position, r, Color(1, 0.9, 0.65, 0.75), 0.3)
+	VFX.dust(player.get_parent(), c, Color(0.7, 0.65, 0.55, 0.8), 8)
+	Audio.play(&"swing_heavy", -3.0, 0.1)

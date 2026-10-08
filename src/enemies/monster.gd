@@ -139,6 +139,7 @@ func make_elite(p_affixes: Array) -> void:
 		status.immune = Array([&"stunned", &"frozen", &"chilled", &"slowed"], TYPE_STRING_NAME, &"", null)
 	set_meta(&"elite", true)
 	_build_aura(EliteAffixes.color_of(affixes[0]))
+	(model as MonsterModel).set_outline(EliteAffixes.color_of(affixes[0]))
 
 
 func is_elite() -> bool:
@@ -808,6 +809,10 @@ func _start_attack(a: AttackData) -> void:
 	var speed := (0.75 if enraged else 1.0) / _speed_affix()
 	_set_ai(AI.ATTACK, a.total_duration() * speed)
 	(model as MonsterModel).play_attack(a.animation, a.windup * speed, a.active * speed, a.recovery * speed)
+	# Milestone 18b: every heavy attack shows the same red ground warning that fills up before it hits.
+	if a == mdata.heavy and a.windup * speed >= 0.25:
+		var reach := a.reach * maxf(1.0, mdata.model_scale * 0.8)
+		_zone = VFX.danger_zone(get_parent(), global_position + get_facing() * reach * 0.5, reach * 0.65, a.windup * speed)
 	if a == mdata.heavy:
 		_heavy_cd = mdata.heavy_cooldown * (0.7 if enraged else 1.0)
 	else:
@@ -1345,6 +1350,8 @@ func _alert(tgt: Node3D) -> void:
 		return
 	(model as MonsterModel).show_alert()
 	_set_ai(AI.ALERT, 0.5)
+	if is_elite() and tgt.is_in_group(&"player"):
+		_elite_roar()
 	if mdata.howls and tgt.is_in_group(&"player"):
 		_howl()
 	# Pack alert: idle allies nearby join in.
@@ -1356,6 +1363,17 @@ func _alert(tgt: Node3D) -> void:
 				m.target = tgt
 				(m.model as MonsterModel).show_alert()
 				m._set_ai(AI.ALERT, 0.3 + m._rng.randf() * 0.4)
+
+
+## Milestone 18b: an elite roars when it sees you (and it lasts the alert pause).
+func _elite_roar() -> void:
+	var rig = (model as MonsterModel).rig
+	if rig is HumanoidModel:
+		(rig as HumanoidModel).play_pose(&"roar", 0.6)
+	VFX.ring(get_parent(), global_position, 3.0 * mdata.model_scale, EliteAffixes.color_of(affixes[0]), 0.4)
+	Audio.play_at(&"monster_growl", global_position, 0.0, 0.1)
+	Events.damage_dealt.emit(global_position + Vector3(0, 2.4 * mdata.model_scale, 0), 0.0, false, false, "Roars!")
+	ai_time = maxf(ai_time, 0.6)
 
 
 ## Bursts out of the sand (sand scorpions).

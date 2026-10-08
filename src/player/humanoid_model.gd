@@ -85,6 +85,8 @@ var _last_pose: Dictionary = {}
 ## How much the action clip owns the legs (0 while running).
 var _legs_w := 1.0
 var _root_driven := false
+## Milestone 18b: hit-stop - the animation holds still for a moment.
+var _freeze := 0.0
 
 
 var _class_id: StringName = &""
@@ -846,6 +848,16 @@ func play_stagger() -> void:
 	play_additive(AnimLibrary.flinch(1.0))
 
 
+## Milestone 18b: hit-stop - hold the current pose for `seconds`.
+func freeze(seconds: float) -> void:
+	_freeze = maxf(_freeze, seconds)
+
+
+## Milestone 18b: a flinch away from the hit (`side` -1 = hit from the left, 1 = from the right).
+func play_flinch(strength: float, side: float) -> void:
+	play_additive(AnimLibrary.flinch(strength, side))
+
+
 func play_death() -> void:
 	anim_event.emit("death", [])
 	cancel_attack()
@@ -960,12 +972,15 @@ func _on_clip_event(ev: StringName) -> void:
 # --- Every frame ----------------------------------------------------------------------------
 
 func _process(delta: float) -> void:
-	_time += delta
 	if _flash_time > 0.0:
 		_flash_time -= delta
 		if _flash_time <= 0.0:
 			for p in _parts:
 				p.material_overlay = null
+	if _freeze > 0.0:
+		_freeze -= delta
+		return
+	_time += delta
 	var base := _base_pose(delta)
 	var pose := base.duplicate()
 	_apply_action(pose, base, delta)

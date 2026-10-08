@@ -150,6 +150,20 @@ func _ready() -> void:
 
 # --- Input ------------------------------------------------------------------------
 
+## Milestone 18b: the attack button went down in the game world (not on a menu)
+## and is still held - hold-to-chain only follows such a press.
+var _light_held_world := false
+
+
+func input_allowed() -> bool:
+	return _light_held_world and not is_dead and not frozen
+
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_released(&"attack_light"):
+		_light_held_world = false
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if is_dead or frozen:
 		if is_dead and event.is_action_pressed(&"respawn"):
@@ -162,6 +176,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return  # clicks (and U = repair) belong to build mode
 	if event.is_action_pressed(&"attack_light"):
 		_want_light = true
+		_light_held_world = true
 	elif event.is_action_pressed(&"attack_heavy"):
 		_want_heavy = true
 	elif event.is_action_pressed(&"interact"):

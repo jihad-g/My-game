@@ -105,6 +105,20 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 18b — Flow of Battle: hack and slash  ✅
+
+- [x] Combo chains ending in finishers for every melee weapon (9 finisher attacks), hold attack to keep chaining, aim assist
+- [x] Hit-stop (setting, 0 = off), directional enemy flinches, knock-downs and getting up (bosses only after their poise breaks)
+- [x] Three fodder enemies in packs of 4–10 in 8 biomes; up to 60 active enemies; death puffs
+- [x] Heavy enemy attacks show a filling red ground warning; elites are outlined and roar
+- [x] AI level of detail: idle enemies far from players think every 4th frame
+- [~] Tests `test_m18b_*` (and the updated combo-length checks) are written but have not been run yet
+- [ ] NOT IMPLEMENTED: damage on the animation's "hit" event (combat keeps its own clock; both start the strike at the end of the wind-up)
+- [ ] NOT IMPLEMENTED: crowd performance measured (60 enemies at 60 fps is a goal, not yet measured with the stress tool)
+- [ ] NOT IMPLEMENTED: simple models for distant enemies and a pool for death effects (from the plan)
+- [ ] Known limitation: knocked-down humanoids tip backwards as a whole (no separate fall animation); boars and other old-style beasts don't flinch
+- [ ] Next: M18c — spells and abilities that look like magic (VFX library v2, a look for each element)
+
 ## Milestone 18a — Flow of Battle: animation system and smooth movement  ✅
 
 - [x] Compact animation system: keyframe clips, three layers (base, action, additive), cross-fades, a leg mask while running, clip events
@@ -115,9 +129,9 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [~] Tests `test_m18a_*` are written but have not been run yet (run them only with the owner's permission)
 - [ ] NOT IMPLEMENTED: root motion that moves the body (attacks still move you with the old lunge; the clip step is only visual)
 - [ ] NOT IMPLEMENTED: damage on the clip's "hit" event (the event exists; combat still uses its own timer, which matches the wind-up) - M18b
-- [ ] NOT IMPLEMENTED: hit reactions by direction, knock-downs, combo chains and hit-stop (M18b)
+- [x] Hit reactions by direction, knock-downs, combo chains and hit-stop (done in M18b)
 - [ ] Known limitation: monsters with their own bodies (wolves, boars, golems...) still use their old animation
-- [ ] Next: M18b — hack and slash (combo chains and finishers, hold to chain, aim assist, hit-stop, knock-downs, crowds)
+- [x] M18b done (v0.22.0)
 
 ## Milestone 17d — Heroes' Arsenal: abilities 66–100, ultimates, upgrades  ✅
 

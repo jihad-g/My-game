@@ -9,7 +9,8 @@ extends Node
 @export var chunk_manager: ChunkManager
 ## Never spawn enemies this close to the player (avoids popping in on top of them).
 @export var min_spawn_distance: float = 14.0
-@export var max_active: int = 30
+## Milestone 18b: room for packs of fodder enemies (was 30).
+@export var max_active: int = 60
 ## Seconds between retries for slots that were too close to the player.
 @export var retry_interval: float = 3.0
 ## Automatic spawning into chunks (tests turn this off to fight in an empty

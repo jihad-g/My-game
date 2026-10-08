@@ -1,14 +1,15 @@
-[gd_resource type="Resource" script_class="WeaponMoveset" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="WeaponMoveset" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/rpg/weapon_moveset.gd" id="1_ms"]
 [ext_resource type="Script" path="res://src/combat/attack_data.gd" id="2_atk"]
 [ext_resource type="Resource" path="res://data/attacks/gs_slash_1.tres" id="l0"]
 [ext_resource type="Resource" path="res://data/attacks/gs_slash_2.tres" id="l1"]
 [ext_resource type="Resource" path="res://data/attacks/gs_heavy.tres" id="h"]
+[ext_resource type="Resource" path="res://data/attacks/gs_leap_finisher.tres" id="fin"]
 
 [resource]
 script = ExtResource("1_ms")
 id = &"greatsword"
-light_combo = Array[ExtResource("2_atk")]([ExtResource("l0"), ExtResource("l1"), ExtResource("l0")])
+light_combo = Array[ExtResource("2_atk")]([ExtResource("l0"), ExtResource("l1"), ExtResource("fin")])
 heavy_attack = ExtResource("h")
 charge_time = 0.9

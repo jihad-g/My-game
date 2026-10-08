@@ -836,8 +836,10 @@ func get_spawn_slots(coord: Vector2i) -> Array:
 		var n := rule.group_min + int(HashUtils.to_unit(hsh, 3) * float(rule.group_max - rule.group_min + 1))
 		for m in range(1, mini(n, rule.group_max)):
 			var a := TAU * float(m) / float(n) + HashUtils.to_unit(hsh, 4) * TAU
-			var gx := ox + lx + roundi(cos(a) * 2.5)
-			var gz := oz + lz + roundi(sin(a) * 2.5)
+			# Big packs (Milestone 18b fodder) stand in two rings; small groups keep the old circle.
+			var ring := 2.5 + (1.8 if n > 5 and m % 2 == 0 else 0.0)
+			var gx := ox + lx + roundi(cos(a) * ring)
+			var gz := oz + lz + roundi(sin(a) * ring)
 			var gh := get_height_blocks(gx, gz)
 			if gh < rule.min_height or gh > rule.max_height:
 				continue

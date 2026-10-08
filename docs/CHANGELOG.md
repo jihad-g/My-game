@@ -2,6 +2,35 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.22.0] — Milestone 18b: Flow of Battle - hack and slash
+
+### Added
+- **Combo chains with finishers**: every melee weapon's light combo now ends in a strong **finisher** with a ring,
+  a bigger shake and a longer hit-stop. Sword: slash, back-slash, thrust, then a spinning finisher. Axe: two chops
+  and an overhead cleave. Dagger: four stabs and a lunge. War hammer: two smashes and a ground slam that stuns.
+  Spear: two thrusts and a wide sweep. Halberd: a whirl. Greatsword: two arcs and a **leaping slam**. Staff: an
+  arcane burst. Unarmed: two punches and a kick (`AttackData.finisher`, `knockdown`, `hitstop`).
+- **Hold attack to keep attacking** (on by default): the chain keeps going while the button is held. It only
+  follows a press that started in the game world, never a click on a menu.
+- **Aim assist** (on by default): each swing turns to the nearest enemy in a 60° cone in front of you. Locking on
+  or using a bow turns it off.
+- **Hit-stop**: the swing and the enemies it hits freeze for 45–120 ms (longer for heavy, charged and finisher
+  hits). Settings slider, 0 = off. It is local to the fight, so co-op players are not slowed.
+- **Enemy reactions**: enemies flinch away from the side they were hit on (humanoids lean, beasts rock).
+- **Knock-downs**: finishers and fully charged heavy attacks knock enemies down; they fall, lie on the ground and
+  get up. Bosses only fall right after their guard (poise) breaks; stun-immune elites never fall.
+- **Crowds**: three new weak pack enemies - **Skeleton Minions**, **Bandit Recruits** and **Cultist Acolytes** - in
+  packs of 4–10 across 8 biomes. Big packs stand in two rings. Up to 60 enemies can be active (was 30).
+- **Death puffs**: a fallen enemy goes up in a puff of dust.
+- **Clear danger**: every heavy enemy attack shows the red ground warning that fills up before it hits.
+- **Elites** are outlined in their affix colour and roar when they see you.
+- Settings → Gameplay: Aim assist, Hold attack to keep attacking, Hit-stop.
+- Tests (written, not run yet): `test_m18b_data`, `test_m18b_combat`.
+
+### Changed
+- Enemies far from every player (over 42 m) and not fighting think only every 4th frame (AI level of detail).
+- Older tests now expect the longer combos (sword 4, staff 3, dagger 5 attacks).
+
 ## [0.21.0] — Milestone 18a: Flow of Battle - animation system and smooth movement
 
 ### Added

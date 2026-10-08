@@ -46,6 +46,9 @@ func _ready() -> void:
 	_slider("Camera rotation speed", "camera_rotate_speed", 0.25, 2.5, 0.05)
 	_choice("Movement feel", "movement_feel", ["Snappy - quick start, stop and turn", "Weighty - slower, heavier"])
 	_toggle("Fixed isometric camera (no rotating)", "fixed_camera")
+	_toggle("Aim assist (swings turn to the nearest enemy in front)", "aim_assist")
+	_toggle("Hold attack to keep attacking", "hold_to_chain")
+	_slider("Hit-stop (freeze on hit, 0 = off)", "hit_stop", 0.0, 1.5, 0.1)
 
 	_build_controls_page()
 

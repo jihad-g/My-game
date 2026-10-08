@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"kick_finisher"
+display_name = "Kick Finisher"
+damage = 10
+damage_type = &"physical"
+stamina_cost = 8
+windup = 0.16
+active = 0.08
+recovery = 0.34
+cancel_ratio = 0.5
+reach = 1.8
+arc_degrees = 100
+knockback = 8
+poise_damage = 25
+lunge_speed = 2.5
+move_multiplier = 0.2
+crit_chance_bonus = 0.05
+animation = &"thrust"
+camera_shake = 0.25
+stun = 0
+finisher = true
+knockdown = 1.0
+hitstop = 0.08

@@ -765,7 +765,7 @@ textures on any surface, so large areas look flat up close.
 |---|---|---|
 | Movement, sprint, dodge, swimming | ✅ | No jump key, no climbing, no drowning |
 | Camera | ✅ | M18a: looks ahead when you move, smooth shake, optional fixed isometric view |
-| Melee combat (combos, block, parry, lock-on, crits, backstab, poise) | ✅ | |
+| Melee combat (combos, block, parry, lock-on, crits, backstab, poise) | ✅ | M18b: finishers, hold-to-chain, aim assist, hit-stop, knock-downs |
 | Ranged weapons for the player (bows, crossbows, throwing) | 🟡 | Bows and 5 kinds of arrows (M17a); no crossbows or throwing weapons yet |
 | Weapon types (sword, axe, dagger, staff, shield, bow, spear, war hammer, greatsword, wand, tome) | ✅ | M17a: two-handed weapons, caster off-hands |
 | Charged heavy, sprint, plunging attacks and ripostes | ✅ | M17a |
@@ -1146,6 +1146,10 @@ and weapon and legendary powers (ideas 9a–9f, 7a–7d, part of 8d).
 **Done: Milestone 17b — "Heroes' Arsenal" part 2.** The ability book (L): 60 new class abilities for levels 2–30
 (ideas 5a–5h and the list in ARSENAL_PLAN.md), 15 passives, a 6-slot bar changed at a bed or a campfire, and a
 third spell slot with a tome.
+
+**Done: Milestone 18b — "Flow of Battle" part 2.** Combo chains with finishers, hold-to-chain, aim assist,
+hit-stop, flinches and knock-downs, packs of fodder enemies, ground warnings for heavy attacks and elite outlines
+(ideas 15d–15f, 2c). Next: M18c, spells that look like magic.
 
 **Done: Milestone 18a — "Flow of Battle" part 1.** The compact animation system (clips, layers, cross-fades,
 leg mask), smooth locomotion, Snappy/Weighty movement, dodge v2, camera lead and the fixed isometric camera

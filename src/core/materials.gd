@@ -94,6 +94,21 @@ static func hit_flash() -> StandardMaterial3D:
 	return _cache[&"hit_flash"]
 
 
+## Milestone 18b: a coloured outline (an inverted hull drawn a little bigger
+## behind the model) that marks elite enemies.
+static func outline(color: Color) -> StandardMaterial3D:
+	var key := "outline_%s" % color.to_html()
+	if not _cache.has(key):
+		var m := StandardMaterial3D.new()
+		m.albedo_color = color
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.cull_mode = BaseMaterial3D.CULL_FRONT
+		m.grow = true
+		m.grow_amount = 0.045
+		_cache[key] = m
+	return _cache[key]
+
+
 ## Red glow overlay used to telegraph dangerous enemy attacks.
 static func danger_glow() -> StandardMaterial3D:
 	if not _cache.has(&"danger_glow"):

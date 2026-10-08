@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/minion_slash.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"copper_coin"
+min_count = 1
+max_count = 1
+chance = 0.4
+
+[resource]
+script = ExtResource("1_md")
+id = &"bandit_recruit"
+display_name = "Bandit Recruit"
+category = 2
+level = 2
+max_health = 30.0
+walk_speed = 2.4
+run_speed = 4.6
+turn_speed = 9.0
+aggro_range = 13.0
+leash_range = 30.0
+max_poise = 10.0
+damage_multipliers = {
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0")]
+xp_reward = 6
+respawn_time = 480.0
+style = 0
+look = &"bandit"
+model_scale = 0.9
+tint = Color(0.55, 0.32, 0.22, 1)
+accent = Color(0.6, 0.45, 0.3, 1)
+melee = ExtResource("2_melee")
+pack_alert = 14.0

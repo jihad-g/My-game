@@ -119,6 +119,8 @@ func _ready() -> void:
 	_run(&"test_m18a_clips")
 	await _run_async(&"test_m18a_model")
 	await _run_async(&"test_m18a_movement")
+	_run(&"test_m18b_data")
+	await _run_async(&"test_m18b_combat")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -1056,7 +1058,7 @@ func test_character_and_equipment() -> void:
 	var ch := player.character
 	check(ch.class_data.id == &"knight" and ch.level == 1, "new Knight at level 1")
 	check(player.equipment.weapon_type() == &"sword" and player.equipment.offhand() != null, "Knight starts with sword and shield")
-	check(player.combat.light_combo.size() == 3, "sword moveset loaded (3-hit combo)")
+	check(player.combat.light_combo.size() == 4, "sword moveset loaded (3 hits and a finisher)")
 	check(player.health.max_health > 100.0 and player.health.current == player.health.max_health, "Defense raises max health (%d)" % roundi(player.health.max_health))
 	var armor_before := ch.armor
 	# XP & levels
@@ -1095,7 +1097,7 @@ func test_character_and_equipment() -> void:
 		var s = player.inventory.get_slot(i)
 		if s != null and s.id == &"crystal_staff":
 			player.equip_from_slot(i)
-	check(player.equipment.weapon_type() == &"staff" and player.combat.light_combo.size() == 2, "weapon swap changes the moveset")
+	check(player.equipment.weapon_type() == &"staff" and player.combat.light_combo.size() == 3, "weapon swap changes the moveset")
 	check(player.unequip_slot(ItemData.EquipSlot.MAIN_HAND) and player.combat.light_combo[0].id == &"punch_1", "unarmed moveset without a weapon")
 	# Real damage: a proficient sword out-damages an unarmed/off-class hit.
 	var boar := _spawn_boar(world, Vector3(0, 0, 3))
@@ -1299,7 +1301,7 @@ func test_rpg_save_load() -> void:
 	check(p.character.base_skill(Skill.DEXTERITY) == dex and p.character.unspent_points == pts, "skills and unspent points restored")
 	check(p.equipment.weapon() != null and p.equipment.weapon().id == &"copper_dagger", "equipment restored")
 	check(absf(p.health.max_health - max_hp) < 0.01, "derived max health identical after load")
-	check(p.model != null and p.combat.light_combo.size() == 4, "dagger moveset active after load")
+	check(p.model != null and p.combat.light_combo.size() == 5, "dagger moveset active after load")
 	var meta_list := SaveManager.list_worlds()
 	check(meta_list.size() == 1 and meta_list[0].get("class") == "assassin" and int(meta_list[0].get("level", 0)) == level, "world list shows class and level")
 	world.queue_free()
@@ -5157,7 +5159,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.21"), "version 0.21 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.22"), "version 0.22 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -5282,7 +5284,7 @@ func test_m14_outfits_ingame() -> void:
 	await _frames(2)
 	var looks: Array = p.model.outfit_looks()
 	check(looks.has(&"hood_mask") and looks.has(&"cloak") and not looks.has(&"helm_plume"), "changing clothes changes the look %s" % [looks])
-	check(p.equipment.weapon_type() == &"dagger" and p.combat.light_combo.size() == 4, "the Knight fights with the dagger combo")
+	check(p.equipment.weapon_type() == &"dagger" and p.combat.light_combo.size() == 5, "the Knight fights with the dagger combo")
 	check(p.character.weapon_mult(&"dagger") >= 0.9, "Knights are no longer bad with daggers (x%.2f)" % p.character.weapon_mult(&"dagger"))
 	check(p.character.class_data.id == &"knight" and p.abilities.get_slot(0).id == &"shield_bash", "still a Knight with Knight abilities")
 	var dex_base := p.character.base_skill(Skill.DEXTERITY)
@@ -6905,4 +6907,124 @@ func test_m18a_movement() -> void:
 		cam._process(1.0 / 60.0)
 	check(cam._lead.x > 0.5, "the camera looks ahead in the walking direction")
 	p.velocity = Vector3.ZERO
+	p.health.invulnerable = false
+
+
+# --- Milestone 18b: hack and slash ---------------------------------------------------------
+
+func test_m18b_data() -> void:
+	var bad := []
+	for f in DirAccess.get_files_at("res://data/movesets/"):
+		var ms := load("res://data/movesets/" + f.trim_suffix(".remap")) as WeaponMoveset
+		if ms == null or ms.ranged:
+			continue
+		var last: AttackData = ms.light_combo.back()
+		if ms.light_combo.size() < 3 or not last.finisher or last.damage <= ms.light_combo[0].damage:
+			bad.append(String(ms.id))
+	check(bad.is_empty(), "every melee weapon has a 3+ hit chain ending in a stronger finisher %s" % [bad])
+	for id in [&"skeleton_minion", &"bandit_recruit", &"cultist_acolyte"]:
+		var d := load("res://data/enemies/%s.tres" % id) as MonsterData
+		check(d != null and d.max_health < 40.0 and d.pack_alert >= 12.0, "%s is a weak pack enemy" % id)
+	var packs := 0
+	for biome in WildSpawns.TABLE:
+		for e in WildSpawns.TABLE[biome]:
+			if e[0] in [&"skeleton_minion", &"bandit_recruit", &"cultist_acolyte"] and int(e[2]) >= 4:
+				packs += 1
+	check(packs >= 6, "fodder packs live in many biomes (%d)" % packs)
+	check(bool(Settings.DEFAULTS.aim_assist) and bool(Settings.DEFAULTS.hold_to_chain) and float(Settings.DEFAULTS.hit_stop) > 0.0,
+		"aim assist, hold-to-chain and hit-stop are on by default")
+	check(Materials.outline(Color.RED).grow and Materials.outline(Color.RED).cull_mode == BaseMaterial3D.CULL_FRONT, "elite outline material")
+
+
+func test_m18b_combat() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 80
+	var off := _clear_offset(world, 2.0)
+	var m := _spawn_monster(world, &"skeleton_warrior", off)
+	m.health.max_health = 50000.0
+	m.health.current = 50000.0
+	await _frames(3)
+	p.set_lock_target(null)
+	# Aim assist: aiming 20 degrees to the side still swings at the enemy.
+	Settings.set_value("aim_assist", true)
+	var a0: AttackData = p.combat.light_combo[0]
+	var side := off.normalized().rotated(Vector3.UP, deg_to_rad(20.0))
+	p.face_direction(side, true)
+	var aimed := p.combat.assisted_direction(a0)
+	var to_m := (m.global_position - p.global_position)
+	to_m.y = 0.0
+	check(aimed.angle_to(to_m.normalized()) < 0.05 or p.get_aim_direction().angle_to(to_m.normalized()) < 0.05, "aim assist turns the swing to the enemy")
+	Settings.set_value("aim_assist", false)
+	check(p.combat.assisted_direction(a0).is_equal_approx(p.get_aim_direction()), "and can be turned off")
+	Settings.set_value("aim_assist", true)
+	# A hit freezes the swing and the enemy for a moment (hit-stop) and the enemy flinches.
+	p.face_direction(off.normalized(), true)
+	p.combat.cancel()
+	p.state = Player.State.NORMAL
+	p.combat.request(&"light")
+	var froze := false
+	for i in 30:
+		await _frames(1)
+		if m._freeze_left > 0.0 and p.combat._hitstop_left > 0.0:
+			froze = true
+			break
+	check(froze, "a hit freezes the swing and the enemy (hit-stop)")
+	Settings.set_value("hit_stop", 0.0)
+	p.combat._hitstop_left = 0.0
+	m._freeze_left = 0.0
+	await _frames(30)
+	p.combat.cancel()
+	p.combat.request(&"light")
+	await _frames(20)
+	check(m._freeze_left <= 0.0, "hit-stop can be turned off")
+	Settings.set_value("hit_stop", 1.0)
+	# Knock-downs: normal enemies fall; bosses only when their poise just broke.
+	m.global_position = p.global_position + off
+	check(m.knock_down(1.0) and m.is_knocked_down(), "a finisher knocks an enemy down")
+	await _frames(20)
+	check(m.model.rotation.x < -1.0, "it lies on the ground")
+	await _frames(90)
+	check(not m.is_knocked_down() and absf(m.model.rotation.x) < 0.1, "and gets up again")
+	_kill(m, world)
+	var boss := _spawn_monster(world, &"bone_king", off * 2.0)
+	await _frames(3)
+	if boss:
+		check(not boss.knock_down(1.0), "a boss with its guard up does not fall")
+		boss._poise_break_ms = Time.get_ticks_msec()
+		check(boss.knock_down(1.0), "a boss falls right after its poise breaks")
+		_kill(boss, world)
+	# Hold to chain: holding the button runs through the whole combo to the finisher.
+	var dummy := _spawn_monster(world, &"skeleton_warrior", off)
+	dummy.health.max_health = 50000.0
+	dummy.health.current = 50000.0
+	await _frames(3)
+	p.combat.cancel()
+	p.combat.combo_index = 0
+	p.combat.held_override[&"light"] = true
+	p._light_held_world = true
+	var finisher_seen := false
+	for i in 300:
+		await _frames(1)
+		if p.combat.current and p.combat.current.finisher:
+			finisher_seen = true
+			break
+	p.combat.held_override.erase(&"light")
+	p._light_held_world = false
+	check(finisher_seen, "holding attack chains to the finisher")
+	_kill(dummy, world)
+	# Elites are outlined and roar.
+	var elite := _spawn_monster(world, &"skeleton_warrior", off * 3.0)
+	await _frames(2)
+	elite.make_elite([&"juggernaut"])
+	await _frames(1)
+	var outlined := false
+	for mi in (elite.model as MonsterModel)._meshes():
+		if (mi as MeshInstance3D).material_overlay is StandardMaterial3D and ((mi as MeshInstance3D).material_overlay as StandardMaterial3D).grow:
+			outlined = true
+	check(outlined, "elites get an outline")
+	check(not elite.knock_down(1.0), "stun-immune elites (Juggernaut) don't fall")
+	_kill(elite, world)
 	p.health.invulnerable = false

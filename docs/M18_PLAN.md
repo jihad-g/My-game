@@ -1,6 +1,6 @@
 # Milestone 18 — "Flow of Battle" (plan)
 
-**Status:** **M18a is done (v0.21.0).** M18b, M18c and M18d are still a plan. Change anything before we build it.
+**Status:** **M18a (v0.21.0) and M18b (v0.22.0) are done.** M18c and M18d are still a plan. Change anything before we build it.
 
 **Owner's answers (8 Oct 2026):** the fixed isometric camera is an *option* (the free camera stays the default);
 aim assist and hold-to-chain are *on by default*; bosses can be knocked down, but *only after their guard (poise)
@@ -87,7 +87,12 @@ M18b, where the combo chains need them.
 **Done when:** you can run, turn, roll and stop without any snap, slide or pop, and attacks, abilities and spells
 all play real clips with wind-up and recovery.
 
-### M18b — Hack and slash
+### M18b — Hack and slash ✅ Done (v0.22.0)
+
+Built as planned, with these differences: the spear's chain is two thrusts and a sweep (3 hits, not 4); the
+packs are 4–10 enemies; simple distant models and a death-effect pool are not done; the 60-enemy frame rate has
+not been measured yet; combat still keeps its own clock for the hit (the animation's "hit" event happens at the
+same moment).
 
 **1. Combo chains per weapon**
 - Every weapon type gets a 3–4 hit chain with **different swings** and a strong **finisher** on the last hit:

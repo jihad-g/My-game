@@ -74,8 +74,20 @@ func flash() -> void:
 	_update_overlay()
 
 
+## Milestone 18b: elites are outlined in their affix colour (hit flash and the
+## danger glow are shown instead while they play).
+var _outline := Color(0, 0, 0, 0)
+
+
+func set_outline(color: Color) -> void:
+	_outline = color
+	_update_overlay()
+
+
 func _update_overlay() -> void:
 	var mat: Material = Materials.hit_flash() if _flash > 0.0 else (Materials.danger_glow() if _telegraph else null)
+	if mat == null and _outline.a > 0.0:
+		mat = Materials.outline(_outline)
 	for m in _meshes():
 		(m as MeshInstance3D).material_overlay = mat
 
@@ -96,6 +108,27 @@ func show_alert(duration: float = 0.7) -> void:
 			_alert.visible = false)
 
 
+## Milestone 18b: hit-stop and flinches for humanoid and beast bodies.
+func freeze(seconds: float) -> void:
+	if rig and rig.has_method("freeze"):
+		rig.freeze(seconds)
+	elif rig:
+		rig.set_process(false)
+		get_tree().create_timer(seconds, true, false, true).timeout.connect(func() -> void:
+			if is_instance_valid(rig):
+				rig.set_process(true))
+
+
+func play_flinch(strength: float, side: float) -> void:
+	if rig and rig.has_method("play_flinch"):
+		rig.play_flinch(strength, side)
+	elif rig:
+		# Beasts: the body rocks back and to the side.
+		var tw := rig.create_tween()
+		tw.tween_property(rig, "rotation", Vector3(-0.3 * strength, 0.0, side * 0.2 * strength), 0.07).set_ease(Tween.EASE_OUT)
+		tw.tween_property(rig, "rotation", Vector3.ZERO, 0.28).set_trans(Tween.TRANS_QUAD)
+
+
 func play_death() -> void:
 	set_telegraph(false)
 	if rig:
@@ -103,6 +136,7 @@ func play_death() -> void:
 
 
 func reset_pose() -> void:
+	_outline = Color(0, 0, 0, 0)
 	set_telegraph(false)
 	if rig:
 		rig.reset_pose()

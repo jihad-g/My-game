@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"gs_leap_finisher"
+display_name = "Leaping Slam Finisher"
+damage = 34
+damage_type = &"physical"
+stamina_cost = 16
+windup = 0.36
+active = 0.12
+recovery = 0.55
+cancel_ratio = 0.5
+reach = 2.8
+arc_degrees = 360
+knockback = 8
+poise_damage = 60
+lunge_speed = 7.0
+move_multiplier = 0.2
+crit_chance_bonus = 0.05
+animation = &"leap_slam"
+camera_shake = 0.45
+stun = 0
+finisher = true
+knockdown = 1.6
+hitstop = 0.12

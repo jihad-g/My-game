@@ -15,6 +15,8 @@ const SWINGS := {
 	&"overhead": {"ready": Vector3(-3.0, 0.1, -0.2), "strike": Vector3(-0.6, 0.0, 0.2), "lean": 0.3, "step": 0.12, "dip": -0.08},
 	&"spin": {"ready": Vector3(-1.6, 1.4, -0.9), "strike": Vector3(-1.6, -1.4, 0.9), "lean": 0.05, "step": 0.0, "dip": -0.04},
 	&"plunge": {"ready": Vector3(-3.1, 0.0, -0.3), "strike": Vector3(-0.3, 0.0, 0.4), "lean": 0.35, "step": 0.0, "dip": -0.12},
+	# Milestone 18b: the greatsword finisher jumps forward and slams down.
+	&"leap_slam": {"ready": Vector3(-3.0, 0.1, -0.2), "strike": Vector3(-0.4, 0.0, 0.3), "lean": 0.35, "step": 0.0, "dip": -0.14, "jump": 0.9},
 }
 const REST_ARM := Vector3(-0.25, 0.0, 0.0)
 
@@ -60,7 +62,14 @@ static func attack(anim: StringName, windup: float, active: float, recovery: flo
 	c.key(&"torso", total, Vector3.ZERO, AnimClip.IN_OUT)
 	# Body: a small forward step and dip on the strike (legs only while standing).
 	c.key(&"step", 0.0, 0.0).key(&"step", t_strike, float(s.step), AnimClip.EASE_OUT).key(&"step", total, 0.0)
-	c.key(&"lift", 0.0, 0.0).key(&"lift", windup, 0.02).key(&"lift", t_strike, float(s.dip), AnimClip.EASE_OUT).key(&"lift", total, 0.0)
+	if s.has("jump"):
+		# A jump during the wind-up that lands on the strike.
+		c.key(&"lift", 0.0, -0.06).key(&"lift", windup * 0.55, float(s.jump), AnimClip.EASE_OUT) \
+			.key(&"lift", windup, float(s.jump) * 0.6, AnimClip.EASE_IN).key(&"lift", t_strike, float(s.dip), AnimClip.EASE_IN) \
+			.key(&"lift", total, 0.0)
+		c.legs_when_moving = true
+	else:
+		c.key(&"lift", 0.0, 0.0).key(&"lift", windup, 0.02).key(&"lift", t_strike, float(s.dip), AnimClip.EASE_OUT).key(&"lift", total, 0.0)
 	c.key(&"leg_l", 0.0, -0.1).key(&"leg_l", t_strike, -0.45, AnimClip.EASE_OUT).key(&"leg_l", total, 0.0)
 	c.key(&"leg_r", 0.0, 0.05).key(&"leg_r", t_strike, 0.3, AnimClip.EASE_OUT).key(&"leg_r", total, 0.0)
 	c.key(&"shin_l", 0.0, 0.1).key(&"shin_l", t_strike, 0.35, AnimClip.EASE_OUT).key(&"shin_l", total, 0.05)
