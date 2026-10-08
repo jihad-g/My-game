@@ -123,6 +123,11 @@ func can_cancel() -> bool:
 		and phase_time >= current.recovery * current.cancel_ratio)
 
 
+## Milestone 18a: a dodge may cancel any part of an attack's recovery (not the wind-up or the hit).
+func can_dodge_cancel() -> bool:
+	return phase == Phase.NONE or phase == Phase.RECOVERY
+
+
 func request(kind: StringName) -> void:
 	_buffered = kind
 	_buffer_left = buffer_time

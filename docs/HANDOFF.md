@@ -3,7 +3,7 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.20.0** (Milestone 17d). The Windows build is `releases/Shardlands-v0.20.0-windows.zip`.
+- Current version: **v0.21.0** (Milestone 18a). The Windows build is `releases/Shardlands-v0.21.0-windows.zip`.
 
 ## How to work with the owner
 - Act as a technical co-founder. Write complete, working code, and every milestone must run.
@@ -33,7 +33,7 @@
 - Screenshots: `xvfb-run -a godot --path . --rendering-method gl_compatibility res://tests/screenshot_runner.tscn -- --only=<arsenal|book|poses|gear|story|...> --out=DIR`
 - Docs: `godot --headless --path . res://tools/balance_report.tscn -- --out=docs/BALANCE.md` and `godot --headless --path . -s tools/gen_rpg_tables.gd`
 
-## What is done (milestones 1–17d)
+## What is done (milestones 1–18a)
 - **M1–M13:** world generation and streaming, survival, 4 classes and skills, crafting and building, villages and kingdoms with NPCs, shops and reputation, POIs and E–S dungeons, bosses, status effects, raids, blueprints, art and audio, co-op multiplayer (host plus guests), balance, tutorial, settings, save recovery, beta release.
 - **M14 Outfits:** one shared body for every class; the look comes from gear; gear sets; a souls-like character creation screen.
 - **M15 Living Wilds:** wild creatures in every biome, treasure spots, item quality, respec.
@@ -62,6 +62,13 @@
     `effective()`, `upgrade_tag()`), chosen in the book at a bed or campfire and saved;
   - summons tinted with `_tint`, 4 new poses (beam, wings, summon, ultimate), `AbilityZone.end_with_follow`.
 
+- **M18a:**
+  - animation clips in `src/anim/anim_clip.gd` and `src/anim/anim_library.gd`; `HumanoidModel` mixes base,
+    action and additive layers (`play_clip`, `play_additive`, `clip_event`), with cross-fades and a leg mask;
+  - `set_locomotion_speed`, `set_motion` (leans, turn shuffle), `add_step_offset` (block-step glide);
+  - Settings `movement_feel` (Snappy/Weighty) and `fixed_camera`; camera lead; dodge v2 (`can_dodge_cancel`);
+  - tests `test_m18a_*` are written but were NOT run (the owner did not allow it yet).
+
 ## Main code locations
 - Combat: `src/player/player_combat.gd`, `src/player/player.gd`
 - Abilities, spells and their effects: `src/rpg/player_abilities.gd` (`_ability_<effect>`, `_spell_<effect>`)
@@ -71,8 +78,8 @@
 - Items, loot and shops: `src/inventory/item_data.gd`, `src/exploration/loot_tables.gd`, `src/living/economy.gd`
 - Full list of abilities, weapons and spells: `docs/ARSENAL_PLAN.md`
 
-## Next step: M18 "Flow of Battle" (plan: `docs/M18_PLAN.md`, wait for the owner's answers and "do it")
-- M18a: a compact animation system (clips, layers, cross-fades) and quick, smooth movement.
+## Next step: M18b (plan: `docs/M18_PLAN.md`; the owner's answers are written at the top)
+- M18a: done (v0.21.0).
 - M18b: hack and slash: combo chains, finishers, hit-stop, knockdowns, crowds of fodder enemies.
 - M18c: spells that look like magic: a VFX library v2 and a look for each element.
 - M18d: smoother world generation: no pop-in, smoother hills, blended biome borders, smooth streaming.

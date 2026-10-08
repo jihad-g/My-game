@@ -1,6 +1,10 @@
 # Milestone 18 — "Flow of Battle" (plan)
 
-**Status:** plan only. Nothing here is built yet. Change, remove or add anything before we start.
+**Status:** **M18a is done (v0.21.0).** M18b, M18c and M18d are still a plan. Change anything before we build it.
+
+**Owner's answers (8 Oct 2026):** the fixed isometric camera is an *option* (the free camera stays the default);
+aim assist and hold-to-chain are *on by default*; bosses can be knocked down, but *only after their guard (poise)
+breaks*; new worlds may look a little different (old saves keep their land).
 
 ## The goal in one sentence
 
@@ -36,7 +40,11 @@ content. Shardlands keeps its own code-built blocky look.
 
 Like M17, we build it in steps. After each step the game runs, I build the .exe and you can play it.
 
-### M18a — Movement and the new animation system
+### M18a — Movement and the new animation system ✅ Done (v0.21.0)
+
+What was built differs from the list below in two places: root motion and damage on the "hit" event are not
+done yet (attacks still move you with their old lunge, and combat still times the hit itself). Both come with
+M18b, where the combo chains need them.
 
 **1. A compact animation system** (new `src/anim/`)
 - `AnimClip`: a short animation made of keyframes for each body part (hips, torso, head, arms, forearms,

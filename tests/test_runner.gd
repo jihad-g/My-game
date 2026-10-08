@@ -116,6 +116,9 @@ func _ready() -> void:
 	await _run_async(&"test_m17d_abilities")
 	await _run_async(&"test_m17d_upgrades")
 	await _run_async(&"test_m17d_passives")
+	_run(&"test_m18a_clips")
+	await _run_async(&"test_m18a_model")
+	await _run_async(&"test_m18a_movement")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5154,7 +5157,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.20"), "version 0.20 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.21"), "version 0.21 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -6740,3 +6743,166 @@ func test_m17d_passives() -> void:
 	var frost := AbilityBook.get_ability(&"ice_lance")
 	var fire := AbilityBook.get_ability(&"flame_wave")
 	check(ab._spell_damage(frost) > ab._spell_damage(fire) * frost.damage / fire.damage * 1.05, "Elemental Dance: a new element hits harder")
+
+
+# --- Milestone 18a: animation system, smooth movement, camera -------------------------------
+
+func test_m18a_clips() -> void:
+	var c := AnimClip.new(&"t", 1.0)
+	c.key(&"fore_r", 0.0, 0.0).key(&"fore_r", 1.0, 1.0, AnimClip.LINEAR)
+	check(is_equal_approx(float(c.sample(&"fore_r", 0.5)), 0.5), "a clip samples between keys")
+	check(c.sample(&"arm_l", 0.5) == null, "parts without a track are left alone")
+	c.key(&"arm_r", 0.0, Vector3.ZERO).key(&"arm_r", 1.0, Vector3(-2, 0, 0), AnimClip.EASE_OUT)
+	check((c.sample(&"arm_r", 0.5) as Vector3).x < -1.5, "ease-out moves fast first")
+	check(AnimClip.apply_ease(0.7, AnimClip.BACK) > 1.0, "the back ease overshoots")
+	c.event(0.4, &"hit")
+	check(c.events_between(0.3, 0.5) == [&"hit"] and c.events_between(0.4, 0.5).is_empty(), "events fire once")
+	var a := AnimLibrary.attack(&"overhead", 0.2, 0.1, 0.3, false, false, true)
+	check(is_equal_approx(a.length, 0.6) and is_equal_approx(a.hold_at, 0.2), "an attack clip: wind-up, strike, recovery, hold")
+	check(a.events_between(0.0, 0.25).has(&"hit") and a.has_part(&"leg_l") and not a.legs_when_moving, "attacks have a hit frame and a stance")
+	var two := AnimLibrary.attack(&"slash_r", 0.2, 0.1, 0.3, true, false, false)
+	check(two.has_part(&"arm_l") and (two.sample(&"arm_l", 0.3) as Vector3).y > 0.5, "two-handed swings use both arms")
+	var bow := AnimLibrary.attack(&"aim", 0.3, 0.05, 0.2, false, true, true)
+	check((bow.sample(&"shield", 0.3) as Vector3).x > 1.4, "the bow is raised in the left hand while drawing")
+	var bad := []
+	for id in HumanoidModel.POSES:
+		var pc := AnimLibrary.pose(id, HumanoidModel.POSES[id], 0.8)
+		if pc.length < 0.79 or not pc.has_part(&"arm_l") or pc.events.is_empty():
+			bad.append(id)
+	check(bad.is_empty(), "every ability pose becomes a clip %s" % [bad])
+	var flinch := AnimLibrary.flinch(1.0)
+	check((flinch.sample(&"torso", 0.0) as Vector3).is_zero_approx() and (flinch.sample(&"torso", 0.38) as Vector3).is_zero_approx(),
+		"the additive flinch starts and ends at zero")
+
+
+func test_m18a_model() -> void:
+	var m := HumanoidModel.new()
+	add_child(m)
+	await get_tree().process_frame
+	var dt := 1.0 / 60.0
+	# Stride: running faster turns the legs faster, but each step is also longer.
+	m.set_locomotion_speed(3.0, 1.0)
+	var p0 := m._walk_phase
+	for i in 60:
+		m.set_locomotion_speed(3.0, dt)
+		m._process(dt)
+	var walk_rate := m._walk_phase - p0
+	m.set_locomotion_speed(8.0, 1.0)
+	p0 = m._walk_phase
+	for i in 60:
+		m.set_locomotion_speed(8.0, dt)
+		m._process(dt)
+	var run_rate := m._walk_phase - p0
+	check(run_rate > walk_rate * 1.3 and run_rate < walk_rate * (8.0 / 3.0), "legs keep up with the speed without sliding (%.1f / %.1f rad/s)" % [walk_rate, run_rate])
+	check(m._amp > 0.9, "long strides when sprinting")
+	# Cross-fade: an attack starts from the current pose, not with a jump.
+	m.set_locomotion_speed(0.0, 1.0)
+	for i in 30:
+		m._process(dt)
+	var before := m._arm_r.rotation
+	m.play_attack(&"overhead", 0.3, 0.1, 0.3)
+	m._process(dt)
+	check(m._arm_r.rotation.distance_to(before) < 0.35, "the swing blends in (no snap)")
+	for i in 18:
+		m._process(dt)
+	check(m._arm_r.rotation.x < -2.0, "the overhead wind-up raises the arm")
+	# While running, the legs keep running during a swing.
+	m.set_locomotion_speed(6.0, 1.0)
+	m.play_attack(&"slash_r", 0.1, 0.1, 0.3)
+	var legs := []
+	for i in 20:
+		m.set_locomotion_speed(6.0, dt)
+		m._process(dt)
+		legs.append(m._leg_l.rotation.x)
+	check(legs.max() - legs.min() > 0.3, "legs keep their run cycle during an attack")
+	# A held swing waits at the end of the wind-up until released.
+	m.set_locomotion_speed(0.0, 1.0)
+	m.play_attack(&"thrust", 0.1, 0.1, 0.2, true)
+	for i in 40:
+		m._process(dt)
+	check(m.current_clip() != null and is_equal_approx(m._action_t, 0.1), "a held swing waits")
+	m.release_attack()
+	for i in 40:
+		m._process(dt)
+	check(m.current_clip() == null, "and finishes after the release")
+	# Clip events.
+	var evs := []
+	m.clip_event.connect(func(e: StringName) -> void: evs.append(e))
+	m.play_attack(&"slash_r", 0.05, 0.05, 0.1)
+	for i in 20:
+		m._process(dt)
+	check(evs.has(&"hit") and evs.has(&"trail_on") and evs.has(&"trail_off"), "clips send their events %s" % [evs])
+	# Poses are clips now, and cancelling fades back smoothly.
+	m.play_pose(&"pray", 0.8)
+	for i in 15:
+		m._process(dt)
+	check(m.current_pose() == &"pray" and m._arm_l.rotation.x < -2.0, "a pose clip raises the arms to pray")
+	var held := m._arm_l.rotation
+	m.cancel_attack()
+	m._process(dt)
+	check(m._arm_l.rotation.distance_to(held) < 0.6, "cancelling fades out instead of snapping")
+	for i in 20:
+		m._process(dt)
+	check(m._arm_l.rotation.x > -1.0, "and returns to the base pose")
+	# Additive flinch and the step glide.
+	m.play_stagger()
+	for i in 4:
+		m._process(dt)
+	check(m._torso.rotation.x < -0.2, "a flinch bends the body back")
+	m.add_step_offset(0.5)
+	m._process(dt)
+	var y0 := m._root.position.y
+	for i in 20:
+		m._process(dt)
+	check(y0 < -0.3 and absf(m._root.position.y) < 0.05, "the body glides up after a block step (%.2f -> %.2f)" % [y0, m._root.position.y])
+	# Leaning into a turn.
+	m.set_locomotion_speed(6.0, 1.0)
+	for i in 20:
+		m.set_motion(0.0, 3.0, dt)
+		m._process(dt)
+	check(m._torso.rotation.z < -0.1, "leans into a left turn")
+	m.queue_free()
+
+
+func test_m18a_movement() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	# Snappy movement: full speed quickly.
+	Settings.set_value("movement_feel", 0)
+	check(p.feel_mult() > 1.5, "Snappy is the default feel")
+	Settings.set_value("movement_feel", 1)
+	check(is_equal_approx(p.feel_mult(), 1.0), "Weighty is the old feel")
+	Settings.set_value("movement_feel", 0)
+	# Dodge v2: it cancels an attack's recovery and works with half the stamina.
+	p.state = Player.State.NORMAL
+	p.combat.phase = PlayerCombat.Phase.RECOVERY
+	p.combat.phase_time = 0.0
+	check(p.combat.can_dodge_cancel(), "a dodge can cancel the start of an attack's recovery")
+	p.combat.phase = PlayerCombat.Phase.ACTIVE
+	check(not p.combat.can_dodge_cancel(), "but not the hit itself")
+	p.combat.cancel()
+	await _frames(2)
+	p.stamina.current = p.dodge_cost * 0.6
+	p._dodge_cooldown_left = 0.0
+	p._start_dodge(Vector3.FORWARD)
+	check(p.state == Player.State.DODGING, "you can still roll with a little stamina")
+	await _frames(40)
+	check(p.state == Player.State.NORMAL, "the roll ends")
+	# The camera: fixed isometric view, and it looks ahead when you move.
+	var cam := world.camera_rig
+	Settings.set_value("fixed_camera", true)
+	await _frames(60)
+	check(cam.fixed and absf(fposmod(cam.yaw_deg - CameraRig.FIXED_YAW, 360.0)) < 3.0, "the fixed camera turns to the isometric angle")
+	cam._target_yaw += 90.0
+	cam.set_fixed(true)
+	check(absf(fposmod(cam._target_yaw - CameraRig.FIXED_YAW + 180.0, 360.0) - 180.0) < 0.01, "and stays there")
+	Settings.set_value("fixed_camera", false)
+	check(not cam.fixed, "it can be turned off")
+	p.velocity = Vector3(6, 0, 0)
+	for i in 30:
+		cam._process(1.0 / 60.0)
+	check(cam._lead.x > 0.5, "the camera looks ahead in the walking direction")
+	p.velocity = Vector3.ZERO
+	p.health.invulnerable = false

@@ -2,6 +2,34 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.21.0] — Milestone 18a: Flow of Battle - animation system and smooth movement
+
+### Added
+- **A compact animation system** (`src/anim/`): `AnimClip` (keyframe tracks for every body part, eases including
+  a small overshoot, events on exact times) and `AnimLibrary` (attacks, ability poses, spells, the dodge, hit
+  flinches and landings built as clips).
+  - `HumanoidModel` now mixes **three layers** every frame: the body on its own (idle, walk, run, air, swim,
+    block, weapon stance), the **action** clip on top, and small **additive** clips (flinch, landing).
+  - **Cross-fades**: a new move starts from the pose the body shows, and a stopped move fades back. Nothing
+    snaps any more.
+  - **Body mask**: while you run, an attack or spell only moves the upper body and the legs keep running;
+    standing still, attacks use a lunge stance with a small step and dip.
+  - Attacks have a wind-up, a strike that overshoots a little and a recovery; the free arm swings for balance.
+    The 17 ability poses became clips with an anticipation, a hold and a release; kneeling and crouching poses
+    bend the legs. The dodge tucks the body into a ball.
+  - Clip events (`clip_event`: "hit", "trail_on", "trail_off", "release", "peak").
+  - Everyone that uses the hero body gets it: the player, NPCs, humanoid monsters and co-op players.
+- **Smooth locomotion**: the legs swing further and faster with the real speed, and one step covers the
+  distance moved, so feet don't slide. The body leans forward when speeding up, back when stopping, and into
+  turns; turning on the spot shuffles the feet. Stepping up a block glides instead of popping.
+- **Movement feel** setting (Gameplay): *Snappy* (new default, about twice as quick to start, stop and turn) or
+  *Weighty* (the old feel).
+- **Dodge v2**: a roll can cancel any part of an attack's recovery, works with at least half the stamina it
+  costs, and ends in a short slide.
+- **Camera**: looks a little ahead in the direction you walk, shakes with a smooth wobble instead of random
+  jumps, and a new **fixed isometric camera** option (Gameplay) locks the classic action-RPG angle.
+- Tests (written, not run yet): `test_m18a_clips`, `test_m18a_model`, `test_m18a_movement`.
+
 ## [0.20.0] — Milestone 17d: Heroes' Arsenal - abilities 66-100, ultimates and upgrades
 
 ### Added

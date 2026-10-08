@@ -15,6 +15,8 @@ signal footstep(left: bool)
 ## Animation started (multiplayer replicates these): "attack" [anim, windup,
 ## active, recovery], "dodge" [duration], "cast" [duration], "death", "respawn".
 signal anim_event(ev: String, args: Array)
+## Milestone 18a: a clip passed one of its events ("hit", "trail_on", "trail_off", "release", "peak").
+signal clip_event(ev: StringName)
 
 @export var skin_color := Color(0.96, 0.78, 0.62)
 @export var hair_color := Color(0.42, 0.26, 0.14)
@@ -42,12 +44,8 @@ var _airborne := false
 var _swimming := false
 var _swim_blend := 0.0
 var _air_blend := 0.0
-var _cast_t := 0.0
-var _cast_len := 0.0
-## Milestone 17c: ability poses (play_pose) and the attack animation playing now.
+## Milestone 17c: the last ability pose (play_pose) and the clip playing now.
 var _pose: StringName = &""
-var _pose_t := 0.0
-var _pose_len := 0.0
 var _anim: StringName = &""
 var _last_step_sign := 0.0
 var _look := 0.0
@@ -57,12 +55,36 @@ var _parts: Array[MeshInstance3D] = []
 var _walk_phase := 0.0
 var _move_amount := 0.0
 var _blocking := false
-var _attack_tween: Tween
 var _dodge_tween: Tween
 var _flash_time := 0.0
-## Arm swing override while attacking (x = shoulder pitch, y = shoulder yaw).
-var _attack_arm := Vector2.ZERO
-var _attack_torso := 0.0
+
+# Milestone 18a: the compact animation system (AnimClip, AnimLibrary).
+## set_locomotion's speed ratio 1.0 is about this many m/s.
+const RATIO_TO_SPEED := 6.25
+const LEG_LENGTH := 0.72
+## Seconds to blend back after a clip is stopped or replaced.
+const CANCEL_FADE := 0.12
+var _speed := 0.0
+var _amp := 0.25
+var _accel_lean := 0.0
+var _turn_lean := 0.0
+var _shuffle := 0.0
+var _step_off := 0.0
+var _bob := 0.0
+var _breathe := 0.0
+## Action layer: the clip, its time, the pose it blends from.
+var _action: AnimClip
+var _action_t := 0.0
+var _action_from: Dictionary = {}
+var _out_from: Dictionary = {}
+var _cancel_t := 0.0
+## Additive layer: [[AnimClip, time]].
+var _additive: Array = []
+## The pose written to the body last frame (cross-fades start from it).
+var _last_pose: Dictionary = {}
+## How much the action clip owns the legs (0 while running).
+var _legs_w := 1.0
+var _root_driven := false
 
 
 var _class_id: StringName = &""
@@ -236,8 +258,7 @@ func set_weapon(weapon_type: StringName, has_shield: bool) -> void:
 
 
 func _build() -> void:
-	if _attack_tween:
-		_attack_tween.kill()
+	_action = null
 	if _dodge_tween:
 		_dodge_tween.kill()
 	if _root:
@@ -704,79 +725,103 @@ func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> MeshIns
 	return mi
 
 
-## `speed_ratio` 0..1+ (1 = running).
+## `speed_ratio` 0..1+ (1 = running). Kept for NPCs, monsters and co-op players;
+## the speed in m/s is about speed_ratio x 6.25.
 func set_locomotion(speed_ratio: float, delta: float) -> void:
-	_move_amount = lerpf(_move_amount, clampf(speed_ratio, 0.0, 1.4), 1.0 - exp(-12.0 * delta))
-	_walk_phase += delta * (4.0 + 7.0 * _move_amount) * (1.0 if _move_amount > 0.05 else 0.0)
+	set_locomotion_speed(speed_ratio * RATIO_TO_SPEED, delta)
+
+
+## Milestone 18a: locomotion from the real ground speed (m/s). The legs swing
+## further and faster the quicker you go, and one step covers the distance moved,
+## so the feet don't slide.
+func set_locomotion_speed(speed: float, delta: float) -> void:
+	var k := 1.0 - exp(-12.0 * delta)
+	_move_amount = lerpf(_move_amount, clampf(speed / RATIO_TO_SPEED, 0.0, 1.4), k)
+	_speed = lerpf(_speed, maxf(speed, 0.0), k)
+	_amp = lerpf(_amp, clampf(0.25 + 0.11 * _speed, 0.25, 1.05), k)
+	if _move_amount > 0.05:
+		# One half walk cycle (PI) moves the body one step: 2 x leg length x sin(swing).
+		var step_len := 2.0 * LEG_LENGTH * sin(maxf(_amp * _gait(), 0.2))
+		_walk_phase += PI * maxf(_speed, 0.6) / step_len * delta
+	elif _shuffle > 0.05:
+		_walk_phase += delta * 9.0 * _shuffle
+
+
+## How much the walk cycle shows: it fades out only near standing still, so slow
+## walking still makes full (short) steps instead of tiny quick ones.
+func _gait() -> float:
+	return clampf(_move_amount / 0.3, 0.0, 1.0)
+
+
+## Milestone 18a: lean forward when speeding up (back when stopping) and into
+## turns; `turn_rate` in rad/s (positive = turning left). Shuffles the feet when
+## turning on the spot.
+func set_motion(accel_forward: float, turn_rate: float, delta: float) -> void:
+	var k := 1.0 - exp(-10.0 * delta)
+	_accel_lean = lerpf(_accel_lean, clampf(accel_forward * 0.012, -0.14, 0.18), k)
+	_turn_lean = lerpf(_turn_lean, clampf(-turn_rate * minf(_speed, 8.0) * 0.012, -0.22, 0.22), k)
+	var turning := _speed < 0.6 and absf(turn_rate) > 2.5
+	_shuffle = move_toward(_shuffle, 1.0 if turning else 0.0, delta * 8.0)
+
+
+## Milestone 18a: the body was lifted onto a block step by `dy` metres. The
+## model starts at the old height and glides up instead of popping.
+func add_step_offset(dy: float) -> void:
+	_step_off = clampf(_step_off - dy, -0.9, 0.9)
 
 
 func set_blocking(value: bool) -> void:
 	_blocking = value
 
 
+# --- The action layer (Milestone 18a) -------------------------------------------------------
+
+## Plays a clip on the action layer, blending from what the body shows now.
+func play_clip(c: AnimClip) -> void:
+	_action_from = _last_pose.duplicate()
+	# Parts the new clip doesn't move glide back from where they are.
+	_out_from = _action_from
+	_cancel_t = CANCEL_FADE
+	_action = c
+	_action_t = 0.0
+	_anim = c.name
+
+
+## The clip on the action layer (null = none).
+func current_clip() -> AnimClip:
+	return _action
+
+
+## Adds a clip on top of everything (flinches, landing).
+func play_additive(c: AnimClip) -> void:
+	_additive.append([c, 0.0])
+	if _additive.size() > 4:
+		_additive.pop_front()
+
+
 ## `hold` (Milestone 17a): the swing stops at the end of the windup until
 ## release_attack() is called (charged heavy attacks and drawing a bow).
 func play_attack(anim: StringName, windup: float, active: float, recovery: float, hold: bool = false) -> void:
-	if _attack_tween:
-		_attack_tween.kill()
-	# Poses: x = arm pitch (negative = raised forward/up), y = arm yaw, torso twist.
-	var ready_pose := Vector3(-2.2, 0.9, -0.5)
-	var strike_pose := Vector3(-1.3, -1.1, 0.6)
-	match anim:
-		&"slash_l":
-			ready_pose = Vector3(-1.4, -1.2, 0.6)
-			strike_pose = Vector3(-1.5, 1.0, -0.6)
-		&"thrust":
-			ready_pose = Vector3(-0.9, 0.2, -0.3)
-			strike_pose = Vector3(-1.7, 0.0, 0.3)
-		&"overhead":
-			ready_pose = Vector3(-3.0, 0.1, -0.2)
-			strike_pose = Vector3(-0.6, 0.0, 0.2)
-		&"spin":
-			ready_pose = Vector3(-1.6, 1.4, -0.9)
-			strike_pose = Vector3(-1.6, -1.4, 0.9)
-		&"aim":
-			# Bow: arm straight forward, pulled back while drawing.
-			ready_pose = Vector3(-1.55, 0.25, -0.35)
-			strike_pose = Vector3(-1.5, 0.0, 0.1)
-		&"plunge":
-			ready_pose = Vector3(-3.1, 0.0, -0.3)
-			strike_pose = Vector3(-0.3, 0.0, 0.4)
-	_anim = anim
 	anim_event.emit("attack", [String(anim), windup, active, recovery])
-	_attack_tween = create_tween()
-	_attack_tween.tween_method(_set_attack_pose, Vector3(_attack_arm.x, _attack_arm.y, _attack_torso), ready_pose, windup).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	_hold_pending = hold
-	if hold:
-		var tw := _attack_tween
-		_attack_tween.tween_callback(func() -> void:
-			if _hold_pending and tw.is_valid():
-				tw.pause())
-	_attack_tween.tween_callback(func() -> void: _set_trail(true))
-	_attack_tween.tween_method(_set_attack_pose, ready_pose, strike_pose, maxf(active, 0.05)).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
-	_attack_tween.tween_callback(func() -> void: _set_trail(false))
-	_attack_tween.tween_method(_set_attack_pose, strike_pose, Vector3.ZERO, recovery).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
-
-
-func _set_attack_pose(v: Vector3) -> void:
-	_attack_arm = Vector2(v.x, v.y)
-	_attack_torso = v.z
+	_set_trail(false)
+	var bow := _weapon_type == &"bow" and _weapon_item != null
+	play_clip(AnimLibrary.attack(anim, windup, active, recovery, _two_handed(), bow, hold))
 
 
 ## Lets a held swing (see play_attack `hold`) continue to the strike.
 func release_attack() -> void:
 	_hold_pending = false
-	if _attack_tween and _attack_tween.is_valid():
-		_attack_tween.play()
 
 
 func cancel_attack() -> void:
+	_hold_pending = false
 	_anim = &""
-	if _attack_tween:
-		_attack_tween.kill()
 	_set_trail(false)
-	_attack_arm = Vector2.ZERO
-	_attack_torso = 0.0
+	if _action != null and _action.name != &"dodge":
+		_out_from = _last_pose.duplicate()
+		_cancel_t = CANCEL_FADE
+		_action = null
 
 
 func play_dodge(duration: float) -> void:
@@ -787,6 +832,8 @@ func play_dodge(duration: float) -> void:
 	_dodge_tween = create_tween()
 	_dodge_tween.tween_property(_root, "rotation:x", TAU, duration).set_trans(Tween.TRANS_SINE)
 	_dodge_tween.tween_callback(func() -> void: _root.rotation.x = 0.0)
+	_set_trail(false)
+	play_clip(AnimLibrary.dodge(duration))
 
 
 func flash() -> void:
@@ -796,14 +843,14 @@ func flash() -> void:
 
 
 func play_stagger() -> void:
-	var tw := create_tween()
-	tw.tween_property(_torso, "rotation:x", -0.5, 0.08)
-	tw.tween_property(_torso, "rotation:x", 0.0, 0.3)
+	play_additive(AnimLibrary.flinch(1.0))
 
 
 func play_death() -> void:
 	anim_event.emit("death", [])
 	cancel_attack()
+	_cancel_t = 0.0
+	_additive.clear()
 	var tw := create_tween()
 	# Knees buckle, then the body topples over.
 	tw.tween_property(_root, "position:y", -0.12, 0.18).set_ease(Tween.EASE_OUT)
@@ -813,6 +860,9 @@ func play_death() -> void:
 
 func reset_pose() -> void:
 	cancel_attack()
+	_cancel_t = 0.0
+	_additive.clear()
+	_step_off = 0.0
 	_root.rotation = Vector3.ZERO
 	_root.position = Vector3.ZERO
 	_root.scale = Vector3.ONE
@@ -825,17 +875,21 @@ func set_air_state(airborne: bool, swimming: bool) -> void:
 	_swimming = swimming
 
 
-## Squash on landing (strength 0..1 from the fall speed).
+## Squash on landing (strength 0..1 from the fall speed): the body squashes and the knees bend.
 func play_land(strength: float) -> void:
 	var s := clampf(strength, 0.0, 1.0)
 	var tw := create_tween()
 	tw.tween_property(_root, "scale", Vector3(1.0 + 0.12 * s, 1.0 - 0.18 * s, 1.0 + 0.12 * s), 0.06)
 	tw.tween_property(_root, "scale", Vector3.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if s > 0.1:
+		play_additive(AnimLibrary.land(s))
 
 
-## Milestone 17c: whole-body poses for abilities and spells, blended in and out
-## over `duration` seconds. Values: arm rotations (al/ar), forearm bends (fl/fr),
-## torso lean (tx) and body height (ry); "jump" makes an arc, "shake" trembles.
+## Milestone 17c: whole-body poses for abilities and spells. Since Milestone 18a
+## each one is played as a clip (AnimLibrary.pose): anticipation, the pose with
+## a small overshoot, a hold and a release. Values: arm rotations (al/ar),
+## forearm bends (fl/fr), torso lean (tx) and body height (ry); "jump" makes an
+## arc, "shake" trembles.
 const POSES := {
 	&"roar": {"al": Vector3(-0.5, 0.0, -1.3), "ar": Vector3(-0.5, 0.0, 1.3), "fl": -0.6, "fr": -0.6, "tx": -0.3},
 	&"pray": {"al": Vector3(-2.9, 0.3, 0.0), "ar": Vector3(-2.9, -0.3, 0.0), "fl": -0.1, "fr": -0.1, "tx": -0.15},
@@ -864,12 +918,11 @@ func play_pose(pose: StringName, duration: float = 0.5) -> void:
 		return
 	anim_event.emit("pose", [String(pose), duration])
 	_pose = pose
-	_pose_len = maxf(duration, 0.2)
-	_pose_t = _pose_len
+	play_clip(AnimLibrary.pose(pose, POSES[pose], duration))
 
 
 func current_pose() -> StringName:
-	return _pose if _pose_t > 0.0 else &""
+	return _pose if _action != null and _action.name == _pose else &""
 
 
 ## True for the player's two-handed melee weapons (greatswords, war hammers): both hands hold it.
@@ -880,8 +933,7 @@ func _two_handed() -> bool:
 ## Both hands raised forward for `duration` seconds (spells).
 func play_cast(duration: float = 0.5) -> void:
 	anim_event.emit("cast", [duration])
-	_cast_len = maxf(duration, 0.2)
-	_cast_t = _cast_len
+	play_clip(AnimLibrary.cast(duration))
 
 
 func _set_trail(on: bool) -> void:
@@ -896,6 +948,17 @@ func _set_trail(on: bool) -> void:
 	_trail.active = on
 
 
+func _on_clip_event(ev: StringName) -> void:
+	match ev:
+		&"trail_on":
+			_set_trail(true)
+		&"trail_off":
+			_set_trail(false)
+	clip_event.emit(ev)
+
+
+# --- Every frame ----------------------------------------------------------------------------
+
 func _process(delta: float) -> void:
 	_time += delta
 	if _flash_time > 0.0:
@@ -903,118 +966,168 @@ func _process(delta: float) -> void:
 		if _flash_time <= 0.0:
 			for p in _parts:
 				p.material_overlay = null
+	var base := _base_pose(delta)
+	var pose := base.duplicate()
+	_apply_action(pose, base, delta)
+	_apply_additive(pose, delta)
+	_write_pose(pose, delta)
+
+
+## Layer 1 - the body on its own: idle, walk/run, air, swim, block and weapon stance.
+func _base_pose(delta: float) -> Dictionary:
 	var m := minf(_move_amount, 1.0)
 	_swim_blend = move_toward(_swim_blend, 1.0 if _swimming else 0.0, delta * 4.0)
 	_air_blend = move_toward(_air_blend, 1.0 if _airborne and not _swimming else 0.0, delta * 8.0)
-	var swing := sin(_walk_phase) * 0.9 * m
+	var amp := maxf(_amp * _gait(), 0.25 * _shuffle)
+	var swing := sin(_walk_phase) * amp
+	var gait := maxf(m, 0.3 * _shuffle)
 	# Footsteps: one per half cycle while moving on the ground.
 	var sgn := signf(sin(_walk_phase))
 	if m > 0.2 and sgn != _last_step_sign and _air_blend < 0.5 and _swim_blend < 0.5:
 		footstep.emit(sgn > 0.0)
 	_last_step_sign = sgn
+	var p := {}
 	# Legs with knees: the shin folds back while the leg swings forward.
-	var knee_l := (0.08 + maxf(0.0, -cos(_walk_phase)) * 1.0) * m
-	var knee_r := (0.08 + maxf(0.0, cos(_walk_phase)) * 1.0) * m
-	_leg_l.rotation.x = lerpf(swing, -0.6, _air_blend)
-	_leg_r.rotation.x = lerpf(-swing, 0.35, _air_blend)
-	_shin_l.rotation.x = lerpf(knee_l, 0.9, _air_blend)
-	_shin_r.rotation.x = lerpf(knee_r, 0.25, _air_blend)
-	# Body: bob and lean into the run, breathe when idle.
-	var bob := absf(sin(_walk_phase)) * 0.06 * m
-	var breathe := sin(_time * 2.1) * 0.012 * (1.0 - m)
-	_torso.position.y = 0.72 + bob + breathe
-	_torso.rotation.x = 0.14 * m * minf(_move_amount, 1.4) + 0.05 * _air_blend
-	_torso.rotation.y = _attack_torso
-	_torso.rotation.z = 0.0
+	var knee_l := (0.08 + maxf(0.0, -cos(_walk_phase)) * (0.6 + 0.4 * amp)) * gait
+	var knee_r := (0.08 + maxf(0.0, cos(_walk_phase)) * (0.6 + 0.4 * amp)) * gait
+	p[&"leg_l"] = lerpf(swing, -0.6, _air_blend)
+	p[&"leg_r"] = lerpf(-swing, 0.35, _air_blend)
+	p[&"shin_l"] = lerpf(knee_l, 0.9, _air_blend)
+	p[&"shin_r"] = lerpf(knee_r, 0.25, _air_blend)
+	# Body: bob and lean into the run (more when speeding up), lean into turns, breathe when idle.
+	_bob = absf(sin(_walk_phase)) * 0.06 * m
+	_breathe = sin(_time * 2.1) * 0.012 * (1.0 - m)
+	p[&"torso"] = Vector3(0.14 * m * minf(_move_amount, 1.4) + 0.05 * _air_blend + _accel_lean, 0.0, _turn_lean)
 	# Idle: an occasional glance around.
 	_look = lerpf(_look, sin(_time * 0.37) * sin(_time * 0.11) * 0.5 * (1.0 - m), 1.0 - exp(-3.0 * delta))
-	_head.rotation.y = _look
-	_head.rotation.x = -sin(_time * 2.1) * 0.02 * (1.0 - m)
-	_arm_l.rotation.x = lerpf(-swing * 0.8, -2.4, _air_blend)
-	_arm_l.rotation.y = 0.0
-	_arm_l.rotation.z = lerpf(-0.04 - absf(breathe) * 2.0, -0.5, _air_blend)
-	_fore_l.rotation.x = -0.25 - 0.35 * m
-	_fore_r.rotation.x = -0.25 - 0.35 * m
+	p[&"head"] = Vector3(-sin(_time * 2.1) * 0.02 * (1.0 - m), _look, -_turn_lean * 0.5)
+	p[&"arm_l"] = Vector3(lerpf(-swing * 0.8, -2.4, _air_blend), 0.0, lerpf(-0.04 - absf(_breathe) * 2.0, -0.5, _air_blend))
+	p[&"arm_r"] = Vector3(lerpf(swing * 0.8 - 0.25, -2.4, _air_blend), 0.0, lerpf(0.04, 0.5, _air_blend))
+	p[&"fore_l"] = -0.25 - 0.35 * m
+	p[&"fore_r"] = -0.25 - 0.35 * m
+	p[&"weapon"] = Vector3(-0.65, 0.0, 0.0)
+	p[&"shield"] = Vector3.ZERO
+	p[&"lift"] = 0.0
+	p[&"step"] = 0.0
 	var two := _two_handed()
-	var bow_left := _weapon_type == &"bow" and _weapon_item != null
-	_shield.rotation.x = 0.0
 	if _blocking and two:
 		# Two-handed guard: the weapon held across, above the head.
-		_arm_l.rotation = Vector3(-1.75, 0.6, 0.0)
-		_arm_r.rotation = Vector3(-1.75, -0.5, 0.0)
-		_fore_l.rotation.x = -0.4
-		_fore_r.rotation.x = -0.4
-		_weapon.rotation = Vector3(0.0, -1.5, 0.0)
+		p[&"arm_l"] = Vector3(-1.75, 0.6, 0.0)
+		p[&"arm_r"] = Vector3(-1.75, -0.5, 0.0)
+		p[&"fore_l"] = -0.4
+		p[&"fore_r"] = -0.4
+		p[&"weapon"] = Vector3(0.0, -1.5, 0.0)
 	elif _blocking:
-		_arm_l.rotation = Vector3(-1.4, 0.6, 0.0)
-		_arm_r.rotation = Vector3(-1.2, -0.9, 0.0)
-		_fore_l.rotation.x = -0.3
-		_fore_r.rotation.x = -0.2
-		_weapon.rotation = Vector3(0.0, -1.2, 0.0)
-	elif _attack_arm != Vector2.ZERO and bow_left and _anim == &"aim":
-		# Drawing a bow: the left arm holds the bow out, the right hand pulls the string to the chest.
-		var pull := clampf(-_attack_arm.x / 1.55, 0.0, 1.0)
-		_arm_l.rotation = Vector3(-1.55 * pull, 0.2 * pull, 0.0)
-		_fore_l.rotation.x = 0.0
-		_arm_r.rotation = Vector3(-1.45 * pull, -0.55 * pull, 0.0)
-		_fore_r.rotation.x = -1.7 * pull
-		_shield.rotation.x = 1.55 * pull
-		_weapon.rotation = Vector3.ZERO
-	elif _attack_arm != Vector2.ZERO:
-		_arm_r.rotation = Vector3(_attack_arm.x, _attack_arm.y, 0.0)
-		_fore_r.rotation.x = -0.1
-		_weapon.rotation = Vector3.ZERO
-		if two:
-			# Both hands on the handle: the left arm follows the right one.
-			_arm_l.rotation = Vector3(_attack_arm.x + 0.15, _attack_arm.y + 0.7, 0.0)
-			_fore_l.rotation.x = -0.5
+		p[&"arm_l"] = Vector3(-1.4, 0.6, 0.0)
+		p[&"arm_r"] = Vector3(-1.2, -0.9, 0.0)
+		p[&"fore_l"] = -0.3
+		p[&"fore_r"] = -0.2
+		p[&"weapon"] = Vector3(0.0, -1.2, 0.0)
 	elif two and _air_blend < 0.5:
 		# Ready stance with a two-handed weapon held diagonally in front.
-		_arm_r.rotation = Vector3(-0.7 + swing * 0.2, -0.35, 0.0)
-		_arm_l.rotation = Vector3(-0.75 + swing * 0.2, 0.55, 0.0)
-		_fore_r.rotation.x = -0.9
-		_fore_l.rotation.x = -0.9
-		_weapon.rotation = Vector3(-0.2, -0.5, 0.0)
+		p[&"arm_r"] = Vector3(-0.7 + swing * 0.2, -0.35, 0.0)
+		p[&"arm_l"] = Vector3(-0.75 + swing * 0.2, 0.55, 0.0)
+		p[&"fore_r"] = -0.9
+		p[&"fore_l"] = -0.9
+		p[&"weapon"] = Vector3(-0.2, -0.5, 0.0)
+	# Swimming: crawl strokes and flutter kicks.
+	if _swim_blend > 0.0:
+		var st := _time * 5.0
+		p[&"arm_l"] = (p[&"arm_l"] as Vector3).lerp(Vector3(fposmod(st, TAU) - PI, 0.0, -0.2), _swim_blend)
+		p[&"arm_r"] = (p[&"arm_r"] as Vector3).lerp(Vector3(fposmod(st + PI, TAU) - PI, 0.0, 0.2), _swim_blend)
+		p[&"leg_l"] = lerpf(p[&"leg_l"], sin(st * 2.0) * 0.4, _swim_blend)
+		p[&"leg_r"] = lerpf(p[&"leg_r"], -sin(st * 2.0) * 0.4, _swim_blend)
+		p[&"shin_l"] = lerpf(p[&"shin_l"], 0.15, _swim_blend)
+		p[&"shin_r"] = lerpf(p[&"shin_r"], 0.15, _swim_blend)
+	return p
+
+
+## Layer 2 - the action clip on top of the base, cross-faded in and out. While
+## you run, the legs keep running (the clip only moves the upper body).
+func _apply_action(pose: Dictionary, base: Dictionary, delta: float) -> void:
+	var moving := _move_amount > 0.25 or _air_blend > 0.5 or _swim_blend > 0.5
+	_legs_w = move_toward(_legs_w, 0.0 if moving else 1.0, delta * 6.0)
+	if _cancel_t > 0.0:
+		# Fading back to the base pose after a clip was stopped or replaced.
+		_cancel_t = maxf(_cancel_t - delta, 0.0)
+		var k := smoothstep(0.0, 1.0, _cancel_t / CANCEL_FADE)
+		for part in _out_from:
+			if base.has(part):
+				pose[part] = AnimClip.blend(base[part], _out_from[part], k)
+	if _action == null:
+		return
+	var c := _action
+	var prev := _action_t
+	if _hold_pending and c.hold_at >= 0.0 and _action_t + delta >= c.hold_at:
+		_action_t = maxf(_action_t, c.hold_at)
 	else:
-		_arm_r.rotation = Vector3(lerpf(swing * 0.8 - 0.25, -2.4, _air_blend), 0.0, lerpf(0.04, 0.5, _air_blend))
-		_weapon.rotation = Vector3(-0.9 + 0.25, 0.0, 0.0)
-	# Casting: both hands forward and up, a little shake of power.
-	if _cast_t > 0.0:
-		_cast_t -= delta
-		var c := clampf(minf(_cast_t, _cast_len - _cast_t) / 0.12, 0.0, 1.0)
-		var shake := sin(_time * 40.0) * 0.04
-		_arm_l.rotation = _arm_l.rotation.lerp(Vector3(-1.5 + shake, 0.35, 0.0), c)
-		_arm_r.rotation = _arm_r.rotation.lerp(Vector3(-1.5 - shake, -0.35, 0.0), c)
-		_fore_l.rotation.x = lerpf(_fore_l.rotation.x, -0.5, c)
-		_fore_r.rotation.x = lerpf(_fore_r.rotation.x, -0.5, c)
-	# Ability poses (Milestone 17c).
-	if _pose_t > 0.0:
-		_pose_t -= delta
-		var pd: Dictionary = POSES[_pose]
-		var w := clampf(minf(_pose_t, _pose_len - _pose_t) / 0.12, 0.0, 1.0)
-		var sh := sin(_time * 40.0) * 0.05 if pd.get("shake", false) else 0.0
-		_arm_l.rotation = _arm_l.rotation.lerp((pd.al as Vector3) + Vector3(sh, 0, 0), w)
-		_arm_r.rotation = _arm_r.rotation.lerp((pd.ar as Vector3) - Vector3(sh, 0, 0), w)
-		_fore_l.rotation.x = lerpf(_fore_l.rotation.x, float(pd.fl), w)
-		_fore_r.rotation.x = lerpf(_fore_r.rotation.x, float(pd.fr), w)
-		_torso.rotation.x = lerpf(_torso.rotation.x, float(pd.tx), w)
-		var dy := float(pd.get("ry", 0.0)) * w
-		if pd.has("jump"):
-			dy += sin(clampf(1.0 - _pose_t / _pose_len, 0.0, 1.0) * PI) * float(pd.jump)
-		_root.position.y = dy
-		if _pose_t <= 0.0:
-			_root.position.y = 0.0
-	# Swimming: body flat, crawl strokes, flutter kicks.
+		_action_t += delta
+	for ev in c.events_between(prev, _action_t):
+		_on_clip_event(ev)
+		if _action != c:
+			return  # an event started another clip
+	var k_in := smoothstep(0.0, 1.0, _action_t / c.fade_in) if c.fade_in > 0.0 else 1.0
+	var k_out := smoothstep(0.0, 1.0, (c.length - _action_t) / c.fade_out) if c.fade_out > 0.0 else 1.0
+	var sh := sin(_time * 40.0) * c.shake
+	for part in c.parts():
+		if not base.has(part):
+			continue
+		var v: Variant = c.sample(part, _action_t)
+		if sh != 0.0 and (part == &"arm_l" or part == &"arm_r"):
+			v = (v as Vector3) + Vector3(sh if part == &"arm_l" else -sh, 0.0, 0.0)
+		var w := k_out
+		if part in AnimClip.LEG_PARTS and not c.legs_when_moving:
+			w *= _legs_w
+		v = AnimClip.blend(_action_from.get(part, pose[part]), v, k_in)
+		pose[part] = AnimClip.blend(pose[part], v, w)
+	if _action_t >= c.length:
+		_action = null
+		_anim = &""
+		_set_trail(false)
+
+
+## Layer 3 - small extras added on top (flinches, landing).
+func _apply_additive(pose: Dictionary, delta: float) -> void:
+	var i := 0
+	while i < _additive.size():
+		var e: Array = _additive[i]
+		var c: AnimClip = e[0]
+		e[1] = float(e[1]) + delta
+		for part in c.parts():
+			if pose.has(part):
+				pose[part] = AnimClip.add(pose[part], c.sample(part, float(e[1])))
+		if float(e[1]) >= c.length:
+			_additive.remove_at(i)
+		else:
+			i += 1
+
+
+func _write_pose(pose: Dictionary, delta: float) -> void:
+	_last_pose = pose
+	_leg_l.rotation.x = pose[&"leg_l"]
+	_leg_r.rotation.x = pose[&"leg_r"]
+	_shin_l.rotation.x = pose[&"shin_l"]
+	_shin_r.rotation.x = pose[&"shin_r"]
+	_torso.rotation = pose[&"torso"]
+	_torso.position.y = 0.72 + _bob + _breathe
+	_head.rotation = pose[&"head"]
+	_arm_l.rotation = pose[&"arm_l"]
+	_arm_r.rotation = pose[&"arm_r"]
+	_fore_l.rotation.x = pose[&"fore_l"]
+	_fore_r.rotation.x = pose[&"fore_r"]
+	_weapon.rotation = pose[&"weapon"]
+	_shield.rotation = pose[&"shield"]
+	# Root: clip lift/step, the glide after a block step, swimming.
+	_step_off *= exp(-14.0 * delta)
+	if absf(_step_off) < 0.002:
+		_step_off = 0.0
+	var y := float(pose[&"lift"]) + _step_off + 0.55 * _swim_blend
+	var z := float(pose[&"step"])
+	if absf(y) > 0.0001 or absf(z) > 0.0001 or _root_driven:
+		_root.position.y = y
+		_root.position.z = z
+		_root_driven = absf(y) > 0.0001 or absf(z) > 0.0001
 	var free_root := _dodge_tween == null or not _dodge_tween.is_running()
 	if free_root and (_swim_blend > 0.0 or _was_swimming):
 		_root.rotation.x = 1.15 * _swim_blend
-		_root.position.y = 0.55 * _swim_blend
 	_was_swimming = _swim_blend > 0.0
-	if _swim_blend > 0.0:
-		var st := _time * 5.0
-		_arm_l.rotation = _arm_l.rotation.lerp(Vector3(fposmod(st, TAU) - PI, 0.0, -0.2), _swim_blend)
-		_arm_r.rotation = _arm_r.rotation.lerp(Vector3(fposmod(st + PI, TAU) - PI, 0.0, 0.2), _swim_blend)
-		_leg_l.rotation.x = lerpf(_leg_l.rotation.x, sin(st * 2.0) * 0.4, _swim_blend)
-		_leg_r.rotation.x = lerpf(_leg_r.rotation.x, -sin(st * 2.0) * 0.4, _swim_blend)
-		_shin_l.rotation.x = lerpf(_shin_l.rotation.x, 0.15, _swim_blend)
-		_shin_r.rotation.x = lerpf(_shin_r.rotation.x, 0.15, _swim_blend)

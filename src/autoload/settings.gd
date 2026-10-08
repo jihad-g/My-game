@@ -22,6 +22,10 @@ const DEFAULTS := {
 	# Gameplay
 	"difficulty": 1, "tutorial_hints": true, "autosave_minutes": 2, "damage_numbers": true,
 	"camera_rotate_speed": 1.0,
+	## Milestone 18a: 0 = Snappy (quick start, stop and turn), 1 = Weighty (the old feel).
+	"movement_feel": 0,
+	## Milestone 18a: a fixed isometric camera (no rotating), like classic action RPGs.
+	"fixed_camera": false,
 	# Controls
 	"toggle_sprint": false,
 	## The character always turns to face the mouse (also while sprinting and winding up attacks).
@@ -184,3 +188,4 @@ func apply_to_world(w: World) -> void:
 	if w.camera_rig:
 		w.camera_rig.shake_enabled = bool(get_value("screen_shake")) and not reduce_motion()
 		w.camera_rig.rotate_speed_scale = clampf(float(get_value("camera_rotate_speed")), 0.25, 2.5)
+		w.camera_rig.set_fixed(bool(get_value("fixed_camera")))

@@ -44,6 +44,8 @@ func _ready() -> void:
 	_choice_values("Autosave", "autosave_minutes", Settings.AUTOSAVE_CHOICES, func(m: int) -> String: return "Off" if m == 0 else "Every %d min" % m)
 	_toggle("Damage numbers", "damage_numbers")
 	_slider("Camera rotation speed", "camera_rotate_speed", 0.25, 2.5, 0.05)
+	_choice("Movement feel", "movement_feel", ["Snappy - quick start, stop and turn", "Weighty - slower, heavier"])
+	_toggle("Fixed isometric camera (no rotating)", "fixed_camera")
 
 	_build_controls_page()
 

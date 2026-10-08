@@ -2,9 +2,9 @@
 
 | File | Version | Platform |
 |---|---|---|
-| [Shardlands-v0.20.0-windows.zip](Shardlands-v0.20.0-windows.zip) | 0.20.0 (Milestone 17d - Heroes' Arsenal: abilities 66-100, ultimates, level-30 upgrades) | Windows 10/11, 64-bit |
+| [Shardlands-v0.21.0-windows.zip](Shardlands-v0.21.0-windows.zip) | 0.21.0 (Milestone 18a - Flow of Battle: animation system, smooth movement, camera) | Windows 10/11, 64-bit |
 
-Older builds are in the git history of this folder (v0.19.0: commit 8ea33dd, v0.18.0: commit 4bc7d38, v0.17.1: commit 0042754, v0.16.0: commit 482c0c8, v0.13.0: commit d8a28b4, v0.12.0: commit 6a42fc1).
+Older builds are in the git history of this folder (v0.20.0: commit 520386f, v0.19.0: commit 8ea33dd, v0.18.0: commit 4bc7d38, v0.17.1: commit 0042754, v0.16.0: commit 482c0c8, v0.13.0: commit d8a28b4, v0.12.0: commit 6a42fc1).
 
 ## Install on Windows
 

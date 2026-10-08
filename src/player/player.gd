@@ -119,6 +119,9 @@ var _dash_hit: Array[Node] = []
 ## Boss "pull" moves drag the player (velocity added while _pull_left > 0).
 var _pull := Vector3.ZERO
 var _pull_left := 0.0
+## Milestone 18a: last frame's planar velocity and model yaw (leaning and turning).
+var _last_planar := Vector2.ZERO
+var _last_yaw := 0.0
 
 
 func _ready() -> void:
@@ -218,7 +221,7 @@ func _physics_process(delta: float) -> void:
 				_want_heavy = false
 				combat.cancel()
 				_move_swimming(input, delta)
-			elif Input.is_action_just_pressed(&"dodge") and _dodge_cooldown_left <= 0.0 and combat.can_cancel():
+			elif Input.is_action_just_pressed(&"dodge") and _dodge_cooldown_left <= 0.0 and combat.can_dodge_cancel():
 				_start_dodge(input)
 			else:
 				_consume_attack_requests()
@@ -249,8 +252,10 @@ func _physics_process(delta: float) -> void:
 	else:
 		_apply_gravity(delta)
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z) * delta
+	var y0 := global_position.y
 	if is_on_floor():
-		GroundMotion.try_step_up(self, horizontal, max_step_height)
+		if GroundMotion.try_step_up(self, horizontal, max_step_height):
+			model.add_step_offset(global_position.y - y0)  # Milestone 18a: glide up the block
 	elif is_swimming:
 		# Climb out onto the bank.
 		GroundMotion.try_step_up(self, horizontal, swim_depth + 0.9)
@@ -260,8 +265,15 @@ func _physics_process(delta: float) -> void:
 
 	_update_facing(delta)
 	_update_interact_target()
-	var planar_speed := Vector2(velocity.x, velocity.z).length()
-	model.set_locomotion(planar_speed / walk_speed * 0.8, delta)
+	var planar := Vector2(velocity.x, velocity.z)
+	var planar_speed := planar.length()
+	# Milestone 18a: the legs follow the real speed; the body leans when speeding up and turning.
+	model.set_locomotion_speed(planar_speed if state != State.DODGING else 0.0, delta)
+	var accel_fwd := ((planar - _last_planar) / maxf(delta, 0.0001)).dot(Vector2(_facing.x, _facing.z))
+	var turn_rate := wrapf(model.rotation.y - _last_yaw, -PI, PI) / maxf(delta, 0.0001)
+	model.set_motion(accel_fwd if state == State.NORMAL else 0.0, turn_rate, delta)
+	_last_planar = planar
+	_last_yaw = model.rotation.y
 	_update_air(planar_speed)
 
 	# Safety net: fell through the world (e.g. terrain not yet loaded).
@@ -405,6 +417,11 @@ func _sprint_held() -> bool:
 	return _sprint_latched
 
 
+## Milestone 18a: "Snappy" (default) reaches full speed and stops about twice as fast as "Weighty".
+func feel_mult() -> float:
+	return 1.0 if int(Settings.get_value("movement_feel")) == 1 else 1.8
+
+
 func _move_normal(input: Vector3, delta: float) -> void:
 	var speed := walk_speed
 	var sprinting := _sprint_held() and input != Vector3.ZERO \
@@ -421,7 +438,7 @@ func _move_normal(input: Vector3, delta: float) -> void:
 		speed *= water_speed_multiplier
 	speed *= combat.get_move_multiplier()
 	var target_vel := input * speed + combat.get_lunge_velocity()
-	var accel := acceleration * delta
+	var accel := acceleration * feel_mult() * delta
 	velocity.x = move_toward(velocity.x, target_vel.x, accel)
 	velocity.z = move_toward(velocity.z, target_vel.z, accel)
 	if sprinting and not combat.is_attacking() and not (bool(Settings.get_value("face_mouse")) and not InputSetup.using_gamepad):
@@ -503,15 +520,18 @@ func _update_facing(delta: float) -> void:
 		_facing = get_aim_direction()
 		combat.attack_direction = _facing
 	var target_yaw := atan2(_facing.x, _facing.z)
-	model.rotation.y = lerp_angle(model.rotation.y, target_yaw, 1.0 - exp(-turn_speed * delta))
+	model.rotation.y = lerp_angle(model.rotation.y, target_yaw, 1.0 - exp(-turn_speed * (1.25 if feel_mult() > 1.0 else 1.0) * delta))
 
 
 # --- Dodge ------------------------------------------------------------------------
 
 func _start_dodge(input: Vector3) -> void:
-	if not stamina.try_consume(dodge_cost * Skill.dodge_cost_mult(character.skill_level(Skill.DEXTERITY)) * dodge_cost_mult()):
+	# Milestone 18a: with at least half the cost left you can still roll (it uses what you have).
+	var cost := stamina.effective_cost(dodge_cost * Skill.dodge_cost_mult(character.skill_level(Skill.DEXTERITY)) * dodge_cost_mult())
+	if stamina.current < cost * 0.5:
 		Events.toast.emit("Not enough stamina to dodge", Color(1, 0.85, 0.4))
 		return
+	stamina.consume(minf(cost, stamina.current), false)
 	combat.cancel()
 	is_blocking = false
 	model.set_blocking(false)
@@ -579,6 +599,9 @@ var _acrobat_chain := false
 func _end_dodge() -> void:
 	state = State.NORMAL
 	health.invulnerable = false
+	# Milestone 18a: the roll ends in a short slide instead of a dead stop.
+	velocity.x = _dodge_dir.x * walk_speed * 0.6
+	velocity.z = _dodge_dir.z * walk_speed * 0.6
 	_dodge_cooldown_left = dodge_cooldown
 	if abilities.has_passive(&"acrobat"):
 		_acrobat_chain = not _acrobat_chain

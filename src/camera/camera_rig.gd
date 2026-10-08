@@ -37,6 +37,26 @@ var shake_enabled := true
 ## Rotation speed multiplier (Settings → Gameplay).
 var rotate_speed_scale := 1.0
 
+# Milestone 18a.
+## The camera looks a little ahead of where you walk (seconds of movement, max metres).
+@export var lead_time: float = 0.28
+@export var max_lead: float = 2.2
+## Fixed isometric view: yaw and pitch can't be changed (Settings → Gameplay).
+const FIXED_YAW := 45.0
+const FIXED_PITCH := 55.0
+var fixed := false
+var _lead := Vector3.ZERO
+var _shake_t := 0.0
+
+
+## Turns the fixed isometric camera on or off (it glides to the angle).
+func set_fixed(on: bool) -> void:
+	fixed = on
+	if on:
+		_target_yaw = FIXED_YAW + roundf((_target_yaw - FIXED_YAW) / 360.0) * 360.0
+		_target_pitch = FIXED_PITCH
+		_dragging = false
+
 
 func _ready() -> void:
 	_pitch_node = Node3D.new()
@@ -76,7 +96,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			_target_distance = clampf(_target_distance * 1.12, min_distance, max_distance)
 		elif mb.button_index == MOUSE_BUTTON_MIDDLE:
-			_dragging = mb.pressed
+			_dragging = mb.pressed and not fixed
 	elif event is InputEventMouseMotion and _dragging:
 		var mm := event as InputEventMouseMotion
 		_target_yaw -= mm.relative.x * mouse_rotate_sensitivity
@@ -86,10 +106,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-	var rot_input := Input.get_axis(&"cam_rotate_right", &"cam_rotate_left")
-	_target_yaw += rot_input * rotate_speed_deg * rotate_speed_scale * delta
-	var pitch_input := Input.get_axis(&"cam_pitch_down", &"cam_pitch_up")
-	_target_pitch = clampf(_target_pitch + pitch_input * 60.0 * delta, min_pitch_deg, max_pitch_deg)
+	if not fixed:
+		var rot_input := Input.get_axis(&"cam_rotate_right", &"cam_rotate_left")
+		_target_yaw += rot_input * rotate_speed_deg * rotate_speed_scale * delta
+		var pitch_input := Input.get_axis(&"cam_pitch_down", &"cam_pitch_up")
+		_target_pitch = clampf(_target_pitch + pitch_input * 60.0 * delta, min_pitch_deg, max_pitch_deg)
 
 	# Free pan relative to the camera orientation.
 	var pan := Input.get_vector(&"cam_pan_left", &"cam_pan_right", &"cam_pan_forward", &"cam_pan_back")
@@ -100,12 +121,20 @@ func _process(delta: float) -> void:
 
 	var t := 1.0 - exp(-follow_sharpness * delta)
 	if target:
-		global_position = global_position.lerp(target.global_position + _pan_offset, t)
+		# Look ahead where the target walks (smoothed, so turning doesn't jerk the view).
+		var v = target.get("velocity")
+		var want := Vector3.ZERO
+		if v is Vector3:
+			want = Vector3((v as Vector3).x, 0.0, (v as Vector3).z) * lead_time
+			want = want.limit_length(max_lead)
+		_lead = _lead.lerp(want, 1.0 - exp(-3.0 * delta))
+		global_position = global_position.lerp(target.global_position + _pan_offset + _lead, t)
 	var z := 1.0 - exp(-zoom_sharpness * delta)
 	distance = lerpf(distance, _target_distance, z)
 	yaw_deg = lerpf(yaw_deg, _target_yaw, z)
 	pitch_deg = lerpf(pitch_deg, _target_pitch, z)
 	_shake = maxf(_shake - delta * 2.5, 0.0)
+	_shake_t += delta
 	_apply_transform()
 	Materials.set_camera_fade(distance)
 
@@ -115,8 +144,9 @@ func _apply_transform() -> void:
 	_pitch_node.rotation = Vector3(-deg_to_rad(pitch_deg), 0, 0)
 	camera.position = Vector3(0, 0, distance)
 	if _shake > 0.0:
-		var s := _shake * _shake * 0.35
-		camera.position += Vector3(randf_range(-s, s), randf_range(-s, s), 0)
+		# Milestone 18a: a smooth wobble instead of random jumps every frame.
+		var s := _shake * _shake * 0.28
+		camera.position += Vector3(sin(_shake_t * 47.0) + sin(_shake_t * 23.0) * 0.5, cos(_shake_t * 41.0) + sin(_shake_t * 17.0) * 0.5, 0.0) * s * 0.67
 
 
 ## Horizontal forward direction of the camera (for camera-relative movement).

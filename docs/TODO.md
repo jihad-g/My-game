@@ -105,6 +105,20 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 18a — Flow of Battle: animation system and smooth movement  ✅
+
+- [x] Compact animation system: keyframe clips, three layers (base, action, additive), cross-fades, a leg mask while running, clip events
+- [x] Attacks, the 17 ability poses, spells, the dodge, flinches and landings are clips; used by the player, NPCs, humanoid monsters and co-op players
+- [x] Locomotion: stride matches the speed (no foot sliding), lean when speeding up and turning, foot shuffle when turning on the spot, glide up block steps
+- [x] Movement feel setting (Snappy default / Weighty); dodge v2 (cancels attack recovery, works with half the stamina, ends in a slide)
+- [x] Camera lead, smooth shake, fixed isometric camera option
+- [~] Tests `test_m18a_*` are written but have not been run yet (run them only with the owner's permission)
+- [ ] NOT IMPLEMENTED: root motion that moves the body (attacks still move you with the old lunge; the clip step is only visual)
+- [ ] NOT IMPLEMENTED: damage on the clip's "hit" event (the event exists; combat still uses its own timer, which matches the wind-up) - M18b
+- [ ] NOT IMPLEMENTED: hit reactions by direction, knock-downs, combo chains and hit-stop (M18b)
+- [ ] Known limitation: monsters with their own bodies (wolves, boars, golems...) still use their old animation
+- [ ] Next: M18b — hack and slash (combo chains and finishers, hold to chain, aim assist, hit-stop, knock-downs, crowds)
+
 ## Milestone 17d — Heroes' Arsenal: abilities 66–100, ultimates, upgrades  ✅
 
 - [x] 72 new class abilities for levels 66–100 (18 per class, 24 passives); every class has 53 abilities
@@ -118,7 +132,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: real hit-by-hit copies for Living Shadow (it repeats your hits as damage; the shadow only follows you)
 - [ ] Known limitation: summons use existing monster bodies with a coloured glow (ghost warriors are brute bodies, the elemental is a wolf body)
 - [ ] Known limitation: ultimates and the strongest passives are not balance-tested in long fights yet
-- [ ] Next: M18 — "Flow of Battle": smooth movement and animation, hack-and-slash combat, better spell effects and smoother world generation (plan: `docs/M18_PLAN.md`)
+- [x] M18a started "Flow of Battle" (plan: `docs/M18_PLAN.md`)
 
 ## Milestone 17c — Heroes' Arsenal: abilities 32–64, shared spells, animations  ✅
 
@@ -410,7 +424,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 - [x] Save/load system (Milestone 2)
 - [~] Save backups and recovery (Milestone 13); cloud saves via Steam Auto-Cloud documented, not tested; save thumbnails NOT IMPLEMENTED
-- [~] Animations (procedural: knees/elbows, idle, run lean, jump, swim, cast, landing — Milestone 10); skeletal/authored animations NOT IMPLEMENTED
+- [~] Animations (procedural: knees/elbows, idle, run lean, jump, swim, cast, landing — Milestone 10; keyframe clips with layers and cross-fades — Milestone 18a); skeletal/authored animations NOT IMPLEMENTED (by design)
 - [x] VFX, sound & music (Milestone 10, all generated)
 - [x] UI polish: pixel-art item icons, panel transitions, settings screen (Milestone 10); key rebinding (Milestone 13)
 - [x] Main menu with seed entry / world selection (Milestone 2)
