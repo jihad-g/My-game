@@ -2,6 +2,24 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.25.0] — World colour pass (Minecraft Dungeons / Hytale look)
+
+### Changed
+- **Richer world colours**: deeper greens in meadows, forests and jungles, warmer sand on beaches and in the
+  desert, warm stone instead of flat blue-grey rock, calmer leaf and rock colours on trees and boulders.
+- **Every block is a little different**: grass and sand mix two tones per block, with lighter and darker
+  patches (about 8x8 blocks) and a small warm/cool shift; rock gets bands by height. This replaces the old
+  checker pattern.
+- **Darker block sides**: walls of blocks are darker than their tops (dirt below the grass edge darker
+  again), so hills and cliffs look chunky even without ambient occlusion (web/compatibility builds too).
+- **Soft tree fade**: trees near the camera, and trees standing between the camera and your hero, now
+  fade to a soft see-through ghost instead of the old grainy pixel pattern. Walls and other big props near
+  the camera fade softly too. Your hero is never hidden behind a tree.
+- The new colours are the world's colours in both art styles (Vibrant and Classic only change light and
+  colour grading).
+- Screenshot mode `--only=style` has a new shot: `style_tree_fade`.
+- Test (written, not run yet): `test_m18_world_colours`.
+
 ## [0.24.0] — Jump and a vibrant look
 
 ### Added

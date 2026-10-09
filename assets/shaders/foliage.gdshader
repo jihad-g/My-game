@@ -1,6 +1,8 @@
 // Vertex-coloured foliage that sways in the wind (Milestone 10). Height above
 // the prop's base drives the bend, so trunks stay planted and crowns move.
 // Optional pixel-dither fade near the camera (trees between camera and player).
+// (Milestone 18 art pass: trees now use foliage_fade.gdshader, a soft
+// see-through fade; this dither path is kept for old saves/materials.)
 shader_type spatial;
 render_mode cull_back, diffuse_burley, specular_schlick_ggx;
 

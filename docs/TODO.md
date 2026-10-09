@@ -105,6 +105,17 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## World colour pass (v0.25.0, asked for during M18)  ✅
+
+- [x] Deeper greens, warmer sand, warm stone; calmer tree leaves and boulders
+- [x] Per-block colour variation (two tones, 8x8 patches, warm/cool shift; rock bands)
+- [x] Block sides darker than tops (chunky look without ambient occlusion)
+- [x] Soft see-through fade for trees near the camera and between the camera and the hero (no grainy dither); walls fade softly too
+- [~] Test `test_m18_world_colours` is written but has not been run yet
+- [ ] Known limitation: a faded tree still casts its full shadow
+- [ ] Known limitation: the camera-to-hero fade works on trees and plants (foliage shader), not on walls and houses (they only fade near the camera)
+- [ ] NOT IMPLEMENTED: real textures on blocks (blocks are still flat colours with per-block shading)
+
 ## Jump and vibrant look (v0.24.0, asked for during M18)  ✅
 
 - [x] Jump on Space (gamepad A when nothing usable is near), coyote time, jump buffer, push-off animation, co-op replay
@@ -112,7 +123,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Art style setting: Vibrant (default) / Classic - saturation, sky, warm sun, lavender shade, glow, filmic tone mapping, soft ambient occlusion
 - [~] Test `test_m18c_jump_and_style` is written but has not been run yet
 - [ ] Known limitation: ambient occlusion only shows with the normal (Forward+) renderer, not in the browser build
-- [ ] NOT IMPLEMENTED: new hand-made textures or recoloured blocks per biome (the look comes from light and colour grading)
+- [x] Recoloured blocks per biome and per block (done in v0.25.0, see below)
 
 ## Milestone 18c — Flow of Battle: spells that look like magic, Creative mode  ✅
 

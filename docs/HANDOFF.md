@@ -3,7 +3,7 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.24.0** (Milestone 18c + jump and the Vibrant look). The Windows build is `releases/Shardlands-v0.24.0-windows.zip`.
+- Current version: **v0.25.0** (Milestone 18c + jump, the Vibrant look and the world colour pass). The Windows build is `releases/Shardlands-v0.25.0-windows.zip`.
 - Keys changed in v0.24.0: **Space = jump**, **Left Alt = dodge roll**.
 - **Creative mode** for testing in the game: the ` key (under Esc).
 
@@ -88,6 +88,9 @@
 
 - **v0.24.0:** `Player._try_jump` (coyote time, buffer), `HumanoidModel.play_jump`, `AnimLibrary.jump`;
   `DayNightCycle.set_art_style` and Settings `art_style` (0 Vibrant, 1 Classic).
+- **v0.25.0:** world colours: biome palettes in `data/biomes/*.tres`, `TerrainGenerator._top_color` (per-block
+  variation) and `TerrainGenerator.side_shade`; soft tree fade `assets/shaders/foliage_fade.gdshader`
+  (`focus_pos` = hero, set by `Materials.set_camera_fade` from CameraRig). Test `test_m18_world_colours` not run yet.
 
 ## Main code locations
 - Combat: `src/player/player_combat.gd`, `src/player/player.gd`

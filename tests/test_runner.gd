@@ -125,6 +125,7 @@ func _ready() -> void:
 	await _run_async(&"test_m18c_casting")
 	await _run_async(&"test_m18c_creative")
 	await _run_async(&"test_m18c_jump_and_style")
+	_run(&"test_m18_world_colours")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5163,7 +5164,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.24"), "version 0.24 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.25"), "version 0.25 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -7196,3 +7197,46 @@ func test_m18c_jump_and_style() -> void:
 	check(world.day_night.vibrant < 0.5 and env.adjustment_saturation < 1.1, "Classic: the older look")
 	Settings.set_value("art_style", 0)
 	p.health.invulnerable = false
+
+
+## v0.25.0 world colour pass: block colours vary, sides are darker than tops,
+## trees use the soft fade shader that also clears the camera -> hero line.
+func test_m18_world_colours() -> void:
+	var gen := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var meadow: BiomeData = null
+	for b in gen.biomes:
+		if (b as BiomeData).id == &"verdant_meadow":
+			meadow = b
+	check(meadow != null, "meadow biome found")
+	if meadow == null:
+		return
+	var seen := {}
+	for x in 24:
+		var c := gen._top_color(meadow, TerrainGenerator.SEA_LEVEL + 4, x * 3, x * 5, true)
+		seen[c.to_html(false)] = true
+		check(c.g > c.r and c.g > c.b, "grass stays green (%s)" % c)
+	check(seen.size() >= 12, "grass blocks vary in colour (%d different)" % seen.size())
+	check(TerrainGenerator.side_shade(Vector3.BACK) < TerrainGenerator.side_shade(Vector3.RIGHT)
+		and TerrainGenerator.side_shade(Vector3.RIGHT) < 0.8, "block sides are darker than tops")
+	var data := gen.generate_chunk(Vector2i(3, 2), 0)
+	var top_sum := 0.0
+	var side_sum := 0.0
+	var tops := 0
+	var sides := 0
+	for q in range(0, data.vertices.size(), 4):
+		var l := data.colors[q].get_luminance()
+		if data.normals[q] == Vector3.UP:
+			top_sum += l
+			tops += 1
+		else:
+			side_sum += l
+			sides += 1
+	if tops > 0 and sides > 0:
+		check(side_sum / sides < top_sum / tops, "average side is darker than average top")
+	var lib := PropLibrary.new()
+	var mat := lib.get_mesh(&"tree_oak").surface_get_material(0) as ShaderMaterial
+	check(mat != null and mat.shader.resource_path.ends_with("foliage_fade.gdshader"), "trees use the soft fade shader")
+	Materials.set_camera_fade(16.0, Vector3(1, 2, 3))
+	check(mat.get_shader_parameter(&"focus_pos") == Vector3(1, 2, 3), "the hero position reaches the tree shader")
+	check(Materials.vertex_color_occluder().distance_fade_mode == BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA,
+		"walls fade softly too (no pixel dither)")

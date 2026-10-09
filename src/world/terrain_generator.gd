@@ -567,10 +567,12 @@ func _side(data: ChunkData, biome: BiomeData, h: int, nh: int, border: bool,
 		return
 	var bh := BLOCK_HEIGHT
 	var top_y := h * bh
-	var shade := 0.72 if normal.z != 0.0 else 0.8
+	var shade := side_shade(normal)
 	# Top band: one block of "grass edge" (or rock/sand), rest dirt/stone below.
+	# Milestone 18 art pass: the dirt below is a little darker again, so cliffs
+	# read as chunky blocks even without screen-space AO.
 	var edge_col := top * shade
-	var body_col := _side_color(biome, h, surface) * shade
+	var body_col := _side_color(biome, h, surface) * (shade * 0.92)
 	var band_bottom := maxi(bottom, h - 1)
 	_quad(data.vertices, data.normals, data.colors, data.indices,
 		Vector3(a.x, top_y, a.z), Vector3(b.x, top_y, b.z),
@@ -583,25 +585,44 @@ func _side(data: ChunkData, biome: BiomeData, h: int, nh: int, border: bool,
 			normal, body_col)
 
 
+## Light on block sides compared with tops (Milestone 18 art pass: darker
+## sides give the chunky Minecraft Dungeons / Hytale look). North/south walls
+## are a bit darker than east/west ones so the two sides of a corner differ.
+static func side_shade(normal: Vector3) -> float:
+	return 0.62 if normal.z != 0.0 else 0.74
+
+
 func _top_color(biome: BiomeData, h: int, wx: int, wz: int, surface: bool) -> Color:
 	var c: Color
+	# Per-block random value, plus a slow "patch" value shared by 8x8 areas, so
+	# grass has lighter and darker patches instead of one flat colour.
+	var t := HashUtils.to_unit(HashUtils.hash3(wx, wz, world_seed), 3)
+	var patch := HashUtils.to_unit(HashUtils.hash3(wx >> 3, wz >> 3, world_seed + 911), 5)
+	var spread := 0.08  # brightness spread between blocks
 	if not surface:
-		c = biome.rock_color if h > CAVE_FLOOR + 2 else biome.top_color.lerp(biome.top_color_alt,
-			HashUtils.to_unit(HashUtils.hash3(wx, wz, world_seed), 3))
+		c = biome.rock_color if h > CAVE_FLOOR + 2 else biome.top_color.lerp(biome.top_color_alt, t)
 	elif h < SEA_LEVEL:
 		c = biome.underwater_color
 	elif h <= SEA_LEVEL + 1:
 		c = biome.shore_color
+		spread = 0.05
 	elif h >= biome.peak_height:
 		c = biome.peak_color
+		spread = 0.04
 	elif h >= biome.rock_height:
-		c = biome.rock_color
+		# Rock: bands by height and a warm/cool shift, so cliffs aren't flat grey.
+		var band := HashUtils.to_unit(HashUtils.hash3(h, wx >> 2, world_seed + 37), 2)
+		c = biome.rock_color * (0.9 + band * 0.16)
+		c = c.lerp(Color(c.r * 1.06, c.g, c.b * 0.92), patch)
+		spread = 0.1
 	else:
-		# Two-tone checker-ish variation gives the voxel look.
-		var t := HashUtils.to_unit(HashUtils.hash3(wx, wz, world_seed), 3)
-		c = biome.top_color.lerp(biome.top_color_alt, t * t)
-	# Subtle per-column brightness jitter.
-	var jitter := 0.97 + HashUtils.to_unit(HashUtils.hash3(wz, wx, 77), 1) * 0.06
+		# Grass / sand: two tones mixed by block and by patch.
+		c = biome.top_color.lerp(biome.top_color_alt, clampf(t * t * 0.7 + patch * 0.55, 0.0, 1.0))
+		# A small warm or cool shift per block (a few blocks look slightly yellow).
+		var hue := HashUtils.to_unit(HashUtils.hash3(wx, wz, world_seed + 5), 7) - 0.5
+		c = Color(c.r * (1.0 + hue * 0.14), c.g, c.b * (1.0 - hue * 0.14))
+		c *= 0.94 + patch * 0.1  # darker and lighter patches
+	var jitter := 1.0 - spread * 0.5 + HashUtils.to_unit(HashUtils.hash3(wz, wx, 77), 1) * spread
 	return Color(c.r * jitter, c.g * jitter, c.b * jitter)
 
 

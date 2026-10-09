@@ -1588,6 +1588,15 @@ func _style_showcase() -> void:
 		await _wait(20)
 		await _shot("style_%s_day" % ["vibrant", "classic"][style])
 	Settings.set_value("art_style", 0)
+	# v0.25.0: a low camera, so trees between the camera and the player use the
+	# soft see-through fade.
+	world.camera_rig._target_distance = 22.0
+	world.camera_rig._target_pitch = 30.0
+	await _wait(40)
+	await _shot("style_tree_fade")
+	world.camera_rig._target_distance = 16.0
+	world.camera_rig._target_pitch = 50.0
+	await _wait(40)
 	world.day_night.hour = 17.4
 	world.day_night.advance_hours(0.0)
 	await _wait(20)

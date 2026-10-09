@@ -136,7 +136,8 @@ func _process(delta: float) -> void:
 	_shake = maxf(_shake - delta * 2.5, 0.0)
 	_shake_t += delta
 	_apply_transform()
-	Materials.set_camera_fade(distance)
+	# Trees between the camera and the hero fade too (Milestone 18 art pass).
+	Materials.set_camera_fade(distance, target.global_position + Vector3(0, 1.0, 0) if target else Vector3(0, -1.0e6, 0))
 
 
 func _apply_transform() -> void:

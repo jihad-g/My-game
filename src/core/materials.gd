@@ -17,13 +17,16 @@ static func vertex_color() -> StandardMaterial3D:
 	return _cache[&"vertex_color"]
 
 
-## Vertex-colour material that dithers out near the camera, so tall props
-## (trees) between the camera and the player don't hide the action.
+## Vertex-colour material that fades out near the camera, so tall props
+## (walls, big rocks) between the camera and the player don't hide the action.
 ## CameraRig updates the fade distances every frame via set_camera_fade().
+## Milestone 18 art pass: a soft see-through fade (no grainy pixel dither);
+## the depth pre-pass keeps far objects drawn like normal solid blocks.
 static func vertex_color_occluder() -> StandardMaterial3D:
 	if not _cache.has(&"vertex_color_occluder"):
 		var m := vertex_color().duplicate() as StandardMaterial3D
-		m.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_DITHER
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
+		m.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA
 		m.distance_fade_min_distance = 6.0
 		m.distance_fade_max_distance = 11.0
 		_cache[&"vertex_color_occluder"] = m
@@ -31,7 +34,9 @@ static func vertex_color_occluder() -> StandardMaterial3D:
 
 
 ## Occluders closer to the camera than ~60% of the camera->player distance fade.
-static func set_camera_fade(camera_distance: float) -> void:
+## `focus` is the hero's chest: trees standing on the line from the camera to
+## the hero fade as well, like in Minecraft Dungeons (foliage shader only).
+static func set_camera_fade(camera_distance: float, focus := Vector3(0, -1.0e6, 0)) -> void:
 	var m := vertex_color_occluder()
 	m.distance_fade_min_distance = camera_distance * 0.45
 	m.distance_fade_max_distance = camera_distance * 0.72
@@ -40,6 +45,7 @@ static func set_camera_fade(camera_distance: float) -> void:
 		if f is ShaderMaterial and String(key).begins_with("foliage_fade"):
 			f.set_shader_parameter(&"fade_min", camera_distance * 0.45)
 			f.set_shader_parameter(&"fade_max", camera_distance * 0.72)
+			f.set_shader_parameter(&"focus_pos", focus)
 
 
 ## Global shader parameters shared by foliage and water (WeatherSystem drives
@@ -49,13 +55,14 @@ static func ensure_globals() -> void:
 
 
 ## Vertex-coloured foliage that sways in the wind (Milestone 10). `sway` is the
-## bend per metre² of height; `fade_near` adds the camera dither of occluders.
+## bend per metre² of height; `fade_near` adds the soft near-camera fade
+## (assets/shaders/foliage_fade.gdshader, Milestone 18 art pass).
 static func foliage(sway: float, fade_near: bool) -> ShaderMaterial:
 	var key := StringName("foliage%s_%d" % ["_fade" if fade_near else "", roundi(sway * 1000.0)])
 	if not _cache.has(key):
 		ensure_globals()
 		var m := ShaderMaterial.new()
-		m.shader = load("res://assets/shaders/foliage.gdshader")
+		m.shader = load("res://assets/shaders/foliage_fade.gdshader" if fade_near else "res://assets/shaders/foliage.gdshader")
 		m.set_shader_parameter(&"sway", sway)
 		m.set_shader_parameter(&"fade_near", fade_near)
 		_cache[key] = m

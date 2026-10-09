@@ -1204,6 +1204,8 @@ grown (M17), so the sync work covers the final set of abilities, enemies and bos
 
 ### Milestone 20 — "World Polish" (look, feel and reach)
 **Goal:** a richer look and a bigger audience.
+**Done early (v0.24.0–v0.25.0):** Vibrant art style, richer biome colours, per-block colour variation, darker
+block sides, soft tree fade between camera and hero.
 **Ideas:** 1a–1f (code-made textures), 2f–2g (more animations; 2c–2e move to M18), 12a–12c (multi-storey building,
 decorations), 14a–14c (horse, boat, waystones), gamepad menus, translations, Steam release checks.
 **Why last:** visual polish and travel are best done when content is stable, and the release work

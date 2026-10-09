@@ -5,10 +5,10 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.24.0 — Jump and a vibrant look**: press **Space to jump** (the dodge roll moved to Left Alt), and
-> the world now has a **Vibrant** art style - richer colours, a deeper sky, a warm sun, cool lavender shade, glow
-> and soft shade in block corners, in the spirit of Minecraft Dungeons and Hytale (Classic is still in the
-> settings).
+> Status: **v0.25.0 — World colour pass**: deeper greens, warmer sand, warm stone, every block a little
+> different, darker block sides for a chunky look, and trees that fade softly (no grainy pattern) when they stand
+> between the camera and your hero - closer to Minecraft Dungeons and Hytale. v0.24.0 added **Space to jump**
+> (dodge roll on Left Alt) and the **Vibrant** art style.
 >
 > Before that, **Milestone 18c — Flow of Battle, part 3 (v0.23.0)**: spells look like magic. Fire throws embers and
 > leaves scorch marks, frost shatters into shards and cold mist, lightning forks and flickers, arcane spells draw
@@ -72,7 +72,7 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 > noticed. A Knight in shadow clothes with daggers plays like an Assassin; the class keeps a small talent, so
 > a Wizard is never a Knight's equal. Built on the beta (Milestone 13: tutorial, guide, settings and
 > accessibility, save recovery, crash reports, achievements, release builds - [`docs/RELEASE.md`](docs/RELEASE.md)).
-> Download a Windows build from [`releases/`](releases/) (v0.24.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
+> Download a Windows build from [`releases/`](releases/) (v0.25.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
 > performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
 > design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md). See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.

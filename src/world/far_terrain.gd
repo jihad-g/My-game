@@ -304,10 +304,10 @@ func _side(v: PackedVector3Array, nrm: PackedVector3Array, col: PackedColorArray
 	if bottom >= h:
 		return
 	var bh := TerrainGenerator.BLOCK_HEIGHT
-	var shade := 0.72 if normal.z != 0.0 else 0.8
+	var shade := TerrainGenerator.side_shade(normal)
 	var band := maxi(bottom, h - 2)
 	TerrainGenerator._quad(v, nrm, col, idx, Vector3(a.x, h * bh, a.z), Vector3(b.x, h * bh, b.z),
 		Vector3(b.x, band * bh, b.z), Vector3(a.x, band * bh, a.z), normal, top * shade)
 	if band > bottom:
 		TerrainGenerator._quad(v, nrm, col, idx, Vector3(a.x, band * bh, a.z), Vector3(b.x, band * bh, b.z),
-			Vector3(b.x, bottom * bh, b.z), Vector3(a.x, bottom * bh, a.z), normal, generator._side_color(biome, h, true) * shade)
+			Vector3(b.x, bottom * bh, b.z), Vector3(a.x, bottom * bh, a.z), normal, generator._side_color(biome, h, true) * (shade * 0.92))

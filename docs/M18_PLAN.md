@@ -1,6 +1,6 @@
 # Milestone 18 — "Flow of Battle" (plan)
 
-**Status:** **M18a (v0.21.0), M18b (v0.22.0) and M18c (v0.23.0) are done.** M18d is still a plan. Change anything before we build it.
+**Status:** **M18a (v0.21.0), M18b (v0.22.0) and M18c (v0.23.0) are done.** Between M18c and M18d the owner asked for jump + the Vibrant look (v0.24.0) and a world colour pass (v0.25.0). M18d is still a plan. Change anything before we build it.
 
 **Owner's answers (8 Oct 2026):** the fixed isometric camera is an *option* (the free camera stays the default);
 aim assist and hold-to-chain are *on by default*; bosses can be knocked down, but *only after their guard (poise)

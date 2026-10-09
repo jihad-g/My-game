@@ -79,8 +79,8 @@ func get_shape(id: StringName) -> Shape3D:
 
 func _build_tree_oak(b: BlockMesh) -> void:
 	var trunk := Color(0.45, 0.3, 0.18)
-	var leaf := Color(0.3, 0.68, 0.28)
-	var leaf_light := Color(0.42, 0.78, 0.32)
+	var leaf := Color(0.19, 0.46, 0.18)
+	var leaf_light := Color(0.3, 0.57, 0.21)
 	b.box(Vector3(0, 1.1, 0), Vector3(0.5, 2.2, 0.5), trunk)
 	b.box(Vector3(0, 2.6, 0), Vector3(2.4, 1.2, 2.4), leaf)
 	b.box(Vector3(0, 3.5, 0), Vector3(1.7, 0.9, 1.7), leaf_light)
@@ -102,8 +102,8 @@ func _build_tree_pine(b: BlockMesh) -> void:
 
 
 func _build_rock(b: BlockMesh) -> void:
-	var stone := Color(0.55, 0.56, 0.6)
-	var stone_dark := Color(0.46, 0.47, 0.52)
+	var stone := Color(0.5, 0.48, 0.45)
+	var stone_dark := Color(0.4, 0.38, 0.37)
 	b.box(Vector3(0, 0.35, 0), Vector3(1.3, 0.7, 1.1), stone)
 	b.box(Vector3(0.25, 0.8, 0.1), Vector3(0.8, 0.4, 0.7), stone_dark)
 	b.box(Vector3(-0.55, 0.2, 0.45), Vector3(0.5, 0.4, 0.5), stone_dark)
@@ -130,7 +130,7 @@ func _build_flowers(b: BlockMesh) -> void:
 
 
 func _build_grass_tuft(b: BlockMesh) -> void:
-	var g := Color(0.36, 0.72, 0.3)
+	var g := Color(0.32, 0.66, 0.24)
 	b.box(Vector3(0, 0.15, 0), Vector3(0.08, 0.3, 0.08), g)
 	b.box(Vector3(0.12, 0.11, 0.05), Vector3(0.07, 0.22, 0.07), g * 1.1)
 	b.box(Vector3(-0.1, 0.12, -0.06), Vector3(0.07, 0.24, 0.07), g * 0.95)
@@ -153,8 +153,8 @@ func _build_stone_pile(b: BlockMesh) -> void:
 
 func _build_tree_jungle(b: BlockMesh) -> void:
 	var trunk := Color(0.4, 0.28, 0.17)
-	var leaf := Color(0.13, 0.52, 0.2)
-	var leaf_light := Color(0.2, 0.62, 0.24)
+	var leaf := Color(0.12, 0.44, 0.19)
+	var leaf_light := Color(0.19, 0.54, 0.22)
 	var vine := Color(0.22, 0.55, 0.22)
 	b.box(Vector3(0, 2.0, 0), Vector3(0.6, 4.0, 0.6), trunk)
 	b.box(Vector3(0, 0.3, 0), Vector3(1.0, 0.6, 1.0), trunk * 0.9)  # buttress roots

@@ -35,7 +35,7 @@ enum Role {
 @export var side_color: Color = Color(0.5, 0.35, 0.22)
 @export var shore_color: Color = Color(0.93, 0.84, 0.55)
 @export var underwater_color: Color = Color(0.72, 0.64, 0.45)
-@export var rock_color: Color = Color(0.56, 0.56, 0.6)
+@export var rock_color: Color = Color(0.55, 0.52, 0.49)
 @export var peak_color: Color = Color(0.95, 0.97, 1.0)
 ## Height (blocks) above which tops turn to rock / snow-capped peaks.
 @export var rock_height: int = 60
