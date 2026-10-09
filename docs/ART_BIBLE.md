@@ -1,12 +1,14 @@
 # Shardlands — Art Bible (blocks and textures)
 
-Version 1 · 2026-10-09 · Direction: **balanced mix** of Minecraft Dungeons and Hytale, **low-medium detail**,
+Version 2 · 2026-10-09 (v2: plants, building blocks, item icons) · Direction: **balanced mix** of Minecraft Dungeons and Hytale, **low-medium detail**,
 palette freely redesigned.
 
 Everything here is made by code and can be rebuilt exactly:
 
 ```
-python3 art/tools/texgen.py          # 73 textures  -> art/textures/*.png (+ textures.json)
+python3 art/tools/texgen.py          # 113 textures -> art/textures/*.png (+ textures.json); uses texgen_extra.py
+python3 art/tools/icongen.py         # 215 item icons -> art/icons/ (+ icon_atlas.png/json)
+python3 art/tools/render_village.py  # art/previews/village.png (buildings, bushes, flowers, crops)
 python3 art/tools/build_atlas.py     # atlas.png, atlas_array.png, atlas.json
 python3 art/tools/render_previews.py # art/previews/<biome>.png, all_biomes.png, far_view_test.png
 python3 art/tools/sheet.py           # art/previews/texture_sheet.png
@@ -175,6 +177,46 @@ Prop colours (trees, boulders, ores) were not changed.
 | `ore_iron` | prop | full | 0,5 | 7 | Ore rock (iron): dark stone with iron nuggets. Full colour - use white vertex colour. |
 | `ore_coal` | prop | full | 1,5 | 7 | Ore rock (coal): dark stone with coal nuggets. Full colour - use white vertex colour. |
 | `ore_silver` | prop | full | 2,5 | 7 | Ore rock (silver): dark stone with silver nuggets. Full colour - use white vertex colour. |
+| `bush_leaves` | prop | tinted | 3,5 | 5 | Bush leaves: small dense clumps (all bush boxes; tint with the bush colour). |
+| `berry_bush` | prop | full | 4,5 | 8 | Berry bush with red berries painted in (use on the main bush box; white vertex colour). |
+| `frostberry_bush` | prop | full | 5,5 | 8 | Frostberry bush: teal leaves, blue berries. |
+| `cactus` | prop | tinted | 6,5 | 5 | Cactus: vertical ribs every 4 px with light spines. |
+| `palm_frond` | prop | tinted | 7,5 | 5 | Palm fronds: leaflets from a centre rib. |
+| `mushroom_cap` | prop | full | 8,5 | 6 | Giant mushroom cap: red with cream spots. |
+| `crystal` | prop | tinted | 9,5 | 6 | Crystal: big facets with bright edges (crystal clusters, altar). |
+| `hanging_moss` | prop | tinted | 10,5 | 3 | Swamp-tree hanging moss strands. |
+| `flowers_mixed` | sprite | full | 11,5 | 18 | Meadow flowers, four colours (the 'flowers' prop). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `flowers_yellow` | sprite | full | 12,5 | 9 | Yellow flower clump. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `flowers_pink` | sprite | full | 13,5 | 9 | Pink flower clump. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `flowers_violet` | sprite | full | 0,6 | 9 | Violet flower clump. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `grass_tuft` | sprite | tinted | 1,6 | 5 | Grass tuft (tint with the biome top colour). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `fern` | sprite | tinted | 2,6 | 5 | Fern (forest/jungle floor; tint green). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `reeds` | sprite | full | 3,6 | 7 | Reeds with cattail heads (shores). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `dead_bush` | sprite | full | 4,6 | 4 | Dry desert bush. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `sunbloom` | sprite | full | 5,6 | 8 | Sunbloom herb (meadow). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `moonpetal` | sprite | full | 6,6 | 5 | Moonpetal herb (glows at night - add emission). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `frost_lotus` | sprite | full | 7,6 | 6 | Frost lotus herb (tundra). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `starlight_orchid` | sprite | full | 8,6 | 6 | Starlight orchid herb (crystal glade). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `emberroot` | sprite | full | 9,6 | 5 | Emberroot herb (desert). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `mushroom_patch` | sprite | full | 10,6 | 5 | Brown mushroom patch. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `glowcap` | sprite | full | 11,6 | 5 | Glowcap mushrooms (caves, emission). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `dreamcap` | sprite | full | 12,6 | 5 | Dreamcap mushrooms (caves). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `wheat_0` | sprite | full | 13,6 | 2 | Wheat crop, growth stage 0 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `wheat_1` | sprite | full | 0,7 | 2 | Wheat crop, growth stage 1 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `wheat_2` | sprite | full | 1,7 | 4 | Wheat crop, growth stage 2 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `wheat_3` | sprite | full | 2,7 | 4 | Wheat crop, growth stage 3 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground. |
+| `planks_wall` | building | tinted | 3,7 | 6 | Wood wall: horizontal boards 0.25 m, staggered joints, nails. Tint WOOD. |
+| `planks_vertical` | building | tinted | 4,7 | 6 | Boards running along v, 0.25 m wide: wood floor (matches the floor-board mesh), doors, chests. |
+| `wood_beam` | building | tinted | 5,7 | 4 | Dark frame wood: posts, beams, door frames. Tint WOOD_DARK. |
+| `palisade` | building | tinted | 6,7 | 5 | Palisade / spike wall: vertical logs 0.25 m. |
+| `roof_shingles` | building | tinted | 7,7 | 5 | Wood roof shingles, staggered rows. |
+| `thatch` | building | tinted | 8,7 | 4 | Thatch roof straw rows. Tint THATCH. |
+| `stone_bricks` | building | tinted | 9,7 | 5 | Stone wall bricks 0.5 x 0.25 m, staggered. |
+| `stone_tiles` | building | tinted | 10,7 | 5 | Stone floor tiles 0.5 m (matches the floor mesh). |
+| `iron_plate` | building | tinted | 11,7 | 5 | Iron plate with rivets: reinforced door, traps, forge, chest bands. |
+| `cloth` | building | tinted | 12,7 | 4 | Woven cloth with a seam every 0.5 m: bed, tailoring, banners, rugs. Tint the cloth colour. |
+| `tilled_soil` | building | tinted | 13,7 | 5 | Farm plot soil: furrows every 0.25 m. Tint SOIL. |
+| `glass` | building | full | 0,8 | 2 | Window glass (alpha 110, glints 200). Not used by the current window mesh (it has no pane). |
 
 ### Which texture each block uses
 
@@ -203,8 +245,8 @@ The full per-biome map (top / shore / underwater / rock / peak → textures) is 
 
 - `art/textures/atlas.png` — 256 x 256, cells of **18 x 18** (16 x 16 texture + **1-pixel gutter** that copies
   the opposite edge, i.e. wrap). 14 cells per row; texture *k* is at cell `(k % 14, k / 14)`, its 16 x 16 area
-  starts at pixel `(cx*18 + 1, cy*18 + 1)`. 73 textures use 6 rows; room for 196.
-- `art/textures/atlas_array.png` — the same 73 textures as a 16 x 1168 vertical strip (one layer each).
+  starts at pixel `(cx*18 + 1, cy*18 + 1)`. 113 textures use 9 rows; room for 196.
+- `art/textures/atlas_array.png` — the same 113 textures as a 16 x 1808 vertical strip (one layer each).
 - `art/textures/atlas.json` — for each texture: `layer`, `cell`, `px` rect, `uv` rect, `tint`, `face`,
   `group`, `shades`, `desc`; plus `groups`, `biomes` (colours + textures per surface) and `props`.
 
@@ -227,8 +269,9 @@ The renderer copies the game's rules: per-block colour variation, 8x8 patches, w
 shade. It does **not** simulate screen-space AO or fog, so it matches the **web/compatibility renderer**;
 Forward+ only adds darker inner corners on top.
 
-**NOT IMPLEMENTED:** a Forward+ (SSAO) version of the previews; previews of props other than trees, boulders
-and ore rocks (bushes, flowers, building pieces, stalagmites are not textured yet).
+`village.png` (v2) shows building pieces, bushes, flowers, herbs and wheat stages, today vs textured.
+
+**NOT IMPLEMENTED:** a Forward+ (SSAO) version of the previews.
 
 ---
 
@@ -238,7 +281,7 @@ and ore rocks (bushes, flowers, building pieces, stalagmites are not textured ye
 
 ### 6.1 Import
 
-1. Import `art/textures/atlas_array.png` as **Texture2DArray**: Horizontal = 1, Vertical = 73.
+1. Import `art/textures/atlas_array.png` as **Texture2DArray**: Horizontal = 1, Vertical = 113.
 2. Import settings: **Compress = Lossless** (no VRAM compression — it smears 16 px art), **Mipmaps = on**,
    **sRGB off for tinted textures** (we read them as numbers; see 6.4). Ores are "full" colour: either a
    second small array with sRGB on, or convert in the shader with `pow(c, 2.2)`.
@@ -314,18 +357,100 @@ shading as is (it is what stops repetition at a distance).
 4. Props (box UVs = world position too, same 16 px per metre).
 5. Apply the new palette in `data/biomes/*.tres`.
 
+
 ---
 
-## 7. Status
+## 8. Plants, bushes and flowers (v2)
+
+**Two kinds of plant art:**
+
+1. **Box textures** (tile, 16 px per metre) for plants that are big boxes in the game:
+   `bush_leaves` (tinted, every bush), `berry_bush` and `frostberry_bush` (full colour: the berries are
+   painted in, so the 5 small berry boxes can stay or go), `cactus`, `palm_frond`, `hanging_moss`, `crystal`
+   (tinted) and `mushroom_cap` (full colour). Bush leaves use **smaller clumps than oak leaves**, so a 1 m bush
+   does not look like a tree crown that fell down.
+2. **Sprites** for small plants: today these are tiny coloured boxes (a 16 cm flower head is 2-3 pixels and
+   does not read). New rule: **small plants are drawn on two crossed vertical cards, 1 m wide x 1 m tall**,
+   with an alpha cut-out sprite. Still 16 px per metre, bottom row = ground. 20 sprites:
+   `flowers_mixed/yellow/pink/violet`, `grass_tuft` (tinted), `fern` (tinted), `reeds`, `dead_bush`,
+   the herbs `sunbloom`, `moonpetal`, `frost_lotus`, `starlight_orchid`, `emberroot`, the mushrooms
+   `mushroom_patch`, `glowcap`, `dreamcap`, and the crop stages `wheat_0..3`.
+
+Sprite rules: hard alpha (0 or 255), 1-pixel stems, flower heads 3 x 3 with a lit top pixel, no outline
+(foliage stays soft like Minecraft Dungeons), max ~12 px tall so they never hide the hero.
+
+**How to use sprites in Godot:** material with `alpha_scissor_threshold = 0.5`, `cull_disabled`, no shadows
+for tufts/flowers (too small, they flicker). Mipmaps eat thin stems at distance: either turn mipmaps **off**
+for sprite layers (put sprites in their own small `Texture2DArray`) or simply hide sprites beyond ~35 m
+(they are `show_in_lod1 = false` already). Add a little wind with the existing foliage sway shader (top
+vertices only). `moonpetal` and `glowcap` should get emission (they glow in the game).
+
+## 9. Building blocks (v2)
+
+All tinted, so the existing piece colours (`WOOD`, `WOOD_DARK`, `STONE`, `THATCH`, `IRON`, cloth colours)
+keep working. Pattern sizes match the meshes:
+
+| Texture | Pattern | Matches |
+|---|---|---|
+| `planks_wall` | horizontal boards 4 px (0.25 m), staggered joints, nails | wood wall, fence rails |
+| `planks_vertical` | boards 4 px wide along v | wood floor (its boards are 0.25 m), door leaf, chest, tables |
+| `wood_beam` | dense vertical grain, no joints | `WOOD_DARK` frames, posts, legs |
+| `palisade` | vertical logs 4 px, lit left / dark gap right | palisade (logs are 0.24 m) |
+| `roof_shingles` | staggered 4 x 4 px shingles with row shadows | wood roof |
+| `thatch` | straw strokes in 4-px rows | thatch roof |
+| `stone_bricks` | 8 x 4 px bricks (0.5 x 0.25 m), staggered | stone wall, forge, altar base |
+| `stone_tiles` | 8 x 8 px tiles (0.5 m) with bevel | stone floor (its tiles are 0.5 m) |
+| `iron_plate` | plates with rivets | door bands, traps, chest bands, forge |
+| `cloth` | small weave, seam every 0.5 m | bed, tailoring, flags, rugs |
+| `tilled_soil` | furrows every 0.25 m | farm plot |
+| `glass` | light blue, alpha 110, glints | window pane (**the window mesh has no pane yet**) |
+
+UVs: **world-space like the terrain** (top: `xz`, sides: horizontal + `-y`). Then boards and bricks line up
+from one piece to the next, which is what makes a wall of many pieces look like one wall. The full piece →
+texture map is in `atlas.json` → `building`.
+
+## 10. Item icons (v2)
+
+- `art/icons/items/<item_id>.png` — **one 32 x 32 icon for each of the 215 items** in `data/items/`.
+- `art/icons/icon_atlas.png` (16 per row) + `icon_atlas.json` (id → cell, shape, colour, rarity).
+- `art/icons/shapes/` — the 65 drawings in a neutral colour, for reference.
+- `art/previews/item_icons_sheet.png` — all icons on an inventory-slot background.
+
+Made by `art/tools/icongen.py`. It uses **the same rules as the game's `ItemIcons`** to pick a drawing
+(id / category / slot) and the colour (`icon_color`, or the metal colour for tools: copper, iron, mithril,
+star metal...). So new items added as data still get an icon by running the script again. What is new is the
+art:
+
+1. 32 x 32, 1-2 px empty margin; weapons and tools point to the **top-right**, handle bottom-left.
+2. Every drawing is built from material slots (main colour, metal, wood, gold, leather, paper, glass...).
+3. **4 tones per material**: shadow, mid-shadow, base, light. Pixels at the top/left edge of a material are
+   lit, bottom/right edge are shaded, and the top-left third of the item is one step lighter (one sun).
+4. Shadows lean **cool**, lights lean **warm** (same rule as the world).
+5. **Coloured outline**, 1 px: the darkest neighbouring colour x 0.32, a little blue — never pure black.
+6. One white glint on metal, gems and glass.
+7. Rare items (rarity ≥ Rare) get **gold** guards / trim, like today.
+
+How to use in the game (coding session): load `icon_atlas.png` once, make an `AtlasTexture` per item from
+`icon_atlas.json`, and fall back to `ItemIcons.render()` for any id that is missing. Import with
+**filter nearest, no mipmaps, lossless**; draw at 2x or 3x (64 / 96 px) in the UI, never at odd scales.
+
+---
+
+## 11. Status
 
 | Item | Status |
 |---|---|
 | Art bible, palette, texture list | done |
-| 73 textures (PNG), variants, tiling check | done |
+| 73 terrain textures (PNG), variants, tiling check | done |
+| Bushes, plant blocks, 20 plant sprites, 12 building textures | done (v2) |
+| 215 item icons (65 drawings) + icon atlas | done (v2) |
+| Village preview | done (v2) |
 | atlas.png + atlas_array.png + atlas.json | done |
 | Biome previews, far-view test, texture sheet | done |
 | Palette written into `data/biomes/*.tres` | **NOT IMPLEMENTED** (no game files changed) |
 | Shader / mesh changes in the game | **NOT IMPLEMENTED** (coding session) |
 | Forward+ (SSAO) previews | **NOT IMPLEMENTED** |
-| Textures for bushes, flowers, reeds, building pieces, stalagmite tops, village props | **NOT IMPLEMENTED** |
+| Textures for village NPC props (market stalls, signs), stalagmites (they reuse `cave_stone_side`), more crops than wheat (carrot, pumpkin stages) | **NOT IMPLEMENTED** |
+| Item icons in the game (replacing `ItemIcons` drawing code) | **NOT IMPLEMENTED** (coding session) |
+| Spell-school symbols on tome icons (all tomes share one drawing, only the colour changes, same as today) | **NOT IMPLEMENTED** |
 | Prop colour changes | **NOT IMPLEMENTED** (kept current colours) |

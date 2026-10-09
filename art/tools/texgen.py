@@ -765,10 +765,16 @@ def main():
     for i, name in enumerate(ORES):
         save(f"ore_{name}", ore(name, 1500 + i * 10), "full", f"Ore rock ({name}): dark stone with {name} nuggets. Full colour - use white vertex colour.", "prop", group="ore")
 
+    import texgen_extra          # plants, sprites, building blocks
+    texgen_extra.build()
+
     with open(os.path.join(OUT, "textures.json"), "w") as f:
         json.dump({"tex_gain": TEX_GAIN, "textures": TEXTURES}, f, indent=1)
     print(f"{len(TEXTURES)} textures written to {OUT}")
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import texgen               # run as module "texgen" so texgen_extra shares TEXTURES
+    texgen.main()

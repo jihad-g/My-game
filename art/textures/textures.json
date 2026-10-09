@@ -657,6 +657,366 @@
    "shades": 7,
    "mean": 0.532,
    "desc": "Ore rock (silver): dark stone with silver nuggets. Full colour - use white vertex colour."
+  },
+  "bush_leaves": {
+   "file": "bush_leaves.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "bush",
+   "shades": 5,
+   "mean": 0.797,
+   "desc": "Bush leaves: small dense clumps (all bush boxes; tint with the bush colour)."
+  },
+  "berry_bush": {
+   "file": "berry_bush.png",
+   "tint": "full",
+   "face": "prop",
+   "group": "bush",
+   "shades": 8,
+   "mean": 0.358,
+   "desc": "Berry bush with red berries painted in (use on the main bush box; white vertex colour)."
+  },
+  "frostberry_bush": {
+   "file": "frostberry_bush.png",
+   "tint": "full",
+   "face": "prop",
+   "group": "bush",
+   "shades": 8,
+   "mean": 0.391,
+   "desc": "Frostberry bush: teal leaves, blue berries."
+  },
+  "cactus": {
+   "file": "cactus.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "plant",
+   "shades": 5,
+   "mean": 0.799,
+   "desc": "Cactus: vertical ribs every 4 px with light spines."
+  },
+  "palm_frond": {
+   "file": "palm_frond.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "plant",
+   "shades": 5,
+   "mean": 0.796,
+   "desc": "Palm fronds: leaflets from a centre rib."
+  },
+  "mushroom_cap": {
+   "file": "mushroom_cap.png",
+   "tint": "full",
+   "face": "prop",
+   "group": "plant",
+   "shades": 6,
+   "mean": 0.429,
+   "desc": "Giant mushroom cap: red with cream spots."
+  },
+  "crystal": {
+   "file": "crystal.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "plant",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Crystal: big facets with bright edges (crystal clusters, altar)."
+  },
+  "hanging_moss": {
+   "file": "hanging_moss.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "plant",
+   "shades": 3,
+   "mean": 0.799,
+   "desc": "Swamp-tree hanging moss strands."
+  },
+  "flowers_mixed": {
+   "file": "flowers_mixed.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 18,
+   "mean": 0.111,
+   "desc": "Meadow flowers, four colours (the 'flowers' prop). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "flowers_yellow": {
+   "file": "flowers_yellow.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 9,
+   "mean": 0.075,
+   "desc": "Yellow flower clump. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "flowers_pink": {
+   "file": "flowers_pink.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 9,
+   "mean": 0.088,
+   "desc": "Pink flower clump. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "flowers_violet": {
+   "file": "flowers_violet.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 9,
+   "mean": 0.088,
+   "desc": "Violet flower clump. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "grass_tuft": {
+   "file": "grass_tuft.png",
+   "tint": "tinted",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.186,
+   "desc": "Grass tuft (tint with the biome top colour). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "fern": {
+   "file": "fern.png",
+   "tint": "tinted",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.319,
+   "desc": "Fern (forest/jungle floor; tint green). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "reeds": {
+   "file": "reeds.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 7,
+   "mean": 0.114,
+   "desc": "Reeds with cattail heads (shores). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "dead_bush": {
+   "file": "dead_bush.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 4,
+   "mean": 0.055,
+   "desc": "Dry desert bush. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "sunbloom": {
+   "file": "sunbloom.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 8,
+   "mean": 0.103,
+   "desc": "Sunbloom herb (meadow). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "moonpetal": {
+   "file": "moonpetal.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.078,
+   "desc": "Moonpetal herb (glows at night - add emission). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "frost_lotus": {
+   "file": "frost_lotus.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 6,
+   "mean": 0.106,
+   "desc": "Frost lotus herb (tundra). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "starlight_orchid": {
+   "file": "starlight_orchid.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 6,
+   "mean": 0.06,
+   "desc": "Starlight orchid herb (crystal glade). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "emberroot": {
+   "file": "emberroot.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.052,
+   "desc": "Emberroot herb (desert). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "mushroom_patch": {
+   "file": "mushroom_patch.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.058,
+   "desc": "Brown mushroom patch. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "glowcap": {
+   "file": "glowcap.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.093,
+   "desc": "Glowcap mushrooms (caves, emission). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "dreamcap": {
+   "file": "dreamcap.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.091,
+   "desc": "Dreamcap mushrooms (caves). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "wheat_0": {
+   "file": "wheat_0.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 2,
+   "mean": 0.018,
+   "desc": "Wheat crop, growth stage 0 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "wheat_1": {
+   "file": "wheat_1.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 2,
+   "mean": 0.049,
+   "desc": "Wheat crop, growth stage 1 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "wheat_2": {
+   "file": "wheat_2.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 4,
+   "mean": 0.152,
+   "desc": "Wheat crop, growth stage 2 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "wheat_3": {
+   "file": "wheat_3.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 4,
+   "mean": 0.212,
+   "desc": "Wheat crop, growth stage 3 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground."
+  },
+  "planks_wall": {
+   "file": "planks_wall.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_wood",
+   "shades": 6,
+   "mean": 0.799,
+   "desc": "Wood wall: horizontal boards 0.25 m, staggered joints, nails. Tint WOOD."
+  },
+  "planks_vertical": {
+   "file": "planks_vertical.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_wood",
+   "shades": 6,
+   "mean": 0.799,
+   "desc": "Boards running along v, 0.25 m wide: wood floor (matches the floor-board mesh), doors, chests."
+  },
+  "wood_beam": {
+   "file": "wood_beam.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_wood",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Dark frame wood: posts, beams, door frames. Tint WOOD_DARK."
+  },
+  "palisade": {
+   "file": "palisade.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_wood",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Palisade / spike wall: vertical logs 0.25 m."
+  },
+  "roof_shingles": {
+   "file": "roof_shingles.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_roof",
+   "shades": 5,
+   "mean": 0.799,
+   "desc": "Wood roof shingles, staggered rows."
+  },
+  "thatch": {
+   "file": "thatch.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_roof",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Thatch roof straw rows. Tint THATCH."
+  },
+  "stone_bricks": {
+   "file": "stone_bricks.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_stone",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Stone wall bricks 0.5 x 0.25 m, staggered."
+  },
+  "stone_tiles": {
+   "file": "stone_tiles.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_stone",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Stone floor tiles 0.5 m (matches the floor mesh)."
+  },
+  "iron_plate": {
+   "file": "iron_plate.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_metal",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Iron plate with rivets: reinforced door, traps, forge, chest bands."
+  },
+  "cloth": {
+   "file": "cloth.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_cloth",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Woven cloth with a seam every 0.5 m: bed, tailoring, banners, rugs. Tint the cloth colour."
+  },
+  "tilled_soil": {
+   "file": "tilled_soil.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_farm",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Farm plot soil: furrows every 0.25 m. Tint SOIL."
+  },
+  "glass": {
+   "file": "glass.png",
+   "tint": "full",
+   "face": "building",
+   "group": "building_glass",
+   "shades": 2,
+   "mean": 0.885,
+   "desc": "Window glass (alpha 110, glints 200). Not used by the current window mesh (it has no pane)."
   }
  }
 }

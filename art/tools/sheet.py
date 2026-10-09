@@ -15,7 +15,9 @@ SAMPLE = {   # group -> sample tint (sRGB hex) just for this sheet
     "crystal_ground": "#8069C6", "dirt": "#8A5A36", "sand": "#F2D48E", "desert_sand": "#EDB66C",
     "sandstone": "#D9A066", "stone": "#8C877F", "mountain_rock": "#8E867D", "snow": "#EEF3FA",
     "ice": "#A9D6EE", "swamp_mud": "#5A4C34", "cave_stone": "#5E5864", "gravel": "#9A948A",
-    "bark": "#6E4A2E", "leaves": "#3F8A34", "boulder": "#8A847C", "ore": "#FFFFFF",
+    "bark": "#6E4A2E", "bush": "#408C40", "plant": "#4C9A44", "sprite": "#5C9C34",
+    "building_wood": "#9E6E42", "building_roof": "#D1B261", "building_stone": "#99999F",
+    "building_metal": "#80808C", "building_cloth": "#B84A42", "building_farm": "#5C3D26", "building_glass": "#FFFFFF", "leaves": "#3F8A34", "boulder": "#8A847C", "ore": "#FFFFFF",
 }
 SIDE_SAMPLE = {"grass_swamp": "#4F4330", "crystal_ground": "#54466E", "snow": "#7E6E68"}
 GAIN = 1.25
@@ -49,7 +51,11 @@ def main():
     d = ImageDraw.Draw(sheet)
     for i, n in enumerate(names):
         t = shade_tex(n, meta[n])
-        tiled = np.tile(t, (2, 2, 1))
+        a = np.asarray(Image.open(os.path.join(TEX, meta[n]["file"])).convert("RGBA"))[..., 3:4] / 255
+        bgc = np.array([0.55, 0.72, 0.85])
+        if meta[n]["face"] == "sprite" or n == "glass":
+            t = a * t + (1 - a) * bgc
+        tiled = np.tile(t, (2, 2, 1)) if meta[n]["face"] != "sprite" else np.dstack([np.pad(t[..., c], 8, constant_values=bgc[c]) for c in range(3)])
         im = Image.fromarray((tiled * 255).astype(np.uint8)).resize((cw, cw), Image.NEAREST)
         x = pad + (i % cols) * (cw + pad)
         y = pad + (i // cols) * (cw + pad + lab)

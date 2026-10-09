@@ -11,9 +11,9 @@
  },
  "array": {
   "file": "atlas_array.png",
-  "layers": 73,
+  "layers": 113,
   "layer_size": 16,
-  "import": "Godot: Import As 'Texture2DArray', Horizontal 1, Vertical 73"
+  "import": "Godot: Import As 'Texture2DArray', Horizontal 1, Vertical 113"
  },
  "tint_modes": {
   "tinted": "final = vertex_colour * tex.rgb * tex_gain",
@@ -1921,6 +1921,1046 @@
     0.20703125,
     0.41796875
    ]
+  },
+  "bush_leaves": {
+   "file": "bush_leaves.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "bush",
+   "shades": 5,
+   "mean": 0.797,
+   "desc": "Bush leaves: small dense clumps (all bush boxes; tint with the bush colour).",
+   "layer": 73,
+   "cell": [
+    3,
+    5
+   ],
+   "px": [
+    55,
+    91,
+    16,
+    16
+   ],
+   "uv": [
+    0.21484375,
+    0.35546875,
+    0.27734375,
+    0.41796875
+   ]
+  },
+  "berry_bush": {
+   "file": "berry_bush.png",
+   "tint": "full",
+   "face": "prop",
+   "group": "bush",
+   "shades": 8,
+   "mean": 0.358,
+   "desc": "Berry bush with red berries painted in (use on the main bush box; white vertex colour).",
+   "layer": 74,
+   "cell": [
+    4,
+    5
+   ],
+   "px": [
+    73,
+    91,
+    16,
+    16
+   ],
+   "uv": [
+    0.28515625,
+    0.35546875,
+    0.34765625,
+    0.41796875
+   ]
+  },
+  "frostberry_bush": {
+   "file": "frostberry_bush.png",
+   "tint": "full",
+   "face": "prop",
+   "group": "bush",
+   "shades": 8,
+   "mean": 0.391,
+   "desc": "Frostberry bush: teal leaves, blue berries.",
+   "layer": 75,
+   "cell": [
+    5,
+    5
+   ],
+   "px": [
+    91,
+    91,
+    16,
+    16
+   ],
+   "uv": [
+    0.35546875,
+    0.35546875,
+    0.41796875,
+    0.41796875
+   ]
+  },
+  "cactus": {
+   "file": "cactus.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "plant",
+   "shades": 5,
+   "mean": 0.799,
+   "desc": "Cactus: vertical ribs every 4 px with light spines.",
+   "layer": 76,
+   "cell": [
+    6,
+    5
+   ],
+   "px": [
+    109,
+    91,
+    16,
+    16
+   ],
+   "uv": [
+    0.42578125,
+    0.35546875,
+    0.48828125,
+    0.41796875
+   ]
+  },
+  "palm_frond": {
+   "file": "palm_frond.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "plant",
+   "shades": 5,
+   "mean": 0.796,
+   "desc": "Palm fronds: leaflets from a centre rib.",
+   "layer": 77,
+   "cell": [
+    7,
+    5
+   ],
+   "px": [
+    127,
+    91,
+    16,
+    16
+   ],
+   "uv": [
+    0.49609375,
+    0.35546875,
+    0.55859375,
+    0.41796875
+   ]
+  },
+  "mushroom_cap": {
+   "file": "mushroom_cap.png",
+   "tint": "full",
+   "face": "prop",
+   "group": "plant",
+   "shades": 6,
+   "mean": 0.429,
+   "desc": "Giant mushroom cap: red with cream spots.",
+   "layer": 78,
+   "cell": [
+    8,
+    5
+   ],
+   "px": [
+    145,
+    91,
+    16,
+    16
+   ],
+   "uv": [
+    0.56640625,
+    0.35546875,
+    0.62890625,
+    0.41796875
+   ]
+  },
+  "crystal": {
+   "file": "crystal.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "plant",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Crystal: big facets with bright edges (crystal clusters, altar).",
+   "layer": 79,
+   "cell": [
+    9,
+    5
+   ],
+   "px": [
+    163,
+    91,
+    16,
+    16
+   ],
+   "uv": [
+    0.63671875,
+    0.35546875,
+    0.69921875,
+    0.41796875
+   ]
+  },
+  "hanging_moss": {
+   "file": "hanging_moss.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "plant",
+   "shades": 3,
+   "mean": 0.799,
+   "desc": "Swamp-tree hanging moss strands.",
+   "layer": 80,
+   "cell": [
+    10,
+    5
+   ],
+   "px": [
+    181,
+    91,
+    16,
+    16
+   ],
+   "uv": [
+    0.70703125,
+    0.35546875,
+    0.76953125,
+    0.41796875
+   ]
+  },
+  "flowers_mixed": {
+   "file": "flowers_mixed.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 18,
+   "mean": 0.111,
+   "desc": "Meadow flowers, four colours (the 'flowers' prop). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 81,
+   "cell": [
+    11,
+    5
+   ],
+   "px": [
+    199,
+    91,
+    16,
+    16
+   ],
+   "uv": [
+    0.77734375,
+    0.35546875,
+    0.83984375,
+    0.41796875
+   ]
+  },
+  "flowers_yellow": {
+   "file": "flowers_yellow.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 9,
+   "mean": 0.075,
+   "desc": "Yellow flower clump. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 82,
+   "cell": [
+    12,
+    5
+   ],
+   "px": [
+    217,
+    91,
+    16,
+    16
+   ],
+   "uv": [
+    0.84765625,
+    0.35546875,
+    0.91015625,
+    0.41796875
+   ]
+  },
+  "flowers_pink": {
+   "file": "flowers_pink.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 9,
+   "mean": 0.088,
+   "desc": "Pink flower clump. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 83,
+   "cell": [
+    13,
+    5
+   ],
+   "px": [
+    235,
+    91,
+    16,
+    16
+   ],
+   "uv": [
+    0.91796875,
+    0.35546875,
+    0.98046875,
+    0.41796875
+   ]
+  },
+  "flowers_violet": {
+   "file": "flowers_violet.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 9,
+   "mean": 0.088,
+   "desc": "Violet flower clump. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 84,
+   "cell": [
+    0,
+    6
+   ],
+   "px": [
+    1,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.00390625,
+    0.42578125,
+    0.06640625,
+    0.48828125
+   ]
+  },
+  "grass_tuft": {
+   "file": "grass_tuft.png",
+   "tint": "tinted",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.186,
+   "desc": "Grass tuft (tint with the biome top colour). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 85,
+   "cell": [
+    1,
+    6
+   ],
+   "px": [
+    19,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.07421875,
+    0.42578125,
+    0.13671875,
+    0.48828125
+   ]
+  },
+  "fern": {
+   "file": "fern.png",
+   "tint": "tinted",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.319,
+   "desc": "Fern (forest/jungle floor; tint green). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 86,
+   "cell": [
+    2,
+    6
+   ],
+   "px": [
+    37,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.14453125,
+    0.42578125,
+    0.20703125,
+    0.48828125
+   ]
+  },
+  "reeds": {
+   "file": "reeds.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 7,
+   "mean": 0.114,
+   "desc": "Reeds with cattail heads (shores). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 87,
+   "cell": [
+    3,
+    6
+   ],
+   "px": [
+    55,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.21484375,
+    0.42578125,
+    0.27734375,
+    0.48828125
+   ]
+  },
+  "dead_bush": {
+   "file": "dead_bush.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 4,
+   "mean": 0.055,
+   "desc": "Dry desert bush. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 88,
+   "cell": [
+    4,
+    6
+   ],
+   "px": [
+    73,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.28515625,
+    0.42578125,
+    0.34765625,
+    0.48828125
+   ]
+  },
+  "sunbloom": {
+   "file": "sunbloom.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 8,
+   "mean": 0.103,
+   "desc": "Sunbloom herb (meadow). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 89,
+   "cell": [
+    5,
+    6
+   ],
+   "px": [
+    91,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.35546875,
+    0.42578125,
+    0.41796875,
+    0.48828125
+   ]
+  },
+  "moonpetal": {
+   "file": "moonpetal.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.078,
+   "desc": "Moonpetal herb (glows at night - add emission). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 90,
+   "cell": [
+    6,
+    6
+   ],
+   "px": [
+    109,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.42578125,
+    0.42578125,
+    0.48828125,
+    0.48828125
+   ]
+  },
+  "frost_lotus": {
+   "file": "frost_lotus.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 6,
+   "mean": 0.106,
+   "desc": "Frost lotus herb (tundra). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 91,
+   "cell": [
+    7,
+    6
+   ],
+   "px": [
+    127,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.49609375,
+    0.42578125,
+    0.55859375,
+    0.48828125
+   ]
+  },
+  "starlight_orchid": {
+   "file": "starlight_orchid.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 6,
+   "mean": 0.06,
+   "desc": "Starlight orchid herb (crystal glade). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 92,
+   "cell": [
+    8,
+    6
+   ],
+   "px": [
+    145,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.56640625,
+    0.42578125,
+    0.62890625,
+    0.48828125
+   ]
+  },
+  "emberroot": {
+   "file": "emberroot.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.052,
+   "desc": "Emberroot herb (desert). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 93,
+   "cell": [
+    9,
+    6
+   ],
+   "px": [
+    163,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.63671875,
+    0.42578125,
+    0.69921875,
+    0.48828125
+   ]
+  },
+  "mushroom_patch": {
+   "file": "mushroom_patch.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.058,
+   "desc": "Brown mushroom patch. Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 94,
+   "cell": [
+    10,
+    6
+   ],
+   "px": [
+    181,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.70703125,
+    0.42578125,
+    0.76953125,
+    0.48828125
+   ]
+  },
+  "glowcap": {
+   "file": "glowcap.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.093,
+   "desc": "Glowcap mushrooms (caves, emission). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 95,
+   "cell": [
+    11,
+    6
+   ],
+   "px": [
+    199,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.77734375,
+    0.42578125,
+    0.83984375,
+    0.48828125
+   ]
+  },
+  "dreamcap": {
+   "file": "dreamcap.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 5,
+   "mean": 0.091,
+   "desc": "Dreamcap mushrooms (caves). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 96,
+   "cell": [
+    12,
+    6
+   ],
+   "px": [
+    217,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.84765625,
+    0.42578125,
+    0.91015625,
+    0.48828125
+   ]
+  },
+  "wheat_0": {
+   "file": "wheat_0.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 2,
+   "mean": 0.018,
+   "desc": "Wheat crop, growth stage 0 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 97,
+   "cell": [
+    13,
+    6
+   ],
+   "px": [
+    235,
+    109,
+    16,
+    16
+   ],
+   "uv": [
+    0.91796875,
+    0.42578125,
+    0.98046875,
+    0.48828125
+   ]
+  },
+  "wheat_1": {
+   "file": "wheat_1.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 2,
+   "mean": 0.049,
+   "desc": "Wheat crop, growth stage 1 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 98,
+   "cell": [
+    0,
+    7
+   ],
+   "px": [
+    1,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.00390625,
+    0.49609375,
+    0.06640625,
+    0.55859375
+   ]
+  },
+  "wheat_2": {
+   "file": "wheat_2.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 4,
+   "mean": 0.152,
+   "desc": "Wheat crop, growth stage 2 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 99,
+   "cell": [
+    1,
+    7
+   ],
+   "px": [
+    19,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.07421875,
+    0.49609375,
+    0.13671875,
+    0.55859375
+   ]
+  },
+  "wheat_3": {
+   "file": "wheat_3.png",
+   "tint": "full",
+   "face": "sprite",
+   "group": "sprite",
+   "shades": 4,
+   "mean": 0.212,
+   "desc": "Wheat crop, growth stage 3 (farm plot). Sprite: alpha cut-out on 2 crossed cards, 1 m x 1 m, bottom row = ground.",
+   "layer": 100,
+   "cell": [
+    2,
+    7
+   ],
+   "px": [
+    37,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.14453125,
+    0.49609375,
+    0.20703125,
+    0.55859375
+   ]
+  },
+  "planks_wall": {
+   "file": "planks_wall.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_wood",
+   "shades": 6,
+   "mean": 0.799,
+   "desc": "Wood wall: horizontal boards 0.25 m, staggered joints, nails. Tint WOOD.",
+   "layer": 101,
+   "cell": [
+    3,
+    7
+   ],
+   "px": [
+    55,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.21484375,
+    0.49609375,
+    0.27734375,
+    0.55859375
+   ]
+  },
+  "planks_vertical": {
+   "file": "planks_vertical.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_wood",
+   "shades": 6,
+   "mean": 0.799,
+   "desc": "Boards running along v, 0.25 m wide: wood floor (matches the floor-board mesh), doors, chests.",
+   "layer": 102,
+   "cell": [
+    4,
+    7
+   ],
+   "px": [
+    73,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.28515625,
+    0.49609375,
+    0.34765625,
+    0.55859375
+   ]
+  },
+  "wood_beam": {
+   "file": "wood_beam.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_wood",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Dark frame wood: posts, beams, door frames. Tint WOOD_DARK.",
+   "layer": 103,
+   "cell": [
+    5,
+    7
+   ],
+   "px": [
+    91,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.35546875,
+    0.49609375,
+    0.41796875,
+    0.55859375
+   ]
+  },
+  "palisade": {
+   "file": "palisade.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_wood",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Palisade / spike wall: vertical logs 0.25 m.",
+   "layer": 104,
+   "cell": [
+    6,
+    7
+   ],
+   "px": [
+    109,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.42578125,
+    0.49609375,
+    0.48828125,
+    0.55859375
+   ]
+  },
+  "roof_shingles": {
+   "file": "roof_shingles.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_roof",
+   "shades": 5,
+   "mean": 0.799,
+   "desc": "Wood roof shingles, staggered rows.",
+   "layer": 105,
+   "cell": [
+    7,
+    7
+   ],
+   "px": [
+    127,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.49609375,
+    0.49609375,
+    0.55859375,
+    0.55859375
+   ]
+  },
+  "thatch": {
+   "file": "thatch.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_roof",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Thatch roof straw rows. Tint THATCH.",
+   "layer": 106,
+   "cell": [
+    8,
+    7
+   ],
+   "px": [
+    145,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.56640625,
+    0.49609375,
+    0.62890625,
+    0.55859375
+   ]
+  },
+  "stone_bricks": {
+   "file": "stone_bricks.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_stone",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Stone wall bricks 0.5 x 0.25 m, staggered.",
+   "layer": 107,
+   "cell": [
+    9,
+    7
+   ],
+   "px": [
+    163,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.63671875,
+    0.49609375,
+    0.69921875,
+    0.55859375
+   ]
+  },
+  "stone_tiles": {
+   "file": "stone_tiles.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_stone",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Stone floor tiles 0.5 m (matches the floor mesh).",
+   "layer": 108,
+   "cell": [
+    10,
+    7
+   ],
+   "px": [
+    181,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.70703125,
+    0.49609375,
+    0.76953125,
+    0.55859375
+   ]
+  },
+  "iron_plate": {
+   "file": "iron_plate.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_metal",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Iron plate with rivets: reinforced door, traps, forge, chest bands.",
+   "layer": 109,
+   "cell": [
+    11,
+    7
+   ],
+   "px": [
+    199,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.77734375,
+    0.49609375,
+    0.83984375,
+    0.55859375
+   ]
+  },
+  "cloth": {
+   "file": "cloth.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_cloth",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Woven cloth with a seam every 0.5 m: bed, tailoring, banners, rugs. Tint the cloth colour.",
+   "layer": 110,
+   "cell": [
+    12,
+    7
+   ],
+   "px": [
+    217,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.84765625,
+    0.49609375,
+    0.91015625,
+    0.55859375
+   ]
+  },
+  "tilled_soil": {
+   "file": "tilled_soil.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_farm",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Farm plot soil: furrows every 0.25 m. Tint SOIL.",
+   "layer": 111,
+   "cell": [
+    13,
+    7
+   ],
+   "px": [
+    235,
+    127,
+    16,
+    16
+   ],
+   "uv": [
+    0.91796875,
+    0.49609375,
+    0.98046875,
+    0.55859375
+   ]
+  },
+  "glass": {
+   "file": "glass.png",
+   "tint": "full",
+   "face": "building",
+   "group": "building_glass",
+   "shades": 2,
+   "mean": 0.885,
+   "desc": "Window glass (alpha 110, glints 200). Not used by the current window mesh (it has no pane).",
+   "layer": 112,
+   "cell": [
+    0,
+    8
+   ],
+   "px": [
+    1,
+    145,
+    16,
+    16
+   ],
+   "uv": [
+    0.00390625,
+    0.56640625,
+    0.06640625,
+    0.62890625
+   ]
   }
  },
  "groups": {
@@ -2773,6 +3813,43 @@
   "ore_silver": {
    "stone": "ore_silver"
   },
+  "berry_bush": {
+   "main": "berry_bush",
+   "top": "berry_bush"
+  },
+  "frostberry_bush": {
+   "main": "frostberry_bush"
+  },
+  "bush (generic)": {
+   "all": "bush_leaves"
+  },
+  "cactus": {
+   "all": "cactus"
+  },
+  "tree_palm": {
+   "trunk": "bark",
+   "fronds": "palm_frond"
+  },
+  "tree_swamp": {
+   "trunk": "bark",
+   "leaves": "bush_leaves",
+   "moss": "hanging_moss"
+  },
+  "tree_snowy_pine": {
+   "trunk": "bark",
+   "leaves": "leaves_pine",
+   "snow": "snow_top_0"
+  },
+  "tree_dead": {
+   "all": "bark"
+  },
+  "mushroom_giant": {
+   "cap": "mushroom_cap",
+   "stem": "cloth"
+  },
+  "crystal_cluster": {
+   "all": "crystal"
+  },
   "colours_unchanged": {
    "trunk": "#734D2E",
    "leaf_oak": "#317530",
@@ -2782,6 +3859,146 @@
    "leaf_jungle": "#1F7030",
    "boulder": "#807A73",
    "ore_stone": "#80808A"
+  }
+ },
+ "sprites": {
+  "flowers": [
+   "flowers_mixed",
+   "flowers_yellow",
+   "flowers_pink",
+   "flowers_violet"
+  ],
+  "grass_tuft": "grass_tuft",
+  "reeds": "reeds",
+  "dead_bush": "dead_bush",
+  "sunbloom": "sunbloom",
+  "moonpetal": "moonpetal",
+  "frost_lotus": "frost_lotus",
+  "starlight_orchid": "starlight_orchid",
+  "emberroot": "emberroot",
+  "mushroom_patch": "mushroom_patch",
+  "glowcap": "glowcap",
+  "dreamcap": "dreamcap",
+  "fern (new)": "fern",
+  "farm_plot crop stages": [
+   "wheat_0",
+   "wheat_1",
+   "wheat_2",
+   "wheat_3"
+  ]
+ },
+ "building": {
+  "wood_wall": {
+   "wall": "planks_wall",
+   "frame": "wood_beam"
+  },
+  "wood_floor": {
+   "top": "planks_vertical",
+   "base": "wood_beam"
+  },
+  "wood_door": {
+   "frame": "wood_beam",
+   "leaf": "planks_vertical",
+   "bands": "iron_plate"
+  },
+  "reinforced_door": {
+   "frame": "wood_beam",
+   "leaf": "planks_vertical",
+   "plates": "iron_plate"
+  },
+  "wood_window": {
+   "wall": "planks_wall",
+   "frame": "wood_beam",
+   "pane": "glass"
+  },
+  "wood_fence": {
+   "posts": "wood_beam",
+   "rails": "planks_wall"
+  },
+  "wood_roof": {
+   "all": "roof_shingles"
+  },
+  "thatch_roof": {
+   "all": "thatch"
+  },
+  "stone_wall": {
+   "all": "stone_bricks"
+  },
+  "stone_floor": {
+   "top": "stone_tiles",
+   "base": "stone_bricks"
+  },
+  "palisade_wall": {
+   "logs": "palisade",
+   "bands": "iron_plate"
+  },
+  "spike_wall": {
+   "beam": "wood_beam",
+   "spikes": "palisade",
+   "tips": "iron_plate"
+  },
+  "spike_trap": {
+   "base": "wood_beam",
+   "spikes": "iron_plate"
+  },
+  "arrow_tower": {
+   "wood": "planks_wall",
+   "frame": "wood_beam",
+   "roof": "roof_shingles"
+  },
+  "storage_chest": {
+   "body": "planks_vertical",
+   "bands": "iron_plate"
+  },
+  "workbench": {
+   "top": "planks_vertical",
+   "legs": "wood_beam"
+  },
+  "table": {
+   "top": "planks_vertical",
+   "legs": "wood_beam"
+  },
+  "chair": {
+   "all": "planks_vertical"
+  },
+  "bed": {
+   "frame": "wood_beam",
+   "blanket": "cloth",
+   "pillow": "cloth"
+  },
+  "tailoring": {
+   "wood": "planks_vertical",
+   "cloth": "cloth"
+  },
+  "forge": {
+   "body": "stone_bricks",
+   "metal": "iron_plate"
+  },
+  "alchemy_table": {
+   "top": "planks_vertical",
+   "legs": "wood_beam"
+  },
+  "arcane_altar": {
+   "base": "stone_bricks",
+   "crystal": "crystal"
+  },
+  "farm_plot": {
+   "soil": "tilled_soil",
+   "crops": "wheat_0..3"
+  },
+  "torch": {
+   "stick": "wood_beam"
+  },
+  "alarm_bell": {
+   "frame": "wood_beam",
+   "bell": "iron_plate"
+  },
+  "claim_flag": {
+   "pole": "wood_beam",
+   "flag": "cloth"
+  },
+  "claim_totem": {
+   "all": "wood_beam"
   }
  }
 }

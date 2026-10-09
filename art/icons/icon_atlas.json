@@ -1,0 +1,3729 @@
+{
+ "icon_size": 32,
+ "columns": 16,
+ "count": 215,
+ "shapes": [
+  "sword",
+  "greatsword",
+  "dagger",
+  "axe",
+  "hatchet",
+  "pickaxe",
+  "hammer",
+  "spear",
+  "staff",
+  "wand",
+  "bow",
+  "arrow",
+  "shield",
+  "crown",
+  "helmet",
+  "hood",
+  "hat",
+  "boots",
+  "gloves",
+  "armor",
+  "robe",
+  "ring",
+  "amulet",
+  "badge",
+  "potion",
+  "vial",
+  "meat",
+  "meat_cooked",
+  "berries",
+  "bread",
+  "bowl",
+  "carrot",
+  "pumpkin",
+  "coconut",
+  "fruit",
+  "wheat",
+  "flower",
+  "root",
+  "heart",
+  "orb",
+  "ore",
+  "ingot",
+  "nugget",
+  "gem",
+  "crystal",
+  "dust",
+  "plank",
+  "log",
+  "stick",
+  "flint",
+  "stone",
+  "lump",
+  "coal",
+  "fiber",
+  "rope",
+  "hide",
+  "tusk",
+  "bone",
+  "campfire",
+  "bandage",
+  "seeds",
+  "mushroom",
+  "scroll",
+  "book",
+  "crate"
+ ],
+ "items": {
+  "aegis_of_dawn": {
+   "cell": [
+    0,
+    0
+   ],
+   "px": [
+    0,
+    0,
+    32,
+    32
+   ],
+   "shape": "shield",
+   "file": "items/aegis_of_dawn.png",
+   "category": "ARMOR",
+   "rarity": 6,
+   "color": "#FFD866"
+  },
+  "alchemists_grimoire": {
+   "cell": [
+    1,
+    0
+   ],
+   "px": [
+    32,
+    0,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/alchemists_grimoire.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#66B272"
+  },
+  "ancient_bone": {
+   "cell": [
+    2,
+    0
+   ],
+   "px": [
+    64,
+    0,
+    32,
+    32
+   ],
+   "shape": "bone",
+   "file": "items/ancient_bone.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#E5E0CC"
+  },
+  "antidote": {
+   "cell": [
+    3,
+    0
+   ],
+   "px": [
+    96,
+    0,
+    32,
+    32
+   ],
+   "shape": "potion",
+   "file": "items/antidote.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#8CD866"
+  },
+  "apprentice_robe": {
+   "cell": [
+    4,
+    0
+   ],
+   "px": [
+    128,
+    0,
+    32,
+    32
+   ],
+   "shape": "robe",
+   "file": "items/apprentice_robe.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#7259B2"
+  },
+  "apprentice_shoes": {
+   "cell": [
+    5,
+    0
+   ],
+   "px": [
+    160,
+    0,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/apprentice_shoes.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#4C3D6B"
+  },
+  "apprentice_staff": {
+   "cell": [
+    6,
+    0
+   ],
+   "px": [
+    192,
+    0,
+    32,
+    32
+   ],
+   "shape": "staff",
+   "file": "items/apprentice_staff.png",
+   "category": "WEAPON",
+   "rarity": 0,
+   "color": "#8C663F"
+  },
+  "apprentice_wand": {
+   "cell": [
+    7,
+    0
+   ],
+   "px": [
+    224,
+    0,
+    32,
+    32
+   ],
+   "shape": "wand",
+   "file": "items/apprentice_wand.png",
+   "category": "WEAPON",
+   "rarity": 1,
+   "color": "#99BFFF"
+  },
+  "apprentice_wraps": {
+   "cell": [
+    8,
+    0
+   ],
+   "px": [
+    256,
+    0,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/apprentice_wraps.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#8C72CC"
+  },
+  "arcane_codex": {
+   "cell": [
+    9,
+    0
+   ],
+   "px": [
+    288,
+    0,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/arcane_codex.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#9972FF"
+  },
+  "arcane_dust": {
+   "cell": [
+    10,
+    0
+   ],
+   "px": [
+    320,
+    0,
+    32,
+    32
+   ],
+   "shape": "dust",
+   "file": "items/arcane_dust.png",
+   "category": "MATERIAL",
+   "rarity": 3,
+   "color": "#B28CFF"
+  },
+  "ash_spear": {
+   "cell": [
+    11,
+    0
+   ],
+   "px": [
+    352,
+    0,
+    32,
+    32
+   ],
+   "shape": "spear",
+   "file": "items/ash_spear.png",
+   "category": "WEAPON",
+   "rarity": 1,
+   "color": "#9E7F59"
+  },
+  "bandage": {
+   "cell": [
+    12,
+    0
+   ],
+   "px": [
+    384,
+    0,
+    32,
+    32
+   ],
+   "shape": "bandage",
+   "file": "items/bandage.png",
+   "category": "FOOD",
+   "rarity": 0,
+   "color": "#EAE5D8"
+  },
+  "bandit_insignia": {
+   "cell": [
+    13,
+    0
+   ],
+   "px": [
+    416,
+    0,
+    32,
+    32
+   ],
+   "shape": "badge",
+   "file": "items/bandit_insignia.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#BF3F33"
+  },
+  "berries": {
+   "cell": [
+    14,
+    0
+   ],
+   "px": [
+    448,
+    0,
+    32,
+    32
+   ],
+   "shape": "berries",
+   "file": "items/berries.png",
+   "category": "FOOD",
+   "rarity": 0,
+   "color": "#D83359"
+  },
+  "boar_hide": {
+   "cell": [
+    15,
+    0
+   ],
+   "px": [
+    480,
+    0,
+    32,
+    32
+   ],
+   "shape": "hide",
+   "file": "items/boar_hide.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#7F5638"
+  },
+  "boar_tusk": {
+   "cell": [
+    0,
+    1
+   ],
+   "px": [
+    0,
+    32,
+    32,
+    32
+   ],
+   "shape": "tusk",
+   "file": "items/boar_tusk.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#F2EACC"
+  },
+  "bread": {
+   "cell": [
+    1,
+    1
+   ],
+   "px": [
+    32,
+    32,
+    32,
+    32
+   ],
+   "shape": "bread",
+   "file": "items/bread.png",
+   "category": "FOOD",
+   "rarity": 0,
+   "color": "#D89E59"
+  },
+  "cactus_fruit": {
+   "cell": [
+    2,
+    1
+   ],
+   "px": [
+    64,
+    32,
+    32,
+    32
+   ],
+   "shape": "fruit",
+   "file": "items/cactus_fruit.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#F2668C"
+  },
+  "campfire_kit": {
+   "cell": [
+    3,
+    1
+   ],
+   "px": [
+    96,
+    32,
+    32,
+    32
+   ],
+   "shape": "campfire",
+   "file": "items/campfire_kit.png",
+   "category": "PLACEABLE",
+   "rarity": 1,
+   "color": "#FF8C33"
+  },
+  "carrot": {
+   "cell": [
+    4,
+    1
+   ],
+   "px": [
+    128,
+    32,
+    32,
+    32
+   ],
+   "shape": "carrot",
+   "file": "items/carrot.png",
+   "category": "FOOD",
+   "rarity": 0,
+   "color": "#F27F26"
+  },
+  "carrot_seeds": {
+   "cell": [
+    5,
+    1
+   ],
+   "px": [
+    160,
+    32,
+    32,
+    32
+   ],
+   "shape": "seeds",
+   "file": "items/carrot_seeds.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#E58C33"
+  },
+  "chainmail": {
+   "cell": [
+    6,
+    1
+   ],
+   "px": [
+    192,
+    32,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/chainmail.png",
+   "category": "ARMOR",
+   "rarity": 1,
+   "color": "#B2B7C6"
+  },
+  "clay": {
+   "cell": [
+    7,
+    1
+   ],
+   "px": [
+    224,
+    32,
+    32,
+    32
+   ],
+   "shape": "lump",
+   "file": "items/clay.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#B77259"
+  },
+  "coal": {
+   "cell": [
+    8,
+    1
+   ],
+   "px": [
+    256,
+    32,
+    32,
+    32
+   ],
+   "shape": "coal",
+   "file": "items/coal.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#2D2D33"
+  },
+  "coconut": {
+   "cell": [
+    9,
+    1
+   ],
+   "px": [
+    288,
+    32,
+    32,
+    32
+   ],
+   "shape": "coconut",
+   "file": "items/coconut.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#7F5933"
+  },
+  "cooked_meat": {
+   "cell": [
+    10,
+    1
+   ],
+   "px": [
+    320,
+    32,
+    32,
+    32
+   ],
+   "shape": "meat_cooked",
+   "file": "items/cooked_meat.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#A85B33"
+  },
+  "cooks_journal": {
+   "cell": [
+    11,
+    1
+   ],
+   "px": [
+    352,
+    32,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/cooks_journal.png",
+   "category": "MISC",
+   "rarity": 1,
+   "color": "#CC9959"
+  },
+  "cooling_draught": {
+   "cell": [
+    12,
+    1
+   ],
+   "px": [
+    384,
+    32,
+    32,
+    32
+   ],
+   "shape": "potion",
+   "file": "items/cooling_draught.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#99D8FF"
+  },
+  "cooling_salad": {
+   "cell": [
+    13,
+    1
+   ],
+   "px": [
+    416,
+    32,
+    32,
+    32
+   ],
+   "shape": "bowl",
+   "file": "items/cooling_salad.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#7FCC72"
+  },
+  "copper_arrow": {
+   "cell": [
+    14,
+    1
+   ],
+   "px": [
+    448,
+    32,
+    32,
+    32
+   ],
+   "shape": "arrow",
+   "file": "items/copper_arrow.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#E0844C"
+  },
+  "copper_dagger": {
+   "cell": [
+    15,
+    1
+   ],
+   "px": [
+    480,
+    32,
+    32,
+    32
+   ],
+   "shape": "dagger",
+   "file": "items/copper_dagger.png",
+   "category": "WEAPON",
+   "rarity": 1,
+   "color": "#D87F47"
+  },
+  "copper_hatchet": {
+   "cell": [
+    0,
+    2
+   ],
+   "px": [
+    0,
+    64,
+    32,
+    32
+   ],
+   "shape": "hatchet",
+   "file": "items/copper_hatchet.png",
+   "category": "TOOL",
+   "rarity": 1,
+   "color": "#E58C4C"
+  },
+  "copper_ingot": {
+   "cell": [
+    1,
+    2
+   ],
+   "px": [
+    32,
+    64,
+    32,
+    32
+   ],
+   "shape": "ingot",
+   "file": "items/copper_ingot.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#E58C4C"
+  },
+  "copper_ore": {
+   "cell": [
+    2,
+    2
+   ],
+   "px": [
+    64,
+    64,
+    32,
+    32
+   ],
+   "shape": "ore",
+   "file": "items/copper_ore.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#D87F47"
+  },
+  "copper_pickaxe": {
+   "cell": [
+    3,
+    2
+   ],
+   "px": [
+    96,
+    64,
+    32,
+    32
+   ],
+   "shape": "pickaxe",
+   "file": "items/copper_pickaxe.png",
+   "category": "TOOL",
+   "rarity": 1,
+   "color": "#E58C4C"
+  },
+  "copper_ring": {
+   "cell": [
+    4,
+    2
+   ],
+   "px": [
+    128,
+    64,
+    32,
+    32
+   ],
+   "shape": "ring",
+   "file": "items/copper_ring.png",
+   "category": "ARMOR",
+   "rarity": 1,
+   "color": "#D87F47"
+  },
+  "copper_staff": {
+   "cell": [
+    5,
+    2
+   ],
+   "px": [
+    160,
+    64,
+    32,
+    32
+   ],
+   "shape": "staff",
+   "file": "items/copper_staff.png",
+   "category": "WEAPON",
+   "rarity": 1,
+   "color": "#E58C4C"
+  },
+  "copper_sword": {
+   "cell": [
+    6,
+    2
+   ],
+   "px": [
+    192,
+    64,
+    32,
+    32
+   ],
+   "shape": "sword",
+   "file": "items/copper_sword.png",
+   "category": "WEAPON",
+   "rarity": 1,
+   "color": "#E58C4C"
+  },
+  "copper_waraxe": {
+   "cell": [
+    7,
+    2
+   ],
+   "px": [
+    224,
+    64,
+    32,
+    32
+   ],
+   "shape": "axe",
+   "file": "items/copper_waraxe.png",
+   "category": "WEAPON",
+   "rarity": 1,
+   "color": "#E0844C"
+  },
+  "crown_of_stars": {
+   "cell": [
+    8,
+    2
+   ],
+   "px": [
+    256,
+    64,
+    32,
+    32
+   ],
+   "shape": "crown",
+   "file": "items/crown_of_stars.png",
+   "category": "ARMOR",
+   "rarity": 6,
+   "color": "#E5D8FF"
+  },
+  "crystal_ring": {
+   "cell": [
+    9,
+    2
+   ],
+   "px": [
+    288,
+    64,
+    32,
+    32
+   ],
+   "shape": "ring",
+   "file": "items/crystal_ring.png",
+   "category": "ARMOR",
+   "rarity": 3,
+   "color": "#B27FFF"
+  },
+  "crystal_shard": {
+   "cell": [
+    10,
+    2
+   ],
+   "px": [
+    320,
+    64,
+    32,
+    32
+   ],
+   "shape": "crystal",
+   "file": "items/crystal_shard.png",
+   "category": "MATERIAL",
+   "rarity": 5,
+   "color": "#B27FFF"
+  },
+  "crystal_staff": {
+   "cell": [
+    11,
+    2
+   ],
+   "px": [
+    352,
+    64,
+    32,
+    32
+   ],
+   "shape": "staff",
+   "file": "items/crystal_staff.png",
+   "category": "WEAPON",
+   "rarity": 2,
+   "color": "#B27FFF"
+  },
+  "draught_of_forgetting": {
+   "cell": [
+    12,
+    2
+   ],
+   "px": [
+    384,
+    64,
+    32,
+    32
+   ],
+   "shape": "potion",
+   "file": "items/draught_of_forgetting.png",
+   "category": "FOOD",
+   "rarity": 3,
+   "color": "#BFB2F2"
+  },
+  "dreamcap": {
+   "cell": [
+    13,
+    2
+   ],
+   "px": [
+    416,
+    64,
+    32,
+    32
+   ],
+   "shape": "mushroom",
+   "file": "items/dreamcap.png",
+   "category": "MATERIAL",
+   "rarity": 3,
+   "color": "#668CFF"
+  },
+  "elixir_of_might": {
+   "cell": [
+    14,
+    2
+   ],
+   "px": [
+    448,
+    64,
+    32,
+    32
+   ],
+   "shape": "potion",
+   "file": "items/elixir_of_might.png",
+   "category": "FOOD",
+   "rarity": 3,
+   "color": "#E53326"
+  },
+  "elixir_of_starlight": {
+   "cell": [
+    15,
+    2
+   ],
+   "px": [
+    480,
+    64,
+    32,
+    32
+   ],
+   "shape": "potion",
+   "file": "items/elixir_of_starlight.png",
+   "category": "FOOD",
+   "rarity": 4,
+   "color": "#E5D8FF"
+  },
+  "emberroot": {
+   "cell": [
+    0,
+    3
+   ],
+   "px": [
+    0,
+    96,
+    32,
+    32
+   ],
+   "shape": "root",
+   "file": "items/emberroot.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#FF7233"
+  },
+  "embers_tome": {
+   "cell": [
+    1,
+    3
+   ],
+   "px": [
+    32,
+    96,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/embers_tome.png",
+   "category": "WEAPON",
+   "rarity": 3,
+   "color": "#D85933"
+  },
+  "fallen_king_greatsword": {
+   "cell": [
+    2,
+    3
+   ],
+   "px": [
+    64,
+    96,
+    32,
+    32
+   ],
+   "shape": "greatsword",
+   "file": "items/fallen_king_greatsword.png",
+   "category": "WEAPON",
+   "rarity": 5,
+   "color": "#D8D1B2"
+  },
+  "fire_arrow": {
+   "cell": [
+    3,
+    3
+   ],
+   "px": [
+    96,
+    96,
+    32,
+    32
+   ],
+   "shape": "arrow",
+   "file": "items/fire_arrow.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#FF7F33"
+  },
+  "flint": {
+   "cell": [
+    4,
+    3
+   ],
+   "px": [
+    128,
+    96,
+    32,
+    32
+   ],
+   "shape": "flint",
+   "file": "items/flint.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#595E72"
+  },
+  "flint_knife": {
+   "cell": [
+    5,
+    3
+   ],
+   "px": [
+    160,
+    96,
+    32,
+    32
+   ],
+   "shape": "dagger",
+   "file": "items/flint_knife.png",
+   "category": "WEAPON",
+   "rarity": 0,
+   "color": "#72727F"
+  },
+  "frost_lotus": {
+   "cell": [
+    6,
+    3
+   ],
+   "px": [
+    192,
+    96,
+    32,
+    32
+   ],
+   "shape": "flower",
+   "file": "items/frost_lotus.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#B2E5FF"
+  },
+  "frostberries": {
+   "cell": [
+    7,
+    3
+   ],
+   "px": [
+    224,
+    96,
+    32,
+    32
+   ],
+   "shape": "berries",
+   "file": "items/frostberries.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#7FBFFF"
+  },
+  "frostbite_warhammer": {
+   "cell": [
+    8,
+    3
+   ],
+   "px": [
+    256,
+    96,
+    32,
+    32
+   ],
+   "shape": "hammer",
+   "file": "items/frostbite_warhammer.png",
+   "category": "WEAPON",
+   "rarity": 4,
+   "color": "#B2E5FF"
+  },
+  "fur_boots": {
+   "cell": [
+    9,
+    3
+   ],
+   "px": [
+    288,
+    96,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/fur_boots.png",
+   "category": "ARMOR",
+   "rarity": 1,
+   "color": "#8C6B4C"
+  },
+  "fur_cap": {
+   "cell": [
+    10,
+    3
+   ],
+   "px": [
+    320,
+    96,
+    32,
+    32
+   ],
+   "shape": "helmet",
+   "file": "items/fur_cap.png",
+   "category": "ARMOR",
+   "rarity": 1,
+   "color": "#8C6647"
+  },
+  "gemstone": {
+   "cell": [
+    11,
+    3
+   ],
+   "px": [
+    352,
+    96,
+    32,
+    32
+   ],
+   "shape": "gem",
+   "file": "items/gemstone.png",
+   "category": "MATERIAL",
+   "rarity": 4,
+   "color": "#66E5D8"
+  },
+  "glowcap": {
+   "cell": [
+    12,
+    3
+   ],
+   "px": [
+    384,
+    96,
+    32,
+    32
+   ],
+   "shape": "mushroom",
+   "file": "items/glowcap.png",
+   "category": "MATERIAL",
+   "rarity": 3,
+   "color": "#4CF2FF"
+  },
+  "gold_nugget": {
+   "cell": [
+    13,
+    3
+   ],
+   "px": [
+    416,
+    96,
+    32,
+    32
+   ],
+   "shape": "nugget",
+   "file": "items/gold_nugget.png",
+   "category": "MATERIAL",
+   "rarity": 3,
+   "color": "#FFD13F"
+  },
+  "great_shard": {
+   "cell": [
+    14,
+    3
+   ],
+   "px": [
+    448,
+    96,
+    32,
+    32
+   ],
+   "shape": "crystal",
+   "file": "items/great_shard.png",
+   "category": "MISC",
+   "rarity": 6,
+   "color": "#D8BFFF"
+  },
+  "healing_draught": {
+   "cell": [
+    15,
+    3
+   ],
+   "px": [
+    480,
+    96,
+    32,
+    32
+   ],
+   "shape": "potion",
+   "file": "items/healing_draught.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#FF5959"
+  },
+  "hearty_stew": {
+   "cell": [
+    0,
+    4
+   ],
+   "px": [
+    0,
+    128,
+    32,
+    32
+   ],
+   "shape": "bowl",
+   "file": "items/hearty_stew.png",
+   "category": "FOOD",
+   "rarity": 2,
+   "color": "#9E6638"
+  },
+  "horned_helm": {
+   "cell": [
+    1,
+    4
+   ],
+   "px": [
+    32,
+    128,
+    32,
+    32
+   ],
+   "shape": "helmet",
+   "file": "items/horned_helm.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#8C6B4C"
+  },
+  "iron_arrow": {
+   "cell": [
+    2,
+    4
+   ],
+   "px": [
+    64,
+    128,
+    32,
+    32
+   ],
+   "shape": "arrow",
+   "file": "items/iron_arrow.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#C1C6D6"
+  },
+  "iron_dirk": {
+   "cell": [
+    3,
+    4
+   ],
+   "px": [
+    96,
+    128,
+    32,
+    32
+   ],
+   "shape": "sword",
+   "file": "items/iron_dirk.png",
+   "category": "WEAPON",
+   "rarity": 1,
+   "color": "#B2B7CC"
+  },
+  "iron_gauntlets": {
+   "cell": [
+    4,
+    4
+   ],
+   "px": [
+    128,
+    128,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/iron_gauntlets.png",
+   "category": "ARMOR",
+   "rarity": 1,
+   "color": "#B2B7C6"
+  },
+  "iron_greatsword": {
+   "cell": [
+    5,
+    4
+   ],
+   "px": [
+    160,
+    128,
+    32,
+    32
+   ],
+   "shape": "greatsword",
+   "file": "items/iron_greatsword.png",
+   "category": "WEAPON",
+   "rarity": 2,
+   "color": "#C1C6D6"
+  },
+  "iron_greaves": {
+   "cell": [
+    6,
+    4
+   ],
+   "px": [
+    192,
+    128,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/iron_greaves.png",
+   "category": "ARMOR",
+   "rarity": 1,
+   "color": "#B2B7C6"
+  },
+  "iron_hatchet": {
+   "cell": [
+    7,
+    4
+   ],
+   "px": [
+    224,
+    128,
+    32,
+    32
+   ],
+   "shape": "hatchet",
+   "file": "items/iron_hatchet.png",
+   "category": "TOOL",
+   "rarity": 2,
+   "color": "#B2B7CC"
+  },
+  "iron_helm": {
+   "cell": [
+    8,
+    4
+   ],
+   "px": [
+    256,
+    128,
+    32,
+    32
+   ],
+   "shape": "helmet",
+   "file": "items/iron_helm.png",
+   "category": "ARMOR",
+   "rarity": 1,
+   "color": "#B2B7C6"
+  },
+  "iron_ingot": {
+   "cell": [
+    9,
+    4
+   ],
+   "px": [
+    288,
+    128,
+    32,
+    32
+   ],
+   "shape": "ingot",
+   "file": "items/iron_ingot.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#A8ADBC"
+  },
+  "iron_kite_shield": {
+   "cell": [
+    10,
+    4
+   ],
+   "px": [
+    320,
+    128,
+    32,
+    32
+   ],
+   "shape": "shield",
+   "file": "items/iron_kite_shield.png",
+   "category": "ARMOR",
+   "rarity": 1,
+   "color": "#B2B7C6"
+  },
+  "iron_ore": {
+   "cell": [
+    11,
+    4
+   ],
+   "px": [
+    352,
+    128,
+    32,
+    32
+   ],
+   "shape": "ore",
+   "file": "items/iron_ore.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#B28C7F"
+  },
+  "iron_pickaxe": {
+   "cell": [
+    12,
+    4
+   ],
+   "px": [
+    384,
+    128,
+    32,
+    32
+   ],
+   "shape": "pickaxe",
+   "file": "items/iron_pickaxe.png",
+   "category": "TOOL",
+   "rarity": 2,
+   "color": "#B2B7CC"
+  },
+  "iron_pike": {
+   "cell": [
+    13,
+    4
+   ],
+   "px": [
+    416,
+    128,
+    32,
+    32
+   ],
+   "shape": "spear",
+   "file": "items/iron_pike.png",
+   "category": "WEAPON",
+   "rarity": 2,
+   "color": "#C1C6D6"
+  },
+  "iron_staff": {
+   "cell": [
+    14,
+    4
+   ],
+   "px": [
+    448,
+    128,
+    32,
+    32
+   ],
+   "shape": "staff",
+   "file": "items/iron_staff.png",
+   "category": "WEAPON",
+   "rarity": 2,
+   "color": "#8CBFF2"
+  },
+  "iron_sword": {
+   "cell": [
+    15,
+    4
+   ],
+   "px": [
+    480,
+    128,
+    32,
+    32
+   ],
+   "shape": "sword",
+   "file": "items/iron_sword.png",
+   "category": "WEAPON",
+   "rarity": 1,
+   "color": "#B2B7CC"
+  },
+  "iron_waraxe": {
+   "cell": [
+    0,
+    5
+   ],
+   "px": [
+    0,
+    160,
+    32,
+    32
+   ],
+   "shape": "axe",
+   "file": "items/iron_waraxe.png",
+   "category": "WEAPON",
+   "rarity": 1,
+   "color": "#A5998C"
+  },
+  "iron_warhammer": {
+   "cell": [
+    1,
+    5
+   ],
+   "px": [
+    32,
+    160,
+    32,
+    32
+   ],
+   "shape": "hammer",
+   "file": "items/iron_warhammer.png",
+   "category": "WEAPON",
+   "rarity": 2,
+   "color": "#C1C6D6"
+  },
+  "leather": {
+   "cell": [
+    2,
+    5
+   ],
+   "px": [
+    64,
+    160,
+    32,
+    32
+   ],
+   "shape": "hide",
+   "file": "items/leather.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#93603D"
+  },
+  "leather_gloves": {
+   "cell": [
+    3,
+    5
+   ],
+   "px": [
+    96,
+    160,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/leather_gloves.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#7F5938"
+  },
+  "leather_jerkin": {
+   "cell": [
+    4,
+    5
+   ],
+   "px": [
+    128,
+    160,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/leather_jerkin.png",
+   "category": "ARMOR",
+   "rarity": 1,
+   "color": "#7F5638"
+  },
+  "leatherworker_notes": {
+   "cell": [
+    5,
+    5
+   ],
+   "px": [
+    160,
+    160,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/leatherworker_notes.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#93603D"
+  },
+  "mana_tonic": {
+   "cell": [
+    6,
+    5
+   ],
+   "px": [
+    192,
+    160,
+    32,
+    32
+   ],
+   "shape": "potion",
+   "file": "items/mana_tonic.png",
+   "category": "FOOD",
+   "rarity": 2,
+   "color": "#598CFF"
+  },
+  "master_weaponsmith_folio": {
+   "cell": [
+    7,
+    5
+   ],
+   "px": [
+    224,
+    160,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/master_weaponsmith_folio.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#7299B2"
+  },
+  "mithril_arrow": {
+   "cell": [
+    8,
+    5
+   ],
+   "px": [
+    256,
+    160,
+    32,
+    32
+   ],
+   "shape": "arrow",
+   "file": "items/mithril_arrow.png",
+   "category": "MATERIAL",
+   "rarity": 3,
+   "color": "#99E0F9"
+  },
+  "mithril_dirk": {
+   "cell": [
+    9,
+    5
+   ],
+   "px": [
+    288,
+    160,
+    32,
+    32
+   ],
+   "shape": "sword",
+   "file": "items/mithril_dirk.png",
+   "category": "WEAPON",
+   "rarity": 3,
+   "color": "#B2D8FF"
+  },
+  "mithril_gauntlets": {
+   "cell": [
+    10,
+    5
+   ],
+   "px": [
+    320,
+    160,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/mithril_gauntlets.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#99D8F9"
+  },
+  "mithril_greaves": {
+   "cell": [
+    11,
+    5
+   ],
+   "px": [
+    352,
+    160,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/mithril_greaves.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#99D8F9"
+  },
+  "mithril_halberd": {
+   "cell": [
+    12,
+    5
+   ],
+   "px": [
+    384,
+    160,
+    32,
+    32
+   ],
+   "shape": "spear",
+   "file": "items/mithril_halberd.png",
+   "category": "WEAPON",
+   "rarity": 4,
+   "color": "#99E0F9"
+  },
+  "mithril_hatchet": {
+   "cell": [
+    13,
+    5
+   ],
+   "px": [
+    416,
+    160,
+    32,
+    32
+   ],
+   "shape": "hatchet",
+   "file": "items/mithril_hatchet.png",
+   "category": "TOOL",
+   "rarity": 3,
+   "color": "#B2D8FF"
+  },
+  "mithril_ingot": {
+   "cell": [
+    14,
+    5
+   ],
+   "px": [
+    448,
+    160,
+    32,
+    32
+   ],
+   "shape": "ingot",
+   "file": "items/mithril_ingot.png",
+   "category": "MATERIAL",
+   "rarity": 3,
+   "color": "#B2D8FF"
+  },
+  "mithril_longbow": {
+   "cell": [
+    15,
+    5
+   ],
+   "px": [
+    480,
+    160,
+    32,
+    32
+   ],
+   "shape": "bow",
+   "file": "items/mithril_longbow.png",
+   "category": "WEAPON",
+   "rarity": 3,
+   "color": "#99E0F9"
+  },
+  "mithril_ore": {
+   "cell": [
+    0,
+    6
+   ],
+   "px": [
+    0,
+    192,
+    32,
+    32
+   ],
+   "shape": "ore",
+   "file": "items/mithril_ore.png",
+   "category": "MATERIAL",
+   "rarity": 3,
+   "color": "#99BFF2"
+  },
+  "mithril_pickaxe": {
+   "cell": [
+    1,
+    6
+   ],
+   "px": [
+    32,
+    192,
+    32,
+    32
+   ],
+   "shape": "pickaxe",
+   "file": "items/mithril_pickaxe.png",
+   "category": "TOOL",
+   "rarity": 3,
+   "color": "#B2D8FF"
+  },
+  "mithril_plate": {
+   "cell": [
+    2,
+    6
+   ],
+   "px": [
+    64,
+    192,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/mithril_plate.png",
+   "category": "ARMOR",
+   "rarity": 6,
+   "color": "#B2D8FF"
+  },
+  "mithril_staff": {
+   "cell": [
+    3,
+    6
+   ],
+   "px": [
+    96,
+    192,
+    32,
+    32
+   ],
+   "shape": "staff",
+   "file": "items/mithril_staff.png",
+   "category": "WEAPON",
+   "rarity": 3,
+   "color": "#99E0F9"
+  },
+  "mithril_sword": {
+   "cell": [
+    4,
+    6
+   ],
+   "px": [
+    128,
+    192,
+    32,
+    32
+   ],
+   "shape": "sword",
+   "file": "items/mithril_sword.png",
+   "category": "WEAPON",
+   "rarity": 3,
+   "color": "#B2D8FF"
+  },
+  "mithril_waraxe": {
+   "cell": [
+    5,
+    6
+   ],
+   "px": [
+    160,
+    192,
+    32,
+    32
+   ],
+   "shape": "axe",
+   "file": "items/mithril_waraxe.png",
+   "category": "WEAPON",
+   "rarity": 3,
+   "color": "#B2D8FF"
+  },
+  "moonpetal": {
+   "cell": [
+    6,
+    6
+   ],
+   "px": [
+    192,
+    192,
+    32,
+    32
+   ],
+   "shape": "flower",
+   "file": "items/moonpetal.png",
+   "category": "MATERIAL",
+   "rarity": 5,
+   "color": "#E5EDFF"
+  },
+  "moonpetal_pendant": {
+   "cell": [
+    7,
+    6
+   ],
+   "px": [
+    224,
+    192,
+    32,
+    32
+   ],
+   "shape": "amulet",
+   "file": "items/moonpetal_pendant.png",
+   "category": "ARMOR",
+   "rarity": 5,
+   "color": "#E5EDFF"
+  },
+  "mushroom": {
+   "cell": [
+    8,
+    6
+   ],
+   "px": [
+    256,
+    192,
+    32,
+    32
+   ],
+   "shape": "mushroom",
+   "file": "items/mushroom.png",
+   "category": "FOOD",
+   "rarity": 0,
+   "color": "#9E6B47"
+  },
+  "padded_hood": {
+   "cell": [
+    9,
+    6
+   ],
+   "px": [
+    288,
+    192,
+    32,
+    32
+   ],
+   "shape": "hood",
+   "file": "items/padded_hood.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#998C72"
+  },
+  "padded_vest": {
+   "cell": [
+    10,
+    6
+   ],
+   "px": [
+    320,
+    192,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/padded_vest.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#8C7F66"
+  },
+  "plank": {
+   "cell": [
+    11,
+    6
+   ],
+   "px": [
+    352,
+    192,
+    32,
+    32
+   ],
+   "shape": "plank",
+   "file": "items/plank.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#C6935B"
+  },
+  "plant_fiber": {
+   "cell": [
+    12,
+    6
+   ],
+   "px": [
+    384,
+    192,
+    32,
+    32
+   ],
+   "shape": "fiber",
+   "file": "items/plant_fiber.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#9EB25B"
+  },
+  "pumpkin": {
+   "cell": [
+    13,
+    6
+   ],
+   "px": [
+    416,
+    192,
+    32,
+    32
+   ],
+   "shape": "pumpkin",
+   "file": "items/pumpkin.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#F28C1E"
+  },
+  "pumpkin_seeds": {
+   "cell": [
+    14,
+    6
+   ],
+   "px": [
+    448,
+    192,
+    32,
+    32
+   ],
+   "shape": "seeds",
+   "file": "items/pumpkin_seeds.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#F29926"
+  },
+  "purifying_draught": {
+   "cell": [
+    15,
+    6
+   ],
+   "px": [
+    480,
+    192,
+    32,
+    32
+   ],
+   "shape": "potion",
+   "file": "items/purifying_draught.png",
+   "category": "FOOD",
+   "rarity": 2,
+   "color": "#D8F2FF"
+  },
+  "raider_boots": {
+   "cell": [
+    0,
+    7
+   ],
+   "px": [
+    0,
+    224,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/raider_boots.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#60422B"
+  },
+  "raider_bracers": {
+   "cell": [
+    1,
+    7
+   ],
+   "px": [
+    32,
+    224,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/raider_bracers.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#66472D"
+  },
+  "raider_harness": {
+   "cell": [
+    2,
+    7
+   ],
+   "px": [
+    64,
+    224,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/raider_harness.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#8C6B4C"
+  },
+  "raw_meat": {
+   "cell": [
+    3,
+    7
+   ],
+   "px": [
+    96,
+    224,
+    32,
+    32
+   ],
+   "shape": "meat",
+   "file": "items/raw_meat.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#E57272"
+  },
+  "recurve_bow": {
+   "cell": [
+    4,
+    7
+   ],
+   "px": [
+    128,
+    224,
+    32,
+    32
+   ],
+   "shape": "bow",
+   "file": "items/recurve_bow.png",
+   "category": "WEAPON",
+   "rarity": 2,
+   "color": "#7F512D"
+  },
+  "ring_of_embers": {
+   "cell": [
+    5,
+    7
+   ],
+   "px": [
+    160,
+    224,
+    32,
+    32
+   ],
+   "shape": "ring",
+   "file": "items/ring_of_embers.png",
+   "category": "ARMOR",
+   "rarity": 2,
+   "color": "#FF7233"
+  },
+  "ring_of_swiftness": {
+   "cell": [
+    6,
+    7
+   ],
+   "px": [
+    192,
+    224,
+    32,
+    32
+   ],
+   "shape": "ring",
+   "file": "items/ring_of_swiftness.png",
+   "category": "ARMOR",
+   "rarity": 3,
+   "color": "#99E5D8"
+  },
+  "rope": {
+   "cell": [
+    7,
+    7
+   ],
+   "px": [
+    224,
+    224,
+    32,
+    32
+   ],
+   "shape": "rope",
+   "file": "items/rope.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#BF9E66"
+  },
+  "rough_handaxe": {
+   "cell": [
+    8,
+    7
+   ],
+   "px": [
+    256,
+    224,
+    32,
+    32
+   ],
+   "shape": "hatchet",
+   "file": "items/rough_handaxe.png",
+   "category": "WEAPON",
+   "rarity": 0,
+   "color": "#997F66"
+  },
+  "royal_bone": {
+   "cell": [
+    9,
+    7
+   ],
+   "px": [
+    288,
+    224,
+    32,
+    32
+   ],
+   "shape": "bone",
+   "file": "items/royal_bone.png",
+   "category": "MATERIAL",
+   "rarity": 4,
+   "color": "#F2E5BF"
+  },
+  "royal_signet": {
+   "cell": [
+    10,
+    7
+   ],
+   "px": [
+    320,
+    224,
+    32,
+    32
+   ],
+   "shape": "ring",
+   "file": "items/royal_signet.png",
+   "category": "ARMOR",
+   "rarity": 3,
+   "color": "#F2C63F"
+  },
+  "rusty_dagger": {
+   "cell": [
+    11,
+    7
+   ],
+   "px": [
+    352,
+    224,
+    32,
+    32
+   ],
+   "shape": "dagger",
+   "file": "items/rusty_dagger.png",
+   "category": "WEAPON",
+   "rarity": 0,
+   "color": "#997259"
+  },
+  "scroll_aegis_of_dawn": {
+   "cell": [
+    12,
+    7
+   ],
+   "px": [
+    384,
+    224,
+    32,
+    32
+   ],
+   "shape": "scroll",
+   "file": "items/scroll_aegis_of_dawn.png",
+   "category": "MISC",
+   "rarity": 6,
+   "color": "#FFB733"
+  },
+  "scroll_crown_of_stars": {
+   "cell": [
+    13,
+    7
+   ],
+   "px": [
+    416,
+    224,
+    32,
+    32
+   ],
+   "shape": "scroll",
+   "file": "items/scroll_crown_of_stars.png",
+   "category": "MISC",
+   "rarity": 6,
+   "color": "#FFB733"
+  },
+  "scroll_mithril_plate": {
+   "cell": [
+    14,
+    7
+   ],
+   "px": [
+    448,
+    224,
+    32,
+    32
+   ],
+   "shape": "scroll",
+   "file": "items/scroll_mithril_plate.png",
+   "category": "MISC",
+   "rarity": 6,
+   "color": "#FFB733"
+  },
+  "scroll_shadowfang": {
+   "cell": [
+    15,
+    7
+   ],
+   "px": [
+    480,
+    224,
+    32,
+    32
+   ],
+   "shape": "scroll",
+   "file": "items/scroll_shadowfang.png",
+   "category": "MISC",
+   "rarity": 6,
+   "color": "#FFB733"
+  },
+  "scroll_staff_of_the_archmage": {
+   "cell": [
+    0,
+    8
+   ],
+   "px": [
+    0,
+    256,
+    32,
+    32
+   ],
+   "shape": "scroll",
+   "file": "items/scroll_staff_of_the_archmage.png",
+   "category": "MISC",
+   "rarity": 6,
+   "color": "#FFB733"
+  },
+  "scroll_sunforged_blade": {
+   "cell": [
+    1,
+    8
+   ],
+   "px": [
+    32,
+    256,
+    32,
+    32
+   ],
+   "shape": "scroll",
+   "file": "items/scroll_sunforged_blade.png",
+   "category": "MISC",
+   "rarity": 6,
+   "color": "#FFB733"
+  },
+  "scroll_titans_greataxe": {
+   "cell": [
+    2,
+    8
+   ],
+   "px": [
+    64,
+    256,
+    32,
+    32
+   ],
+   "shape": "scroll",
+   "file": "items/scroll_titans_greataxe.png",
+   "category": "MISC",
+   "rarity": 6,
+   "color": "#FFB733"
+  },
+  "shadow_boots": {
+   "cell": [
+    3,
+    8
+   ],
+   "px": [
+    96,
+    256,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/shadow_boots.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#28262D"
+  },
+  "shadow_cloak": {
+   "cell": [
+    4,
+    8
+   ],
+   "px": [
+    128,
+    256,
+    32,
+    32
+   ],
+   "shape": "robe",
+   "file": "items/shadow_cloak.png",
+   "category": "ARMOR",
+   "rarity": 2,
+   "color": "#333347"
+  },
+  "shadow_garb": {
+   "cell": [
+    5,
+    8
+   ],
+   "px": [
+    160,
+    256,
+    32,
+    32
+   ],
+   "shape": "robe",
+   "file": "items/shadow_garb.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#383347"
+  },
+  "shadow_hood": {
+   "cell": [
+    6,
+    8
+   ],
+   "px": [
+    192,
+    256,
+    32,
+    32
+   ],
+   "shape": "hood",
+   "file": "items/shadow_hood.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#38334C"
+  },
+  "shadow_wraps": {
+   "cell": [
+    7,
+    8
+   ],
+   "px": [
+    224,
+    256,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/shadow_wraps.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#33333D"
+  },
+  "shadowfang": {
+   "cell": [
+    8,
+    8
+   ],
+   "px": [
+    256,
+    256,
+    32,
+    32
+   ],
+   "shape": "dagger",
+   "file": "items/shadowfang.png",
+   "category": "WEAPON",
+   "rarity": 6,
+   "color": "#4C3F66"
+  },
+  "shard_fragment": {
+   "cell": [
+    9,
+    8
+   ],
+   "px": [
+    288,
+    256,
+    32,
+    32
+   ],
+   "shape": "crystal",
+   "file": "items/shard_fragment.png",
+   "category": "MISC",
+   "rarity": 5,
+   "color": "#B2D8FF"
+  },
+  "shardbreaker": {
+   "cell": [
+    10,
+    8
+   ],
+   "px": [
+    320,
+    256,
+    32,
+    32
+   ],
+   "shape": "hammer",
+   "file": "items/shardbreaker.png",
+   "category": "WEAPON",
+   "rarity": 6,
+   "color": "#BF8CFF"
+  },
+  "shardheart_amulet": {
+   "cell": [
+    11,
+    8
+   ],
+   "px": [
+    352,
+    256,
+    32,
+    32
+   ],
+   "shape": "amulet",
+   "file": "items/shardheart_amulet.png",
+   "category": "ARMOR",
+   "rarity": 5,
+   "color": "#CCE5FF"
+  },
+  "smithing_manual": {
+   "cell": [
+    12,
+    8
+   ],
+   "px": [
+    384,
+    256,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/smithing_manual.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#727284"
+  },
+  "soft_leather_boots": {
+   "cell": [
+    13,
+    8
+   ],
+   "px": [
+    416,
+    256,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/soft_leather_boots.png",
+   "category": "ARMOR",
+   "rarity": 1,
+   "color": "#664733"
+  },
+  "squire_gauntlets": {
+   "cell": [
+    14,
+    8
+   ],
+   "px": [
+    448,
+    256,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/squire_gauntlets.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#A8ADBC"
+  },
+  "squire_greaves": {
+   "cell": [
+    15,
+    8
+   ],
+   "px": [
+    480,
+    256,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/squire_greaves.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#664C38"
+  },
+  "squire_helm": {
+   "cell": [
+    0,
+    9
+   ],
+   "px": [
+    0,
+    288,
+    32,
+    32
+   ],
+   "shape": "helmet",
+   "file": "items/squire_helm.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#B7BCCC"
+  },
+  "squire_plate": {
+   "cell": [
+    1,
+    9
+   ],
+   "px": [
+    32,
+    288,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/squire_plate.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#C6CCDB"
+  },
+  "squire_sword": {
+   "cell": [
+    2,
+    9
+   ],
+   "px": [
+    64,
+    288,
+    32,
+    32
+   ],
+   "shape": "sword",
+   "file": "items/squire_sword.png",
+   "category": "WEAPON",
+   "rarity": 0,
+   "color": "#C6CCDB"
+  },
+  "staff_of_the_archmage": {
+   "cell": [
+    3,
+    9
+   ],
+   "px": [
+    96,
+    288,
+    32,
+    32
+   ],
+   "shape": "staff",
+   "file": "items/staff_of_the_archmage.png",
+   "category": "WEAPON",
+   "rarity": 6,
+   "color": "#9966FF"
+  },
+  "star_core": {
+   "cell": [
+    4,
+    9
+   ],
+   "px": [
+    128,
+    288,
+    32,
+    32
+   ],
+   "shape": "orb",
+   "file": "items/star_core.png",
+   "category": "MATERIAL",
+   "rarity": 5,
+   "color": "#E5D8FF"
+  },
+  "star_metal_ingot": {
+   "cell": [
+    5,
+    9
+   ],
+   "px": [
+    160,
+    288,
+    32,
+    32
+   ],
+   "shape": "ingot",
+   "file": "items/star_metal_ingot.png",
+   "category": "MATERIAL",
+   "rarity": 4,
+   "color": "#A5B2FF"
+  },
+  "star_metal_ore": {
+   "cell": [
+    6,
+    9
+   ],
+   "px": [
+    192,
+    288,
+    32,
+    32
+   ],
+   "shape": "ore",
+   "file": "items/star_metal_ore.png",
+   "category": "MATERIAL",
+   "rarity": 4,
+   "color": "#8C99F2"
+  },
+  "starfall_blade": {
+   "cell": [
+    7,
+    9
+   ],
+   "px": [
+    224,
+    288,
+    32,
+    32
+   ],
+   "shape": "sword",
+   "file": "items/starfall_blade.png",
+   "category": "WEAPON",
+   "rarity": 6,
+   "color": "#B2BFFF"
+  },
+  "starfall_bow": {
+   "cell": [
+    8,
+    9
+   ],
+   "px": [
+    256,
+    288,
+    32,
+    32
+   ],
+   "shape": "bow",
+   "file": "items/starfall_bow.png",
+   "category": "WEAPON",
+   "rarity": 6,
+   "color": "#D1B7FF"
+  },
+  "starlight_orchid": {
+   "cell": [
+    9,
+    9
+   ],
+   "px": [
+    288,
+    288,
+    32,
+    32
+   ],
+   "shape": "flower",
+   "file": "items/starlight_orchid.png",
+   "category": "MATERIAL",
+   "rarity": 4,
+   "color": "#E5D8FF"
+  },
+  "starmetal_amulet": {
+   "cell": [
+    10,
+    9
+   ],
+   "px": [
+    320,
+    288,
+    32,
+    32
+   ],
+   "shape": "amulet",
+   "file": "items/starmetal_amulet.png",
+   "category": "ARMOR",
+   "rarity": 5,
+   "color": "#A5B2FF"
+  },
+  "stick": {
+   "cell": [
+    11,
+    9
+   ],
+   "px": [
+    352,
+    288,
+    32,
+    32
+   ],
+   "shape": "stick",
+   "file": "items/stick.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#B78C56"
+  },
+  "stone": {
+   "cell": [
+    12,
+    9
+   ],
+   "px": [
+    384,
+    288,
+    32,
+    32
+   ],
+   "shape": "stone",
+   "file": "items/stone.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#9999A3"
+  },
+  "stone_hatchet": {
+   "cell": [
+    13,
+    9
+   ],
+   "px": [
+    416,
+    288,
+    32,
+    32
+   ],
+   "shape": "hatchet",
+   "file": "items/stone_hatchet.png",
+   "category": "TOOL",
+   "rarity": 0,
+   "color": "#99999E"
+  },
+  "stone_maul": {
+   "cell": [
+    14,
+    9
+   ],
+   "px": [
+    448,
+    288,
+    32,
+    32
+   ],
+   "shape": "hammer",
+   "file": "items/stone_maul.png",
+   "category": "WEAPON",
+   "rarity": 1,
+   "color": "#9E9EA3"
+  },
+  "stone_pickaxe": {
+   "cell": [
+    15,
+    9
+   ],
+   "px": [
+    480,
+    288,
+    32,
+    32
+   ],
+   "shape": "pickaxe",
+   "file": "items/stone_pickaxe.png",
+   "category": "TOOL",
+   "rarity": 0,
+   "color": "#99999E"
+  },
+  "stoneskin_elixir": {
+   "cell": [
+    0,
+    10
+   ],
+   "px": [
+    0,
+    320,
+    32,
+    32
+   ],
+   "shape": "potion",
+   "file": "items/stoneskin_elixir.png",
+   "category": "FOOD",
+   "rarity": 3,
+   "color": "#9999A5"
+  },
+  "stormcaller_wand": {
+   "cell": [
+    1,
+    10
+   ],
+   "px": [
+    32,
+    320,
+    32,
+    32
+   ],
+   "shape": "wand",
+   "file": "items/stormcaller_wand.png",
+   "category": "WEAPON",
+   "rarity": 5,
+   "color": "#BFCCFF"
+  },
+  "sun_hat": {
+   "cell": [
+    2,
+    10
+   ],
+   "px": [
+    64,
+    320,
+    32,
+    32
+   ],
+   "shape": "hat",
+   "file": "items/sun_hat.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#E5CC7F"
+  },
+  "sunbloom": {
+   "cell": [
+    3,
+    10
+   ],
+   "px": [
+    96,
+    320,
+    32,
+    32
+   ],
+   "shape": "flower",
+   "file": "items/sunbloom.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#FFD84C"
+  },
+  "sunforged_blade": {
+   "cell": [
+    4,
+    10
+   ],
+   "px": [
+    128,
+    320,
+    32,
+    32
+   ],
+   "shape": "sword",
+   "file": "items/sunforged_blade.png",
+   "category": "WEAPON",
+   "rarity": 6,
+   "color": "#FFCC59"
+  },
+  "sunstone": {
+   "cell": [
+    5,
+    10
+   ],
+   "px": [
+    160,
+    320,
+    32,
+    32
+   ],
+   "shape": "gem",
+   "file": "items/sunstone.png",
+   "category": "MATERIAL",
+   "rarity": 4,
+   "color": "#FFBF4C"
+  },
+  "thorn_heart": {
+   "cell": [
+    6,
+    10
+   ],
+   "px": [
+    192,
+    320,
+    32,
+    32
+   ],
+   "shape": "heart",
+   "file": "items/thorn_heart.png",
+   "category": "MATERIAL",
+   "rarity": 4,
+   "color": "#993359"
+  },
+  "thorn_venom": {
+   "cell": [
+    7,
+    10
+   ],
+   "px": [
+    224,
+    320,
+    32,
+    32
+   ],
+   "shape": "vial",
+   "file": "items/thorn_venom.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#7FBF4C"
+  },
+  "titans_greataxe": {
+   "cell": [
+    8,
+    10
+   ],
+   "px": [
+    256,
+    320,
+    32,
+    32
+   ],
+   "shape": "axe",
+   "file": "items/titans_greataxe.png",
+   "category": "WEAPON",
+   "rarity": 6,
+   "color": "#E5E0CC"
+  },
+  "tome_arcane_barrier": {
+   "cell": [
+    9,
+    10
+   ],
+   "px": [
+    288,
+    320,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_arcane_barrier.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#7FB2FF"
+  },
+  "tome_arcane_missiles": {
+   "cell": [
+    10,
+    10
+   ],
+   "px": [
+    320,
+    320,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_arcane_missiles.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#CC7FFF"
+  },
+  "tome_blink": {
+   "cell": [
+    11,
+    10
+   ],
+   "px": [
+    352,
+    320,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_blink.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#BF8CFF"
+  },
+  "tome_blizzard": {
+   "cell": [
+    12,
+    10
+   ],
+   "px": [
+    384,
+    320,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_blizzard.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#99E5FF"
+  },
+  "tome_detect_treasure": {
+   "cell": [
+    13,
+    10
+   ],
+   "px": [
+    416,
+    320,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_detect_treasure.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#FFD84C"
+  },
+  "tome_drain_life": {
+   "cell": [
+    14,
+    10
+   ],
+   "px": [
+    448,
+    320,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_drain_life.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#993366"
+  },
+  "tome_earth_spike": {
+   "cell": [
+    15,
+    10
+   ],
+   "px": [
+    480,
+    320,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_earth_spike.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#A58C66"
+  },
+  "tome_earth_wall": {
+   "cell": [
+    0,
+    11
+   ],
+   "px": [
+    0,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_earth_wall.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#998C72"
+  },
+  "tome_feather_fall": {
+   "cell": [
+    1,
+    11
+   ],
+   "px": [
+    32,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_feather_fall.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#E5F2FF"
+  },
+  "tome_fire_ring": {
+   "cell": [
+    2,
+    11
+   ],
+   "px": [
+    64,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_fire_ring.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#FF7F33"
+  },
+  "tome_frost_path": {
+   "cell": [
+    3,
+    11
+   ],
+   "px": [
+    96,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_frost_path.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#99E5FF"
+  },
+  "tome_gust": {
+   "cell": [
+    4,
+    11
+   ],
+   "px": [
+    128,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_gust.png",
+   "category": "MISC",
+   "rarity": 1,
+   "color": "#CCF2FF"
+  },
+  "tome_haste": {
+   "cell": [
+    5,
+    11
+   ],
+   "px": [
+    160,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_haste.png",
+   "category": "MISC",
+   "rarity": 1,
+   "color": "#FFE566"
+  },
+  "tome_healing_light": {
+   "cell": [
+    6,
+    11
+   ],
+   "px": [
+    192,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_healing_light.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#FFF28C"
+  },
+  "tome_light": {
+   "cell": [
+    7,
+    11
+   ],
+   "px": [
+    224,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_light.png",
+   "category": "MISC",
+   "rarity": 1,
+   "color": "#FFF2B2"
+  },
+  "tome_lightning_dash": {
+   "cell": [
+    8,
+    11
+   ],
+   "px": [
+    256,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_lightning_dash.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#CCD8FF"
+  },
+  "tome_meteor": {
+   "cell": [
+    9,
+    11
+   ],
+   "px": [
+    288,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_meteor.png",
+   "category": "MISC",
+   "rarity": 4,
+   "color": "#FF7226"
+  },
+  "tome_poison_cloud": {
+   "cell": [
+    10,
+    11
+   ],
+   "px": [
+    320,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_poison_cloud.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#7FD84C"
+  },
+  "tome_recall": {
+   "cell": [
+    11,
+    11
+   ],
+   "px": [
+    352,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_recall.png",
+   "category": "MISC",
+   "rarity": 4,
+   "color": "#BF99FF"
+  },
+  "tome_rejuvenate": {
+   "cell": [
+    12,
+    11
+   ],
+   "px": [
+    384,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_rejuvenate.png",
+   "category": "MISC",
+   "rarity": 1,
+   "color": "#66FF7F"
+  },
+  "tome_root_snare": {
+   "cell": [
+    13,
+    11
+   ],
+   "px": [
+    416,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_root_snare.png",
+   "category": "MISC",
+   "rarity": 1,
+   "color": "#66BF4C"
+  },
+  "tome_shardfall": {
+   "cell": [
+    14,
+    11
+   ],
+   "px": [
+    448,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_shardfall.png",
+   "category": "MISC",
+   "rarity": 6,
+   "color": "#CC99FF"
+  },
+  "tome_silence": {
+   "cell": [
+    15,
+    11
+   ],
+   "px": [
+    480,
+    352,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_silence.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#D899FF"
+  },
+  "tome_spark_shield": {
+   "cell": [
+    0,
+    12
+   ],
+   "px": [
+    0,
+    384,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_spark_shield.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#CCD8FF"
+  },
+  "tome_stone_skin": {
+   "cell": [
+    1,
+    12
+   ],
+   "px": [
+    32,
+    384,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_stone_skin.png",
+   "category": "MISC",
+   "rarity": 1,
+   "color": "#A5998C"
+  },
+  "tome_storm_call": {
+   "cell": [
+    2,
+    12
+   ],
+   "px": [
+    64,
+    384,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_storm_call.png",
+   "category": "MISC",
+   "rarity": 4,
+   "color": "#BFD8FF"
+  },
+  "tome_summon_spirit_wolf": {
+   "cell": [
+    3,
+    12
+   ],
+   "px": [
+    96,
+    384,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_summon_spirit_wolf.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#99CCFF"
+  },
+  "tome_tame_beast": {
+   "cell": [
+    4,
+    12
+   ],
+   "px": [
+    128,
+    384,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/tome_tame_beast.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#99CC66"
+  },
+  "trolls_brew": {
+   "cell": [
+    5,
+    12
+   ],
+   "px": [
+    160,
+    384,
+    32,
+    32
+   ],
+   "shape": "potion",
+   "file": "items/trolls_brew.png",
+   "category": "FOOD",
+   "rarity": 2,
+   "color": "#59993F"
+  },
+  "tusk_charm": {
+   "cell": [
+    6,
+    12
+   ],
+   "px": [
+    192,
+    384,
+    32,
+    32
+   ],
+   "shape": "amulet",
+   "file": "items/tusk_charm.png",
+   "category": "ARMOR",
+   "rarity": 2,
+   "color": "#F2EACC"
+  },
+  "vegetable_stew": {
+   "cell": [
+    7,
+    12
+   ],
+   "px": [
+    224,
+    384,
+    32,
+    32
+   ],
+   "shape": "bowl",
+   "file": "items/vegetable_stew.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#CC7233"
+  },
+  "void_shard": {
+   "cell": [
+    8,
+    12
+   ],
+   "px": [
+    256,
+    384,
+    32,
+    32
+   ],
+   "shape": "crystal",
+   "file": "items/void_shard.png",
+   "category": "MATERIAL",
+   "rarity": 4,
+   "color": "#59338C"
+  },
+  "wanderer_boots": {
+   "cell": [
+    9,
+    12
+   ],
+   "px": [
+    288,
+    384,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/wanderer_boots.png",
+   "category": "ARMOR",
+   "rarity": 2,
+   "color": "#7F6042"
+  },
+  "warlords_cleaver": {
+   "cell": [
+    10,
+    12
+   ],
+   "px": [
+    320,
+    384,
+    32,
+    32
+   ],
+   "shape": "axe",
+   "file": "items/warlords_cleaver.png",
+   "category": "WEAPON",
+   "rarity": 4,
+   "color": "#998C7F"
+  },
+  "warming_draught": {
+   "cell": [
+    11,
+    12
+   ],
+   "px": [
+    352,
+    384,
+    32,
+    32
+   ],
+   "shape": "potion",
+   "file": "items/warming_draught.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#FF7F33"
+  },
+  "weaponsmith_folio": {
+   "cell": [
+    12,
+    12
+   ],
+   "px": [
+    384,
+    384,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/weaponsmith_folio.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#7F6B5B"
+  },
+  "wheat": {
+   "cell": [
+    13,
+    12
+   ],
+   "px": [
+    416,
+    384,
+    32,
+    32
+   ],
+   "shape": "wheat",
+   "file": "items/wheat.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#F2D166"
+  },
+  "wheat_seeds": {
+   "cell": [
+    14,
+    12
+   ],
+   "px": [
+    448,
+    384,
+    32,
+    32
+   ],
+   "shape": "seeds",
+   "file": "items/wheat_seeds.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#D8BF66"
+  },
+  "wild_hide": {
+   "cell": [
+    15,
+    12
+   ],
+   "px": [
+    480,
+    384,
+    32,
+    32
+   ],
+   "shape": "hide",
+   "file": "items/wild_hide.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#A87F56"
+  },
+  "wisp_essence": {
+   "cell": [
+    0,
+    13
+   ],
+   "px": [
+    0,
+    416,
+    32,
+    32
+   ],
+   "shape": "orb",
+   "file": "items/wisp_essence.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#BF99FF"
+  },
+  "wizard_hat": {
+   "cell": [
+    1,
+    13
+   ],
+   "px": [
+    32,
+    416,
+    32,
+    32
+   ],
+   "shape": "hat",
+   "file": "items/wizard_hat.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#6B4CB7"
+  },
+  "wood": {
+   "cell": [
+    2,
+    13
+   ],
+   "px": [
+    64,
+    416,
+    32,
+    32
+   ],
+   "shape": "log",
+   "file": "items/wood.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#9E6B3D"
+  },
+  "wooden_arrow": {
+   "cell": [
+    3,
+    13
+   ],
+   "px": [
+    96,
+    416,
+    32,
+    32
+   ],
+   "shape": "arrow",
+   "file": "items/wooden_arrow.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#8C8C99"
+  },
+  "wooden_buckler": {
+   "cell": [
+    4,
+    13
+   ],
+   "px": [
+    128,
+    416,
+    32,
+    32
+   ],
+   "shape": "shield",
+   "file": "items/wooden_buckler.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#8C5B33"
+  },
+  "wooden_shortbow": {
+   "cell": [
+    5,
+    13
+   ],
+   "px": [
+    160,
+    416,
+    32,
+    32
+   ],
+   "shape": "bow",
+   "file": "items/wooden_shortbow.png",
+   "category": "WEAPON",
+   "rarity": 1,
+   "color": "#996B3D"
+  },
+  "worn_boots": {
+   "cell": [
+    6,
+    13
+   ],
+   "px": [
+    192,
+    416,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/worn_boots.png",
+   "category": "ARMOR",
+   "rarity": 0,
+   "color": "#724C33"
+  }
+ }
+}
