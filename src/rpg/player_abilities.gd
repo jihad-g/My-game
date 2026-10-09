@@ -193,6 +193,8 @@ func on_level_up(level: int) -> PackedStringArray:
 func is_unlocked(a: AbilityData) -> bool:
 	if a == null:
 		return false
+	if player.creative:
+		return true  # Creative mode (Milestone 18c): every active ability
 	if a == shield_ability():
 		return player.character.can_use_temperature_shield()
 	return player.character.level >= a.unlock_level
@@ -211,6 +213,8 @@ func cooldown_left(a: AbilityData) -> float:
 
 
 func effective_cost(a: AbilityData) -> float:
+	if player != null and player.creative:
+		return 0.0
 	if a == shield_ability():
 		return player.character.ability_mana_cost(player.character.class_data.temperature_shield_cost)
 	a = effective(a)
@@ -264,12 +268,36 @@ func try_use(slot: int) -> bool:
 	if a.animation != &"":
 		player.model.play_pose(a.animation, a.anim_time)
 	_pay(a, minf(cost, player.mana.current) if a.cost_type == AbilityData.CostType.MANA else cost)
-	cooldowns[a.id] = a.cooldown * cooldown_mult()
+	cooldowns[a.id] = 0.0 if player.creative else a.cooldown * cooldown_mult()
 	_maybe_echo(fn, a)
 	_after_cast(a)
+	_cast_fx(a, false)
 	cooldowns_changed.emit()
 	Events.ability_used.emit(a.id)
 	return true
+
+
+## Milestone 18c: the ultimates' element and sound, by class.
+const ULTIMATE_FX := {&"barbarian": [&"fire", &"boss_roar"], &"knight": [&"holy", &"horn"],
+	&"wizard": [&"arcane", &"thunder_0"], &"assassin": [&"shadow", &"teleport"]}
+
+
+## Milestone 18c: magic glows in the hands with its element's look and sound; ultimates
+## get their big moment. Physical stamina and rage abilities show their swing instead.
+func _cast_fx(a: AbilityData, spell: bool) -> void:
+	if player == null or player.model == null:
+		return
+	var el := FX.element_of(a.damage_type)
+	var cid: StringName = player.character.class_data.id if player.character.class_data else &""
+	if a.ultimate:
+		var u: Array = ULTIMATE_FX.get(cid, [&"arcane", &"cast"])
+		FX.ultimate(player, u[0], u[1])
+		return
+	if el == &"physical":
+		if not spell and a.cost_type != AbilityData.CostType.MANA:
+			return
+		el = &"holy" if cid == &"knight" else (&"shadow" if cid == &"assassin" else &"arcane")
+	FX.cast_glow(player.model, el, true)
 
 
 func _can_pay(a: AbilityData, cost: float) -> bool:
@@ -1064,6 +1092,8 @@ func _ability_temperature_shield(a: AbilityData) -> bool:
 
 ## Why a spell can't be cast right now ("" = it can).
 func spell_block_reason(a: AbilityData) -> String:
+	if player.creative:
+		return ""
 	var mc := player.character.skill_level(Skill.MANA_CONTROL)
 	if mc < a.required_mana_control:
 		return "%s needs Mana Control %d (you have %d)" % [a.display_name, a.required_mana_control, mc]
@@ -1105,9 +1135,10 @@ func try_cast(slot: int) -> bool:
 		player.model.play_pose(a.animation, a.anim_time)
 	else:
 		player.model.play_cast(0.45)
-	cooldowns[a.id] = a.cooldown * cooldown_mult()
+	cooldowns[a.id] = 0.0 if player.creative else a.cooldown * cooldown_mult()
 	_maybe_echo(fn, a)
 	_after_cast(a)
+	_cast_fx(a, true)
 	cooldowns_changed.emit()
 	Events.ability_used.emit(a.id)
 	return true

@@ -848,6 +848,14 @@ func play_stagger() -> void:
 	play_additive(AnimLibrary.flinch(1.0))
 
 
+## Milestone 18c: where a hand is in the world (spell glows gather there).
+func hand_position(left: bool) -> Vector3:
+	var fore := _fore_l if left else _fore_r
+	if fore == null or not fore.is_inside_tree():
+		return global_position + Vector3(0, 1.2, 0)
+	return fore.global_transform * Vector3(0, -0.26, 0)
+
+
 ## Milestone 18b: hit-stop - hold the current pose for `seconds`.
 func freeze(seconds: float) -> void:
 	_freeze = maxf(_freeze, seconds)

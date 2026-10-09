@@ -75,6 +75,8 @@ const KEY_BINDINGS := {
 	&"blueprints": [KEY_P],
 	&"debug_raid": [KEY_F4],
 	&"debug_event": [KEY_F12],
+	## Milestone 18c: Creative mode for testing (the key under Esc).
+	&"creative_menu": [KEY_QUOTELEFT],
 }
 
 const MOUSE_BINDINGS := {

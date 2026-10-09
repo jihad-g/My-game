@@ -19,6 +19,9 @@ var launch_sound: StringName = &""
 var style: StringName = &""
 ## What the projectile can hit (enemy projectiles use PLAYER instead of ENEMY).
 var mask := Layers.TERRAIN | Layers.ENEMY | Layers.PROP | Layers.BUILDING
+## Milestone 18c: the element's look (trail and impact). &"" = guessed from `color`.
+var element: StringName = &""
+var _trail: Node3D
 
 var _age := 0.0
 var _shape := SphereShape3D.new()
@@ -55,6 +58,9 @@ func _ready() -> void:
 	light.light_energy = 1.5
 	light.omni_range = 4.0
 	add_child(light)
+	if element == &"":
+		element = FX.element_from_color(color)
+	_trail = FX.trail(self, element)
 	if velocity.length_squared() > 0.0:
 		look_at(global_position + velocity, Vector3.UP)
 
@@ -104,5 +110,9 @@ func _impact(target: Object, pos: Vector3) -> void:
 			on_hit.call(target, float(dealt) if dealt != null else 0.0)
 	if on_impact.is_valid():
 		on_impact.call(pos)
-	VFX.burst(get_parent(), pos, 0.6 if style == &"arrow" else 1.2, Color(color.r, color.g, color.b, 0.8))
+	FX.stop_trail(_trail)
+	if style == &"arrow":
+		VFX.burst(get_parent(), pos, 0.6, Color(color.r, color.g, color.b, 0.8))
+	else:
+		FX.impact(get_parent(), pos, element if element != &"" else FX.element_from_color(color), 0.9)
 	queue_free()

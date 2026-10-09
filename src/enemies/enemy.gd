@@ -60,6 +60,7 @@ func _ready() -> void:
 	health.damaged.connect(_on_damaged)
 	status.health = health
 	status.effect_applied.connect(_on_status_applied)
+	status.effect_expired.connect(_on_status_expired)
 	status.reaction.connect(func(text: String) -> void:
 		Events.damage_dealt.emit(global_position + Vector3(0, 2.6, 0), 0.0, false, false, text))
 	Events.target_changed.connect(_on_target_changed)
@@ -104,7 +105,7 @@ func on_pool_release() -> void:
 		target.set_lock_target(null)
 	target = null
 	# Milestone 17b/c marks from player abilities must not follow a pooled enemy into its next life.
-	for m in [&"blind_until", &"sunder", &"sunder_until", &"tamed_until", &"spirit"]:
+	for m in [&"blind_until", &"sunder", &"sunder_until", &"tamed_until", &"spirit", &"training_dummy"]:
 		if has_meta(m):
 			remove_meta(m)
 	if not is_in_group(&"enemies"):
@@ -119,6 +120,9 @@ func on_pool_release() -> void:
 	_down_left = 0.0
 	_freeze_left = 0.0
 	_puffed = false
+	if _ice_shell and is_instance_valid(_ice_shell):
+		_ice_shell.queue_free()
+	_ice_shell = null
 
 
 ## Milestone 17c: a tamed beast (Tame Beast, Spirit Wolf) fights for the player.
@@ -436,6 +440,45 @@ func _on_status_applied(id: StringName) -> void:
 		Events.damage_dealt.emit(global_position + Vector3(0, 2.2, 0), 0.0, false, false, StatusEffects.display_name(id))
 	if id == &"stunned":
 		stagger(status.time_left(id))
+	if id == &"frozen":
+		_set_ice_shell(true)
+
+
+func _on_status_expired(id: StringName) -> void:
+	if id == &"frozen":
+		_set_ice_shell(false)
+
+
+## Milestone 18c: a frozen enemy is wrapped in a shell of ice that shatters when it thaws.
+var _ice_shell: MeshInstance3D
+
+
+func _set_ice_shell(on: bool) -> void:
+	if on and (_ice_shell == null or not is_instance_valid(_ice_shell)):
+		_ice_shell = MeshInstance3D.new()
+		var box := BoxMesh.new()
+		var s := 1.0
+		if data is MonsterData:
+			s = (data as MonsterData).model_scale
+		box.size = Vector3(1.1, 2.1, 1.1) * s
+		_ice_shell.mesh = box
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color(0.7, 0.92, 1.0, 0.38)
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.metallic_specular = 1.0
+		m.roughness = 0.05
+		m.emission_enabled = true
+		m.emission = Color(0.3, 0.55, 0.7)
+		_ice_shell.material_override = m
+		_ice_shell.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_ice_shell.position.y = 1.05 * s
+		add_child(_ice_shell)
+	elif not on and _ice_shell and is_instance_valid(_ice_shell):
+		if is_inside_tree():
+			FX.particles(get_parent(), global_position + Vector3(0, 1.0, 0), {"color": Color(0.85, 0.97, 1.0), "amount": 14,
+				"life": 0.6, "speed": 4.0, "gravity": 12.0, "size": 0.45})
+		_ice_shell.queue_free()
+		_ice_shell = null
 
 
 func _on_taunted(_source: Node3D) -> void:

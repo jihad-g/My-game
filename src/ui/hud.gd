@@ -53,6 +53,9 @@ var _trade := TradePanel.new()
 var _requests := RequestsPanel.new()
 var _reputation := ReputationPanel.new()
 var _spellbook := SpellbookPanel.new()
+## Milestone 18c: Creative mode for testing (the ` key).
+var creative := CreativePanel.new()
+var _creative_label := Label.new()
 var _blueprints := BlueprintPanel.new()
 ## Raid / world event banner (Milestone 7).
 var _event_label := Label.new()
@@ -131,6 +134,15 @@ func _ready() -> void:
 	_root.add_child(journal)
 	_root.add_child(story)
 	_root.add_child(_blueprints)
+	_root.add_child(creative)
+	_creative_label.text = "CREATIVE MODE ( ` )"
+	_creative_label.add_theme_font_size_override(&"font_size", 13)
+	_creative_label.add_theme_color_override(&"font_color", Color(0.55, 1.0, 0.75))
+	_creative_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_creative_label.position.y = 6.0
+	_creative_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_creative_label.visible = false
+	_root.add_child(_creative_label)
 	_root.add_child(tutorial_card)
 	_root.add_child(guide)
 	_dialogue.trade_requested.connect(func(n: NPC) -> void:
@@ -201,6 +213,7 @@ func bind(p_player: Player, p_world: World) -> void:
 	_crafting.bind(player)
 	_chest.bind(player)
 	_spellbook.bind(player)
+	creative.bind(player, world)
 	if world.quests:
 		journal.bind(world)
 	_blueprints.bind(world)
@@ -849,6 +862,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			world.blueprints.placer.end()
 		elif world and world.build_mode and world.build_mode.active:
 			world.build_mode.set_active(false)
+		elif creative.visible:
+			creative.visible = false
 		elif achievements.visible:
 			achievements.visible = false
 		elif guide.visible:
@@ -899,6 +914,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not _loading.visible:
 			journal.toggle()
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"creative_menu"):
+		if not _loading.visible:
+			creative.toggle()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"spellbook"):
 		if not _loading.visible:
 			_spellbook.toggle()
@@ -934,6 +953,7 @@ func _toggle_inventory() -> void:
 func _process(delta: float) -> void:
 	if player == null:
 		return
+	_creative_label.visible = player.creative
 	_update_temperature()
 	_update_ammo()
 	_quest_t -= delta

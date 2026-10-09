@@ -150,6 +150,39 @@ func _ready() -> void:
 
 # --- Input ------------------------------------------------------------------------
 
+## Milestone 18c: Creative mode for testing (CreativePanel, the ` key). Not saved.
+var creative := false
+var creative_fast := false
+## Creative mode was used this session (achievements stay off).
+static var creative_used := false
+
+
+func set_creative(on: bool) -> void:
+	creative = on
+	if on:
+		creative_used = true
+		abilities.cooldowns.clear()
+		abilities.cooldowns_changed.emit()
+		abilities.fill_bar()
+	abilities.bar_changed.emit()
+
+
+## Keeps everything full while Creative mode is on.
+func _creative_tick() -> void:
+	if health.current < health.max_health:
+		health.current = health.max_health
+		health.health_changed.emit(health.current, health.max_health)
+	if mana.current < mana.max_mana:
+		mana.refill()
+	if stamina.current < stamina.max_stamina:
+		stamina.refill()
+	if hunger.current < hunger.max_hunger * 0.95:
+		hunger.current = hunger.max_hunger
+		hunger.hunger_changed.emit(hunger.current, hunger.max_hunger)
+	if character.class_data and character.class_data.uses_rage:
+		abilities.set_rage(abilities.max_rage())
+
+
 ## Milestone 18b: the attack button went down in the game world (not on a menu)
 ## and is still held - hold-to-chain only follows such a press.
 var _light_held_world := false
@@ -216,6 +249,8 @@ func _physics_process(delta: float) -> void:
 		return
 	_dodge_cooldown_left -= delta
 	hunger.activity_multiplier = 1.0
+	if creative:
+		_creative_tick()
 	_update_water()
 
 	if state == State.DEAD:
@@ -447,6 +482,8 @@ func _move_normal(input: Vector3, delta: float) -> void:
 		stamina.consume(sprint_cost_per_second * delta)
 		hunger.activity_multiplier = 2.0
 	speed *= stats.get_mult(Stats.MOVE_SPEED)
+	if creative and creative_fast:
+		speed *= 1.8
 	if is_blocking and not abilities.has_buff(&"phalanx"):  # Phalanx (Milestone 17d): full speed
 		speed *= block_move_multiplier
 	if _in_water:
@@ -642,6 +679,9 @@ func _update_blocking(delta: float) -> void:
 ## Called by enemies. Resolves dodge i-frames, block and parry before damage.
 func receive_hit(info: DamageInfo) -> void:
 	if is_dead:
+		return
+	if creative:
+		Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, true, "Creative")
 		return
 	if health.invulnerable:
 		Events.damage_dealt.emit(global_position + Vector3(0, 2, 0), 0.0, false, true, "Dodged")

@@ -1395,6 +1395,8 @@ func _howl() -> void:
 
 
 func _on_hit_reaction(info: DamageInfo) -> void:
+	if has_meta(&"training_dummy"):
+		return  # Creative mode's training dummy never fights back
 	if ai in [AI.IDLE, AI.WANDER, AI.RETURN, AI.DORMANT, AI.MARCH] and info.source is Node3D and _alive(info.source):
 		_alert(info.source)
 
@@ -1404,6 +1406,8 @@ func is_charging() -> bool:
 
 
 func _on_taunted(source: Node3D) -> void:
+	if has_meta(&"training_dummy"):
+		return
 	if ai in [AI.IDLE, AI.WANDER, AI.RETURN, AI.ALERT, AI.DORMANT, AI.MARCH, AI.FLEE]:
 		target = source
 		_set_ai(AI.CHASE)

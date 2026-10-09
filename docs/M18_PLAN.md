@@ -1,6 +1,6 @@
 # Milestone 18 — "Flow of Battle" (plan)
 
-**Status:** **M18a (v0.21.0) and M18b (v0.22.0) are done.** M18c and M18d are still a plan. Change anything before we build it.
+**Status:** **M18a (v0.21.0), M18b (v0.22.0) and M18c (v0.23.0) are done.** M18d is still a plan. Change anything before we build it.
 
 **Owner's answers (8 Oct 2026):** the fixed isometric camera is an *option* (the free camera stays the default);
 aim assist and hold-to-chain are *on by default*; bosses can be knocked down, but *only after their guard (poise)
@@ -135,7 +135,11 @@ same moment).
 **Done when:** a pack of 10 enemies can be cut down with combos in a few seconds, every hit shows hit-stop and a
 reaction, and the game still runs at 60 fps on the test machine.
 
-### M18c — Spells and abilities that look like magic
+### M18c — Spells and abilities that look like magic ✅ Done (v0.23.0)
+
+Built mostly by upgrading the shared pieces every ability uses (bursts, bolts, projectiles, ground areas, casts),
+so all 240 abilities and spells changed at once; abilities with the same shape share a look in their element's
+colour. Added on request: **Creative mode for testing** (the ` key).
 
 **1. A VFX library v2** (`src/fx/`)
 - Particle effects built with `GPUParticles3D`, with a `CPUParticles3D` fallback for the browser and

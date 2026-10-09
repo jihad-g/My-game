@@ -17,6 +17,8 @@ var follow: Node3D
 var end_with_follow := false
 var velocity := Vector3.ZERO
 
+## Milestone 18c: the element look, guessed from `color`.
+var element: StringName = &"physical"
 var _t := 0.0
 var _next := 0.0
 var _disc: MeshInstance3D
@@ -32,7 +34,7 @@ func _ready() -> void:
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = Color(color.r, color.g, color.b, 0.32)
+	mat.albedo_color = Color(color.r, color.g, color.b, 0.16)
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	cyl.material = mat
 	_disc = MeshInstance3D.new()
@@ -40,6 +42,26 @@ func _ready() -> void:
 	_disc.position.y = 0.08
 	_disc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_disc)
+	# Milestone 18c: a soft glow on the ground in the element's look, and motes rising from it.
+	element = FX.element_from_color(color)
+	var glow := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(radius * 2.2, radius * 2.2)
+	glow.mesh = plane
+	var gm := StandardMaterial3D.new()
+	gm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	gm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	gm.albedo_texture = FX.soft_texture()
+	gm.albedo_color = Color(color.r, color.g, color.b, 0.55)
+	if color.v > 0.3:
+		gm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	glow.material_override = gm
+	glow.position.y = 0.1
+	glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(glow)
+	var tw := glow.create_tween().set_loops()
+	tw.tween_property(gm, "albedo_color:a", 0.35, 0.6).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(gm, "albedo_color:a", 0.55, 0.6).set_trans(Tween.TRANS_SINE)
 
 
 func _physics_process(delta: float) -> void:
@@ -63,6 +85,11 @@ func _physics_process(delta: float) -> void:
 		if on_tick.is_valid():
 			on_tick.call(enemies_inside())
 		VFX.ring(get_parent(), global_position, radius, Color(color.r, color.g, color.b, 0.5), 0.3)
+		if tick >= 0.3:
+			FX.particles(get_parent(), global_position + Vector3(0, 0.2, 0), {"color": Color(color.r, color.g, color.b, 0.8),
+				"amount": clampi(int(radius * 4), 4, 18), "life": 0.9, "speed": 0.8, "spread": 25.0,
+				"gravity": -1.5 if element != &"frost" else 0.5, "size": 0.5, "radius": radius * 0.7, "explosive": 0.3,
+				"add": element != &"shadow"})
 	if _t >= duration:
 		queue_free()
 

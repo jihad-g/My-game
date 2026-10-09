@@ -32,8 +32,15 @@ static func ring(parent: Node, pos: Vector3, radius: float, color: Color, time: 
 	tw.chain().tween_callback(mi.queue_free)
 
 
-## Glowing sphere burst (impacts, blinks).
+## Glowing sphere burst (impacts, blinks). Milestone 18c: also soft particles and,
+## for bigger bursts, a short flash of light in the same colour.
 static func burst(parent: Node, pos: Vector3, radius: float, color: Color, time: float = 0.25) -> void:
+	if parent and parent.is_inside_tree():
+		FX.particles(parent, pos, {"color": Color(color.r, color.g, color.b, maxf(color.a, 0.6)), "amount": clampi(int(6 + radius * 5), 6, 30),
+			"life": 0.45 + time, "speed": 1.5 + radius * 1.5, "size": 0.45 + radius * 0.15, "damping": 2.5,
+			"add": color.v > 0.3})
+		if radius >= 1.2 and color.v > 0.3:
+			FX.light_flash(parent, pos, color, 1.4, 2.0 + radius * 2.0, 0.2)
 	var mi := MeshInstance3D.new()
 	var mesh := SphereMesh.new()
 	mesh.radius = 0.5
@@ -53,9 +60,17 @@ static func burst(parent: Node, pos: Vector3, radius: float, color: Color, time:
 	tw.chain().tween_callback(mi.queue_free)
 
 
-## Jagged lightning line through points.
+## Jagged lightning line through points. Milestone 18c: lightning-coloured bolts
+## become real branching lightning; golden bolts from the sky become beams of light.
 static func bolt(parent: Node, points: PackedVector3Array, color: Color, time: float = 0.2) -> void:
 	if points.size() < 2:
+		return
+	var element := FX.element_from_color(color)
+	if element == &"lightning":
+		FX.lightning(parent, points, color, maxf(time, 0.18))
+		return
+	if element == &"holy" and points[0].y - points[points.size() - 1].y > 6.0:
+		FX.sky_beam(parent, points[points.size() - 1], color)
 		return
 	var im := ImmediateMesh.new()
 	im.surface_begin(Mesh.PRIMITIVE_LINES)

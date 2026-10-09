@@ -104,6 +104,8 @@ func is_unlocked(id: StringName) -> bool:
 func unlock(id: StringName) -> bool:
 	if unlocked.has(id) or Achievements.get_def(id).is_empty():
 		return false
+	if Player.creative_used:
+		return false  # Creative mode was used this session (Milestone 18c)
 	unlocked[id] = Time.get_unix_time_from_system()
 	backend.unlock(id)
 	_dirty = true

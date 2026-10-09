@@ -121,6 +121,9 @@ func _ready() -> void:
 	await _run_async(&"test_m18a_movement")
 	_run(&"test_m18b_data")
 	await _run_async(&"test_m18b_combat")
+	await _run_async(&"test_m18c_fx")
+	await _run_async(&"test_m18c_casting")
+	await _run_async(&"test_m18c_creative")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5159,7 +5162,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.22"), "version 0.22 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.23"), "version 0.23 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -7028,3 +7031,123 @@ func test_m18b_combat() -> void:
 	check(not elite.knock_down(1.0), "stun-immune elites (Juggernaut) don't fall")
 	_kill(elite, world)
 	p.health.invulnerable = false
+
+
+# --- Milestone 18c: spells that look like magic, Creative mode ------------------------------
+
+func test_m18c_fx() -> void:
+	for el in FX.ELEMENTS:
+		check(FX.element_from_color(FX.color_of(el)) == el, "the colour of %s reads as %s" % [el, el])
+	check(FX.element_of(&"fire") == &"fire" and FX.element_of(&"physical") == &"physical", "damage types give elements")
+	var holder := Node3D.new()
+	add_child(holder)
+	await _frames(1)
+	var before := FX.spawned + FX.reused
+	for el in FX.ELEMENTS:
+		FX.impact(holder, Vector3.ZERO, el, 1.5)
+	check(FX.spawned + FX.reused > before + 8, "every element makes particles")
+	check(not get_tree().get_nodes_in_group(&"fx_marks").is_empty(), "big impacts leave a mark on the ground")
+	await get_tree().create_timer(2.0).timeout
+	check(FX.pooled() > 0, "finished emitters go back to the pool")
+	var reused0 := FX.reused
+	FX.particles(holder, Vector3.ZERO, {"amount": 5})
+	check(FX.reused > reused0, "and are used again")
+	FX.lightning(holder, PackedVector3Array([Vector3(0, 3, 0), Vector3(2, 0, 0)]))
+	check(holder.get_children().any(func(n: Node) -> bool: return n is MeshInstance3D and (n as MeshInstance3D).mesh is ImmediateMesh), "lightning draws a bolt")
+	var p := Projectile.new()
+	p.color = Color(1, 0.5, 0.15)
+	p.velocity = Vector3(0, 0, 5)
+	holder.add_child(p)
+	await _frames(1)
+	check(p.element == &"fire" and p._trail != null, "a fire bolt has a fire trail")
+	VFX.enabled = false
+	check(FX.particles(holder, Vector3.ZERO, {}) == null, "particles can be switched off")
+	VFX.enabled = true
+	holder.queue_free()
+	await _frames(2)
+
+
+func test_m18c_casting() -> void:
+	var world: World = await _boot_class(&"wizard")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	var ab := p.abilities
+	var hand := p.model.hand_position(true)
+	check(hand.distance_to(p.global_position) < 2.5 and hand.y > p.global_position.y + 0.3, "the model knows where its hands are")
+	var before := FX.spawned + FX.reused
+	ab.bar[0] = &"firebolt"
+	ab.cooldowns.clear()
+	p.mana.refill()
+	check(ab.try_use(0) and FX.spawned + FX.reused > before, "casting makes the hands glow")
+	# A frozen enemy is wrapped in ice.
+	var m := _spawn_monster(world, &"skeleton_warrior", _clear_offset(world, 3.0))
+	await _frames(2)
+	m.apply_status(&"frozen", 1.0, {})
+	check(m._ice_shell != null, "frozen enemies get an ice shell")
+	m.status.remove(&"frozen")
+	check(m._ice_shell == null, "and it shatters when they thaw")
+	_kill(m, world)
+	# The ultimate's moment: slow motion (alone), a screen flash.
+	p.character.grant_xp(Progression.total_xp_for(100) - p.character.total_xp, Progression.Source.OTHER)
+	await _frames(2)
+	ab.bar[0] = &"shard_nova"
+	ab.cooldowns.clear()
+	p.mana.refill()
+	check(ab.try_use(0), "Shard Nova fires")
+	check(Engine.time_scale < 0.9 or Settings.reduce_motion(), "an ultimate slows time for a moment")
+	check(not get_tree().get_nodes_in_group(&"fx_screen_flash").is_empty(), "and flashes the screen")
+	await get_tree().create_timer(0.6, true, false, true).timeout
+	check(is_equal_approx(Engine.time_scale, 1.0), "time goes back to normal")
+	Engine.time_scale = 1.0
+	p.health.invulnerable = false
+
+
+func test_m18c_creative() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	_clear_enemies(world)
+	var ab := p.abilities
+	var panel := CreativePanel.new()
+	world.add_child(panel)
+	panel.bind(p, world)
+	panel.set_creative(true)
+	check(p.creative and Player.creative_used, "creative mode turns on")
+	var hp := p.health.current
+	p.receive_hit(DamageInfo.create(500.0, p))
+	check(p.health.current >= hp and not p.is_dead, "you can't be hurt")
+	# Every active ability can be used at once, for free, with no cooldown.
+	var ult := AbilityBook.get_ability(&"paladins_oath")
+	check(p.character.level < 100 and ab.is_unlocked(ult) and ab.effective_cost(ult) == 0.0, "a level-100 ability is usable and free")
+	ab.bar[0] = &"paladins_oath"
+	check(ab.try_use(0) and ab.cooldown_left(ult) <= 0.0, "and has no cooldown")
+	for b in ab.buffs.keys():
+		ab.remove_buff(b)
+	# Tools.
+	panel._learn_spells()
+	check(p.spells.knows(&"shardfall"), "learn every spell")
+	panel._level(30)
+	check(p.character.level >= 30, "level up to 30")
+	var items := p.inventory.count_of(&"iron_arrow")
+	panel._give_kit()
+	check(p.inventory.count_of(&"iron_arrow") > items, "the test kit has arrows")
+	panel._spawn(&"skeleton_warrior", &"dummy")
+	await _frames(3)
+	var dummy: Monster = null
+	for e in get_tree().get_nodes_in_group(&"enemies"):
+		if e.has_meta(&"training_dummy"):
+			dummy = e
+	check(dummy != null and dummy.health.max_health >= 50000.0, "a training dummy appears")
+	if dummy:
+		dummy.receive_hit(DamageInfo.create(10.0, p))
+		await _frames(10)
+		check(dummy.ai == Monster.AI.DORMANT, "the dummy never fights back")
+	panel._clear()
+	await _frames(2)
+	check(get_tree().get_nodes_in_group(&"enemies").filter(func(e: Node) -> bool: return not e.get("is_dead")).is_empty(), "clear enemies")
+	check(not Platform.unlock(&"first_blood"), "no achievements after creative mode")
+	panel.set_creative(false)
+	check(not p.creative, "creative mode turns off")
+	check(InputMap.has_action(&"creative_menu"), "the ` key opens creative mode")
+	panel.queue_free()
+	Player.creative_used = false

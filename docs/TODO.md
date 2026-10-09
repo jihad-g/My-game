@@ -105,6 +105,19 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 18c — Flow of Battle: spells that look like magic, Creative mode  ✅
+
+- [x] VFX library v2: soft particles (GPU, CPU fallback), pooling, ground marks, branching lightning, sky beams, light flashes
+- [x] A look for each element (fire, frost, lightning, arcane, holy, poison, shadow)
+- [x] Cast glow and element sound for every magic ability and spell; projectile trails and element impacts; glowing ground areas; ice shell on frozen enemies
+- [x] Ultimate moments: slow motion (alone only), screen flash, ground mark, a sound per class
+- [x] Creative mode for testing (` key): god mode, free and instant abilities, levels, spells, test kit, spawns, clear enemies, day/night
+- [~] Tests `test_m18c_*` are written but have not been run yet
+- [ ] NOT IMPLEMENTED: a hand-picked effect for every single one of the 240 abilities and spells - they share the element looks; most look different by element, shape and colour
+- [ ] NOT IMPLEMENTED: Creative mode in co-op, and saving Creative mode (it is off after loading)
+- [ ] Known limitation: the colour of older effects decides their element (a few may pick a near element)
+- [ ] Next: M18d — smoother world generation (no pop-in, smoother hills, blended biome borders, smooth streaming)
+
 ## Milestone 18b — Flow of Battle: hack and slash  ✅
 
 - [x] Combo chains ending in finishers for every melee weapon (9 finisher attacks), hold attack to keep chaining, aim assist
@@ -117,7 +130,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: crowd performance measured (60 enemies at 60 fps is a goal, not yet measured with the stress tool)
 - [ ] NOT IMPLEMENTED: simple models for distant enemies and a pool for death effects (from the plan)
 - [ ] Known limitation: knocked-down humanoids tip backwards as a whole (no separate fall animation); boars and other old-style beasts don't flinch
-- [ ] Next: M18c — spells and abilities that look like magic (VFX library v2, a look for each element)
+- [x] M18c done (v0.23.0)
 
 ## Milestone 18a — Flow of Battle: animation system and smooth movement  ✅
 

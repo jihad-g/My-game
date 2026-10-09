@@ -2,6 +2,35 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.23.0] — Milestone 18c: Flow of Battle - spells that look like magic, and Creative mode
+
+### Added
+- **VFX library v2** (`src/fx/fx.gd`, `FX`): soft glowing particles instead of cubes (GPU particles, with CPU
+  particles on the compatibility renderer used by the browser build), **pooled** emitters, ground marks that
+  fade, **branching lightning** that flickers, beams of light from the sky, swirls and short light flashes.
+- **A look for every element**: fire (rising embers, scorch marks), frost (falling shards, cold mist, frost
+  marks), lightning (forked bolts, sparks), arcane (swirling motes, turning runes on the ground), holy (beams
+  from the sky, golden motes), poison (bubbles and a low cloud), shadow (smoke that pulls inward).
+- **Every ability and spell** gets the new look at once, because the shared pieces were upgraded:
+  - casting magic makes the hands **glow and gather** the element, with the element's sound;
+  - projectiles leave a glowing **trail** and hit with their element's impact;
+  - areas on the ground glow softly and send up motes;
+  - bursts throw soft sparks and light; lightning-coloured bolts become real lightning, and golden bolts from the
+    sky become beams of light;
+  - frozen enemies are wrapped in an **ice shell** that shatters when they thaw.
+- **Ultimates feel special**: a short slow-motion moment (only when playing alone), a screen flash, a big mark on
+  the ground and a sound for each class.
+- **Creative mode for testing** (the ` key, under Esc): you can't be hurt, health/mana/stamina/Rage/food stay
+  full, every active ability and spell can be used for free with no cooldown. Tools: fast move, level 30/64/100,
+  learn every spell, a test kit (one of each weapon type, 99 arrows, a tome), spawn a training dummy (50 000
+  health, never fights back), a minion pack, an elite or a boss, clear enemies, day/night, reset cooldowns.
+  Single player only; achievements are off for the rest of the session once it is used.
+- Tests (written, not run yet): `test_m18c_fx`, `test_m18c_casting`, `test_m18c_creative`.
+
+### Changed
+- "Reduce flashing" also softens light flashes, lightning flicker and the ultimate's screen flash; "Reduce
+  motion" turns the slow motion off; "Hit & dust particles" also turns the new particles off.
+
 ## [0.22.0] — Milestone 18b: Flow of Battle - hack and slash
 
 ### Added
