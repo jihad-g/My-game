@@ -16,6 +16,8 @@ const DEFAULTS := {
 	# Display & graphics
 	"fullscreen": false, "vsync": true, "render_scale": 1.0, "shadows": 2,  # 0 off, 1 low, 2 high
 	"weather_particles": true, "ambient_particles": true, "far_terrain": true, "vfx_particles": true,
+	## Milestone 18c+: 0 = Vibrant (rich colours, glow, soft shade), 1 = Classic.
+	"art_style": 0,
 	"max_fps": 0, "show_fps": false,
 	# Comfort
 	"screen_shake": true,
@@ -189,6 +191,8 @@ func apply_to_world(w: World) -> void:
 	if w.chunk_manager and w.chunk_manager.far:
 		w.chunk_manager.far.visible = bool(get_value("far_terrain")) and w.layer == TerrainGenerator.Layer.SURFACE
 		w.chunk_manager.far.set_meta(&"hidden_by_settings", not bool(get_value("far_terrain")))
+	if w.day_night:
+		w.day_night.set_art_style(int(get_value("art_style")))
 	if w.camera_rig:
 		w.camera_rig.shake_enabled = bool(get_value("screen_shake")) and not reduce_motion()
 		w.camera_rig.rotate_speed_scale = clampf(float(get_value("camera_rotate_speed")), 0.25, 2.5)

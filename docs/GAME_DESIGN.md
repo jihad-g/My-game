@@ -1147,6 +1147,9 @@ and weapon and legendary powers (ideas 9a–9f, 7a–7d, part of 8d).
 (ideas 5a–5h and the list in ARSENAL_PLAN.md), 15 passives, a 6-slot bar changed at a bed or a campfire, and a
 third spell slot with a tome.
 
+**Done (v0.24.0): jump and the Vibrant art style**, asked for by the owner during M18. Space jumps, the dodge is
+on Left Alt, and the Vibrant style gives richer colours, glow and soft shade.
+
 **Done: Milestone 18c — "Flow of Battle" part 3.** VFX library v2 with a look for each element, cast glows,
 trails, ice shells, ultimate moments (idea 15g), and Creative mode for testing. Next: M18d, smoother worlds.
 

@@ -9,7 +9,7 @@ extends Node3D
 ## jitter. Animation events (swings, dodges, casts) arrive reliably and are
 ## replayed on the same HumanoidModel the local player uses.
 
-const ANIM_EVENTS := ["attack", "dodge", "cast", "death", "respawn", "look", "pose"]
+const ANIM_EVENTS := ["attack", "dodge", "cast", "death", "respawn", "look", "pose", "jump"]
 const BUFFER := 24
 
 var peer_id := 0
@@ -94,6 +94,8 @@ func play_event(ev: String, args: Array) -> void:
 			if args.size() >= 4:
 				model.play_attack(StringName(String(args[0])), float(args[1]), float(args[2]), float(args[3]))
 				Audio.play_at(&"swing", global_position + Vector3(0, 1, 0), -8.0)
+		"jump":
+			model.play_jump()
 		"dodge":
 			model.play_dodge(float(args[0]) if args.size() > 0 else 0.4)
 		"cast":

@@ -54,6 +54,42 @@ const MIN_LIGHT_ELEVATION := 18.0
 
 var _sky_mat: ShaderMaterial
 
+# Milestone 18c+: the art style (Settings → Display & graphics). Vibrant: richer
+# colours, a deeper sky, a warm sun, cool lavender shade, stronger glow and soft
+# ambient occlusion - the colourful look of Minecraft Dungeons and Hytale.
+## 0..1 (1 = Vibrant, 0 = Classic).
+var vibrant := 1.0
+const V_DAY_ZENITH := Color(0.1, 0.4, 1.0)
+const V_DAY_HORIZON := Color(0.5, 0.85, 1.0)
+const V_DUSK_ZENITH := Color(0.36, 0.24, 0.72)
+const V_DUSK_HORIZON := Color(1.0, 0.48, 0.32)
+const V_SUN_DAY := Color(1.0, 0.92, 0.76)
+const V_SHADE := Color(0.62, 0.7, 1.0)
+
+
+## Switches the art style: 0 = Vibrant (default), 1 = Classic.
+func set_art_style(style: int) -> void:
+	vibrant = 0.0 if style == 1 else 1.0
+	if environment and environment.environment:
+		var env := environment.environment
+		var v := vibrant > 0.5
+		env.glow_enabled = true
+		env.glow_intensity = 0.6 if v else 0.35
+		env.glow_bloom = 0.1 if v else 0.05
+		env.glow_hdr_threshold = 0.85 if v else 1.0
+		env.tonemap_mode = Environment.TONE_MAPPER_FILMIC if v else Environment.TONE_MAPPER_LINEAR
+		env.tonemap_exposure = 1.12 if v else 1.0
+		env.tonemap_white = 6.0 if v else 1.0
+		# Soft shade in block corners (Forward+ only; ignored on the compatibility renderer).
+		env.ssao_enabled = v
+		env.ssao_radius = 1.2
+		env.ssao_intensity = 1.6
+		env.ssao_power = 1.3
+		env.adjustment_contrast = 1.07 if v else 1.0
+	if sun:
+		sun.shadow_blur = 1.6 if vibrant > 0.5 else 1.0
+	_apply()
+
 
 func _ready() -> void:
 	hour = start_hour
@@ -153,17 +189,19 @@ func _apply() -> void:
 		var elev := maxf(asin(clampf(ldir.y, -1.0, 1.0)), deg_to_rad(MIN_LIGHT_ELEVATION))
 		var l := Vector3(flat.normalized().x * cos(elev), sin(elev), flat.normalized().y * cos(elev)) if flat.length() > 0.001 else Vector3.UP
 		sun.global_transform.basis = Basis.looking_at(-l, Vector3.UP if absf(l.y) < 0.99 else Vector3.FORWARD)
-		var day_col := SUN_DAY.lerp(SUN_DUSK, dusk * dusk)
+		var day_col := SUN_DAY.lerp(V_SUN_DAY, vibrant).lerp(SUN_DUSK, dusk * dusk)
 		var moon_light := 0.12 + 0.14 * (1.0 - absf(moon_phase() - 0.5) * 2.0)
 		sun.light_color = MOON.lerp(day_col, daylight)
-		sun.light_energy = lerpf(moon_light, 1.2, daylight) * (1.0 - dim) + weather_flash * 1.5
+		sun.light_energy = lerpf(moon_light, 1.2 + 0.15 * vibrant, daylight) * (1.0 - dim) + weather_flash * 1.5
 		sun.shadow_opacity = 1.0 - dim * 0.7
 		if sky_tint.a > 0.0:
 			sun.light_color = sun.light_color.lerp(Color(sky_tint.r, sky_tint.g, sky_tint.b), sky_tint.a * 0.6)
 	if environment and environment.environment:
 		var env := environment.environment
-		var zen := NIGHT_ZENITH.lerp(DAY_ZENITH, daylight).lerp(DUSK_ZENITH, dusk * 0.5 * daylight)
-		var hor := NIGHT_HORIZON.lerp(DAY_HORIZON, daylight).lerp(DUSK_HORIZON, dusk * 0.6)
+		var day_zen := DAY_ZENITH.lerp(V_DAY_ZENITH, vibrant)
+		var day_hor := DAY_HORIZON.lerp(V_DAY_HORIZON, vibrant)
+		var zen := NIGHT_ZENITH.lerp(day_zen, daylight).lerp(DUSK_ZENITH.lerp(V_DUSK_ZENITH, vibrant), dusk * 0.5 * daylight)
+		var hor := NIGHT_HORIZON.lerp(day_hor, daylight).lerp(DUSK_HORIZON.lerp(V_DUSK_HORIZON, vibrant), dusk * 0.6)
 		# Overcast skies wash out towards grey (darker at night).
 		var grey := OVERCAST * lerpf(0.18, 1.0, daylight)
 		zen = zen.lerp(grey * 0.9, dim)
@@ -190,12 +228,12 @@ func _apply() -> void:
 		var fog_col := hor.lerp(Color.WHITE, 0.15)
 		fog_col = fog_col.lerp(weather_fog_color * lerpf(0.25, 1.0, daylight), clampf(weather_fog, 0.0, 1.0) * 0.8)
 		env.fog_light_color = fog_col
-		env.ambient_light_color = Color(0.4, 0.45, 0.8).lerp(Color(0.85, 0.88, 1.0), daylight)
+		env.ambient_light_color = Color(0.4, 0.45, 0.8).lerp(Color(0.85, 0.88, 1.0).lerp(V_SHADE, vibrant * 0.6), daylight)
 		if sky_tint.a > 0.0:
 			env.ambient_light_color = env.ambient_light_color.lerp(Color(sky_tint.r, sky_tint.g, sky_tint.b), sky_tint.a * 0.5)
-		env.ambient_light_energy = lerpf(0.28, 0.55, daylight) * (1.0 - dim * 0.45) + weather_flash * 0.6
-		# Overcast: duller, darker colours.
-		env.adjustment_saturation = 1.05 - dim * 0.4
+		env.ambient_light_energy = lerpf(0.28, 0.55 + 0.15 * vibrant, daylight) * (1.0 - dim * 0.45) + weather_flash * 0.6
+		# Overcast: duller, darker colours. Vibrant: richer colours.
+		env.adjustment_saturation = 1.05 + 0.27 * vibrant - dim * 0.4
 		env.adjustment_brightness = 1.0 - dim * 0.22 + weather_flash * 0.3
 		var f := clampf(weather_fog, 0.0, 1.0)
 		env.fog_depth_begin = lerpf(FOG_BEGIN, 0.0, sqrt(f))
@@ -212,7 +250,7 @@ func _apply_underground() -> void:
 		env.background_color = Color(0.01, 0.01, 0.02)
 		env.fog_light_color = Color(0.02, 0.02, 0.04)
 		env.fog_depth_curve = 1.4
-		env.adjustment_saturation = 1.05
+		env.adjustment_saturation = 1.05 + 0.2 * vibrant
 		env.adjustment_brightness = 1.0
 		env.fog_depth_begin = 16.0
 		env.fog_depth_end = 55.0

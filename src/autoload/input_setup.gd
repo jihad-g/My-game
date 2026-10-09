@@ -19,7 +19,9 @@ const KEY_BINDINGS := {
 	&"move_left": [KEY_A],
 	&"move_right": [KEY_D],
 	&"sprint": [KEY_SHIFT],
-	&"dodge": [KEY_SPACE],
+	## Milestone 18c+: Space jumps (like Minecraft and Hytale); the dodge roll moved to Left Alt.
+	&"jump": [KEY_SPACE],
+	&"dodge": [KEY_ALT],
 	&"block": [KEY_CTRL],
 	&"interact": [KEY_F],
 	&"inventory": [KEY_I],
@@ -98,6 +100,8 @@ const PAD_BINDINGS := {
 	&"attack_heavy": [JOY_BUTTON_Y],
 	&"dodge": [JOY_BUTTON_B],
 	&"interact": [JOY_BUTTON_A],
+	## A jumps when there is nothing to use nearby (Player decides).
+	&"jump": [JOY_BUTTON_A],
 	&"block": [JOY_BUTTON_LEFT_SHOULDER],
 	&"ability_1": [JOY_BUTTON_RIGHT_SHOULDER],
 	&"ability_2": [[JOY_AXIS_TRIGGER_RIGHT, 1.0]],
@@ -122,7 +126,7 @@ const HOTBAR_ACTIONS: Array[StringName] = [
 ## (Debug keys are deliberately not rebindable.)
 const REBINDABLE := [
 	["Movement", [[&"move_forward", "Move forward"], [&"move_back", "Move back"], [&"move_left", "Move left"],
-		[&"move_right", "Move right"], [&"sprint", "Sprint"], [&"dodge", "Dodge roll"]]],
+		[&"move_right", "Move right"], [&"sprint", "Sprint"], [&"jump", "Jump"], [&"dodge", "Dodge roll"]]],
 	["Combat", [[&"attack_light", "Light attack"], [&"attack_heavy", "Heavy attack"], [&"block", "Block / parry"],
 		[&"target_lock", "Lock on"], [&"ability_1", "Ability 1"], [&"ability_2", "Ability 2"], [&"ability_3", "Ability 3"],
 		[&"ability_shield", "Ability 4 (T)"], [&"ability_5", "Ability 5"], [&"ability_6", "Ability 6"],

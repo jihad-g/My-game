@@ -65,6 +65,7 @@ func _ready() -> void:
 	_choice_values("Frame rate limit", "max_fps", Settings.FPS_CHOICES, func(f: int) -> String: return "Unlimited" if f == 0 else "%d FPS" % f)
 	_toggle("Show FPS", "show_fps")
 	_slider("Render scale", "render_scale", 0.5, 1.0, 0.05)
+	_choice("Art style", "art_style", ["Vibrant - rich colours, glow and soft shade", "Classic - the older, softer look"])
 	_choice("Shadows", "shadows", ["Off", "Low", "High"])
 	_toggle("Horizon terrain", "far_terrain")
 	_toggle("Weather particles", "weather_particles")

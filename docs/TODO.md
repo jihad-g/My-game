@@ -105,6 +105,15 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Jump and vibrant look (v0.24.0, asked for during M18)  ✅
+
+- [x] Jump on Space (gamepad A when nothing usable is near), coyote time, jump buffer, push-off animation, co-op replay
+- [x] Dodge moved to Left Alt
+- [x] Art style setting: Vibrant (default) / Classic - saturation, sky, warm sun, lavender shade, glow, filmic tone mapping, soft ambient occlusion
+- [~] Test `test_m18c_jump_and_style` is written but has not been run yet
+- [ ] Known limitation: ambient occlusion only shows with the normal (Forward+) renderer, not in the browser build
+- [ ] NOT IMPLEMENTED: new hand-made textures or recoloured blocks per biome (the look comes from light and colour grading)
+
 ## Milestone 18c — Flow of Battle: spells that look like magic, Creative mode  ✅
 
 - [x] VFX library v2: soft particles (GPU, CPU fallback), pooling, ground marks, branching lightning, sky beams, light flashes

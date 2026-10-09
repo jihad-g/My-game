@@ -21,6 +21,12 @@ enum State { NORMAL, DODGING, STAGGERED, DEAD, DASHING }
 @export var turn_speed: float = 24.0
 @export var gravity: float = 24.0
 @export var max_step_height: float = 0.6
+## Jump (Milestone 18c+): about 1.4 m high - clears two blocks.
+@export var jump_velocity: float = 8.2
+## Seconds after walking off a ledge in which a jump still works, and how long a
+## jump press waits for the ground.
+const COYOTE_TIME := 0.12
+const JUMP_BUFFER := 0.12
 ## Movement multiplier while wading through water.
 @export var water_speed_multiplier: float = 0.65
 ## Movement multiplier while swimming in deep water.
@@ -119,6 +125,11 @@ var _dash_hit: Array[Node] = []
 ## Boss "pull" moves drag the player (velocity added while _pull_left > 0).
 var _pull := Vector3.ZERO
 var _pull_left := 0.0
+## Milestone 18c+: jumping.
+var _since_floor := 0.0
+var _jump_buffer := 0.0
+var _jumping := false
+
 ## Milestone 18a: last frame's planar velocity and model yaw (leaning and turning).
 var _last_planar := Vector2.ZERO
 var _last_yaw := 0.0
@@ -207,6 +218,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.is_action_pressed(&"attack_light") or event.is_action_pressed(&"attack_heavy") \
 				or event.is_action_pressed(&"ability_6"):
 			return  # clicks (and U = repair) belong to build mode
+	if event.is_action_pressed(&"jump") and not (event is InputEventJoypadButton and _interact_target != null):
+		_jump_buffer = JUMP_BUFFER  # a gamepad A near something usable interacts instead
+		if event is InputEventJoypadButton:
+			return
 	if event.is_action_pressed(&"attack_light"):
 		_want_light = true
 		_light_held_world = true
@@ -248,6 +263,8 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		return
 	_dodge_cooldown_left -= delta
+	_jump_buffer -= delta
+	_since_floor = 0.0 if is_on_floor() else _since_floor + delta
 	hunger.activity_multiplier = 1.0
 	if creative:
 		_creative_tick()
@@ -274,6 +291,7 @@ func _physics_process(delta: float) -> void:
 			elif Input.is_action_just_pressed(&"dodge") and _dodge_cooldown_left <= 0.0 and combat.can_dodge_cancel():
 				_start_dodge(input)
 			else:
+				_try_jump()
 				_consume_attack_requests()
 				_move_normal(input, delta)
 		State.DODGING:
@@ -334,7 +352,7 @@ func _physics_process(delta: float) -> void:
 ## Jump/fall pose, and a landing squash + dust + thud after a real fall.
 func _update_air(planar_speed: float) -> void:
 	var airborne := not is_on_floor() and not is_swimming and state != State.DODGING
-	model.set_air_state(airborne and _fall_speed > 2.5, is_swimming)
+	model.set_air_state(airborne and (_fall_speed > 2.5 or _jumping), is_swimming)
 	if airborne:
 		_fall_speed = maxf(_fall_speed, -velocity.y)
 		return
@@ -349,6 +367,7 @@ func _update_air(planar_speed: float) -> void:
 		VFX.dust(get_parent(), global_position, _dust_color(), int(4 + s * 8))
 		Audio.play(StringName("step_" + footstep_surface()), -2.0, 0.05)
 	_fall_speed = 0.0
+	_jumping = false
 	_moving_fast = planar_speed > walk_speed * 1.15
 
 
@@ -513,6 +532,36 @@ func _consume_attack_requests() -> void:
 		combat.request(&"heavy")
 	_want_light = false
 	_want_heavy = false
+
+
+## Jumps if a jump was pressed a moment ago and you are on the ground (or just
+## walked off it). It can cancel the end of an attack, like the dodge.
+func _try_jump() -> void:
+	if _jump_buffer <= 0.0 or frozen or is_swimming or _since_floor > COYOTE_TIME or _jumping and _since_floor > 0.0:
+		return
+	if not combat.can_dodge_cancel():
+		return
+	_jump_buffer = 0.0
+	if combat.is_attacking():
+		combat.cancel()
+	is_blocking = false
+	model.set_blocking(false)
+	velocity.y = jump_velocity
+	_since_floor = COYOTE_TIME + 1.0
+	_jumping = true
+	model.play_jump()
+	VFX.dust(get_parent(), global_position, _dust_color(), 5)
+	Audio.play(StringName("step_" + footstep_surface()), -6.0, 0.08)
+	hunger.activity_multiplier = 1.5
+
+
+func jump() -> void:
+	_jump_buffer = JUMP_BUFFER
+	_try_jump()
+
+
+func is_jumping() -> bool:
+	return _jumping and not is_on_floor()
 
 
 func can_start_attack() -> bool:

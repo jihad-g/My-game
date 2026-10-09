@@ -124,6 +124,7 @@ func _ready() -> void:
 	await _run_async(&"test_m18c_fx")
 	await _run_async(&"test_m18c_casting")
 	await _run_async(&"test_m18c_creative")
+	await _run_async(&"test_m18c_jump_and_style")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5162,7 +5163,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.23"), "version 0.23 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.24"), "version 0.24 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -7153,3 +7154,45 @@ func test_m18c_creative() -> void:
 	check(InputMap.has_action(&"creative_menu"), "the ` key opens creative mode")
 	panel.queue_free()
 	Player.creative_used = false
+
+
+func test_m18c_jump_and_style() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	# Space jumps; the dodge roll is on Left Alt.
+	var space := InputMap.action_get_events(&"jump").any(func(e: InputEvent) -> bool: return e is InputEventKey and (e as InputEventKey).physical_keycode == KEY_SPACE)
+	var alt := InputMap.action_get_events(&"dodge").any(func(e: InputEvent) -> bool: return e is InputEventKey and (e as InputEventKey).physical_keycode == KEY_ALT)
+	check(space and alt, "Space jumps and Left Alt dodges")
+	for i in 30:
+		await get_tree().physics_frame
+	check(p.is_on_floor(), "standing on the ground")
+	var y0 := p.global_position.y
+	p.jump()
+	var top := y0
+	for i in 20:
+		await get_tree().physics_frame
+		top = maxf(top, p.global_position.y)
+	check(top > y0 + 1.0 and p.is_jumping(), "the jump goes over a metre up (%.2f m)" % (top - y0))
+	for i in 60:
+		await get_tree().physics_frame
+	check(p.is_on_floor() and not p.is_jumping(), "and lands again")
+	p.jump()
+	await get_tree().physics_frame
+	p.jump()
+	for i in 20:
+		await get_tree().physics_frame
+	check(p.global_position.y < top + 0.5, "no jumping again in the air")
+	for i in 60:
+		await get_tree().physics_frame
+	# Art style: Vibrant by default, Classic on request.
+	var env := world.day_night.environment.environment
+	world.day_night.hour = 12.0
+	world.day_night.weather_dim = 0.0
+	Settings.set_value("art_style", 0)
+	check(world.day_night.vibrant > 0.5 and env.adjustment_saturation > 1.25 and env.glow_intensity > 0.5, "Vibrant: richer colours and glow")
+	Settings.set_value("art_style", 1)
+	check(world.day_night.vibrant < 0.5 and env.adjustment_saturation < 1.1, "Classic: the older look")
+	Settings.set_value("art_style", 0)
+	p.health.invulnerable = false

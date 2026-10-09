@@ -2,6 +2,23 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.24.0] — Jump and a vibrant look
+
+### Added
+- **Jump** (Space; gamepad A when nothing usable is near): about 1.4 m high, clears two blocks. A short grace
+  time after walking off a ledge and a buffered press make it feel responsive. It can cancel the end of an
+  attack, has a push-off animation, and attacking while falling after a jump gives the plunging slam.
+  Co-op players see your jumps.
+- **Art style** setting (Display & graphics): **Vibrant** (new default) or Classic. Vibrant has richer colours,
+  a deeper blue sky with warmer sunsets, a warm golden sun, cool lavender shade, stronger glow on magic and
+  lights, filmic tone mapping and soft ambient occlusion in block corners - the colourful look of
+  Minecraft Dungeons and Hytale. Classic keeps the older, softer look.
+- Test (written, not run yet): `test_m18c_jump_and_style`.
+
+### Changed
+- **The dodge roll moved from Space to Left Alt** (Space is now Jump). Both can be changed in Settings →
+  Controls.
+
 ## [0.23.1] — Tests for Milestone 18 run and fixed
 
 ### Fixed

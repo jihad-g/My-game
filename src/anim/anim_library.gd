@@ -213,6 +213,18 @@ static func flinch(strength: float, side: float = 0.0) -> AnimClip:
 	return c
 
 
+## Additive jump push-off: a quick dip, then the legs push and the arms swing up.
+static func jump() -> AnimClip:
+	var c := AnimClip.new(&"jump", 0.3)
+	c.key(&"lift", 0.0, -0.08).key(&"lift", 0.06, -0.1, AnimClip.EASE_OUT).key(&"lift", 0.3, 0.0, AnimClip.EASE_OUT)
+	c.key(&"shin_l", 0.0, 0.4).key(&"shin_l", 0.08, -0.1, AnimClip.EASE_OUT).key(&"shin_l", 0.3, 0.0)
+	c.key(&"shin_r", 0.0, 0.4).key(&"shin_r", 0.08, -0.1, AnimClip.EASE_OUT).key(&"shin_r", 0.3, 0.0)
+	c.key(&"arm_l", 0.0, Vector3(0.3, 0, 0)).key(&"arm_l", 0.1, Vector3(-0.8, 0, -0.2), AnimClip.EASE_OUT).key(&"arm_l", 0.3, Vector3.ZERO)
+	c.key(&"arm_r", 0.0, Vector3(0.3, 0, 0)).key(&"arm_r", 0.1, Vector3(-0.8, 0, 0.2), AnimClip.EASE_OUT).key(&"arm_r", 0.3, Vector3.ZERO)
+	c.key(&"torso", 0.0, Vector3(0.15, 0, 0)).key(&"torso", 0.1, Vector3(-0.1, 0, 0), AnimClip.EASE_OUT).key(&"torso", 0.3, Vector3.ZERO)
+	return c
+
+
 ## Additive landing squash on the knees (the root also squashes).
 static func land(strength: float) -> AnimClip:
 	var c := AnimClip.new(&"land", 0.32)

@@ -848,6 +848,12 @@ func play_stagger() -> void:
 	play_additive(AnimLibrary.flinch(1.0))
 
 
+## Milestone 18c+: the push-off of a jump (the air pose follows by itself).
+func play_jump() -> void:
+	anim_event.emit("jump", [])
+	play_additive(AnimLibrary.jump())
+
+
 ## Milestone 18c: where a hand is in the world (spell glows gather there).
 func hand_position(left: bool) -> Vector3:
 	var fore := _fore_l if left else _fore_r
