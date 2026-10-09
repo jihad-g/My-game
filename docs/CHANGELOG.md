@@ -23,7 +23,8 @@ All notable changes to this project. Format loosely follows *Keep a Changelog*.
 - **New item icons** for all 215 items (hand-tuned 32 x 32 pixel art from `art/tools/icongen.py`); items
   without one still get the drawn icon.
 - Setting **Block textures** (Display & graphics): turn the textures off for the old plain-colour look.
-- Test (written, not run yet): `test_v026_block_textures`.
+- Test: `test_v026_block_textures`. Full suite run: 1797 passed; the only failure (`test_m9_streaming`:
+  prefetch) also fails on v0.25.1 on a 2-thread machine.
 
 ### Changed
 - **New biome palette** (art bible): fresher meadow green, cooler forest, emerald jungle, teal taiga, olive
@@ -32,8 +33,10 @@ All notable changes to this project. Format loosely follows *Keep a Changelog*.
   fade near the camera); the foliage shaders draw the textures too. Meshes without texture data (characters,
   effects) look exactly as before.
 - Textures fade to plain colour beyond ~40-70 m, so far terrain does not shimmer.
+- Tuned after the first look: textures are calmer (`tex_strength` 0.55) and never darken a block on
+  average (each texture is divided by its own average colour, plus a small 8% lift).
 - Per-block brightness spread on grass is a bit smaller (textures add their own detail).
-- Tests updated for the new materials and icons (written, not run yet).
+- Tests updated for the new materials, icons and version 0.26.
 
 ## [0.25.1] — Smoother running (Minecraft Dungeons feel)
 

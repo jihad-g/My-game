@@ -3,7 +3,7 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.25.1** (Milestone 18c + jump, the Vibrant look, the world colour pass and smoother running). The Windows build is `releases/Shardlands-v0.25.1-windows.zip`.
+- Current version: **v0.26.0** (Milestone 18c + jump, the Vibrant look, the world colour pass and smoother running). The Windows build is `releases/Shardlands-v0.26.0-windows.zip`.
 - Block textures are being designed in a separate session (`docs/TEXTURE_DESIGN_PROMPT.md`); its results go to `art/textures/` and `docs/ART_BIBLE.md`.
 - Keys changed in v0.24.0: **Space = jump**, **Left Alt = dodge roll**.
 - **Creative mode** for testing in the game: the ` key (under Esc).

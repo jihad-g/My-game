@@ -5171,7 +5171,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.25"), "version 0.25 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.26"), "version 0.26 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -7312,5 +7312,7 @@ func test_v026_block_textures() -> void:
 	check(ItemIconAtlas.CELLS.has(&"iron_sword") and ItemIcons.get_icon(sword) is AtlasTexture, "items use the hand-made icon atlas")
 	# Setting.
 	Settings.set_value("block_textures", false)
-	check(is_equal_approx(float(RenderingServer.global_shader_parameter_get(&"block_textures")), 0.0), "textures can be turned off")
+	check(Settings.get_value("block_textures") == false, "textures can be turned off")
+	if DisplayServer.get_name() != "headless":  # the headless renderer keeps no shader globals
+		check(is_equal_approx(float(RenderingServer.global_shader_parameter_get(&"block_textures")), 0.0), "the shaders see the setting")
 	Settings.set_value("block_textures", true)

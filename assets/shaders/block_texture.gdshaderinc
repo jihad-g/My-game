@@ -15,6 +15,12 @@ global uniform float block_textures;      // 1 = on, 0 = off (Settings "Block te
 uniform sampler2DArray block_tex : filter_nearest_mipmap, repeat_enable;
 uniform float tex_fade_start = 36.0;      // metres from the camera
 uniform float tex_fade_end = 72.0;
+// v0.26.0 tuning: how strongly the pixel detail shows (1 = full art-bible contrast).
+// Lower = calmer ground. Detail is also divided by the texture's own average,
+// so a texture can make a block lighter or darker in spots but never darker overall.
+uniform float tex_strength = 0.55;
+// Small lift for textured blocks (dark specks make textured ground read darker).
+uniform float tex_brightness = 1.08;
 
 const float TEX_GAIN = 1.25;
 
@@ -28,6 +34,13 @@ vec3 unpack_rgb(float p) {
 	float g = floor((v - r * 65536.0) / 256.0);
 	float b = v - r * 65536.0 - g * 256.0;
 	return vec3(r, g, b) / 255.0;
+}
+
+// Linear multiplier for a tinted texel, normalised by the layer's average colour
+// (its 1 x 1 mip) so the block keeps its colour on average.
+vec3 detail(vec3 texel, float layer) {
+	vec3 avg = textureLod(block_tex, vec3(0.5, 0.5, layer), 4.0).rgb;
+	return srgb_to_linear(texel * TEX_GAIN) / max(srgb_to_linear(avg * TEX_GAIN), vec3(0.02));
 }
 
 // Linear albedo for a vertex colour (sRGB), texture position, UV2 and camera distance.
@@ -45,13 +58,13 @@ vec3 block_albedo(vec3 col_srgb, vec2 uv, vec2 meta, float dist) {
 	if (side >= 0.0) {
 		// Grass-edge band: alpha 1 = top part (grass, snow, moss), alpha 0 = the wall below.
 		vec4 e = textureGrad(block_tex, vec3(uv.x, mod(uv.y, 0.5), layer), gx, gy);
-		vec3 top = base * mix(vec3(1.0), srgb_to_linear(e.rgb * TEX_GAIN), k);
+		vec3 top = base * mix(vec3(1.0), srgb_to_linear(e.rgb * TEX_GAIN) * tex_brightness, k * tex_strength);
 		if (block_textures <= 0.0) {
 			return base;
 		}
 		vec3 wall_col = srgb_to_linear(unpack_rgb(meta.y - 1.0));
 		vec3 s = textureGrad(block_tex, vec3(uv, side), gx, gy).rgb;
-		vec3 wall = wall_col * mix(vec3(1.0), srgb_to_linear(s * TEX_GAIN), k);
+		vec3 wall = wall_col * mix(vec3(1.0), detail(s, side) * tex_brightness, k * tex_strength);
 		return mix(wall, top, step(0.5, e.a));
 	}
 	vec4 t = textureGrad(block_tex, vec3(uv, layer), gx, gy);
@@ -61,5 +74,5 @@ vec3 block_albedo(vec3 col_srgb, vec2 uv, vec2 meta, float dist) {
 		vec3 avg = textureLod(block_tex, vec3(0.5, 0.5, layer), 4.0).rgb;
 		return base * mix(srgb_to_linear(avg), srgb_to_linear(t.rgb), k);
 	}
-	return base * mix(vec3(1.0), srgb_to_linear(t.rgb * TEX_GAIN), k);
+	return base * mix(vec3(1.0), detail(t.rgb, layer) * tex_brightness, k * tex_strength);
 }
