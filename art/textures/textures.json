@@ -1,0 +1,662 @@
+{
+ "tex_gain": 1.25,
+ "textures": {
+  "dirt_side": {
+   "file": "dirt_side.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "dirt",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Dirt wall: soft blobs + a few pebbles. 16x16 = 1 m (two blocks)."
+  },
+  "dirt_top": {
+   "file": "dirt_top.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "dirt",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Bare dirt from above."
+  },
+  "crystal_side": {
+   "file": "crystal_side.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "crystal_ground",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Dirt wall with small crystal shards."
+  },
+  "mud_side": {
+   "file": "mud_side.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "swamp_mud",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Dark mud wall with hanging roots."
+  },
+  "grass_meadow_top_0": {
+   "file": "grass_meadow_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_meadow",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Soft blobs + light grass tufts (Verdant Meadows). Variant 0."
+  },
+  "grass_meadow_top_1": {
+   "file": "grass_meadow_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_meadow",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Soft blobs + light grass tufts (Verdant Meadows). Variant 1."
+  },
+  "grass_meadow_top_2": {
+   "file": "grass_meadow_top_2.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_meadow",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Soft blobs + light grass tufts (Verdant Meadows). Variant 2."
+  },
+  "grass_meadow_edge": {
+   "file": "grass_meadow_edge.png",
+   "tint": "tinted_edge",
+   "face": "edge",
+   "group": "grass_meadow",
+   "shades": 13,
+   "mean": 0.788,
+   "desc": "Side band of the top block. Rows 0-7 are used (0.5 m). alpha 255 = top part (top colour), alpha 0 = side part (side colour + side texture)."
+  },
+  "grass_forest_top_0": {
+   "file": "grass_forest_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_forest",
+   "shades": 5,
+   "mean": 0.799,
+   "desc": "Clover leaves + dark leaf litter (Whispering Forest). Variant 0."
+  },
+  "grass_forest_top_1": {
+   "file": "grass_forest_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_forest",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Clover leaves + dark leaf litter (Whispering Forest). Variant 1."
+  },
+  "grass_forest_top_2": {
+   "file": "grass_forest_top_2.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_forest",
+   "shades": 5,
+   "mean": 0.801,
+   "desc": "Clover leaves + dark leaf litter (Whispering Forest). Variant 2."
+  },
+  "grass_forest_edge": {
+   "file": "grass_forest_edge.png",
+   "tint": "tinted_edge",
+   "face": "edge",
+   "group": "grass_forest",
+   "shades": 15,
+   "mean": 0.777,
+   "desc": "Side band of the top block. Rows 0-7 are used (0.5 m). alpha 255 = top part (top colour), alpha 0 = side part (side colour + side texture)."
+  },
+  "grass_jungle_top_0": {
+   "file": "grass_jungle_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_jungle",
+   "shades": 6,
+   "mean": 0.798,
+   "desc": "Big broad leaves (Emerald Jungle). Variant 0."
+  },
+  "grass_jungle_top_1": {
+   "file": "grass_jungle_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_jungle",
+   "shades": 6,
+   "mean": 0.799,
+   "desc": "Big broad leaves (Emerald Jungle). Variant 1."
+  },
+  "grass_jungle_top_2": {
+   "file": "grass_jungle_top_2.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_jungle",
+   "shades": 6,
+   "mean": 0.803,
+   "desc": "Big broad leaves (Emerald Jungle). Variant 2."
+  },
+  "grass_jungle_edge": {
+   "file": "grass_jungle_edge.png",
+   "tint": "tinted_edge",
+   "face": "edge",
+   "group": "grass_jungle",
+   "shades": 15,
+   "mean": 0.779,
+   "desc": "Side band of the top block. Rows 0-7 are used (0.5 m). alpha 255 = top part (top colour), alpha 0 = side part (side colour + side texture)."
+  },
+  "grass_taiga_top_0": {
+   "file": "grass_taiga_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_taiga",
+   "shades": 5,
+   "mean": 0.799,
+   "desc": "Fallen needles + few tufts (Frostpine Taiga). Variant 0."
+  },
+  "grass_taiga_top_1": {
+   "file": "grass_taiga_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_taiga",
+   "shades": 5,
+   "mean": 0.801,
+   "desc": "Fallen needles + few tufts (Frostpine Taiga). Variant 1."
+  },
+  "grass_taiga_top_2": {
+   "file": "grass_taiga_top_2.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_taiga",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Fallen needles + few tufts (Frostpine Taiga). Variant 2."
+  },
+  "grass_taiga_edge": {
+   "file": "grass_taiga_edge.png",
+   "tint": "tinted_edge",
+   "face": "edge",
+   "group": "grass_taiga",
+   "shades": 13,
+   "mean": 0.777,
+   "desc": "Side band of the top block. Rows 0-7 are used (0.5 m). alpha 255 = top part (top colour), alpha 0 = side part (side colour + side texture)."
+  },
+  "grass_swamp_top_0": {
+   "file": "grass_swamp_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_swamp",
+   "shades": 5,
+   "mean": 0.802,
+   "desc": "Moss with dark wet puddles and glints (Murk Swamp). Variant 0."
+  },
+  "grass_swamp_top_1": {
+   "file": "grass_swamp_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_swamp",
+   "shades": 5,
+   "mean": 0.786,
+   "desc": "Moss with dark wet puddles and glints (Murk Swamp). Variant 1."
+  },
+  "grass_swamp_top_2": {
+   "file": "grass_swamp_top_2.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_swamp",
+   "shades": 5,
+   "mean": 0.812,
+   "desc": "Moss with dark wet puddles and glints (Murk Swamp). Variant 2."
+  },
+  "grass_swamp_edge": {
+   "file": "grass_swamp_edge.png",
+   "tint": "tinted_edge",
+   "face": "edge",
+   "group": "grass_swamp",
+   "shades": 15,
+   "mean": 0.778,
+   "desc": "Side band of the top block. Rows 0-7 are used (0.5 m). alpha 255 = top part (top colour), alpha 0 = side part (side colour + side texture)."
+  },
+  "grass_alpine_top_0": {
+   "file": "grass_alpine_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_alpine",
+   "shades": 4,
+   "mean": 0.799,
+   "desc": "Short sparse tufts, bare patches (Stonecrown grass). Variant 0."
+  },
+  "grass_alpine_top_1": {
+   "file": "grass_alpine_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_alpine",
+   "shades": 4,
+   "mean": 0.802,
+   "desc": "Short sparse tufts, bare patches (Stonecrown grass). Variant 1."
+  },
+  "grass_alpine_top_2": {
+   "file": "grass_alpine_top_2.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "grass_alpine",
+   "shades": 4,
+   "mean": 0.799,
+   "desc": "Short sparse tufts, bare patches (Stonecrown grass). Variant 2."
+  },
+  "grass_alpine_edge": {
+   "file": "grass_alpine_edge.png",
+   "tint": "tinted_edge",
+   "face": "edge",
+   "group": "grass_alpine",
+   "shades": 12,
+   "mean": 0.795,
+   "desc": "Side band of the top block. Rows 0-7 are used (0.5 m). alpha 255 = top part (top colour), alpha 0 = side part (side colour + side texture)."
+  },
+  "crystal_ground_top_0": {
+   "file": "crystal_ground_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "crystal_ground",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Violet moss with small sparkles (Crystal Glade ground). Variant 0."
+  },
+  "crystal_ground_top_1": {
+   "file": "crystal_ground_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "crystal_ground",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Violet moss with small sparkles (Crystal Glade ground). Variant 1."
+  },
+  "crystal_ground_top_2": {
+   "file": "crystal_ground_top_2.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "crystal_ground",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Violet moss with small sparkles (Crystal Glade ground). Variant 2."
+  },
+  "crystal_ground_edge": {
+   "file": "crystal_ground_edge.png",
+   "tint": "tinted_edge",
+   "face": "edge",
+   "group": "crystal_ground",
+   "shades": 15,
+   "mean": 0.783,
+   "desc": "Side band of the top block. Rows 0-7 are used (0.5 m). alpha 255 = top part (top colour), alpha 0 = side part (side colour + side texture)."
+  },
+  "sand_top_0": {
+   "file": "sand_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "sand",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Beach / shore sand, calm, few grains. Variant 0."
+  },
+  "sand_top_1": {
+   "file": "sand_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "sand",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Beach / shore sand, calm, few grains. Variant 1."
+  },
+  "sand_top_2": {
+   "file": "sand_top_2.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "sand",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Beach / shore sand, calm, few grains. Variant 2."
+  },
+  "sand_side": {
+   "file": "sand_side.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "sand",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Sand wall: soft horizontal layers."
+  },
+  "desert_sand_top_0": {
+   "file": "desert_sand_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "desert_sand",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Desert sand with wind ripples (all variants share direction). Variant 0."
+  },
+  "desert_sand_top_1": {
+   "file": "desert_sand_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "desert_sand",
+   "shades": 6,
+   "mean": 0.799,
+   "desc": "Desert sand with wind ripples (all variants share direction). Variant 1."
+  },
+  "desert_sand_top_2": {
+   "file": "desert_sand_top_2.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "desert_sand",
+   "shades": 6,
+   "mean": 0.801,
+   "desc": "Desert sand with wind ripples (all variants share direction). Variant 2."
+  },
+  "desert_sand_side": {
+   "file": "desert_sand_side.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "desert_sand",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Desert sand wall."
+  },
+  "sandstone_side": {
+   "file": "sandstone_side.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "sandstone",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Sandstone: 4-pixel layers with a lit lip and a shadow line."
+  },
+  "sandstone_top": {
+   "file": "sandstone_top.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "sandstone",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Sandstone slabs from above."
+  },
+  "stone_top_0": {
+   "file": "stone_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "stone",
+   "shades": 4,
+   "mean": 0.799,
+   "desc": "Stone: big flat facets, cracks, light from top-left. Variant 0."
+  },
+  "stone_top_1": {
+   "file": "stone_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "stone",
+   "shades": 4,
+   "mean": 0.798,
+   "desc": "Stone: big flat facets, cracks, light from top-left. Variant 1."
+  },
+  "stone_top_2": {
+   "file": "stone_top_2.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "stone",
+   "shades": 4,
+   "mean": 0.803,
+   "desc": "Stone: big flat facets, cracks, light from top-left. Variant 2."
+  },
+  "stone_side_0": {
+   "file": "stone_side_0.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "stone",
+   "shades": 4,
+   "mean": 0.799,
+   "desc": "Stone wall: wide flat slabs. Variant 0."
+  },
+  "stone_side_1": {
+   "file": "stone_side_1.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "stone",
+   "shades": 4,
+   "mean": 0.801,
+   "desc": "Stone wall: wide flat slabs. Variant 1."
+  },
+  "mountain_rock_top_0": {
+   "file": "mountain_rock_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "mountain_rock",
+   "shades": 4,
+   "mean": 0.797,
+   "desc": "Mountain rock from above: chunky facets. Variant 0."
+  },
+  "mountain_rock_top_1": {
+   "file": "mountain_rock_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "mountain_rock",
+   "shades": 4,
+   "mean": 0.803,
+   "desc": "Mountain rock from above: chunky facets. Variant 1."
+  },
+  "mountain_rock_side": {
+   "file": "mountain_rock_side.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "mountain_rock",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Cliff: strong horizontal strata + vertical cracks."
+  },
+  "snow_top_0": {
+   "file": "snow_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "snow",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Snow: very soft drifts, rare sparkles. Variant 0."
+  },
+  "snow_top_1": {
+   "file": "snow_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "snow",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Snow: very soft drifts, rare sparkles. Variant 1."
+  },
+  "snow_edge": {
+   "file": "snow_edge.png",
+   "tint": "tinted_edge",
+   "face": "edge",
+   "group": "snow",
+   "shades": 14,
+   "mean": 0.788,
+   "desc": "Snow cap over dirt: rounded bumps, no thin drips."
+  },
+  "snow_side": {
+   "file": "snow_side.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "snow",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Packed snow wall (for snow blocks deeper than one block)."
+  },
+  "ice_top": {
+   "file": "ice_top.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "ice",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Ice sheet: diagonal glints, two small cracks. Tint with ice_color."
+  },
+  "ice_side": {
+   "file": "ice_side.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "ice",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Ice wall: vertical light bands."
+  },
+  "swamp_mud_top_0": {
+   "file": "swamp_mud_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "swamp_mud",
+   "shades": 6,
+   "mean": 0.803,
+   "desc": "Swamp mud: wet puddles with glints. Variant 0."
+  },
+  "swamp_mud_top_1": {
+   "file": "swamp_mud_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "swamp_mud",
+   "shades": 6,
+   "mean": 0.794,
+   "desc": "Swamp mud: wet puddles with glints. Variant 1."
+  },
+  "cave_stone_top_0": {
+   "file": "cave_stone_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "cave_stone",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Cave floor: rough facets, mineral glints. Variant 0."
+  },
+  "cave_stone_top_1": {
+   "file": "cave_stone_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "cave_stone",
+   "shades": 5,
+   "mean": 0.798,
+   "desc": "Cave floor: rough facets, mineral glints. Variant 1."
+  },
+  "cave_stone_side": {
+   "file": "cave_stone_side.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "cave_stone",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Cave wall: rough tall facets."
+  },
+  "gravel_top_0": {
+   "file": "gravel_top_0.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "gravel",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Gravel / riverbed: round pebbles with outlines. Variant 0."
+  },
+  "gravel_top_1": {
+   "file": "gravel_top_1.png",
+   "tint": "tinted",
+   "face": "top",
+   "group": "gravel",
+   "shades": 4,
+   "mean": 0.8,
+   "desc": "Gravel / riverbed: round pebbles with outlines. Variant 1."
+  },
+  "gravel_side": {
+   "file": "gravel_side.png",
+   "tint": "tinted",
+   "face": "side",
+   "group": "gravel",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Gravel wall."
+  },
+  "bark": {
+   "file": "bark.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "bark",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Tree bark: three wiggling vertical grooves, plates, one knot. All trunks."
+  },
+  "leaves_oak": {
+   "file": "leaves_oak.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "leaves",
+   "shades": 5,
+   "mean": 0.793,
+   "desc": "Oak leaves: round clumps lit from top-left."
+  },
+  "leaves_pine": {
+   "file": "leaves_pine.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "leaves",
+   "shades": 4,
+   "mean": 0.798,
+   "desc": "Pine needles: rows of downward chevrons."
+  },
+  "leaves_jungle": {
+   "file": "leaves_jungle.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "leaves",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Jungle leaves: big broad leaves with a rib."
+  },
+  "boulder": {
+   "file": "boulder.png",
+   "tint": "tinted",
+   "face": "prop",
+   "group": "boulder",
+   "shades": 5,
+   "mean": 0.8,
+   "desc": "Boulder / rock props: big facets, a little moss light."
+  },
+  "ore_copper": {
+   "file": "ore_copper.png",
+   "tint": "full",
+   "face": "prop",
+   "group": "ore",
+   "shades": 8,
+   "mean": 0.491,
+   "desc": "Ore rock (copper): dark stone with copper nuggets. Full colour - use white vertex colour."
+  },
+  "ore_iron": {
+   "file": "ore_iron.png",
+   "tint": "full",
+   "face": "prop",
+   "group": "ore",
+   "shades": 7,
+   "mean": 0.507,
+   "desc": "Ore rock (iron): dark stone with iron nuggets. Full colour - use white vertex colour."
+  },
+  "ore_coal": {
+   "file": "ore_coal.png",
+   "tint": "full",
+   "face": "prop",
+   "group": "ore",
+   "shades": 7,
+   "mean": 0.454,
+   "desc": "Ore rock (coal): dark stone with coal nuggets. Full colour - use white vertex colour."
+  },
+  "ore_silver": {
+   "file": "ore_silver.png",
+   "tint": "full",
+   "face": "prop",
+   "group": "ore",
+   "shades": 7,
+   "mean": 0.532,
+   "desc": "Ore rock (silver): dark stone with silver nuggets. Full colour - use white vertex colour."
+  }
+ }
+}
