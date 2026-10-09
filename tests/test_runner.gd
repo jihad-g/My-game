@@ -7191,7 +7191,7 @@ func test_m18c_jump_and_style() -> void:
 	world.day_night.hour = 12.0
 	world.day_night.weather_dim = 0.0
 	Settings.set_value("art_style", 0)
-	check(world.day_night.vibrant > 0.5 and env.adjustment_saturation > 1.25 and env.glow_intensity > 0.5, "Vibrant: richer colours and glow")
+	check(world.day_night.vibrant > 0.5 and env.adjustment_saturation > 1.1 and env.adjustment_contrast > 1.1 and env.glow_intensity > 0.5, "Vibrant: richer colours, more contrast and glow")
 	Settings.set_value("art_style", 1)
 	check(world.day_night.vibrant < 0.5 and env.adjustment_saturation < 1.1, "Classic: the older look")
 	Settings.set_value("art_style", 0)

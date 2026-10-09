@@ -14,6 +14,10 @@ func _ready() -> void:
 		if arg.begins_with("--out="):
 			_out_dir = arg.substr(6)
 	DirAccess.make_dir_recursive_absolute(_out_dir)
+	if "--only=style" in OS.get_cmdline_user_args():
+		await _style_showcase()
+		get_tree().quit()
+		return
 	if "--only=menu" in OS.get_cmdline_user_args():
 		var m := (load("res://scenes/menu/main_menu.tscn") as PackedScene).instantiate()
 		add_child(m)
@@ -1555,3 +1559,65 @@ func _outfits_showcase() -> void:
 	cam._target_distance = 7.0
 	await _wait(40)
 	await _shot("outfits_closeup")
+
+
+## v0.24.0: the Vibrant and Classic art styles side by side, a sunset, a pack of
+## minions and the element looks of spells.
+func _style_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"wizard")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var frames := 0
+	while world.chunk_manager.pending_count() > 0 and frames < 1500:
+		await get_tree().process_frame
+		frames += 1
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud._help.visible = false
+	world.hud.visible = false  # clean pictures: no HUD, no story pop-up
+	world.day_night.day_length = 1.0e9  # hold the time of day
+	world.day_night.hour = 11.0
+	world.weather.force(0, 1.0)
+	world.camera_rig._target_distance = 16.0
+	world.camera_rig._target_pitch = 50.0
+	await _wait(60)
+	for style in [0, 1]:
+		Settings.set_value("art_style", style)
+		await _wait(20)
+		await _shot("style_%s_day" % ["vibrant", "classic"][style])
+	Settings.set_value("art_style", 0)
+	world.day_night.hour = 17.4
+	world.day_night.advance_hours(0.0)
+	await _wait(20)
+	await _shot("style_vibrant_sunset")
+	world.day_night.hour = 11.0
+	world.day_night.advance_hours(0.0)
+	# A pack of minions and a few spells of different elements.
+	world.camera_rig._target_distance = 12.0
+	p.character.grant_xp(Progression.total_xp_for(100), Progression.Source.OTHER)
+	p.set_creative(true)
+	var dir := p.get_facing()
+	var foes: Array[Monster] = []
+	for k in 6:
+		var off := dir.rotated(Vector3.UP, (k - 2.5) * 0.35) * (5.0 + (k % 2) * 1.5)
+		var pos := p.global_position + off
+		pos.y = world.get_ground_height(pos) + 0.3
+		var m := world.spawner.spawn_enemy(load(Monster.MONSTER_SCENE_PATH), pos, "", load("res://data/enemies/skeleton_minion.tres")) as Monster
+		if m:
+			m.health.max_health = 50000.0
+			m.health.reset_full()
+			m.make_dormant(-1.0)
+			m.set_meta(&"training_dummy", true)
+			foes.append(m)
+	await _wait(30)
+	await _shot("style_minion_pack")
+	if not foes.is_empty():
+		p.set_lock_target(foes[2])
+	for spec in [[&"flame_wave", "fire"], [&"absolute_zero", "frost"], [&"chain_lightning", "lightning"], [&"arcane_explosion", "arcane"]]:
+		p.abilities.bar[0] = spec[0]
+		p.abilities.try_use(0)
+		await _wait(7)
+		await _shot("style_spell_%s" % spec[1])
+		await _wait(50)

@@ -78,14 +78,14 @@ func set_art_style(style: int) -> void:
 		env.glow_bloom = 0.1 if v else 0.05
 		env.glow_hdr_threshold = 0.85 if v else 1.0
 		env.tonemap_mode = Environment.TONE_MAPPER_FILMIC if v else Environment.TONE_MAPPER_LINEAR
-		env.tonemap_exposure = 1.12 if v else 1.0
+		env.tonemap_exposure = 0.95 if v else 1.0
 		env.tonemap_white = 6.0 if v else 1.0
 		# Soft shade in block corners (Forward+ only; ignored on the compatibility renderer).
 		env.ssao_enabled = v
 		env.ssao_radius = 1.2
 		env.ssao_intensity = 1.6
 		env.ssao_power = 1.3
-		env.adjustment_contrast = 1.07 if v else 1.0
+		env.adjustment_contrast = 1.2 if v else 1.0
 	if sun:
 		sun.shadow_blur = 1.6 if vibrant > 0.5 else 1.0
 	_apply()
@@ -192,7 +192,7 @@ func _apply() -> void:
 		var day_col := SUN_DAY.lerp(V_SUN_DAY, vibrant).lerp(SUN_DUSK, dusk * dusk)
 		var moon_light := 0.12 + 0.14 * (1.0 - absf(moon_phase() - 0.5) * 2.0)
 		sun.light_color = MOON.lerp(day_col, daylight)
-		sun.light_energy = lerpf(moon_light, 1.2 + 0.15 * vibrant, daylight) * (1.0 - dim) + weather_flash * 1.5
+		sun.light_energy = lerpf(moon_light, 1.2 + 0.2 * vibrant, daylight) * (1.0 - dim) + weather_flash * 1.5
 		sun.shadow_opacity = 1.0 - dim * 0.7
 		if sky_tint.a > 0.0:
 			sun.light_color = sun.light_color.lerp(Color(sky_tint.r, sky_tint.g, sky_tint.b), sky_tint.a * 0.6)
@@ -228,13 +228,14 @@ func _apply() -> void:
 		var fog_col := hor.lerp(Color.WHITE, 0.15)
 		fog_col = fog_col.lerp(weather_fog_color * lerpf(0.25, 1.0, daylight), clampf(weather_fog, 0.0, 1.0) * 0.8)
 		env.fog_light_color = fog_col
-		env.ambient_light_color = Color(0.4, 0.45, 0.8).lerp(Color(0.85, 0.88, 1.0).lerp(V_SHADE, vibrant * 0.6), daylight)
+		env.ambient_light_color = Color(0.4, 0.45, 0.8).lerp(Color(0.85, 0.88, 1.0).lerp(V_SHADE, vibrant * 0.3), daylight)
 		if sky_tint.a > 0.0:
 			env.ambient_light_color = env.ambient_light_color.lerp(Color(sky_tint.r, sky_tint.g, sky_tint.b), sky_tint.a * 0.5)
-		env.ambient_light_energy = lerpf(0.28, 0.55 + 0.15 * vibrant, daylight) * (1.0 - dim * 0.45) + weather_flash * 0.6
-		# Overcast: duller, darker colours. Vibrant: richer colours.
-		env.adjustment_saturation = 1.05 + 0.27 * vibrant - dim * 0.4
-		env.adjustment_brightness = 1.0 - dim * 0.22 + weather_flash * 0.3
+		env.ambient_light_energy = lerpf(0.28, 0.55 - 0.05 * vibrant, daylight) * (1.0 - dim * 0.45) + weather_flash * 0.6
+		# Overcast: duller, darker colours. Vibrant: a little richer, with more contrast
+		# (light and shade) rather than louder colours.
+		env.adjustment_saturation = 1.05 + 0.12 * vibrant - dim * 0.4
+		env.adjustment_brightness = 1.0 - 0.05 * vibrant - dim * 0.22 + weather_flash * 0.3
 		var f := clampf(weather_fog, 0.0, 1.0)
 		env.fog_depth_begin = lerpf(FOG_BEGIN, 0.0, sqrt(f))
 		env.fog_depth_end = lerpf(FOG_END, 48.0, sqrt(f))
@@ -250,7 +251,7 @@ func _apply_underground() -> void:
 		env.background_color = Color(0.01, 0.01, 0.02)
 		env.fog_light_color = Color(0.02, 0.02, 0.04)
 		env.fog_depth_curve = 1.4
-		env.adjustment_saturation = 1.05 + 0.2 * vibrant
+		env.adjustment_saturation = 1.05 + 0.08 * vibrant
 		env.adjustment_brightness = 1.0
 		env.fog_depth_begin = 16.0
 		env.fog_depth_end = 55.0
