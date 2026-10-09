@@ -112,7 +112,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Cast glow and element sound for every magic ability and spell; projectile trails and element impacts; glowing ground areas; ice shell on frozen enemies
 - [x] Ultimate moments: slow motion (alone only), screen flash, ground mark, a sound per class
 - [x] Creative mode for testing (` key): god mode, free and instant abilities, levels, spells, test kit, spawns, clear enemies, day/night
-- [~] Tests `test_m18c_*` are written but have not been run yet
+- [x] Tests `test_m18c_*` run and pass (v0.23.1)
 - [ ] NOT IMPLEMENTED: a hand-picked effect for every single one of the 240 abilities and spells - they share the element looks; most look different by element, shape and colour
 - [ ] NOT IMPLEMENTED: Creative mode in co-op, and saving Creative mode (it is off after loading)
 - [ ] Known limitation: the colour of older effects decides their element (a few may pick a near element)
@@ -125,7 +125,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Three fodder enemies in packs of 4–10 in 8 biomes; up to 60 active enemies; death puffs
 - [x] Heavy enemy attacks show a filling red ground warning; elites are outlined and roar
 - [x] AI level of detail: idle enemies far from players think every 4th frame
-- [~] Tests `test_m18b_*` (and the updated combo-length checks) are written but have not been run yet
+- [x] Tests `test_m18b_*` and the updated combo-length checks run and pass (v0.23.1)
 - [ ] NOT IMPLEMENTED: damage on the animation's "hit" event (combat keeps its own clock; both start the strike at the end of the wind-up)
 - [ ] NOT IMPLEMENTED: crowd performance measured (60 enemies at 60 fps is a goal, not yet measured with the stress tool)
 - [ ] NOT IMPLEMENTED: simple models for distant enemies and a pool for death effects (from the plan)
@@ -139,7 +139,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Locomotion: stride matches the speed (no foot sliding), lean when speeding up and turning, foot shuffle when turning on the spot, glide up block steps
 - [x] Movement feel setting (Snappy default / Weighty); dodge v2 (cancels attack recovery, works with half the stamina, ends in a slide)
 - [x] Camera lead, smooth shake, fixed isometric camera option
-- [~] Tests `test_m18a_*` are written but have not been run yet (run them only with the owner's permission)
+- [x] Tests `test_m18a_*` run and pass (v0.23.1)
 - [ ] NOT IMPLEMENTED: root motion that moves the body (attacks still move you with the old lunge; the clip step is only visual)
 - [ ] NOT IMPLEMENTED: damage on the clip's "hit" event (the event exists; combat still uses its own timer, which matches the wind-up) - M18b
 - [x] Hit reactions by direction, knock-downs, combo chains and hit-stop (done in M18b)

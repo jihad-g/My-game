@@ -6,7 +6,7 @@
 script = ExtResource("1_atk")
 id = &"dagger_lunge_finisher"
 display_name = "Lunging Finisher"
-damage = 14
+damage = 12
 damage_type = &"physical"
 stamina_cost = 10
 windup = 0.1

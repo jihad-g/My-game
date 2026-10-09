@@ -6,7 +6,7 @@
 script = ExtResource("1_atk")
 id = &"spear_sweep_finisher"
 display_name = "Sweeping Finisher"
-damage = 20
+damage = 17
 damage_type = &"physical"
 stamina_cost = 12
 windup = 0.24

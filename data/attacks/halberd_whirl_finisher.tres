@@ -6,7 +6,7 @@
 script = ExtResource("1_atk")
 id = &"halberd_whirl_finisher"
 display_name = "Whirling Finisher"
-damage = 22
+damage = 19
 damage_type = &"physical"
 stamina_cost = 13
 windup = 0.24

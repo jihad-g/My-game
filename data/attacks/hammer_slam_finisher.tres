@@ -6,7 +6,7 @@
 script = ExtResource("1_atk")
 id = &"hammer_slam_finisher"
 display_name = "Ground Slam Finisher"
-damage = 30
+damage = 26
 damage_type = &"physical"
 stamina_cost = 16
 windup = 0.4

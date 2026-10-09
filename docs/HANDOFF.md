@@ -3,7 +3,7 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.23.0** (Milestone 18c). The Windows build is `releases/Shardlands-v0.23.0-windows.zip`.
+- Current version: **v0.23.1** (Milestone 18c + test fixes). The Windows build is `releases/Shardlands-v0.23.1-windows.zip`.
 - **Creative mode** for testing in the game: the ` key (under Esc).
 
 ## How to work with the owner
@@ -68,7 +68,7 @@
     action and additive layers (`play_clip`, `play_additive`, `clip_event`), with cross-fades and a leg mask;
   - `set_locomotion_speed`, `set_motion` (leans, turn shuffle), `add_step_offset` (block-step glide);
   - Settings `movement_feel` (Snappy/Weighty) and `fixed_camera`; camera lead; dodge v2 (`can_dodge_cancel`);
-  - tests `test_m18a_*` are written but were NOT run (the owner did not allow it yet).
+  - tests `test_m18a_*` (run and pass since v0.23.1).
 
 - **M18b:**
   - finishers (`AttackData.finisher`, `knockdown`, `hitstop`) at the end of every melee moveset in `data/movesets/`;
@@ -76,14 +76,14 @@
     `_apply_hitstop`; `Enemy.freeze`, `_flinch`, `knock_down`; AI level of detail in `Enemy._physics_process`;
   - fodder enemies `skeleton_minion`, `bandit_recruit`, `cultist_acolyte` in `WildSpawns.TABLE`; spawner max 60;
   - elite outline (`Materials.outline`, `MonsterModel.set_outline`) and roar; heavy-attack ground warnings;
-  - tests `test_m18b_*` and all `test_m18a_*` were NOT run (the owner did not allow it yet).
+  - tests `test_m18b_*` (run and pass since v0.23.1).
 
 - **M18c:**
   - `src/fx/fx.gd` (`FX`): pooled soft particles, element looks (`impact`, `cast_glow`, `ultimate`), `lightning`,
     `sky_beam`, `ground_mark`, `light_flash`; `VFX.burst`/`bolt`, `Projectile`, `AbilityZone` use it;
   - `PlayerAbilities._cast_fx`; `Enemy._set_ice_shell`;
   - Creative mode: `src/ui/creative_panel.gd`, `Player.creative`, `Player.creative_used` (blocks achievements);
-  - tests `test_m18a_*`, `test_m18b_*` and `test_m18c_*` were NOT run (the owner did not allow it yet).
+  - tests `test_m18a_*`, `test_m18b_*` and `test_m18c_*` were run with the owner's permission and pass (v0.23.1).
 
 ## Main code locations
 - Combat: `src/player/player_combat.gd`, `src/player/player.gd`

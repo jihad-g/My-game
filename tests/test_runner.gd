@@ -6766,7 +6766,7 @@ func test_m18a_clips() -> void:
 	check(is_equal_approx(a.length, 0.6) and is_equal_approx(a.hold_at, 0.2), "an attack clip: wind-up, strike, recovery, hold")
 	check(a.events_between(0.0, 0.25).has(&"hit") and a.has_part(&"leg_l") and not a.legs_when_moving, "attacks have a hit frame and a stance")
 	var two := AnimLibrary.attack(&"slash_r", 0.2, 0.1, 0.3, true, false, false)
-	check(two.has_part(&"arm_l") and (two.sample(&"arm_l", 0.3) as Vector3).y > 0.5, "two-handed swings use both arms")
+	check(two.has_part(&"arm_l") and (two.sample(&"arm_l", 0.2) as Vector3).y > 0.5, "two-handed swings use both arms")
 	var bow := AnimLibrary.attack(&"aim", 0.3, 0.05, 0.2, false, true, true)
 	check((bow.sample(&"shield", 0.3) as Vector3).x > 1.4, "the bow is raised in the left hand while drawing")
 	var bad := []
@@ -6808,7 +6808,7 @@ func test_m18a_model() -> void:
 	m.play_attack(&"overhead", 0.3, 0.1, 0.3)
 	m._process(dt)
 	check(m._arm_r.rotation.distance_to(before) < 0.35, "the swing blends in (no snap)")
-	for i in 18:
+	for i in 14:
 		m._process(dt)
 	check(m._arm_r.rotation.x < -2.0, "the overhead wind-up raises the arm")
 	# While running, the legs keep running during a swing.
@@ -6945,26 +6945,26 @@ func test_m18b_combat() -> void:
 	p.health.invulnerable = true
 	_clear_enemies(world)
 	world.spawner.max_active = 80
-	var off := _clear_offset(world, 2.0)
+	p.set_lock_target(null)
+	var aim := p.get_aim_direction()
+	# Aim assist: an enemy 20 degrees to the side of the aim still gets the swing.
+	var off := aim.rotated(Vector3.UP, deg_to_rad(20.0)) * 2.0
 	var m := _spawn_monster(world, &"skeleton_warrior", off)
 	m.health.max_health = 50000.0
 	m.health.current = 50000.0
 	await _frames(3)
-	p.set_lock_target(null)
-	# Aim assist: aiming 20 degrees to the side still swings at the enemy.
 	Settings.set_value("aim_assist", true)
 	var a0: AttackData = p.combat.light_combo[0]
-	var side := off.normalized().rotated(Vector3.UP, deg_to_rad(20.0))
-	p.face_direction(side, true)
 	var aimed := p.combat.assisted_direction(a0)
 	var to_m := (m.global_position - p.global_position)
 	to_m.y = 0.0
-	check(aimed.angle_to(to_m.normalized()) < 0.05 or p.get_aim_direction().angle_to(to_m.normalized()) < 0.05, "aim assist turns the swing to the enemy")
+	check(aimed.angle_to(to_m.normalized()) < 0.05 and aim.angle_to(to_m.normalized()) > 0.25, "aim assist turns the swing to the enemy")
 	Settings.set_value("aim_assist", false)
 	check(p.combat.assisted_direction(a0).is_equal_approx(p.get_aim_direction()), "and can be turned off")
 	Settings.set_value("aim_assist", true)
 	# A hit freezes the swing and the enemy for a moment (hit-stop) and the enemy flinches.
-	p.face_direction(off.normalized(), true)
+	m.global_position = p.global_position + aim * 1.6
+	await _frames(2)
 	p.combat.cancel()
 	p.state = Player.State.NORMAL
 	p.combat.request(&"light")
@@ -7144,7 +7144,9 @@ func test_m18c_creative() -> void:
 		check(dummy.ai == Monster.AI.DORMANT, "the dummy never fights back")
 	panel._clear()
 	await _frames(2)
-	check(get_tree().get_nodes_in_group(&"enemies").filter(func(e: Node) -> bool: return not e.get("is_dead")).is_empty(), "clear enemies")
+	check(get_tree().get_nodes_in_group(&"enemies").filter(func(e: Node) -> bool:
+		return not e.get("is_dead") and (e as Node3D).is_visible_in_tree() \
+			and (e as Node3D).global_position.distance_to(p.global_position) < 40.0).is_empty(), "clear enemies near you")
 	check(not Platform.unlock(&"first_blood"), "no achievements after creative mode")
 	panel.set_creative(false)
 	check(not p.creative, "creative mode turns off")

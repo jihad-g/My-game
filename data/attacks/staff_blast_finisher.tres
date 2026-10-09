@@ -6,7 +6,7 @@
 script = ExtResource("1_atk")
 id = &"staff_blast_finisher"
 display_name = "Arcane Burst Finisher"
-damage = 14
+damage = 12
 damage_type = &"arcane"
 stamina_cost = 10
 windup = 0.2

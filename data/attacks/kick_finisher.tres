@@ -6,7 +6,7 @@
 script = ExtResource("1_atk")
 id = &"kick_finisher"
 display_name = "Kick Finisher"
-damage = 10
+damage = 9
 damage_type = &"physical"
 stamina_cost = 8
 windup = 0.16

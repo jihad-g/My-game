@@ -67,7 +67,7 @@ roadmap toward classes, skills, crafting, dungeons, settlements, building and a 
 > noticed. A Knight in shadow clothes with daggers plays like an Assassin; the class keeps a small talent, so
 > a Wizard is never a Knight's equal. Built on the beta (Milestone 13: tutorial, guide, settings and
 > accessibility, save recovery, crash reports, achievements, release builds - [`docs/RELEASE.md`](docs/RELEASE.md)).
-> Download a Windows build from [`releases/`](releases/) (v0.23.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
+> Download a Windows build from [`releases/`](releases/) (v0.23.1). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
 > performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
 > design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md). See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
 > [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.

@@ -6,7 +6,7 @@
 script = ExtResource("1_atk")
 id = &"axe_cleave_finisher"
 display_name = "Cleaving Finisher"
-damage = 26
+damage = 22
 damage_type = &"physical"
 stamina_cost = 14
 windup = 0.28

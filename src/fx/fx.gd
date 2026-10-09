@@ -238,7 +238,7 @@ static func _recycle(e: Node3D) -> void:
 	var key: String = e.get_meta(&"fx_key", "")
 	var idle: Array = _pool.get(key, [])
 	if idle.size() >= POOL_MAX:
-		e.free()
+		e.queue_free()  # not free(): we are inside its own "finished" signal
 		return
 	idle.append(e)
 	_pool[key] = idle

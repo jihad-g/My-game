@@ -2,9 +2,9 @@
 
 | File | Version | Platform |
 |---|---|---|
-| [Shardlands-v0.23.0-windows.zip](Shardlands-v0.23.0-windows.zip) | 0.23.0 (Milestone 18c - Flow of Battle: spell effects, Creative mode) | Windows 10/11, 64-bit |
+| [Shardlands-v0.23.1-windows.zip](Shardlands-v0.23.1-windows.zip) | 0.23.1 (Milestone 18c - spell effects, Creative mode; tested) | Windows 10/11, 64-bit |
 
-Older builds are in the git history of this folder (v0.22.0: commit 537925d, v0.21.0: commit d113f78, v0.20.0: commit 520386f, v0.19.0: commit 8ea33dd, v0.18.0: commit 4bc7d38, v0.17.1: commit 0042754, v0.16.0: commit 482c0c8, v0.13.0: commit d8a28b4, v0.12.0: commit 6a42fc1).
+Older builds are in the git history of this folder (v0.23.0: commit d91a552, v0.22.0: commit 537925d, v0.21.0: commit d113f78, v0.20.0: commit 520386f, v0.19.0: commit 8ea33dd, v0.18.0: commit 4bc7d38, v0.17.1: commit 0042754, v0.16.0: commit 482c0c8, v0.13.0: commit d8a28b4, v0.12.0: commit 6a42fc1).
 
 ## Install on Windows
 

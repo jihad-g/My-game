@@ -2,6 +2,20 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.23.1] — Tests for Milestone 18 run and fixed
+
+### Fixed
+- The effect pool could try to free a particle emitter while it was still sending its "finished" signal.
+- Finishers dealt a bit too much single-target damage for early levels (the balance check found level-5
+  characters too strong): finisher damage is about 15% lower. They still hit everything around you and knock
+  enemies down.
+
+### Tests
+- All M18 tests now pass (91 checks), plus the older groups that use the changed code: M17 (198), balance,
+  combat, status effects, magic, elites, bosses, animation, settings, release, save/load, outfits, wilds.
+- Five M18 test mistakes were fixed (timing of two animation samples, the aim direction in headless tests, and
+  counting hidden pooled enemies).
+
 ## [0.23.0] — Milestone 18c: Flow of Battle - spells that look like magic, and Creative mode
 
 ### Added

@@ -6,7 +6,7 @@
 script = ExtResource("1_atk")
 id = &"gs_leap_finisher"
 display_name = "Leaping Slam Finisher"
-damage = 34
+damage = 29
 damage_type = &"physical"
 stamina_cost = 16
 windup = 0.36
