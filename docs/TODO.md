@@ -105,6 +105,14 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Smoother running (v0.25.1, asked for during M18)  ✅
+
+- [x] Arm follow-through, shoulder twist, weight shift, elbow bend, softer bounce, steady head
+- [x] Springy lean when starting and stopping
+- [x] Prompt for a texture-design session: `docs/TEXTURE_DESIGN_PROMPT.md`
+- [ ] NOT IMPLEMENTED: block textures (designed in a separate session first, then added to the game)
+- [ ] NOT IMPLEMENTED: cape / hair that sways with movement
+
 ## World colour pass (v0.25.0, asked for during M18)  ✅
 
 - [x] Deeper greens, warmer sand, warm stone; calmer tree leaves and boulders

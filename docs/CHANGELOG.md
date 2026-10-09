@@ -2,6 +2,20 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.25.1] — Smoother running (Minecraft Dungeons feel)
+
+### Changed
+- **Smoother, bouncier run** for the hero, NPCs and co-op players: the arms swing a moment after the legs
+  (follow-through), the shoulders twist with the arms, the body shifts its weight from foot to foot, the
+  forward elbow bends more, and the bounce is a little bigger and softer.
+- **Starting and stopping feel alive**: the forward lean is springy - you lean in when you start running,
+  rock back a little when you stop, and settle.
+- The head stays steady while the body moves (it turns back against the twist and lean).
+
+### Added
+- `docs/TEXTURE_DESIGN_PROMPT.md`: a ready prompt for a separate session that designs the block textures
+  (art bible, palettes, 16x16 pixel textures, atlas, previews) before we add them to the game.
+
 ## [0.25.0] — World colour pass (Minecraft Dungeons / Hytale look)
 
 ### Changed

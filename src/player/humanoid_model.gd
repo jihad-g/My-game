@@ -67,6 +67,9 @@ const CANCEL_FADE := 0.12
 var _speed := 0.0
 var _amp := 0.25
 var _accel_lean := 0.0
+## v0.25.1: the forward lean is a springy value, so starting and stopping
+## overshoot a little and settle (the bouncy Minecraft Dungeons feel).
+var _lean_vel := 0.0
 var _turn_lean := 0.0
 var _shuffle := 0.0
 var _step_off := 0.0
@@ -760,7 +763,11 @@ func _gait() -> float:
 ## turning on the spot.
 func set_motion(accel_forward: float, turn_rate: float, delta: float) -> void:
 	var k := 1.0 - exp(-10.0 * delta)
-	_accel_lean = lerpf(_accel_lean, clampf(accel_forward * 0.012, -0.14, 0.18), k)
+	# Spring (about 13% overshoot): lean in when you start, rock back and settle when you stop.
+	var target := clampf(accel_forward * 0.012, -0.14, 0.18)
+	var d := minf(delta, 0.05)
+	_lean_vel += ((target - _accel_lean) * 120.0 - _lean_vel * 12.0) * d
+	_accel_lean = clampf(_accel_lean + _lean_vel * d, -0.2, 0.24)
 	_turn_lean = lerpf(_turn_lean, clampf(-turn_rate * minf(_speed, 8.0) * 0.012, -0.22, 0.22), k)
 	var turning := _speed < 0.6 and absf(turn_rate) > 2.5
 	_shuffle = move_toward(_shuffle, 1.0 if turning else 0.0, delta * 8.0)
@@ -1009,6 +1016,12 @@ func _base_pose(delta: float) -> Dictionary:
 	_air_blend = move_toward(_air_blend, 1.0 if _airborne and not _swimming else 0.0, delta * 8.0)
 	var amp := maxf(_amp * _gait(), 0.25 * _shuffle)
 	var swing := sin(_walk_phase) * amp
+	# v0.25.1 smoother run: arms swing a moment after the legs (follow-through),
+	# shoulders twist with the arms, the body shifts its weight from foot to foot.
+	var run := m * _gait()
+	var arm_swing := sin(_walk_phase - 0.3) * amp
+	var twist := arm_swing * 0.22 * run
+	var sway := sin(_walk_phase) * 0.035 * run
 	var gait := maxf(m, 0.3 * _shuffle)
 	# Footsteps: one per half cycle while moving on the ground.
 	var sgn := signf(sin(_walk_phase))
@@ -1024,16 +1037,19 @@ func _base_pose(delta: float) -> Dictionary:
 	p[&"shin_l"] = lerpf(knee_l, 0.9, _air_blend)
 	p[&"shin_r"] = lerpf(knee_r, 0.25, _air_blend)
 	# Body: bob and lean into the run (more when speeding up), lean into turns, breathe when idle.
-	_bob = absf(sin(_walk_phase)) * 0.06 * m
+	_bob = pow(absf(sin(_walk_phase)), 0.7) * 0.07 * m
 	_breathe = sin(_time * 2.1) * 0.012 * (1.0 - m)
-	p[&"torso"] = Vector3(0.14 * m * minf(_move_amount, 1.4) + 0.05 * _air_blend + _accel_lean, 0.0, _turn_lean)
+	var lean := 0.14 * m * minf(_move_amount, 1.4) + 0.05 * _air_blend + _accel_lean
+	p[&"torso"] = Vector3(lean, twist, _turn_lean + sway)
 	# Idle: an occasional glance around.
 	_look = lerpf(_look, sin(_time * 0.37) * sin(_time * 0.11) * 0.5 * (1.0 - m), 1.0 - exp(-3.0 * delta))
-	p[&"head"] = Vector3(-sin(_time * 2.1) * 0.02 * (1.0 - m), _look, -_turn_lean * 0.5)
-	p[&"arm_l"] = Vector3(lerpf(-swing * 0.8, -2.4, _air_blend), 0.0, lerpf(-0.04 - absf(_breathe) * 2.0, -0.5, _air_blend))
-	p[&"arm_r"] = Vector3(lerpf(swing * 0.8 - 0.25, -2.4, _air_blend), 0.0, lerpf(0.04, 0.5, _air_blend))
-	p[&"fore_l"] = -0.25 - 0.35 * m
-	p[&"fore_r"] = -0.25 - 0.35 * m
+	# The head stays steady: it turns back against the shoulder twist and lean.
+	p[&"head"] = Vector3(-sin(_time * 2.1) * 0.02 * (1.0 - m) - lean * 0.35, _look - twist * 0.7, -_turn_lean * 0.5 - sway * 0.6)
+	p[&"arm_l"] = Vector3(lerpf(-arm_swing * 0.85, -2.4, _air_blend), 0.0, lerpf(-0.04 - absf(_breathe) * 2.0 - 0.08 * run, -0.5, _air_blend))
+	p[&"arm_r"] = Vector3(lerpf(arm_swing * 0.85 - 0.25, -2.4, _air_blend), 0.0, lerpf(0.04 + 0.08 * run, 0.5, _air_blend))
+	# Elbows bend more on the arm swinging forward.
+	p[&"fore_l"] = -0.25 - 0.35 * m - maxf(0.0, arm_swing) * 0.6 * run
+	p[&"fore_r"] = -0.25 - 0.35 * m - maxf(0.0, -arm_swing) * 0.6 * run
 	p[&"weapon"] = Vector3(-0.65, 0.0, 0.0)
 	p[&"shield"] = Vector3.ZERO
 	p[&"lift"] = 0.0
