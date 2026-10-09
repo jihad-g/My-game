@@ -533,6 +533,8 @@ func _build_surface(data: ChunkData, n: int, w: int, ox: int, oz: int) -> void:
 			_quad_ao(data, Vector3(x0, y, z0), Vector3(x1, y, z0), Vector3(x1, y, z1), Vector3(x0, y, z1), top,
 				_ao(hw, hn, data.heights[k - w - 1] > h), _ao(he, hn, data.heights[k - w + 1] > h),
 				_ao(he, hs, data.heights[k + w + 1] > h), _ao(hw, hs, data.heights[k + w - 1] > h))
+			_tex_quad(data, Vector2(x0, z0), Vector2(x1, z0), Vector2(x1, z1), Vector2(x0, z1),
+				Vector2(_top_layer(biome, h, wx, wz, surface) + 1, 0.0))
 			# Side walls where the neighbour is lower; always on chunk borders (skirt).
 			# (Each side is skipped cheaply when the neighbour isn't lower.)
 			_side(data, biome, h, data.heights[k + 1], i == n - 1,
@@ -550,6 +552,8 @@ func _build_surface(data: ChunkData, n: int, w: int, ox: int, oz: int) -> void:
 					_quad(data.vertices, data.normals, data.colors, data.indices,
 						Vector3(x0, WATER_Y, z0), Vector3(x1, WATER_Y, z0), Vector3(x1, WATER_Y, z1), Vector3(x0, WATER_Y, z1),
 						Vector3.UP, ice)
+					_tex_quad(data, Vector2(x0, z0), Vector2(x1, z0), Vector2(x1, z1), Vector2(x0, z1),
+						Vector2(int(_biome_tex(biome)[&"ice"]) + 1, 0.0))
 				else:
 					var wv := data.water_vertices
 					var base := wv.size()
@@ -574,15 +578,85 @@ func _side(data: ChunkData, biome: BiomeData, h: int, nh: int, border: bool,
 	var edge_col := top * shade
 	var body_col := _side_color(biome, h, surface) * (shade * 0.92)
 	var band_bottom := maxi(bottom, h - 1)
+	# v0.26.0 textures: u runs along the wall, v = -height (both in metres).
+	var ua := a.z if normal.x != 0.0 else a.x
+	var ub := b.z if normal.x != 0.0 else b.x
+	var bt := _biome_tex(biome)
+	var side_layer: int = bt.get(_side_key(biome, h, surface), bt[&"side"])
+	var kind := _surface_kind(biome, h, surface)
+	var edge_key: StringName = EDGE_KEY.get(kind, &"")
+	var edge_meta := Vector2(side_layer + 1, 0.0)
+	if edge_key != &"":
+		# Grass-edge band: edge mask texture + the wall texture and colour below the grass.
+		edge_meta = Vector2(int(bt[edge_key]) + 1 + 256 * (side_layer + 1), 1.0 + _pack_rgb(body_col))
 	_quad(data.vertices, data.normals, data.colors, data.indices,
 		Vector3(a.x, top_y, a.z), Vector3(b.x, top_y, b.z),
 		Vector3(b.x, band_bottom * bh, b.z), Vector3(a.x, band_bottom * bh, a.z),
 		normal, edge_col)
+	_tex_quad(data, Vector2(ua, -top_y), Vector2(ub, -top_y), Vector2(ub, -band_bottom * bh), Vector2(ua, -band_bottom * bh), edge_meta)
 	if band_bottom > bottom:
 		_quad(data.vertices, data.normals, data.colors, data.indices,
 			Vector3(a.x, band_bottom * bh, a.z), Vector3(b.x, band_bottom * bh, b.z),
 			Vector3(b.x, bottom * bh, b.z), Vector3(a.x, bottom * bh, a.z),
 			normal, body_col)
+		_tex_quad(data, Vector2(ua, -band_bottom * bh), Vector2(ub, -band_bottom * bh), Vector2(ub, -bottom * bh), Vector2(ua, -bottom * bh),
+			Vector2(side_layer + 1, 0.0))
+
+
+# --- v0.26.0 block textures (BlockTextures, docs/ART_BIBLE.md) --------------------
+
+const EDGE_KEY := {&"top": &"edge", &"shore": &"shore_edge", &"rock": &"rock_edge", &"peak": &"peak_edge"}
+
+
+## Which surface a column top shows (same rules as _top_color).
+func _surface_kind(biome: BiomeData, h: int, surface: bool) -> StringName:
+	if not surface:
+		return &"rock" if h > CAVE_FLOOR + 2 else &"top"
+	if h < SEA_LEVEL:
+		return &"underwater"
+	if h <= SEA_LEVEL + 1:
+		return &"shore"
+	if h >= biome.peak_height:
+		return &"peak"
+	if h >= biome.rock_height:
+		return &"rock"
+	return &"top"
+
+
+## Which wall texture sits under a column (same rules as _side_color).
+func _side_key(biome: BiomeData, h: int, surface: bool) -> StringName:
+	if not surface or h >= biome.rock_height - 4:
+		return &"rock_side"
+	if h <= SEA_LEVEL + 1:
+		return &"shore_side"
+	return &"side"
+
+
+static func _biome_tex(biome: BiomeData) -> Dictionary:
+	return BlockTextures.BIOMES.get(biome.id, BlockTextures.BIOMES[&"verdant_meadow"])
+
+
+## Texture layer of a column top; variants are picked per block by hash.
+func _top_layer(biome: BiomeData, h: int, wx: int, wz: int, surface: bool) -> int:
+	var list: Array = _biome_tex(biome)[_surface_kind(biome, h, surface)]
+	if list.size() == 1:
+		return list[0]
+	return list[HashUtils.hash3(wx, wz, world_seed + 41) % list.size()]
+
+
+static func _pack_rgb(c: Color) -> float:
+	return float(clampi(roundi(c.r * 255.0), 0, 255) * 65536 + clampi(roundi(c.g * 255.0), 0, 255) * 256
+		+ clampi(roundi(c.b * 255.0), 0, 255))
+
+
+## UVs (metres) and UV2 for the 4 vertices just added.
+static func _tex_quad(data: ChunkData, a: Vector2, b: Vector2, c: Vector2, d: Vector2, meta: Vector2) -> void:
+	data.uvs.append(a)
+	data.uvs.append(b)
+	data.uvs.append(c)
+	data.uvs.append(d)
+	for i in 4:
+		data.uv2s.append(meta)
 
 
 ## Light on block sides compared with tops (Milestone 18 art pass: darker
@@ -598,7 +672,7 @@ func _top_color(biome: BiomeData, h: int, wx: int, wz: int, surface: bool) -> Co
 	# grass has lighter and darker patches instead of one flat colour.
 	var t := HashUtils.to_unit(HashUtils.hash3(wx, wz, world_seed), 3)
 	var patch := HashUtils.to_unit(HashUtils.hash3(wx >> 3, wz >> 3, world_seed + 911), 5)
-	var spread := 0.08  # brightness spread between blocks
+	var spread := 0.06  # brightness spread between blocks (v0.26.0: 0.08 -> 0.06, textures add their own)
 	if not surface:
 		c = biome.rock_color if h > CAVE_FLOOR + 2 else biome.top_color.lerp(biome.top_color_alt, t)
 	elif h < SEA_LEVEL:

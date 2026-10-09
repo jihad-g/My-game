@@ -18,6 +18,8 @@ const DEFAULTS := {
 	"weather_particles": true, "ambient_particles": true, "far_terrain": true, "vfx_particles": true,
 	## Milestone 18c+: 0 = Vibrant (rich colours, glow, soft shade), 1 = Classic.
 	"art_style": 0,
+	## v0.26.0: pixel-art block textures on terrain, props and buildings (off = plain colours).
+	"block_textures": true,
 	"max_fps": 0, "show_fps": false,
 	# Comfort
 	"screen_shake": true,
@@ -154,6 +156,7 @@ func apply() -> void:
 	Audio.set_volume(&"Ambience", float(get_value("ambience_volume")))
 	Audio.set_volume(&"UI", float(get_value("ui_volume")))
 	VFX.enabled = bool(get_value("vfx_particles"))
+	Materials.set_block_textures(bool(get_value("block_textures")))
 	Engine.max_fps = maxi(0, int(get_value("max_fps")))
 	if DisplayServer.get_name() != "headless":
 		var fs := bool(get_value("fullscreen"))

@@ -126,6 +126,7 @@ func _ready() -> void:
 	await _run_async(&"test_m18c_creative")
 	await _run_async(&"test_m18c_jump_and_style")
 	_run(&"test_m18_world_colours")
+	_run(&"test_v026_block_textures")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -4128,13 +4129,18 @@ func test_m10_icons() -> void:
 		var img := ItemIcons.render(item)
 		var opaque := 0
 		var outline := 0
-		var dark := item.icon_color.darkened(0.75)
+		# v0.26.0: atlas icons have a coloured outline: dark pixels touching transparency.
 		for y in ItemIcons.SIZE:
 			for x in ItemIcons.SIZE:
 				var c := img.get_pixel(x, y)
 				if c.a > 0.5:
 					opaque += 1
-					if absf(c.r - dark.r) + absf(c.g - dark.g) + absf(c.b - dark.b) < 0.03:
+					var edge := false
+					for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+						var q := Vector2i(x, y) + d
+						if q.x < 0 or q.y < 0 or q.x >= ItemIcons.SIZE or q.y >= ItemIcons.SIZE or img.get_pixel(q.x, q.y).a < 0.5:
+							edge = true
+					if edge and c.get_luminance() < 0.45:
 						outline += 1
 		if opaque < 60 or opaque > 900 or outline < 20:
 			bad.append("%s(%d/%d)" % [item.id, opaque, outline])
@@ -4195,7 +4201,8 @@ func test_m10_visual_assets() -> void:
 	var mat := lib.get_mesh(&"tree_oak").surface_get_material(0) as ShaderMaterial
 	check(mat.get_shader_parameter(&"fade_near") == true, "trees still fade near the camera")
 	check(lib.get_mesh(&"grass_tuft").surface_get_material(0) is ShaderMaterial, "grass sways")
-	check(not (lib.get_mesh(&"rock").surface_get_material(0) is ShaderMaterial), "rocks don't sway")
+	var rock_mat := lib.get_mesh(&"rock").surface_get_material(0) as ShaderMaterial
+	check(rock_mat == null or not rock_mat.shader.resource_path.contains("foliage"), "rocks don't sway")
 	check(Materials.water() is ShaderMaterial, "water is the animated shader")
 	for sh in ["sky", "foliage", "water"]:
 		check(load("res://assets/shaders/%s.gdshader" % sh) is Shader, "%s shader loads" % sh)
@@ -7238,5 +7245,72 @@ func test_m18_world_colours() -> void:
 	check(mat != null and mat.shader.resource_path.ends_with("foliage_fade.gdshader"), "trees use the soft fade shader")
 	Materials.set_camera_fade(16.0, Vector3(1, 2, 3))
 	check(mat.get_shader_parameter(&"focus_pos") == Vector3(1, 2, 3), "the hero position reaches the tree shader")
-	check(Materials.vertex_color_occluder().distance_fade_mode == BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA,
+	var occ := Materials.vertex_color_occluder() as ShaderMaterial
+	check(occ != null and occ.shader.resource_path.ends_with("blocky_fade.gdshader")
+		and is_equal_approx(float(occ.get_shader_parameter(&"fade_min")), 16.0 * 0.45),
 		"walls fade softly too (no pixel dither)")
+
+
+## v0.26.0 block textures: texture array, terrain UVs and layers (grass edge
+## with the wall below), textured props and building pieces, plant cards,
+## new biome palette, atlas item icons and the "Block textures" setting.
+func test_v026_block_textures() -> void:
+	var arr := Materials.block_texture_array()
+	check(BlockTextures.COUNT >= 100 and BlockTextures.LAYER.size() == BlockTextures.COUNT, "texture table has every layer")
+	if DisplayServer.get_name() != "headless":
+		check(arr != null and arr.get_layers() == BlockTextures.COUNT, "block textures load as one texture array")
+	check((Materials.vertex_color() as ShaderMaterial).shader.resource_path.ends_with("blocky.gdshader"), "blocks use the textured shader")
+	# Terrain: every vertex has UVs, tops use a grass layer of the biome, edges carry the wall layer.
+	var gen := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var data := gen.generate_chunk(Vector2i(3, 2), 0)
+	check(data.uvs.size() == data.vertices.size() and data.uv2s.size() == data.vertices.size(), "terrain has texture data per vertex")
+	var tops := 0
+	var edges := 0
+	var known := {}
+	for b in BlockTextures.BIOMES:
+		for v in BlockTextures.BIOMES[b].values():
+			if v is Array:
+				for l in v:
+					known[int(l) + 1] = true
+			else:
+				known[int(v) + 1] = true
+	var unknown := 0
+	for q in range(0, data.vertices.size(), 4):
+		var code := int(data.uv2s[q].x)
+		if data.normals[q] == Vector3.UP:
+			tops += 1
+			if not known.has(code % 256):
+				unknown += 1
+		elif code >= 256:
+			edges += 1
+	check(tops > 0 and unknown == 0, "terrain tops use biome texture layers (%d unknown)" % unknown)
+	check(edges > 0, "grass-edge bands know the wall texture below them (%d)" % edges)
+	# New palette.
+	for b in gen.biomes:
+		if (b as BiomeData).id == &"verdant_meadow":
+			check((b as BiomeData).top_color.to_html(false) == "5a9a34", "meadow uses the new art-bible green")
+	# Props and building pieces.
+	var lib := PropLibrary.new()
+	var oak := lib.get_mesh(&"tree_oak")
+	var oak_arrays := oak.surface_get_arrays(0)
+	check(oak_arrays[Mesh.ARRAY_TEX_UV2] != null and (oak_arrays[Mesh.ARRAY_TEX_UV2] as PackedVector2Array).size() > 0, "trees carry bark/leaf textures")
+	var flowers := lib.get_mesh(&"flowers")
+	var cards: int = flowers.get_meta(&"card_surface", -1)
+	check(cards >= 0 and (flowers.surface_get_material(cards) as ShaderMaterial).shader.resource_path.ends_with("sprite.gdshader"), "flowers are cut-out plant cards")
+	var wall := BlockMesh.new()
+	BuildMeshes.build_into(wall, &"wood_wall")
+	check(wall.is_textured(), "wood walls have plank textures")
+	var crop := BlockMesh.new()
+	BuildMeshes.build_into(crop, &"crop_wheat_3")
+	check(not crop.card_arrays().is_empty(), "ripe wheat is drawn on cards")
+	# Untextured meshes (characters) stay plain.
+	var plain := BlockMesh.new()
+	plain.box(Vector3.ZERO, Vector3.ONE, Color.RED)
+	check(not plain.is_textured() and plain.to_arrays()[Mesh.ARRAY_TEX_UV2] == null, "characters stay untextured")
+	# Item icons come from the atlas when present.
+	var sword := ItemDB.get_item(&"iron_sword")
+	check(ItemIconAtlas.CELLS.has(&"iron_sword") and ItemIcons.get_icon(sword) is AtlasTexture, "items use the hand-made icon atlas")
+	# Setting.
+	Settings.set_value("block_textures", false)
+	check(is_equal_approx(float(RenderingServer.global_shader_parameter_get(&"block_textures")), 0.0), "textures can be turned off")
+	Settings.set_value("block_textures", true)

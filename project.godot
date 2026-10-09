@@ -8,7 +8,7 @@ config_version=5
 
 config/name="Shardlands"
 config/description="Stylized blocky open-world survival RPG (prototype)."
-config/version="0.25.1"
+config/version="0.26.0"
 run/main_scene="res://scenes/menu/main_menu.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
@@ -72,6 +72,10 @@ wind_dir={
 rain_amount={
 "type": "float",
 "value": 0.0
+}
+block_textures={
+"type": "float",
+"value": 1.0
 }
 
 [shardlands]

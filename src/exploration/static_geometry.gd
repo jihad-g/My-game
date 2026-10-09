@@ -18,8 +18,11 @@ static func merge(statics: Array, boxes: Array, roofs: Dictionary = {}, color: C
 		out_boxes.append([b.size, b.xform])
 	var arrays := {}
 	for k in groups:
-		if not groups[k].is_empty():
+		if groups[k].has_boxes():
 			arrays[k] = groups[k].to_arrays()
+		var cards: Array = groups[k].card_arrays()
+		if not cards.is_empty():
+			arrays["cards_%s" % k] = cards  # v0.26.0: crops/plants on cut-out cards
 	for idx in roofs:
 		var rb := BlockMesh.new()
 		for r in roofs[idx]:
@@ -39,7 +42,7 @@ static func attach(parent: Node3D, merged: Dictionary, layer: int = Layers.BUILD
 		var mi := MeshInstance3D.new()
 		mi.name = key.capitalize().replace(" ", "")
 		mi.mesh = mesh
-		mi.material_override = mats.get(key, Materials.vertex_color())
+		mi.material_override = Materials.sprite(0.25) if key.begins_with("cards_") else mats.get(key, Materials.vertex_color())
 		if key == "glow":
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(mi)

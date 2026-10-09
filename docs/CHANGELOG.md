@@ -2,6 +2,39 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.26.0] — Block textures (art bible v2 in the game)
+
+### Added
+- **Pixel-art block textures** (16 x 16, 16 texels per metre) on the ground, cliffs, props and building pieces,
+  made by code in `art/tools/` (see `docs/ART_BIBLE.md`). They are multiplied with the block colours, so the
+  per-block colour variation, darker sides and corner shade all stay.
+  - Every biome has its own grass (meadow tufts, forest clover, jungle leaves, taiga needles, swamp moss,
+    alpine grass, crystal moss), plus sand, desert ripples, sandstone, stone, mountain rock, snow, ice, mud,
+    cave stone and gravel. Tops have 2-3 variants so the ground does not repeat.
+  - **Grass edge**: the side of the top block shows grass (or snow) hanging over the dirt below.
+  - Trees (bark, oak/pine/jungle leaves), bushes (berry bushes with painted berries), cactus, palm fronds,
+    swamp moss, crystals, the giant mushroom cap, boulders, stalagmites and **ore rocks** (copper, iron,
+    coal, mithril).
+  - Building pieces: plank walls, floor boards, dark beams, palisade logs, roof shingles, thatch, stone
+    bricks and tiles, iron plates, cloth (beds, flags, carpets), farm soil.
+- **Small plants are drawn on crossed cut-out cards** instead of tiny boxes: flowers, grass tufts, reeds, dry
+  bushes, the herbs (sunbloom, moonpetal, frost lotus, starlight orchid, emberroot), mushrooms, glowcaps
+  (glowing) and **wheat in 4 growth stages** (also in village farms). They sway in the wind.
+- **New item icons** for all 215 items (hand-tuned 32 x 32 pixel art from `art/tools/icongen.py`); items
+  without one still get the drawn icon.
+- Setting **Block textures** (Display & graphics): turn the textures off for the old plain-colour look.
+- Test (written, not run yet): `test_v026_block_textures`.
+
+### Changed
+- **New biome palette** (art bible): fresher meadow green, cooler forest, emerald jungle, teal taiga, olive
+  swamp, more orange desert, warm-grey mountain rock, brighter crystal glade, lighter caves for the web build.
+- The block material is now a shader (`assets/shaders/blocky.gdshader`, `blocky_fade.gdshader` for walls that
+  fade near the camera); the foliage shaders draw the textures too. Meshes without texture data (characters,
+  effects) look exactly as before.
+- Textures fade to plain colour beyond ~40-70 m, so far terrain does not shimmer.
+- Per-block brightness spread on grass is a bit smaller (textures add their own detail).
+- Tests updated for the new materials and icons (written, not run yet).
+
 ## [0.25.1] — Smoother running (Minecraft Dungeons feel)
 
 ### Changed

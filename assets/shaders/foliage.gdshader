@@ -15,9 +15,8 @@ uniform float fade_max = 11.0;
 
 varying float v_depth;
 
-vec3 srgb_to_linear(vec3 c) {
-	return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c));
-}
+// v0.26.0: leaves, bark and bushes get pixel-art block textures (UV/UV2 from BlockMesh).
+#include "res://assets/shaders/block_texture.gdshaderinc"
 
 void vertex() {
 	vec3 wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -33,7 +32,7 @@ void vertex() {
 }
 
 void fragment() {
-	ALBEDO = srgb_to_linear(COLOR.rgb);
+	ALBEDO = block_albedo(COLOR.rgb, UV, UV2, v_depth);
 	ROUGHNESS = 0.95;
 	SPECULAR = 0.2;
 	if (fade_near) {

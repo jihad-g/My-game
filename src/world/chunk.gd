@@ -62,6 +62,9 @@ func build(data: ChunkData) -> void:
 		arrays[Mesh.ARRAY_VERTEX] = data.vertices
 		arrays[Mesh.ARRAY_NORMAL] = data.normals
 		arrays[Mesh.ARRAY_COLOR] = data.colors
+		if data.uvs.size() == data.vertices.size():
+			arrays[Mesh.ARRAY_TEX_UV] = data.uvs
+			arrays[Mesh.ARRAY_TEX_UV2] = data.uv2s
 		arrays[Mesh.ARRAY_INDEX] = data.indices
 		_terrain_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 		_terrain_mesh.surface_set_material(0, Materials.vertex_color())

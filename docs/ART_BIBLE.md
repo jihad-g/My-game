@@ -447,10 +447,36 @@ How to use in the game (coding session): load `icon_atlas.png` once, make an `At
 | Village preview | done (v2) |
 | atlas.png + atlas_array.png + atlas.json | done |
 | Biome previews, far-view test, texture sheet | done |
-| Palette written into `data/biomes/*.tres` | **NOT IMPLEMENTED** (no game files changed) |
-| Shader / mesh changes in the game | **NOT IMPLEMENTED** (coding session) |
+| Palette written into `data/biomes/*.tres` | done (v0.26.0) |
+| Shader / mesh changes in the game | done (v0.26.0) — see section 12 |
 | Forward+ (SSAO) previews | **NOT IMPLEMENTED** |
 | Textures for village NPC props (market stalls, signs), stalagmites (they reuse `cave_stone_side`), more crops than wheat (carrot, pumpkin stages) | **NOT IMPLEMENTED** |
-| Item icons in the game (replacing `ItemIcons` drawing code) | **NOT IMPLEMENTED** (coding session) |
+| Item icons in the game | done (v0.26.0): atlas first, `ItemIcons` drawing as fallback |
 | Spell-school symbols on tome icons (all tomes share one drawing, only the colour changes, same as today) | **NOT IMPLEMENTED** |
 | Prop colour changes | **NOT IMPLEMENTED** (kept current colours) |
+
+
+---
+
+## 12. In the game (v0.26.0)
+
+How it was built (so the next change knows where to look):
+
+- **Pipeline:** `texgen.py` → `build_atlas.py` → `icongen.py` → **`export_game.py`**. The last one copies
+  `assets/textures/block_textures.png` (16 x 16·N strip) and `assets/icons/item_icons.png` into the game and
+  writes the generated tables `src/core/block_textures.gd` (`BlockTextures`: layer numbers, biome surfaces)
+  and `src/ui/item_icon_atlas.gd` (`ItemIconAtlas`). `art/` has a `.gdignore`: Godot never imports it.
+- **Texture array:** `Materials.block_texture_array()` cuts the strip into layers, makes mipmaps per layer and
+  builds one `Texture2DArray` (works in Forward+ and Compatibility/web).
+- **Shaders:** `assets/shaders/block_texture.gdshaderinc` holds `block_albedo()`. It is used by `blocky`,
+  `blocky_fade`, `foliage` and `foliage_fade`. `sprite.gdshader` draws plant cards (alpha scissor, sway,
+  optional glow). Global shader parameter `block_textures` (1/0) is the setting.
+- **Vertex data:** `UV` = metres (cards: 0..1), `UV2.x` = layer + 1 (+ 256·(wall layer + 1) on grass-edge
+  bands), `UV2.y` = 0 tinted / -1 full colour / 1 + packed wall colour on edges. No UV2 = untextured.
+- **Terrain:** `TerrainGenerator._surface_kind / _side_key / _top_layer / _tex_quad` choose layers with the
+  same rules as `_top_color / _side_color`; `ChunkData.uvs / uv2s`; `Chunk.build` adds them to the mesh.
+- **Props / buildings:** `BlockMesh.texture = &"name"` before boxes; `BlockMesh.card()` for plants;
+  `BuildMeshes` sets textures by piece colour (`WOOD` → planks, `STONE` → bricks, `IRON` → iron plate ...).
+  Merged settlement meshes keep cards as their own "cards_*" meshes.
+- **Change a texture:** edit the Python, run the four scripts, done. Layer numbers may move; nothing in the
+  game uses raw numbers, only names.

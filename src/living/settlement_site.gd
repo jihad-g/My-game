@@ -86,8 +86,11 @@ func _build_static() -> void:
 	for b in layout.boxes:
 		_boxes.append([b.size, b.xform])
 	for k in groups:
-		if not groups[k].is_empty():
+		if groups[k].has_boxes():
 			_arrays[String(k)] = groups[k].to_arrays()
+		var cards: Array = groups[k].card_arrays()
+		if not cards.is_empty():
+			_arrays["cards_%s" % k] = cards  # v0.26.0: crops/plants on cut-out cards
 	for idx in layout.roofs:
 		var rb := BlockMesh.new()
 		for r in layout.roofs[idx]:
@@ -105,7 +108,7 @@ func _attach_static() -> void:
 		var mi := MeshInstance3D.new()
 		mi.name = key.capitalize().replace(" ", "")
 		mi.mesh = mesh
-		mi.material_override = mats.get(key, Materials.vertex_color())
+		mi.material_override = Materials.sprite(0.25) if key.begins_with("cards_") else mats.get(key, Materials.vertex_color())
 		if key == "glow":
 			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(mi)

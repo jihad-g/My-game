@@ -18,13 +18,50 @@ static func get_icon(item: ItemData) -> Texture2D:
 		return null
 	if _cache.has(item.id):
 		return _cache[item.id]
-	var tex := ImageTexture.create_from_image(render(item))
+	var tex: Texture2D = null
+	# v0.26.0: hand-tuned pixel-art icons from the icon atlas (art/tools/icongen.py).
+	var atlas := _atlas()
+	if atlas and ItemIconAtlas.CELLS.has(item.id):
+		var at := AtlasTexture.new()
+		at.atlas = atlas
+		var cell: Vector2i = ItemIconAtlas.CELLS[item.id]
+		at.region = Rect2(cell.x * ItemIconAtlas.SIZE, cell.y * ItemIconAtlas.SIZE, ItemIconAtlas.SIZE, ItemIconAtlas.SIZE)
+		tex = at
+	else:
+		tex = ImageTexture.create_from_image(render(item))
 	_cache[item.id] = tex
 	return tex
 
 
-## The icon image of an item (also used by tests).
+static var _atlas_tex: Texture2D = null
+static var _atlas_image: Image = null
+
+
+static func _atlas() -> Texture2D:
+	if _atlas_tex == null and ResourceLoader.exists(ItemIconAtlas.PATH):
+		_atlas_tex = load(ItemIconAtlas.PATH) as Texture2D
+	return _atlas_tex
+
+
+## The icon image of an item (also used by tests). Items in the icon atlas use
+## the hand-tuned icon; new items fall back to the drawing below.
 static func render(item: ItemData) -> Image:
+	var atlas := _atlas()
+	if atlas and ItemIconAtlas.CELLS.has(item.id):
+		if _atlas_image == null:
+			_atlas_image = atlas.get_image()
+			if _atlas_image and _atlas_image.is_compressed():
+				_atlas_image.decompress()
+		if _atlas_image and not _atlas_image.is_empty():
+			var cell: Vector2i = ItemIconAtlas.CELLS[item.id]
+			var region := _atlas_image.get_region(Rect2i(cell * ItemIconAtlas.SIZE, Vector2i(ItemIconAtlas.SIZE, ItemIconAtlas.SIZE)))
+			region.convert(Image.FORMAT_RGBA8)
+			return region
+	return draw(item)
+
+
+## The icon drawn in code (fallback for items without an atlas icon).
+static func draw(item: ItemData) -> Image:
 	var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	var shape := shape_of(item)

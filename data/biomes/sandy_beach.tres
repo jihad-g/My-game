@@ -55,10 +55,10 @@ display_name = "Sandy Beach"
 role = 2
 map_color = Color(0.93, 0.86, 0.6, 1)
 
-top_color = Color(0.96, 0.83, 0.54, 1)
-top_color_alt = Color(0.99, 0.89, 0.63, 1)
-side_color = Color(0.88, 0.71, 0.45, 1)
-shore_color = Color(0.96, 0.83, 0.54, 1)
-underwater_color = Color(0.82, 0.7, 0.47, 1)
+top_color = Color(0.949, 0.831, 0.557, 1)
+top_color_alt = Color(0.973, 0.878, 0.651, 1)
+side_color = Color(0.851, 0.69, 0.467, 1)
+shore_color = Color(0.949, 0.831, 0.557, 1)
+underwater_color = Color(0.816, 0.698, 0.478, 1)
 prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2")]
 enemy_spawns = []

@@ -16,6 +16,10 @@ var vertices := PackedVector3Array()
 var normals := PackedVector3Array()
 var colors := PackedColorArray()
 var indices := PackedInt32Array()
+## v0.26.0 block textures: UV in metres and UV2 = (layer code, extra), one per
+## vertex like `colors` (see assets/shaders/block_texture.gdshaderinc).
+var uvs := PackedVector2Array()
+var uv2s := PackedVector2Array()
 ## Triangle soup for ConcavePolygonShape3D (LOD0 only).
 var collision_faces := PackedVector3Array()
 ## Water surface arrays.
@@ -37,6 +41,6 @@ var max_height: int = 0
 
 ## Rough memory footprint in bytes (for the ChunkManager's data cache budget).
 func estimate_bytes() -> int:
-	return 256 + vertices.size() * 12 + normals.size() * 12 + colors.size() * 16 + indices.size() * 4 \
+	return 256 + vertices.size() * 12 + normals.size() * 12 + colors.size() * 16 + indices.size() * 4 + uvs.size() * 16 \
 		+ collision_faces.size() * 12 + water_vertices.size() * 12 + water_indices.size() * 4 \
 		+ heights.size() * 4 + biomes.size() + props.size() * 160 + spawns.size() * 96 + features.size() * 96
