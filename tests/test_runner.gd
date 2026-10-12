@@ -127,6 +127,9 @@ func _ready() -> void:
 	await _run_async(&"test_m18c_jump_and_style")
 	_run(&"test_m18_world_colours")
 	_run(&"test_v026_block_textures")
+	_run(&"test_m18d_shape")
+	_run(&"test_m18d_impostors")
+	await _run_async(&"test_m18d_streaming")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5171,7 +5174,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.26"), "version 0.26 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.27"), "version 0.27 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -7316,3 +7319,172 @@ func test_v026_block_textures() -> void:
 	if DisplayServer.get_name() != "headless":  # the headless renderer keeps no shader globals
 		check(is_equal_approx(float(RenderingServer.global_shader_parameter_get(&"block_textures")), 0.0), "the shaders see the setting")
 	Settings.set_value("block_textures", true)
+
+
+# --- Milestone 18d: smoother world -------------------------------------------------------
+
+func test_m18d_shape() -> void:
+	var fp = load("res://tools/terrain_fingerprint.gd")
+	var st := _settings()
+	# Old worlds keep exactly the land they had (fingerprints taken on v0.26.0).
+	var old := {GameState.DEFAULT_SEED: 680667454, 42: 1116730081, 987654321: 1017830459}
+	for sd in old:
+		check(fp.fingerprint(TerrainGenerator.new(sd, st, TerrainGenerator.SHAPE_CLASSIC)) == old[sd],
+			"seed %d: the old shape is unchanged" % sd)
+	var a := TerrainGenerator.new(42, st)
+	var b := TerrainGenerator.new(42, st)
+	check(a.shape == TerrainGenerator.SHAPE_SMOOTH and TerrainGenerator.LATEST_SHAPE == TerrainGenerator.SHAPE_SMOOTH, "new worlds use the smooth shape")
+	check(fp.fingerprint(a) == fp.fingerprint(b), "the same seed makes the same smooth world")
+	check(fp.fingerprint(a) != old[42], "the smooth world is a new shape")
+	GameState.reset(7)
+	check(GameState.terrain_shape == TerrainGenerator.LATEST_SHAPE, "a new game starts with the latest shape")
+	# Gentler lowlands: fewer one-block steps between neighbours.
+	var g3 := TerrainGenerator.new(GameState.DEFAULT_SEED, st, TerrainGenerator.SHAPE_CLASSIC)
+	var g4 := TerrainGenerator.new(GameState.DEFAULT_SEED, st, TerrainGenerator.SHAPE_SMOOTH)
+	var steps := [0, 0]
+	var cols := [0, 0]
+	for k in 2:
+		var g: TerrainGenerator = [g3, g4][k]
+		for z in range(-600, 600, 37):
+			for x in range(-600, 600, 3):
+				var h := g.get_height_blocks(x, z)
+				if h < 2 or h > 40:
+					continue
+				cols[k] += 1
+				if g.get_height_blocks(x + 1, z) != h:
+					steps[k] += 1
+	var r3 := float(steps[0]) / maxf(1.0, cols[0])
+	var r4 := float(steps[1]) / maxf(1.0, cols[1])
+	check(r4 < r3, "smoother lowlands: steps per column %.3f -> %.3f" % [r3, r4])
+	# Biome borders: find a border between two land biomes and walk across it.
+	var found := false
+	for z in range(-2000, 2000, 50):
+		if found:
+			break
+		for x in range(-2000, 2000, 8):
+			var b1 := g4.get_biome(x, z)
+			var b2 := g4.get_biome(x + 8, z)
+			if b1 == b2 or b1.role != BiomeData.Role.LAND or b2.role != BiomeData.Role.LAND:
+				continue
+			# Count biome changes along 80 m across the border: a hard line changes once.
+			var changes := 0
+			var max_jump := 0.0
+			var prev := g4.get_biome_index(x - 40, z)
+			var pc := g4._top_color(g4.get_biome(x - 40, z), 10, x - 40, z, true)
+			for d in range(-39, 41):
+				var bi := g4.get_biome_index(x + d, z)
+				if bi != prev:
+					changes += 1
+				prev = bi
+				var c := g4._top_color(g4.get_biome(x + d, z), 10, x + d, z, true)
+				max_jump = maxf(max_jump, absf(c.g - pc.g) + absf(c.r - pc.r))
+				pc = c
+			check(changes > 1, "biomes mix across the border (%d changes in 80 m)" % changes)
+			check(max_jump < 0.2, "grass colour flows across the border (largest step %.3f)" % max_jump)
+			found = true
+			break
+	check(found, "found a land biome border to check")
+	# Saves: the shape is stored, and old saves (no field) load the old shape.
+	check(SaveManager.has_method("load_world"), "save manager present")
+	var src := FileAccess.get_file_as_string("res://src/save/save_manager.gd")
+	check(src.contains("\"generator_version\": TerrainGenerator.LATEST_SHAPE") and src.contains("TerrainGenerator.SHAPE_CLASSIC"),
+		"new saves store the shape; old saves fall back to the old shape")
+
+
+func test_m18d_impostors() -> void:
+	var gen := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var cover := FarImpostors.tree_cover(gen)
+	check(cover.size() == gen.biomes.size(), "tree cover known for every biome")
+	var forest := -1
+	for i in gen.biomes.size():
+		if (gen.biomes[i] as BiomeData).id == &"whispering_forest":
+			forest = i
+	check(forest >= 0 and not (cover[forest] as Array).is_empty() and float(cover[forest][0]) > 0.0, "forests have far trees")
+	# A LOD2 chunk in a forest carries leafy clumps (with texture data for every vertex).
+	var found := false
+	for r in range(0, 4000, 64):
+		if found:
+			break
+		for k in 8:
+			var q := Vector2i(roundi(cos(k * 0.785) * r), roundi(sin(k * 0.785) * r))
+			if gen.get_biome_index(q.x, q.y) != forest:
+				continue
+			var c := TerrainGenerator.column_to_chunk(q.x, q.y)
+			var with_trees := gen.generate_chunk(c, 2)
+			var faces := 0
+			for n in with_trees.normals:
+				if n == Vector3.UP:
+					faces += 1
+			check(with_trees.uvs.size() == with_trees.vertices.size() and with_trees.uv2s.size() == with_trees.vertices.size(),
+				"LOD2 chunk keeps texture data for every vertex")
+			var ground_only := 16 / with_trees.step * 16 / with_trees.step
+			check(faces > ground_only, "LOD2 forest chunk has far tree clumps (%d tops, %d ground)" % [faces, ground_only])
+			found = true
+			break
+	check(found, "found a forest to check")
+	# Landmarks: a town gets a far model, and only beyond the real town's range.
+	var st := gen.settlements.get_region(Vector2i(0, 0))
+	if st == null:
+		st = gen.settlements.get_region(Vector2i(1, 0))
+	if check(st != null, "a settlement to look at"):
+		var list := FarImpostors.landmarks_in(gen, st.center.x - 8, st.center.y - 8, st.center.x + 8, st.center.y + 8)
+		check(list.has(st), "the settlement is a landmark")
+		var arrays := FarImpostors.landmark_arrays(st)
+		check((arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() >= 24, "the landmark has houses")
+		check(FarImpostors.LANDMARK_NEAR > SettlementManager.SPAWN_RANGE, "landmarks hide where the real town is built")
+		var far := FarTerrain.new()
+		far.setup(gen)
+		var t := FarTerrain.tile_of_chunk(TerrainGenerator.column_to_chunk(st.center.x, st.center.y))
+		var r := far.build_tile(t, Vector2i(9999, 9999), 9)
+		check((r.landmarks as Array).size() >= 1, "far tiles carry their landmarks")
+		far.free()
+
+
+func test_m18d_streaming() -> void:
+	var world: World = await _boot_class(&"knight")
+	var cm := world.chunk_manager
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	check(cm.apply_budget_ms <= 2.0, "chunk building budget is about 2 ms per frame")
+	check(Chunk._feature_cache.size() == Chunk.FEATURE_SCENES.size(), "cave scenes are loaded at the loading screen")
+	check(world.generator.shape == GameState.terrain_shape, "the world uses the save's terrain shape")
+	for i in 60:
+		await get_tree().process_frame
+	check(cm._settled, "streaming settled after loading")
+	# Move fast: one more ring.
+	var r0 := cm.outer_radius()
+	cm._velocity = Vector3(cm.fast_ring_speed + 6.0, 0, 0)
+	cm._last_pos = Vector3.INF
+	cm._track_velocity(0.0)
+	cm._process(0.0)
+	check(cm.outer_radius() == cm.lod_radii[cm.lod_radii.size() - 1] + 1, "one more ring while moving fast (%d -> %d)" % [r0, cm.outer_radius()])
+	cm._velocity = Vector3.ZERO
+	cm._process(0.0)
+	check(cm.outer_radius() == cm.lod_radii[cm.lod_radii.size() - 1], "back to normal when slow")
+	# Jump ahead: new chunks dither in instead of popping.
+	p.global_position += Vector3(160, 0, 0)
+	p.global_position.y = world.get_ground_height(p.global_position) + 0.5
+	var saw_fade := false
+	var saw_ghost := false
+	for i in 120:
+		await get_tree().process_frame
+		if cm.fading_count() > 0:
+			saw_fade = true
+		for c: Chunk in cm._fading:
+			if c._ghost_mi.visible:
+				saw_ghost = true
+	check(saw_fade, "new chunks fade in")
+	check(saw_ghost, "chunks that change detail cross-fade from their old mesh")
+	var frames := 0
+	while cm.pending_count() > 0 and frames < 1500:
+		await get_tree().process_frame
+		frames += 1
+	for i in 40:
+		await get_tree().process_frame
+	check(cm.fading_count() == 0, "every fade finishes")
+	var c0 := cm.get_chunk(TerrainGenerator.world_to_chunk(p.global_position))
+	check(c0 != null and c0.ground_appear() >= 1.0 and not c0._ghost_mi.visible, "settled chunks are fully drawn, no ghost left")
+	check((c0._terrain_mesh.surface_get_material(0) as ShaderMaterial).get_shader_parameter(&"fade_channel") == 0, "the ground reads the ground fade channel")
+	world.queue_free()
+	await get_tree().process_frame

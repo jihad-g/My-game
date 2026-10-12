@@ -105,6 +105,22 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 18d — Flow of Battle: a smoother world  ✅ (v0.27.0)
+
+- [x] Chunks and their props fade in (dither) instead of popping; detail changes cross-fade (fade map, `chunk_fade.gdshaderinc`)
+- [x] Far tree clumps in LOD2 chunks and horizon tiles; landmark models for towns and POIs beyond 185 m
+- [x] Cave entrance scenes loaded at the loading screen
+- [x] Smoother land for new worlds (shape 4): domain-warped hills, gentler lowlands, wide beaches, river valleys
+- [x] Biome borders blend over ~32 m (colour mix + dithered biome per block)
+- [x] Old saves keep their land exactly (shape 3, proven by `tools/terrain_fingerprint.tscn`); co-op guests get the host's shape
+- [x] Streaming: camera-facing chunks first, ~2 ms build budget, one more ring above 12 m/s
+- [~] Tests `test_m18d_*` are written but have not been run yet (waiting for the owner's OK)
+- [ ] NOT IMPLEMENTED: measured "2-minute sprint across 3 biomes, slowest frame under 25 ms" (needs the stress tool on real hardware)
+- [ ] NOT IMPLEMENTED: splitting a chunk build over several frames (one LOD0 chunk with collision can still take a few ms)
+- [ ] Known limitation: rare biomes (Crystal Glade...) keep a hard border; water fades a little when its chunk changes detail
+- [ ] Known limitation: far tree clumps and landmarks are simple boxes; tree clumps don't sit exactly where the real trees will be
+- [ ] Known limitation: characters standing in a chunk that is fading in fade with it for half a second
+
 ## Smoother running (v0.25.1, asked for during M18)  ✅
 
 - [x] Arm follow-through, shoulder twist, weight shift, elbow bend, softer bounce, steady head
@@ -144,7 +160,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: a hand-picked effect for every single one of the 240 abilities and spells - they share the element looks; most look different by element, shape and colour
 - [ ] NOT IMPLEMENTED: Creative mode in co-op, and saving Creative mode (it is off after loading)
 - [ ] Known limitation: the colour of older effects decides their element (a few may pick a near element)
-- [ ] Next: M18d — smoother world generation (no pop-in, smoother hills, blended biome borders, smooth streaming)
+- [x] M18d done (v0.27.0)
 
 ## Milestone 18b — Flow of Battle: hack and slash  ✅
 

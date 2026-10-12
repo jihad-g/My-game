@@ -69,6 +69,9 @@ explore points of interest and dungeons → get better gear → go further out (
 - **The world** is a square continent area surrounded by an endless ocean. Land sinks into the sea
   12.8 km from the centre and you cannot go past 13.86 km.
 - **Eleven surface biomes and one underground biome** (see the catalogue).
+- **Smoother land (v0.27.0, new worlds)**: flowing hills, gentle lowlands, wide beaches, river valleys, and
+  biome borders that blend over about 32 m. Worlds made before v0.27.0 keep their original land.
+- **Streaming without pop-in (v0.27.0)**: terrain and props fade in; far forests, towns and towers show on the horizon.
 - **Kingdoms and villages** with generated names (e.g. "Kingdom of Valdoria", capital "Valdor"). The
   survey of seed 20250101 finds 229 capitals and 658 villages. Each kingdom has a ruler on a throne who
   gives titles: *Friend of …*, *Knight of …*, *Champion of …*.
@@ -116,7 +119,8 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 - Follows the player. Rotate (Q/E or middle mouse), tilt (Page Up/Down), zoom (wheel), free pan (arrow
   keys), recenter (V). Gamepad: right stick.
 - Trees between the camera and you fade out (dither). Roofs above you hide so you can see inside.
-- Camera shake on hits (can be turned off). Far plane 640 m; horizon terrain out to 512 m.
+- Camera shake on hits (can be turned off). Far plane 640 m; horizon terrain out to 512 m, with simple far
+  trees and town/tower landmarks (v0.27.0).
 
 ### 3.3 Combat
 - **Light attacks**: a combo per weapon type — sword 3 hits, dagger 4 hits, axe 2 hits, staff 2 hits,
@@ -882,7 +886,7 @@ All open items from `docs/TODO.md`, plus problems found while writing this docum
 32. Known limitation: the bed mesh (1.9 m) can overlap the next cell's furniture.
 33. Known limitation: entering a kingdom capital costs one ~40 ms frame.
 34. Known limitation: NPCs don't collide with each other or the player.
-35. Known limitation: the first chunk with a new scene type (cave entrance, POI) takes ~20 ms once.
+35. ~~The first chunk with a new scene type takes ~20 ms once~~ - cave scenes load at the loading screen (v0.27.0).
 36. Known limitation: dungeons are built in the sky with the surface paused; a short load when entering.
 37. Known limitation: town raids only play out near you (otherwise the result is rolled).
 38. Dropped loot and living enemies are not saved.
@@ -891,7 +895,7 @@ All open items from `docs/TODO.md`, plus problems found while writing this docum
 41. The world map reveals everything (no fog of war).
 42. Placed objects on the other layer stay in memory.
 43. Buildings and construction sites live in `save.json`, not region files (fine until thousands of pieces).
-44. Far-terrain impostors for trees, towns and POIs; off-screen simulation of settlements and farms.
+44. ~~Far-terrain impostors for trees, towns and POIs~~ (done in v0.27.0); off-screen simulation of settlements and farms.
 45. Floating origin (only needed if the world grows past ±14 km).
 46. Multi-storey tower interiors and climbing.
 47. Mines (built mine structures in caves); underground water, lava and deeper cave levels; overhangs.
@@ -1146,6 +1150,11 @@ and weapon and legendary powers (ideas 9a–9f, 7a–7d, part of 8d).
 **Done: Milestone 17b — "Heroes' Arsenal" part 2.** The ability book (L): 60 new class abilities for levels 2–30
 (ideas 5a–5h and the list in ARSENAL_PLAN.md), 15 passives, a 6-slot bar changed at a bed or a campfire, and a
 third spell slot with a tome.
+
+**Done: Milestone 18d — "Flow of Battle" part 4 (v0.27.0).** A smoother world: chunks and props fade in, detail
+changes cross-fade, far tree clumps and town/POI landmarks on the horizon, smoother land for new worlds
+(domain-warped hills, gentle lowlands, wide beaches, river valleys) and biome borders that blend over ~32 m.
+Old saves keep their land exactly. Milestone 18 is complete. Next: Milestone 19 "Together in Danger" (co-op combat).
 
 **Done (v0.24.0): jump and the Vibrant art style**, asked for by the owner during M18. Space jumps, the dodge is
 on Left Alt, and the Vibrant style gives richer colours, glow and soft shade.

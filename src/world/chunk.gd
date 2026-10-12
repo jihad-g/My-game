@@ -6,6 +6,13 @@ extends Node3D
 ## LOD0: terrain mesh + collision + interactive props (PropBody).
 ## LOD1: terrain mesh + decorative props (no collision).
 ## LOD2: coarse terrain mesh only, no shadows.
+##
+## Milestone 18d: a chunk that appears fades in with a fine dither, and when it
+## changes detail the old mesh stays as a "ghost" that dithers out on exactly
+## the pixels the new mesh dithers in, so there is no pop and no hole.
+
+## Seconds a fade-in / detail cross-fade takes.
+const FADE_TIME := 0.45
 
 var coord: Vector2i
 var lod: int = -1
@@ -15,6 +22,11 @@ var library: PropLibrary
 var _terrain_mesh := ArrayMesh.new()
 var _water_mesh := ArrayMesh.new()
 var _terrain_mi := MeshInstance3D.new()
+## The previous detail's mesh while it cross-fades out (Milestone 18d).
+var _ghost_mesh := ArrayMesh.new()
+var _ghost_mi := MeshInstance3D.new()
+var _fade := 1.0
+var _fade_props := false
 var _water_mi := MeshInstance3D.new()
 var _body := StaticBody3D.new()
 var _collision := CollisionShape3D.new()
@@ -28,6 +40,15 @@ const FEATURE_SCENES := {
 	&"cave_exit": "res://scenes/world/cave_exit.tscn",
 }
 static var _feature_cache: Dictionary = {}
+
+
+## Loads the feature scenes up front (the loading screen calls this), so the
+## first cave entrance doesn't cost a ~20 ms load in the middle of play.
+static func preload_features() -> void:
+	for id in FEATURE_SCENES:
+		var path: String = FEATURE_SCENES[id]
+		if not _feature_cache.has(path):
+			_feature_cache[path] = load(path)
 ## prop index -> {"prop_id", "mm_index", "transform", "position", "body"}
 var _instances: Dictionary = {}
 
@@ -35,6 +56,11 @@ var _instances: Dictionary = {}
 func _init() -> void:
 	_terrain_mi.mesh = _terrain_mesh
 	add_child(_terrain_mi)
+	_ghost_mi.mesh = _ghost_mesh
+	_ghost_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_ghost_mi.visible = false
+	add_child(_ghost_mi)
+	set_process(false)
 	_water_mi.mesh = _water_mesh
 	_water_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_water_mi)
@@ -46,8 +72,21 @@ func _init() -> void:
 	add_child(_body)
 
 
-func build(data: ChunkData) -> void:
+## `fade`: dither in (and cross-fade from the old detail) instead of popping.
+func build(data: ChunkData, fade: bool = false) -> void:
+	var old_lod := lod if visible else -1
 	clear_props()
+	if fade and old_lod >= 0 and _terrain_mesh.get_surface_count() > 0:
+		# Keep the old mesh as a ghost that fades out while the new one fades in.
+		var t := _terrain_mesh
+		_terrain_mesh = _ghost_mesh
+		_ghost_mesh = t
+		_terrain_mi.mesh = _terrain_mesh
+		_ghost_mi.mesh = _ghost_mesh
+		_ghost_mesh.surface_set_material(0, Materials.terrain_ghost())
+		_ghost_mi.visible = true
+	else:
+		_ghost_mi.visible = false
 	coord = data.coord
 	lod = data.lod
 	layer = data.layer
@@ -67,7 +106,7 @@ func build(data: ChunkData) -> void:
 			arrays[Mesh.ARRAY_TEX_UV2] = data.uv2s
 		arrays[Mesh.ARRAY_INDEX] = data.indices
 		_terrain_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-		_terrain_mesh.surface_set_material(0, Materials.vertex_color())
+		_terrain_mesh.surface_set_material(0, Materials.terrain())
 	_terrain_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if lod <= 1 \
 		else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
@@ -95,6 +134,39 @@ func build(data: ChunkData) -> void:
 
 	_build_props(data)
 	_build_features(data)
+	# Props only fade when they were not there before (new chunk, or LOD2 -> 1);
+	# LOD0 <-> LOD1 rebuilds the same props in the same places.
+	_fade_props = old_lod < 0 or old_lod >= 2
+	_set_fade(0.0 if fade else 1.0)
+	set_process(fade)
+
+
+func _process(delta: float) -> void:
+	_set_fade(_fade + delta / FADE_TIME)
+	if _fade >= 1.0:
+		set_process(false)
+
+
+## True while the chunk is still fading in.
+func is_fading() -> bool:
+	return _fade < 1.0
+
+
+func _set_fade(f: float) -> void:
+	_fade = clampf(f, 0.0, 1.0)
+	if _fade >= 1.0:
+		_ghost_mi.visible = false
+		_ghost_mesh.clear_surfaces()
+
+
+## 0..1: how far the ground has faded in (ChunkManager writes it to the fade map).
+func ground_appear() -> float:
+	return _fade * _fade * (3.0 - 2.0 * _fade)
+
+
+## 0..1: how far the props have faded in (1 when they were already there).
+func props_appear() -> float:
+	return ground_appear() if _fade_props else 1.0
 
 
 func _build_features(data: ChunkData) -> void:
@@ -284,5 +356,8 @@ func release() -> void:
 	clear_props()
 	lod = -1
 	visible = false
+	set_process(false)
+	_ghost_mi.visible = false
+	_ghost_mesh.clear_surfaces()
 	_collision.disabled = true
 	_body.process_mode = Node.PROCESS_MODE_DISABLED

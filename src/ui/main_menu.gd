@@ -381,6 +381,7 @@ func join_game(address: String) -> void:
 		Net.join_failed.disconnect(c.callable)
 	Net.welcomed.connect(func(data: Dictionary) -> void:
 		SaveManager.start_transient(GameState.parse_seed(data.get("seed", "0")), StringName(String(data.get("class", "knight"))), picker.look)
+		GameState.terrain_shape = int(data.get("shape", TerrainGenerator.SHAPE_CLASSIC))
 		get_tree().change_scene_to_file(GAME_SCENE), CONNECT_ONE_SHOT)
 	Net.join_failed.connect(func(reason: String) -> void: _status.text = "Couldn't join: %s" % reason, CONNECT_ONE_SHOT)
 	var err := Net.join(host, port)

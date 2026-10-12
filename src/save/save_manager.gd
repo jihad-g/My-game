@@ -101,7 +101,7 @@ func create_world(world_name: String, seed_value: int, class_id: StringName = Cl
 		"seed": str(seed_value),
 		"class": String(class_id),
 		"save_version": SAVE_VERSION,
-		"generator_version": 3,
+		"generator_version": TerrainGenerator.LATEST_SHAPE,
 		"game_version": ProjectSettings.get_setting("application/config/version", "0"),
 		"created": now,
 		"last_played": now,
@@ -131,6 +131,8 @@ func load_world(id: String) -> bool:
 	current_world_id = id
 	new_character_class = StringName(meta.get("class", ClassRegistry.DEFAULT_CLASS))
 	GameState.reset(GameState.parse_seed(meta.get("seed", GameState.DEFAULT_SEED)))
+	# Worlds made before Milestone 18d keep their land (shape 3).
+	GameState.terrain_shape = int(meta.get("generator_version", TerrainGenerator.SHAPE_CLASSIC))
 	GameState.set_region_directory(regions_path(id))
 	pending = {}
 	last_load = {"source": "none", "backup": "", "problems": PackedStringArray()}

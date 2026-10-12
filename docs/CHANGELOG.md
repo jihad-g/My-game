@@ -2,6 +2,37 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.27.0] — Milestone 18d: Flow of Battle, part 4 - a smoother world
+
+### Added
+- **No more pop-in**: new terrain chunks and their trees, rocks and plants **fade in** with a fine dither instead
+  of appearing at once. When a chunk changes detail, the old ground fades out on exactly the pixels where the new
+  ground fades in, so there is never a hole or a double. A small "fade map" (one texel per chunk around the
+  hero, `assets/shaders/chunk_fade.gdshaderinc`) drives it, so it costs almost nothing.
+- **Far trees**: the low-detail ring of chunks and the horizon tiles now show simple two-tier tree clumps where
+  the biome has forests (`src/world/far_impostors.gd`), so forests no longer vanish between the real trees and
+  the horizon.
+- **Landmarks on the horizon**: towns (houses and a keep for kingdoms), wizard towers, temples, ruins and dungeon
+  gates get simple far models. They only show beyond 185 m, where the real buildings are not built yet.
+- `tools/terrain_fingerprint.tscn`: prints a hash of the generated land, used to prove old worlds keep theirs.
+- Screenshot mode `--only=smooth` (old land next to new land, the horizon, chunks fading in).
+- Tests `test_m18d_shape`, `test_m18d_impostors`, `test_m18d_streaming` (written; run when the owner says so).
+
+### Changed
+- **New worlds have smoother land** (terrain shape 4):
+  - hills and mountains are "domain-warped", so they bend and flow instead of looking like round noise blobs;
+  - small bumps are half as strong in the lowlands, so walking ground steps up and down less often;
+  - wide, gentle beaches and lake banks; rivers lie in wide valleys that slope down to the banks;
+  - **biome borders blend over about 32 m**: grass colours flow from one biome into the next, and near a
+    border each block picks one of the two biomes, so plants and textures mix instead of changing on a line.
+- **Old saves keep their land exactly** (terrain shape 3). The shape is stored in the world's meta as
+  `generator_version`; worlds without it load the old shape. Co-op guests get the host's shape.
+- **Smoother streaming**:
+  - the part of the screen the camera looks at loads first;
+  - building chunks may use about 2 ms per frame (was 4 ms);
+  - while you move fast (over 12 m/s) one more ring of chunks is streamed ahead.
+- Cave entrance scenes are loaded during the loading screen (no ~20 ms hitch at the first cave).
+
 ## [0.26.0] — Block textures (art bible v2 in the game)
 
 ### Added

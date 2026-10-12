@@ -5,7 +5,12 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.26.0 — Block textures** (pixel-art ground, plants, buildings and item icons; new biome colours).
+> Status: **v0.27.0 — Milestone 18d: a smoother world**. Terrain and trees fade in instead of popping, far
+> forests, towns and towers show on the horizon, new worlds have softer hills, wide beaches, river valleys and
+> biome borders that blend over about 32 m, and streaming loads what the camera sees first. Old saves keep
+> their land exactly.
+>
+> Before that, **v0.26.0 — Block textures** (pixel-art ground, plants, buildings and item icons; new biome colours).
 > **v0.25.0 — World colour pass**: deeper greens, warmer sand, warm stone, every block a little
 > different, darker block sides for a chunky look, and trees that fade softly (no grainy pattern) when they stand
 > between the camera and your hero - closer to Minecraft Dungeons and Hytale. v0.24.0 added **Space to jump**

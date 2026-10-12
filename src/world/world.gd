@@ -91,7 +91,8 @@ func _exit_tree() -> void:
 
 
 func _ready() -> void:
-	generator = TerrainGenerator.new(GameState.world_seed, worldgen)
+	generator = TerrainGenerator.new(GameState.world_seed, worldgen, GameState.terrain_shape)
+	Chunk.preload_features()  # Milestone 18d: no load spike at the first cave entrance
 	building = BuildingManager.new()
 	building.name = "Buildings"
 	building.world = self

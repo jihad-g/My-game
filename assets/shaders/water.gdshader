@@ -9,6 +9,8 @@ global uniform float rain_amount;
 uniform vec3 shallow : source_color = vec3(0.32, 0.7, 0.95);
 uniform vec3 deep : source_color = vec3(0.12, 0.38, 0.72);
 uniform float alpha = 0.68;
+// Milestone 18d: fades in with its chunk (ground channel).
+#include "res://assets/shaders/chunk_fade.gdshaderinc"
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
 
@@ -33,7 +35,7 @@ void fragment() {
 	}
 	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
 	ALBEDO = col + vec3(0.25, 0.3, 0.35) * fres;
-	ALPHA = clamp(alpha + fres * 0.25, 0.0, 0.95);
+	ALPHA = clamp(alpha + fres * 0.25, 0.0, 0.95) * chunk_appear(wp);
 	ROUGHNESS = 0.12;
 	SPECULAR = 0.7;
 	METALLIC = 0.0;

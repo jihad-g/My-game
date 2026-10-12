@@ -8,7 +8,7 @@ config_version=5
 
 config/name="Shardlands"
 config/description="Stylized blocky open-world survival RPG (prototype)."
-config/version="0.26.0"
+config/version="0.27.0"
 run/main_scene="res://scenes/menu/main_menu.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
@@ -76,6 +76,14 @@ rain_amount={
 block_textures={
 "type": "float",
 "value": 1.0
+}
+chunk_fade={
+"type": "sampler2D",
+"value": ""
+}
+chunk_fade_rect={
+"type": "vec4",
+"value": Vector4(0, 0, 0, 0)
 }
 
 [shardlands]

@@ -9,6 +9,9 @@ extends Node
 const DEFAULT_SEED := 20250101
 
 var world_seed: int = DEFAULT_SEED
+## Terrain shape version of the current world (TerrainGenerator.SHAPE_*).
+## New worlds use the latest; old saves keep the shape they were made with.
+var terrain_shape: int = TerrainGenerator.LATEST_SHAPE
 ## Total simulated game time in seconds since the world was created.
 var world_time: float = 0.0
 ## Removed props and killed spawn slots, by region (see RegionStore).
@@ -138,6 +141,7 @@ func set_region_directory(path: String) -> void:
 
 func reset(new_seed: int) -> void:
 	world_seed = new_seed
+	terrain_shape = TerrainGenerator.LATEST_SHAPE
 	world_time = 0.0
 	regions = RegionStore.new()
 	discovered_biomes.clear()

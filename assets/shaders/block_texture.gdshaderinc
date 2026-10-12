@@ -24,6 +24,8 @@ uniform float tex_brightness = 1.08;
 
 const float TEX_GAIN = 1.25;
 
+#include "res://assets/shaders/chunk_fade.gdshaderinc"
+
 vec3 srgb_to_linear(vec3 c) {
 	return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c));
 }

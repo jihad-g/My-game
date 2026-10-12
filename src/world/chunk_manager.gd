@@ -13,6 +13,9 @@ extends Node3D
 ## - Prefetch (Milestone 9): while the focus moves, the chunks that will be needed
 ##   around where it is heading are generated into the cache ahead of time, and
 ##   the work queue favours chunks in the direction of travel.
+## - Milestone 18d: chunks dither in (and cross-fade when their detail changes)
+##   instead of popping; the area the camera looks at loads first; the build
+##   budget is ~2 ms per frame; one more ring is streamed while moving fast.
 ## - Chunks outside the outer radius are unloaded back into a node pool.
 ## - Only world *modifications* are persisted (GameState / RegionStore), so
 ##   unloaded chunks can be regenerated identically at any time.
@@ -25,7 +28,7 @@ signal chunk_removed(coord: Vector2i)
 ## Worker tasks in flight at once (0 = automatic from the CPU core count).
 @export var max_concurrent_tasks: int = 0
 ## Main-thread time per frame for turning generated data into nodes (ms).
-@export var apply_budget_ms: float = 4.0
+@export var apply_budget_ms: float = 2.0
 ## Hard cap on chunks built per frame (even when they are cheap).
 @export var max_applies_per_frame: int = 8
 ## Extra radius before a chunk is unloaded (prevents thrashing at the edge).
@@ -40,6 +43,10 @@ signal chunk_removed(coord: Vector2i)
 @export var far_terrain_enabled: bool = true
 ## Settlements/POIs within this distance (m) are laid out in the background.
 @export var prewarm_radius_m: int = 1500
+## Milestone 18d: chunks dither in instead of popping (off: instant, as before).
+@export var fade_in: bool = true
+## Milestone 18d: above this speed (m/s) one more ring of chunks is streamed.
+@export var fast_ring_speed: float = 12.0
 
 ## True on builds without threads (the web export): see setup().
 var single_threaded := not OS.has_feature("threads")
@@ -69,6 +76,18 @@ var _velocity := Vector3.ZERO
 var _last_pos := Vector3.INF
 var _threads := 4
 var _prewarm_task := -1
+## 1 while moving fast (one more outer ring), else 0.
+var _extra_ring := 0
+## False after a teleport / layer change until the near area is built: chunks
+## built then appear at once (the loading screen hides them anyway).
+var _settled := false
+## Milestone 18d fade map: one texel per chunk around the focus (R = ground,
+## G = props), read by the block shaders (assets/shaders/chunk_fade.gdshaderinc).
+const FADE_MAP_SIZE := 32
+var _fade_img := Image.create(FADE_MAP_SIZE, FADE_MAP_SIZE, false, Image.FORMAT_RG8)
+var _fade_tex: ImageTexture
+var _fading: Array[Chunk] = []
+var _fade_dirty := true
 var _prewarm_at := Vector2i(0x7FFFFFFF, 0)
 var _stats := {"generated": 0, "discarded": 0, "cache_hits": 0, "prefetched": 0, "evicted": 0,
 	"apply_ms": 0.0, "applied": 0, "apply_ms_max": 0.0, "prewarms": 0}
@@ -100,18 +119,33 @@ func _process(delta: float) -> void:
 	if generator == null or focus == null:
 		return
 	_track_velocity(delta)
+	var extra := _extra_ring
+	var speed := _velocity.length()
+	if speed > fast_ring_speed:
+		extra = 1
+	elif speed < fast_ring_speed * 0.7:
+		extra = 0
+	if extra != _extra_ring:
+		_extra_ring = extra
+		_center = Vector2i(0x7FFFFFFF, 0)  # rebuild the rings with the new radius
 	var c := TerrainGenerator.world_to_chunk(focus.global_position)
 	if c != _center:
 		_center = c
+		_fade_dirty = true
 		_update_desired()
 		if far:
-			far.update_focus(_center, layer, lod_radii[lod_radii.size() - 1] - 1)
+			far.update_focus(_center, layer, outer_radius() - 1)
 		_maybe_prewarm()
 	_dispatch()
 	_apply_results()
+	if not _settled and is_near_area_ready():
+		_settled = true
+	_update_fade_map()
 
 
 func _exit_tree() -> void:
+	# Turn the fade map off so nothing else is dithered by stale values.
+	RenderingServer.global_shader_parameter_set(&"chunk_fade_rect", Vector4.ZERO)
 	# Never leave worker tasks running against freed data.
 	if _prewarm_task >= 0:
 		WorkerThreadPool.wait_for_task_completion(_prewarm_task)
@@ -187,6 +221,7 @@ func get_debug_stats() -> Dictionary:
 func force_refresh() -> void:
 	_center = Vector2i(0x7FFFFFFF, 0)
 	_last_pos = Vector3.INF
+	_settled = false
 
 
 ## Switches the streamed layer: every loaded chunk is unloaded and the new
@@ -209,9 +244,30 @@ func set_layer(new_layer: int) -> void:
 
 func lod_for_distance(dist: float) -> int:
 	for i in lod_radii.size():
-		if dist <= lod_radii[i] + 0.5:
+		if dist <= _radius(i) + 0.5:
 			return i
 	return -1
+
+
+## Ring radius of a LOD level (the outer ring grows by one while moving fast).
+func _radius(i: int) -> int:
+	return lod_radii[i] + (_extra_ring if i == lod_radii.size() - 1 else 0)
+
+
+## Outermost streamed ring right now.
+func outer_radius() -> int:
+	return _radius(lod_radii.size() - 1)
+
+
+## Where the camera looks, flat on the ground (zero when there is no camera).
+func view_direction() -> Vector3:
+	var vp := get_viewport()
+	var cam := vp.get_camera_3d() if vp else null
+	if cam == null:
+		return Vector3.ZERO
+	var f := -cam.global_transform.basis.z
+	f.y = 0.0
+	return f.normalized() if f.length() > 0.01 else Vector3.ZERO
 
 
 func _track_velocity(delta: float) -> void:
@@ -232,14 +288,14 @@ func _track_velocity(delta: float) -> void:
 func predicted_center() -> Vector2i:
 	if _velocity.length() < 2.0:
 		return _center
-	var r_max: int = lod_radii[lod_radii.size() - 1]
+	var r_max: int = outer_radius()
 	var lead := (_velocity * prefetch_seconds).limit_length(float(r_max * TerrainGenerator.CHUNK_SIZE))
 	return _center + Vector2i(roundi(lead.x / TerrainGenerator.CHUNK_SIZE), roundi(lead.z / TerrainGenerator.CHUNK_SIZE))
 
 
 func _update_desired() -> void:
 	_desired.clear()
-	var r_max: int = lod_radii[lod_radii.size() - 1]
+	var r_max: int = outer_radius()
 	for dz in range(-r_max, r_max + 1):
 		for dx in range(-r_max, r_max + 1):
 			var lod := lod_for_distance(Vector2(dx, dz).length())
@@ -263,6 +319,10 @@ func _update_desired() -> void:
 			continue
 		_queue.append(coord)
 	var bias := Vector2(predicted_center() - _center).limit_length(2.0)
+	# Milestone 18d: the part of the screen the camera looks at fills in first
+	# (the top-down camera sees much further ahead than behind the hero).
+	var view := view_direction()
+	bias += Vector2(view.x, view.z) * 1.5
 	var focus_pt := Vector2(_center) + bias
 	_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
 		return Vector2(a).distance_squared_to(focus_pt) < Vector2(b).distance_squared_to(focus_pt))
@@ -276,7 +336,7 @@ func _update_prefetch() -> void:
 	var pc := predicted_center()
 	if pc == _center:
 		return
-	var r_max: int = lod_radii[lod_radii.size() - 1]
+	var r_max: int = outer_radius()
 	var list := []
 	for dz in range(-r_max, r_max + 1):
 		for dx in range(-r_max, r_max + 1):
@@ -395,7 +455,9 @@ func _build(data: ChunkData) -> void:
 	if chunk == null:
 		chunk = _take_chunk()
 		_chunks[data.coord] = chunk
-	chunk.build(data)
+	chunk.build(data, fade_in and _settled)
+	if chunk.is_fading():
+		_fading.append(chunk)
 	chunk_ready.emit(data.coord, data.lod, chunk)
 
 
@@ -416,6 +478,42 @@ func _maybe_prewarm() -> void:
 	_stats.prewarms += 1
 	var col := at * TerrainGenerator.CHUNK_SIZE
 	_prewarm_task = WorkerThreadPool.add_task(generator.prewarm.bind(col, prewarm_radius_m), false, "world_prewarm")
+
+
+# --- Fade map (Milestone 18d) -------------------------------------------------------
+
+## Writes the fade state of the chunks around the focus into the fade map while
+## anything fades (and once more when it is done, or after the focus moved).
+func _update_fade_map() -> void:
+	var active := false
+	for i in range(_fading.size() - 1, -1, -1):
+		if _fading[i].is_fading():
+			active = true
+		else:
+			_fading.remove_at(i)
+			_fade_dirty = true
+	if not active and not _fade_dirty:
+		return
+	_fade_dirty = false
+	var origin := _center - Vector2i(FADE_MAP_SIZE / 2, FADE_MAP_SIZE / 2)
+	_fade_img.fill(Color(1, 1, 0))
+	for chunk in _fading:
+		var p := chunk.coord - origin
+		if p.x >= 0 and p.y >= 0 and p.x < FADE_MAP_SIZE and p.y < FADE_MAP_SIZE and chunk.layer == layer:
+			_fade_img.set_pixel(p.x, p.y, Color(chunk.ground_appear(), chunk.props_appear(), 0))
+	if _fade_tex == null:
+		_fade_tex = ImageTexture.create_from_image(_fade_img)
+		RenderingServer.global_shader_parameter_set(&"chunk_fade", _fade_tex)
+	else:
+		_fade_tex.update(_fade_img)
+	var cs := TerrainGenerator.CHUNK_SIZE
+	RenderingServer.global_shader_parameter_set(&"chunk_fade_rect",
+		Vector4(origin.x * cs, origin.y * cs, FADE_MAP_SIZE * cs, FADE_MAP_SIZE))
+
+
+## Chunks still fading in (tests, debug overlay).
+func fading_count() -> int:
+	return _fading.size()
 
 
 # --- Data cache ------------------------------------------------------------------
@@ -484,5 +582,7 @@ func _unload(coord: Vector2i) -> void:
 		return
 	_chunks.erase(coord)
 	chunk.release()
+	_fading.erase(chunk)
+	_fade_dirty = true
 	_pool.append(chunk)
 	chunk_removed.emit(coord)

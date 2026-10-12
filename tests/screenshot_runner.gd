@@ -18,6 +18,10 @@ func _ready() -> void:
 		await _style_showcase()
 		get_tree().quit()
 		return
+	if "--only=smooth" in OS.get_cmdline_user_args():
+		await _smooth_showcase()
+		get_tree().quit()
+		return
 	if "--only=menu" in OS.get_cmdline_user_args():
 		var m := (load("res://scenes/menu/main_menu.tscn") as PackedScene).instantiate()
 		add_child(m)
@@ -1630,3 +1634,70 @@ func _style_showcase() -> void:
 		await _wait(7)
 		await _shot("style_spell_%s" % spec[1])
 		await _wait(50)
+
+
+## Milestone 18d: the old land (shape 3) next to the new smooth land (shape 4)
+## at the same seed - a biome border, the horizon, and chunks fading in.
+func _smooth_showcase() -> void:
+	var g4 := TerrainGenerator.new(GameState.DEFAULT_SEED, load("res://data/worldgen/default_worldgen.tres"), 4)
+	var spawn := g4.find_spawn_column(Vector2i.ZERO)
+	# A border between two land biomes near the spawn.
+	var border := Vector3(spawn.x + 0.5, 0, spawn.y + 0.5)
+	var found := false
+	for r in range(40, 3000, 24):
+		if found:
+			break
+		for k in maxi(8, r / 16):
+			var a := TAU * k / maxi(8, r / 16)
+			var q := Vector2i(spawn.x + roundi(cos(a) * r), spawn.y + roundi(sin(a) * r))
+			var b1 := g4.get_biome(q.x - 20, q.y)
+			var b2 := g4.get_biome(q.x + 20, q.y)
+			if b1 != b2 and b1.role == BiomeData.Role.LAND and b2.role == BiomeData.Role.LAND \
+					and g4.get_height_blocks(q.x, q.y) > 2:
+				border = Vector3(q.x + 0.5, 0, q.y + 0.5)
+				found = true
+				break
+	for shape in [3, 4]:
+		SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+		GameState.terrain_shape = shape
+		var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+		add_child(world)
+		while not world.is_ready:
+			await get_tree().process_frame
+		var p := world.player
+		p.health.invulnerable = true
+		world.spawner.max_active = 0
+		world.hud.visible = false
+		world.day_night.day_length = 1.0e9
+		world.day_night.hour = 11.0
+		world.weather.force(0, 1.0)
+		await _teleport(world, border)
+		var frames := 0
+		while world.chunk_manager.far.pending_count() > 0 and frames < 3000:
+			await get_tree().process_frame
+			frames += 1
+		world.camera_rig._target_distance = 34.0
+		world.camera_rig._target_pitch = 55.0
+		world.camera_rig._target_yaw = 30.0
+		await _sec(2.5)
+		await _shot("m18d_border_shape%d" % shape)
+		world.camera_rig._target_distance = 42.0
+		world.camera_rig._target_pitch = 22.0
+		await _sec(2.5)
+		await _shot("m18d_horizon_shape%d" % shape)
+		if shape == 4:
+			# Jump ahead without the loading screen: the new chunks dither in.
+			world.camera_rig._target_distance = 40.0
+			world.camera_rig._target_pitch = 40.0
+			await _sec(1.0)
+			p.global_position += Vector3(40, 0, 0)
+			p.global_position.y = world.get_ground_height(p.global_position) + 0.5
+			world.camera_rig.snap_to_target()
+			await _sec(0.35)
+			print("fading chunks: ", world.chunk_manager.fading_count())
+			await _shot("m18d_fade_in")
+			var cam := get_viewport().get_camera_3d()
+			for mi: MeshInstance3D in world.chunk_manager.far._landmarks.values():
+				print("landmark %.0f m from camera, begin %.0f" % [mi.global_position.distance_to(cam.global_position), mi.visibility_range_begin])
+		world.queue_free()
+		await _wait(10)

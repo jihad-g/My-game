@@ -11,6 +11,8 @@ uniform float sway = 0.25;
 uniform float emission = 0.0;      // glowing plants (glowcap, moonpetal)
 
 varying float v_layer;
+// Milestone 18d: fades in with its chunk.
+#include "res://assets/shaders/chunk_fade.gdshaderinc"
 
 vec3 srgb_to_linear(vec3 c) {
 	return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(0.04045, c));
@@ -31,6 +33,9 @@ void vertex() {
 }
 
 void fragment() {
+	if (appear_hidden(FRAGCOORD.xy, (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz)) {
+		discard;
+	}
 	vec4 t = texture(block_tex, vec3(UV, v_layer));
 	vec3 tint = srgb_to_linear(COLOR.rgb);
 	// Tinted sprites (tufts, ferns) carry 0.8 grey; full-colour ones are real colours.

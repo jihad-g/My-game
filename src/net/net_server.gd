@@ -192,7 +192,7 @@ func _welcome(ps: PeerState, fresh: bool) -> Dictionary:
 			pickups.append([nid, String(pk.item_id), pk.count, pk.global_position])
 	var placed: Array = w.to_save().get("placed", [])
 	return {
-		"version": NetProtocol.VERSION, "seed": str(GameState.world_seed), "checksum": NetProtocol.world_checksum(w.generator),
+		"version": NetProtocol.VERSION, "seed": str(GameState.world_seed), "shape": GameState.terrain_shape, "checksum": NetProtocol.world_checksum(w.generator),
 		"world_time": GameState.world_time, "day": w.day_night.day, "hour": w.day_night.hour,
 		"peer_id": ps.id, "name": ps.name, "class": String(ps.class_id), "fresh": fresh,
 		"position": ps.pos, "layer": ps.layer, "inventory": ps.inventory.to_array(), "equipment": ps.equipment.to_save(),

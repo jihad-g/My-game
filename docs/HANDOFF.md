@@ -3,7 +3,8 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.26.0** (Milestone 18c + jump, the Vibrant look, the world colour pass, smoother running and **block textures**). The Windows build is `releases/Shardlands-v0.26.0-windows.zip`.
+- Current version: **v0.27.0** (Milestone 18d: a smoother world; Milestone 18 is complete). The Windows build is `releases/Shardlands-v0.27.0-windows.zip`.
+- The owner asked to do the 10 next steps one by one: 1 M18d (done), 2 M19 co-op combat, 3 monster pathfinding, 4 weather + seasons, 5 waystones/horses/boats, 6 multi-storey building, 7 map fog of war + dungeon keys, 8 monster animations + capes/hair, 9 performance + testing pass, 10 release polish.
 - Read next: `docs/TODO.md` (done and NOT IMPLEMENTED), `docs/CHANGELOG.md`, `docs/M18_PLAN.md` (current milestone) and `docs/ART_BIBLE.md` (art rules).
 - Keys changed in v0.24.0: **Space = jump**, **Left Alt = dodge roll**.
 - **Creative mode** for testing in the game: the ` key (under Esc).
@@ -38,7 +39,7 @@
 - Docs: `godot --headless --path . res://tools/balance_report.tscn -- --out=docs/BALANCE.md` and `godot --headless --path . -s tools/gen_rpg_tables.gd`
 - Art (Python, `art/tools/`): `texgen.py` and `texgen_extra.py` (block textures), `build_atlas.py`, `icongen.py` (item icons), `export_game.py` (copies them into the game).
 
-## What is done (milestones 1–18c + art passes)
+## What is done (milestones 1–18d + art passes)
 - **M1–M13:** world generation and streaming, survival, 4 classes and skills, crafting and building, villages and kingdoms with NPCs, shops and reputation, POIs and E–S dungeons, bosses, status effects, raids, blueprints, art and audio, co-op multiplayer (host plus guests), balance, tutorial, settings, save recovery, beta release.
 - **M14 Outfits:** one shared body for every class; the look comes from gear; gear sets; a souls-like character creation screen.
 - **M15 Living Wilds:** wild creatures in every biome, treasure spots, item quality, respec.
@@ -102,6 +103,14 @@
   - 215 new item icons (`src/ui/item_icon_atlas.gd`); new biome palette;
   - Setting **Block textures** (Display & graphics) turns them off; textures fade to plain colour far away;
   - test `test_v026_block_textures`; full suite run: 1797 passed.
+- **M18d (v0.27.0) smoother world:**
+  - terrain shapes: `TerrainGenerator.SHAPE_CLASSIC` (3, old saves, never change it) and `SHAPE_SMOOTH` (4, new worlds);
+    stored as `generator_version` in the world meta, `GameState.terrain_shape`, sent to co-op guests as "shape";
+    `tools/terrain_fingerprint.tscn` proves shape 3 is unchanged;
+  - fade-in: `ChunkManager` fade map (global shader params `chunk_fade`, `chunk_fade_rect`), `Chunk` ghost mesh,
+    `assets/shaders/chunk_fade.gdshaderinc` (`fade_channel` 0 ground, 1 props, 2 ghost); `Materials.terrain()`;
+  - `src/world/far_impostors.gd`: far tree clumps (LOD2 chunks + far tiles) and landmarks (`FarTerrain._landmarks`);
+  - tests `test_m18d_*` written, not run yet.
 
 ## Main code locations
 - Combat: `src/player/player_combat.gd`, `src/player/player.gd`
@@ -114,13 +123,7 @@
 - Items, loot and shops: `src/inventory/item_data.gd`, `src/exploration/loot_tables.gd`, `src/living/economy.gd`
 - Full list of abilities, weapons and spells: `docs/ARSENAL_PLAN.md`
 
-## Next step: M18d (plan: `docs/M18_PLAN.md`; the owner's answers are written at the top)
-- M18a, M18b and M18c are done (v0.21.0–v0.23.1). Block textures are done (v0.26.0).
-- **M18d: smoother world generation:**
-  - no pop-in: chunks and props fade in, LOD cross-fades, far impostors for trees, towns and POIs;
-  - smoother land: domain-warped noise, slope smoothing, river valleys, beaches, biome borders blended over about 32 m;
-  - smooth streaming: chunks in front of the camera first, about 2 ms frame budget, an extra ring when moving fast;
-  - the same seed must make the same world; old saves keep their changed blocks and visited chunks.
+## Next step: M19 — real co-op combat (item 2 of the owner's list of 10)
 
 ## After that
 - **M19 "Together in Danger":** real co-op combat, plus abilities that help friends.

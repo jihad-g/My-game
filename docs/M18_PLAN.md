@@ -1,6 +1,6 @@
 # Milestone 18 — "Flow of Battle" (plan)
 
-**Status:** **M18a (v0.21.0), M18b (v0.22.0) and M18c (v0.23.0) are done.** Between M18c and M18d the owner asked for jump + the Vibrant look (v0.24.0) and a world colour pass (v0.25.0). M18d is still a plan. Change anything before we build it.
+**Status:** **M18a (v0.21.0), M18b (v0.22.0), M18c (v0.23.0) and M18d (v0.27.0) are done - Milestone 18 is complete.** Between M18c and M18d the owner asked for jump + the Vibrant look (v0.24.0) and a world colour pass (v0.25.0). M18d is still a plan. Change anything before we build it.
 
 **Owner's answers (8 Oct 2026):** the fixed isometric camera is an *option* (the free camera stays the default);
 aim assist and hold-to-chain are *on by default*; bosses can be knocked down, but *only after their guard (poise)
@@ -185,7 +185,7 @@ shape share one effect with a different colour.
 **Done when:** you can tell every element apart with the sound off, and casting a big spell looks and feels like
 the peak of a fight.
 
-### M18d — Smoother world generation
+### M18d — Smoother world generation ✅ Done (v0.27.0)
 
 **1. No more pop-in**
 - New chunks and props **fade in** (dither) instead of appearing.

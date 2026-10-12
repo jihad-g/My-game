@@ -51,7 +51,8 @@ func on_welcome(data: Dictionary) -> void:
 		net.fail_join("Different game version")
 		return
 	var seed := GameState.parse_seed(data.get("seed", "0"))
-	var gen := TerrainGenerator.new(seed, load("res://data/worldgen/default_worldgen.tres"))
+	var shape := int(data.get("shape", TerrainGenerator.SHAPE_CLASSIC))
+	var gen := TerrainGenerator.new(seed, load("res://data/worldgen/default_worldgen.tres"), shape)
 	if NetProtocol.world_checksum(gen) != int(data.get("checksum", 0)):
 		net.fail_join("This world generates differently on your game (different version?)")
 		return

@@ -17,6 +17,9 @@ void vertex() {
 }
 
 void fragment() {
+	if (appear_hidden(FRAGCOORD.xy, (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz)) {
+		discard;
+	}
 	ALBEDO = block_albedo(COLOR.rgb, UV, UV2, v_dist);
 	ROUGHNESS = 0.95;
 	SPECULAR = 0.2;

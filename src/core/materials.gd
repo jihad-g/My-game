@@ -17,6 +17,26 @@ static func vertex_color() -> Material:
 	return _cache[&"vertex_color"]
 
 
+## Milestone 18d: the chunk ground. Same as vertex_color() but it reads the
+## ground channel of the chunk fade map (assets/shaders/chunk_fade.gdshaderinc).
+static func terrain() -> Material:
+	if not _cache.has(&"terrain"):
+		var m := (vertex_color() as ShaderMaterial).duplicate() as ShaderMaterial
+		m.set_shader_parameter(&"fade_channel", 0)
+		_cache[&"terrain"] = m
+	return _cache[&"terrain"]
+
+
+## Milestone 18d: the old ground of a chunk that changes detail, dithering out
+## on exactly the pixels where the new ground dithers in.
+static func terrain_ghost() -> Material:
+	if not _cache.has(&"terrain_ghost"):
+		var m := (vertex_color() as ShaderMaterial).duplicate() as ShaderMaterial
+		m.set_shader_parameter(&"fade_channel", 2)
+		_cache[&"terrain_ghost"] = m
+	return _cache[&"terrain_ghost"]
+
+
 ## Vertex-colour material that fades out near the camera, so tall props
 ## (walls, big rocks) between the camera and the player don't hide the action.
 ## CameraRig updates the fade distances every frame via set_camera_fade().
@@ -137,6 +157,7 @@ static func water() -> Material:
 		ensure_globals()
 		var m := ShaderMaterial.new()
 		m.shader = load("res://assets/shaders/water.gdshader")
+		m.set_shader_parameter(&"fade_channel", 0)  # fades with the chunk ground
 		_cache[&"water"] = m
 	return _cache[&"water"]
 

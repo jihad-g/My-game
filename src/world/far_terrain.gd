@@ -11,6 +11,10 @@ extends Node3D
 ## SINK metres lower so where they overlap the outermost chunk ring the real
 ## chunk always wins. Tile heights are sampled on worker threads and cached,
 ## so moving only re-meshes the tiles along the hole's edge.
+##
+## Milestone 18d: tiles also carry far tree clumps, and towns / points of
+## interest get simple landmark models that only show beyond the distance where
+## the real buildings exist (FarImpostors).
 
 const TILE_CHUNKS := 4
 const TILE_SIZE := TILE_CHUNKS * TerrainGenerator.CHUNK_SIZE
@@ -41,6 +45,8 @@ var _center := Vector2i(0x7FFFFFFF, 0)
 var _hole_r := 8
 var _active := false
 var _built := 0
+## Landmark key -> MeshInstance3D (towns, towers, temples... on the horizon).
+var _landmarks: Dictionary = {}
 
 
 func setup(p_generator: TerrainGenerator) -> void:
@@ -92,6 +98,18 @@ func update_focus(center: Vector2i, layer: int, hole_r: int) -> void:
 			_release(t)
 		_queue.clear()
 		return
+	# Forget landmarks that left the horizon.
+	var far_m := float(radius_chunks + TILE_CHUNKS * 2) * TerrainGenerator.CHUNK_SIZE
+	var cpos := Vector2((center.x + 0.5) * TerrainGenerator.CHUNK_SIZE, (center.y + 0.5) * TerrainGenerator.CHUNK_SIZE)
+	for key: String in _landmarks.keys():
+		var mi: MeshInstance3D = _landmarks[key]
+		var d := Vector2(mi.position.x, mi.position.z).distance_to(cpos)
+		if d > far_m:
+			mi.queue_free()
+			_landmarks.erase(key)
+		else:
+			# Backup for renderers without visibility ranges: never near the hero.
+			mi.visible = d > FarImpostors.LANDMARK_NEAR - 20.0
 	var tc := tile_of_chunk(center)
 	var rt := ceili(float(radius_chunks) / TILE_CHUNKS) + 1
 	# Drop tiles that left the horizon or vanished under the chunk rings.
@@ -153,6 +171,7 @@ func apply_results(budget_ms: float) -> void:
 		if dr.x > radius_chunks + TILE_CHUNKS or dr.y < _hole_r - 0.5:
 			continue
 		_apply_mesh(t, r)
+		_apply_landmarks(r.get("landmarks", []))
 		if (Time.get_ticks_usec() - t0) / 1000.0 > budget_ms:
 			return
 
@@ -192,6 +211,32 @@ func _apply_mesh(t: Vector2i, r: Dictionary) -> void:
 		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, water)
 		mesh.surface_set_material(mesh.get_surface_count() - 1, Materials.water())
 	_built += 1
+
+
+func landmark_count() -> int:
+	return _landmarks.size()
+
+
+func _apply_landmarks(list: Array) -> void:
+	for lm: Array in list:
+		var key: String = lm[0]
+		if _landmarks.has(key):
+			continue
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, lm[2])
+		mesh.surface_set_material(0, Materials.vertex_color())
+		var mi := MeshInstance3D.new()
+		mi.mesh = mesh
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		# Only beyond the range where the real town / building is spawned.
+		mi.visibility_range_begin = FarImpostors.LANDMARK_NEAR
+		mi.visibility_range_begin_margin = 10.0
+		mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+		add_child(mi)
+		mi.position = lm[1]
+		var cpos := Vector2((_center.x + 0.5) * TerrainGenerator.CHUNK_SIZE, (_center.y + 0.5) * TerrainGenerator.CHUNK_SIZE)
+		mi.visible = Vector2(mi.position.x, mi.position.z).distance_to(cpos) > FarImpostors.LANDMARK_NEAR - 20.0
+		_landmarks[key] = mi
 
 
 func _release(t: Vector2i) -> void:
@@ -253,11 +298,18 @@ func build_tile(t: Vector2i, hole_center: Vector2i, hole_r: int, cached: Array =
 	var wn := PackedVector3Array()
 	var wi := PackedInt32Array()
 	var bh := TerrainGenerator.BLOCK_HEIGHT
+	var cover := FarImpostors.tree_cover(generator)
 	for j in range(1, CELLS + 1):
 		for i in range(1, CELLS + 1):
 			var k := j * W + i
 			if skip[k] == 1:
 				continue
+			# Milestone 18d: far tree clumps (tiles sit SINK lower, so lift them back).
+			var clump := FarImpostors.clump_at(generator, cover, floori(float(ox) / STEP) + i - 1,
+				floori(float(oz) / STEP) + j - 1, biome_ids[k], heights[k])
+			if not clump.is_empty():
+				FarImpostors.add_clump(v, nrm, col, idx, (i - 1) * STEP + STEP * 0.5 + float(clump[0]),
+					(j - 1) * STEP + STEP * 0.5 + float(clump[1]), heights[k] * bh + SINK, clump)
 			var h := heights[k]
 			var biome: BiomeData = generator.biomes[biome_ids[k]]
 			var x0 := float((i - 1) * STEP)
@@ -293,8 +345,12 @@ func build_tile(t: Vector2i, hole_center: Vector2i, hole_r: int, cached: Array =
 	water[Mesh.ARRAY_VERTEX] = wv
 	water[Mesh.ARRAY_NORMAL] = wn
 	water[Mesh.ARRAY_INDEX] = wi
+	var landmarks := []
+	for info in FarImpostors.landmarks_in(generator, ox, oz, ox + TILE_SIZE, oz + TILE_SIZE):
+		landmarks.append([FarImpostors.landmark_key(info),
+			Vector3(info.center.x + 0.5, info.ground_y(), info.center.y + 0.5), FarImpostors.landmark_arrays(info)])
 	return {"tile": t, "heights": heights, "biomes": biome_ids, "terrain": terrain, "water": water,
-		"hole": hole_center, "holed": holed}
+		"hole": hole_center, "holed": holed, "landmarks": landmarks}
 
 
 ## Wall down to a lower neighbour; a skirt where the neighbour is cut out.

@@ -51,8 +51,21 @@ const WORLD_LIMIT_M := WORLD_RADIUS_CHUNKS * CHUNK_SIZE
 const WORLD_EDGE_START_M := 12800
 const WORLD_EDGE_END_M := 13500
 
+## Terrain shape versions (stored in a world's meta as "generator_version").
+## 3 = the land of v0.26 and older worlds, kept forever so old saves never change.
+## 4 = Milestone 18d: domain-warped hills, gentler lowlands, wide beaches, river
+##     valleys and biome borders that blend over about 32 m.
+const SHAPE_CLASSIC := 3
+const SHAPE_SMOOTH := 4
+const LATEST_SHAPE := SHAPE_SMOOTH
+## Width of the soft biome border in climate units (about 16 m to each side).
+const BORDER_SOFT := 0.006
+
 var world_seed: int
 var settings: WorldGenSettings
+## Terrain shape version (SHAPE_CLASSIC or SHAPE_SMOOTH).
+var shape: int = LATEST_SHAPE
+var _smooth := true
 var biomes: Array[BiomeData] = []
 ## Villages and kingdoms (Milestone 5): flatten terrain, clear props, block spawns.
 var settlements: Settlements
@@ -86,12 +99,16 @@ var _cave_tunnel := FastNoiseLite.new()
 var _cave_tunnel2 := FastNoiseLite.new()
 var _cave_cavern := FastNoiseLite.new()
 var _cave_floor := FastNoiseLite.new()
+var _shape_warp := FastNoiseLite.new()
 
 
-func _init(p_seed: int, p_settings: WorldGenSettings) -> void:
+func _init(p_seed: int, p_settings: WorldGenSettings, p_shape: int = LATEST_SHAPE) -> void:
 	world_seed = p_seed
 	settings = p_settings
+	shape = p_shape
+	_smooth = shape >= SHAPE_SMOOTH
 	var s := settings
+	_setup_noise(_shape_warp, 20, 0.0035, 2)
 	_setup_noise(_continent, 1, s.continent_frequency, 4)
 	_setup_noise(_island, 2, s.island_frequency, 2)
 	_setup_noise(_hills, 3, s.hill_frequency, 2)
@@ -255,12 +272,19 @@ func _sample_raw(wx: int, wz: int) -> int:
 			h = lerpf(h, 3.0 + (isl - s.island_threshold) * 30.0, it)
 			land = maxf(land, it)
 
-	var hills := _hills.get_noise_2d(x, z) * 0.5 + 0.5
+	# Milestone 18d: hills and mountains are sampled at "warped" positions, so
+	# they bend and flow instead of looking like round noise blobs.
+	var hx := x
+	var hz := z
+	if _smooth:
+		hx += _shape_warp.get_noise_2d(x, z) * 28.0
+		hz += _shape_warp.get_noise_2d(z - 517.0, x + 241.0) * 28.0
+	var hills := _hills.get_noise_2d(hx, hz) * 0.5 + 0.5
 	h += hills * hills * s.hill_amplitude * land
 
-	var mm := _ss(s.mountain_mask_start, s.mountain_mask_end, _mountain.get_noise_2d(x, z)) * land
+	var mm := _ss(s.mountain_mask_start, s.mountain_mask_end, _mountain.get_noise_2d(hx, hz)) * land
 	if mm > 0.0:
-		var r := 1.0 - absf(_ridge.get_noise_2d(x, z))
+		var r := 1.0 - absf(_ridge.get_noise_2d(hx, hz))
 		h += mm * (0.3 + 0.7 * r * r) * s.mountain_amplitude
 
 	var t := temperature01(x, z)
@@ -276,6 +300,12 @@ func _sample_raw(wx: int, wz: int) -> int:
 	var ar := _ss(0.34, 0.22, m) * _ss(0.58, 0.7, t) * land
 	if ar > 0.0:
 		h += (_dune.get_noise_2d(x, z) * 0.5 + 0.5) * s.dune_amplitude * ar
+	# Milestone 18d: wide, gentle beaches and shores - land close to the water
+	# line is pressed flatter, so coasts and lake banks slope softly.
+	if _smooth:
+		var coast := (1.0 - _ss(0.0, 7.0, absf(h - 1.0))) * (1.0 - mm)
+		if coast > 0.0:
+			h = lerpf(h, 1.0 + (h - 1.0) * 0.45, coast * 0.8)
 	# Lakes.
 	var lk := _ss(s.lake_threshold, s.lake_threshold + 0.14, _lake.get_noise_2d(x, z)) * (1.0 - mm) * land
 	if lk > 0.0:
@@ -286,13 +316,20 @@ func _sample_raw(wx: int, wz: int) -> int:
 		var warp_x := _warp.get_noise_2d(x, z) * s.river_warp
 		var warp_z := _warp.get_noise_2d(z + 913.0, x - 377.0) * s.river_warp
 		var rv := absf(_river.get_noise_2d(x + warp_x, z + warp_z))
+		if _smooth:
+			# Milestone 18d: rivers sit in wide valleys that slope down to the banks.
+			var vt := _ss(s.river_valley_width * 3.0, s.river_valley_width, rv) * rmask
+			if vt > 0.0 and h > 2.0:
+				h = lerpf(h, 2.0 + (h - 2.0) * 0.45, vt)
 		var rt := _ss(s.river_valley_width, s.river_width, rv) * rmask
 		if rt > 0.0:
 			h = lerpf(h, -3.0, rt)
 			if rv < s.river_width * 0.55 and rmask > 0.6:
 				h = minf(h, -5.0)
 
-	h += detail * s.detail_amplitude
+	# Small bumps. Milestone 18d: half as strong in the lowlands, so walking
+	# ground does not step up and down every few blocks (full in mountains).
+	h += detail * s.detail_amplitude * (lerpf(0.45, 1.0, mm) if _smooth else 1.0)
 	if edge > 0.0:
 		h = lerpf(h, s.ocean_depth, edge)
 	var hb := floori(h)
@@ -301,6 +338,49 @@ func _sample_raw(wx: int, wz: int) -> int:
 	var jitter := _regional.get_noise_2d(z * 1.7, x * 1.7) * 0.035
 	var biome := _pick_biome(hb, land, mm, t + jitter, m - jitter, x, z)
 	return (hb + _HEIGHT_BIAS) | (biome << 16)
+
+
+## Climate used to pick biomes (with the small border wiggle), as (t, m).
+func biome_climate(x: float, z: float) -> Vector2:
+	var jitter := _regional.get_noise_2d(z * 1.7, x * 1.7) * 0.035
+	return Vector2(temperature01(x, z) + jitter, moisture01(x, z) - jitter)
+
+
+## How much a land biome's climate box contains (t, m): 1 inside, 0 outside,
+## soft over BORDER_SOFT at its edges (edges at 0 or 1 are never soft).
+static func _membership(b: BiomeData, t: float, m: float) -> float:
+	var w := 1.0
+	if b.temperature_min > 0.0:
+		w *= _ss(b.temperature_min - BORDER_SOFT, b.temperature_min + BORDER_SOFT, t)
+	if b.temperature_max < 1.0:
+		w *= _ss(b.temperature_max + BORDER_SOFT, b.temperature_max - BORDER_SOFT, t)
+	if b.moisture_min > 0.0:
+		w *= _ss(b.moisture_min - BORDER_SOFT, b.moisture_min + BORDER_SOFT, m)
+	if b.moisture_max < 1.0:
+		w *= _ss(b.moisture_max + BORDER_SOFT, b.moisture_max - BORDER_SOFT, m)
+	return w
+
+
+## Milestone 18d: grass/sand colours mixed from every land biome by how much
+## the column's climate belongs to each (first listed wins, like _pick_biome),
+## so colours flow across biome borders instead of changing on a line.
+## Returns [top_color, top_color_alt].
+func blended_top_colors(x: float, z: float) -> Array:
+	var tm := biome_climate(x, z)
+	var left := 1.0
+	var a := Color(0, 0, 0)
+	var b := Color(0, 0, 0)
+	for i in _land_biomes:
+		var bd := biomes[i]
+		var w := _membership(bd, tm.x, tm.y) if i != _fallback_biome else 1.0
+		if w <= 0.0:
+			continue
+		a += bd.top_color * (w * left)
+		b += bd.top_color_alt * (w * left)
+		left *= 1.0 - w
+		if left <= 0.001:
+			break
+	return [a, b]
 
 
 static func unpack_height(sample: int) -> int:
@@ -323,6 +403,20 @@ func _pick_biome(h: int, land: float, mm: float, t: float, m: float, x: float, z
 		for i in _rare_biomes:
 			if rarity > biomes[i].rare_threshold:
 				return i
+	if _smooth:
+		# Milestone 18d: near a border, each column picks one of the touching
+		# biomes at random (weighted by how deep it is inside each), so plants,
+		# textures and ground mix over about 32 m instead of changing on a line.
+		var u := HashUtils.to_unit(HashUtils.hash3(int(x), int(z), world_seed + 271), 4)
+		for i in _land_biomes:
+			if i == _fallback_biome:
+				return i
+			var w := _membership(biomes[i], t, m)
+			if w >= 1.0 or (w > 0.0 and u < w):
+				return i
+			if w > 0.0:
+				u = (u - w) / (1.0 - w)
+		return _fallback_biome
 	for i in _land_biomes:
 		var b := biomes[i]
 		if t >= b.temperature_min and t <= b.temperature_max and m >= b.moisture_min and m <= b.moisture_max:
@@ -502,9 +596,34 @@ func generate_chunk(coord: Vector2i, lod: int, layer: int = Layer.SURFACE) -> Ch
 		_place_features(data, entrances, ox, oz)
 	if lod <= 1:
 		_place_props(data, w, ox, oz, entrances)
+	if lod >= 2 and layer == Layer.SURFACE:
+		_add_far_trees(data, w, ox, oz)
 	if lod == 0 and layer == Layer.SURFACE:
 		data.spawns = get_spawn_slots(coord)
 	return data
+
+
+## Milestone 18d: LOD2 chunks have no props, so forests get simple leafy
+## "impostor" clumps (FarImpostors) to bridge the props and the horizon.
+func _add_far_trees(data: ChunkData, w: int, ox: int, oz: int) -> void:
+	var cover := FarImpostors.tree_cover(self)
+	var cells := CHUNK_SIZE / FarImpostors.CELL
+	for b in cells:
+		for a in cells:
+			var lx := a * FarImpostors.CELL + FarImpostors.CELL / 2
+			var lz := b * FarImpostors.CELL + FarImpostors.CELL / 2
+			var k := (lz / data.step + 1) * w + (lx / data.step + 1)
+			var h := data.heights[k]
+			var clump := FarImpostors.clump_at(self, cover, floori(float(ox + lx) / FarImpostors.CELL),
+				floori(float(oz + lz) / FarImpostors.CELL), data.biomes[k], h)
+			if clump.is_empty():
+				continue
+			var before := data.vertices.size()
+			FarImpostors.add_clump(data.vertices, data.normals, data.colors, data.indices,
+				lx + float(clump[0]), lz + float(clump[1]), h * BLOCK_HEIGHT, clump)
+			for _i in data.vertices.size() - before:
+				data.uvs.append(Vector2.ZERO)
+				data.uv2s.append(Vector2.ZERO)
 
 
 func _build_surface(data: ChunkData, n: int, w: int, ox: int, oz: int) -> void:
@@ -691,7 +810,13 @@ func _top_color(biome: BiomeData, h: int, wx: int, wz: int, surface: bool) -> Co
 		spread = 0.1
 	else:
 		# Grass / sand: two tones mixed by block and by patch.
-		c = biome.top_color.lerp(biome.top_color_alt, clampf(t * t * 0.7 + patch * 0.55, 0.0, 1.0))
+		var c0 := biome.top_color
+		var c1 := biome.top_color_alt
+		if _smooth and biome.role == BiomeData.Role.LAND:
+			var bl := blended_top_colors(wx, wz)
+			c0 = bl[0]
+			c1 = bl[1]
+		c = c0.lerp(c1, clampf(t * t * 0.7 + patch * 0.55, 0.0, 1.0))
 		# A small warm or cool shift per block (a few blocks look slightly yellow).
 		var hue := HashUtils.to_unit(HashUtils.hash3(wx, wz, world_seed + 5), 7) - 0.5
 		c = Color(c.r * (1.0 + hue * 0.14), c.g, c.b * (1.0 - hue * 0.14))
