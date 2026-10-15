@@ -18,6 +18,10 @@ func _ready() -> void:
 		await _style_showcase()
 		get_tree().quit()
 		return
+	if "--only=pixelstyle" in OS.get_cmdline_user_args():
+		await _pixel_style_showcase()
+		get_tree().quit()
+		return
 	if "--only=smooth" in OS.get_cmdline_user_args():
 		await _smooth_showcase()
 		get_tree().quit()
@@ -1701,3 +1705,136 @@ func _smooth_showcase() -> void:
 				print("landmark %.0f m from camera, begin %.0f" % [mi.global_position.distance_to(cam.global_position), mi.visibility_range_begin])
 		world.queue_free()
 		await _wait(10)
+
+
+## Style preview (not a milestone): the owner's reference models rebuilt with
+## pixel-textured boxes (tests/style_preview.gd) and put in the real world,
+## next to today's models for comparison.
+func _pixel_style_showcase() -> void:
+	var SP := preload("res://tests/style_preview.gd")
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"wizard")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 10.5
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	var c := _dry_center(world, p.global_position, 26.0)
+	await _teleport(world, c + Vector3(-9, 0, 2))
+	var frames := 0
+	while world.chunk_manager.pending_count() > 0 and frames < 1500:
+		await get_tree().process_frame
+		frames += 1
+	await _wait(30)
+	_clear_monsters(world)
+	var spots := {
+		"wanderer": Vector3(-6.0, 0, 0), "skeleton": Vector3(-3.0, 0, 0), "knight": Vector3(0.5, 0, -0.5),
+		"centaur": Vector3(4.2, 0, -0.5), "sword": Vector3(7.4, 0, 0.6), "weapons": Vector3(0.5, 0, 4.2),
+	}
+	var models := {
+		"wanderer": SP.wanderer(), "skeleton": SP.skeleton(), "knight": SP.knight_rider(),
+		"centaur": SP.centaur(), "sword": SP.bandaged_sword(), "weapons": SP.weapons(),
+	}
+	for k in models:
+		var at: Vector3 = c + spots[k]
+		at.y = world.get_ground_height(at)
+		var m: Node3D = models[k]
+		world.add_child(m)
+		m.global_position = at + (Vector3(0, 0.15, 0) if k == "sword" else Vector3.ZERO)
+		if k == "centaur":
+			m.rotation_degrees.y = -35.0
+		elif k == "knight":
+			m.rotation_degrees.y = 30.0
+		spots[k] = at
+	# Today's models for comparison: the player (wizard) and a skeleton minion.
+	var old_pos := c + Vector3(-4.2, 0, 1.4)
+	await _teleport(world, c + Vector3(-7.4, 0, 1.4))
+	p.rotation.y = 0.0
+	var minion := _monster(world, &"skeleton_minion", old_pos)
+	if minion:
+		minion.make_dormant(-1.0)
+		minion.set_meta(&"training_dummy", true)
+		minion.health.invulnerable = true
+	await _wait(30)
+	# Our own camera: stop the game camera and its see-through tree fade.
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var cam := Camera3D.new()
+	cam.fov = 40.0
+	cam.far = 600.0
+	world.add_child(cam)
+	cam.current = true
+	var shots := [
+		["pixel_lineup", c + Vector3(0.6, 1.0, 1.2), 15.5, 0.0, 18.0],
+		["pixel_skeleton_vs_today", spots["skeleton"] + Vector3(-0.6, 1.0, 0.5), 4.2, 18.0, 10.0],
+		["pixel_centaur", spots["centaur"] + Vector3(0, 1.5, 0), 5.2, -20.0, 10.0],
+		["pixel_knight", spots["knight"] + Vector3(0, 1.6, 0), 5.4, 12.0, 8.0],
+		["pixel_weapons", spots["weapons"] + Vector3(0, 1.0, 0), 5.2, 0.0, 10.0],
+		["pixel_wanderer", spots["wanderer"] + Vector3(-0.6, 1.2, 0.5), 3.8, 12.0, 6.0],
+		["pixel_sword", spots["sword"] + Vector3(0, 1.1, 0), 2.9, 20.0, 6.0],
+	]
+	for sh in shots:
+		var target: Vector3 = sh[1]
+		var yaw := deg_to_rad(float(sh[3]))
+		var pitch := deg_to_rad(float(sh[4]))
+		cam.global_position = target + Vector3(sin(yaw) * cos(pitch), sin(pitch), cos(yaw) * cos(pitch)) * float(sh[2])
+		cam.look_at(target)
+		await _wait(8)
+		await _shot(sh[0])
+	# Batch 2 (tests/style_preview_2.gd): one group at a time on the same spot.
+	var S2 := preload("res://tests/style_preview_2.gd")
+	for k in models:
+		models[k].visible = false
+	if minion:
+		minion.visible = false
+	var groups := [
+		["pixel_townsfolk", [S2.witch(), S2.adventurer(), S2.cook(), S2.dwarf(), S2.old_wizard(), S2.merchant()], 1.3, 8.2],
+		["pixel_copper_samurai", [S2.copper_knight(), S2.oni_samurai(), S2.ronin()], 1.6, 6.0],
+		["pixel_warband", [S2.brute(1.0, 0), S2.brute(1.35, 1), S2.banner(), S2.brute(1.15, 0), S2.brute(0.8, 1)], 1.25, 7.6],
+		["pixel_armour_sets", [S2.armour_set(0), S2.armour_set(1), S2.armour_set(2), S2.armour_set(3)], 1.6, 7.0],
+	]
+	var stage := c + Vector3(0.5, 0, 1.5)
+	for g in groups:
+		var nodes: Array = g[1]
+		for i in nodes.size():
+			var at: Vector3 = stage + Vector3((i - (nodes.size() - 1) * 0.5) * float(g[2]), 0, 0)
+			at.y = world.get_ground_height(at)
+			world.add_child(nodes[i])
+			nodes[i].global_position = at
+		if g[0] == "pixel_copper_samurai":
+			var kat: Node3D = S2.red_katana()
+			world.add_child(kat)
+			var at2 := stage + Vector3(0.8, 0, 1.0)
+			kat.global_position = Vector3(at2.x, world.get_ground_height(at2), at2.z)
+			nodes.append(kat)
+		var gy := world.get_ground_height(stage)
+		var target := Vector3(stage.x, gy + 1.05, stage.z)
+		cam.current = true
+		cam.global_position = target + Vector3(0, sin(deg_to_rad(9.0)), cos(deg_to_rad(9.0))) * float(g[3])
+		cam.look_at(target)
+		await _wait(8)
+		await _shot(g[0])
+		for n in nodes:
+			n.queue_free()
+	for k in models:
+		models[k].visible = true
+	if minion:
+		minion.visible = true
+	# The real game camera (default distance and angle) to judge it in play.
+	world.camera_rig.set_process(true)
+	world.camera_rig.camera.current = true
+	await _teleport(world, c + Vector3(-0.5, 0, 1.8))
+	world.camera_rig._target_distance = 16.0
+	world.camera_rig._target_pitch = 50.0
+	world.camera_rig.snap_to_target()
+	await _wait(40)
+	await _shot("pixel_game_camera")
+	world.camera_rig._target_distance = 9.0
+	await _wait(60)
+	await _shot("pixel_game_camera_close")
