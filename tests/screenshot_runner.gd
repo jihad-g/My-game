@@ -18,6 +18,10 @@ func _ready() -> void:
 		await _style_showcase()
 		get_tree().quit()
 		return
+	if "--only=pixelpilot" in OS.get_cmdline_user_args():
+		await _pixel_pilot_showcase()
+		get_tree().quit()
+		return
 	if "--only=pixelstyle" in OS.get_cmdline_user_args():
 		await _pixel_style_showcase()
 		get_tree().quit()
@@ -1838,3 +1842,70 @@ func _pixel_style_showcase() -> void:
 	world.camera_rig._target_distance = 9.0
 	await _wait(60)
 	await _shot("pixel_game_camera_close")
+
+
+## Art pass pilot: the real Skeleton Minion and Skeleton Warrior, now drawn
+## pixel by pixel (src/art/pixel_skeleton.gd), close up and from the game camera.
+func _pixel_pilot_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 10.5
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	var c := _dry_center(world, p.global_position, 26.0)
+	await _teleport(world, c + Vector3(0, 0, 4))
+	_clear_monsters(world)
+	var foes: Array[Monster] = []
+	for spec in [[&"skeleton_minion", Vector3(-0.9, 0, 0)], [&"skeleton_warrior", Vector3(0.9, 0, -0.3)]]:
+		var m := _monster(world, spec[0], c + spec[1])
+		if m:
+			m.make_dormant(-1.0)
+			m.set_meta(&"training_dummy", true)
+			m.health.invulnerable = true
+			m.rotation.y = 0.0
+			foes.append(m)
+	await _wait(40)
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var cam := Camera3D.new()
+	cam.fov = 35.0
+	world.add_child(cam)
+	cam.current = true
+	var gy := world.get_ground_height(c)
+	for sh in [["pixel_pilot_front", 0.0, 3.6, 8.0], ["pixel_pilot_side", 35.0, 3.4, 14.0], ["pixel_pilot_close", 10.0, 1.9, 6.0]]:
+		var target := Vector3(c.x, gy + (1.25 if sh[0] == "pixel_pilot_close" else 0.85), c.z)
+		if sh[0] == "pixel_pilot_close":
+			target.x -= 0.9
+		var yaw := deg_to_rad(float(sh[1]))
+		var pitch := deg_to_rad(float(sh[3]))
+		cam.global_position = target + Vector3(sin(yaw) * cos(pitch), sin(pitch), cos(yaw) * cos(pitch)) * float(sh[2])
+		cam.look_at(target)
+		await _wait(8)
+		await _shot(sh[0])
+	# Mid-swing, so the bones are seen moving with the normal rig.
+	for m in foes:
+		var mm := m.get_node_or_null("Model") as MonsterModel
+		if mm == null:
+			for ch in m.get_children():
+				if ch is MonsterModel:
+					mm = ch
+		if mm:
+			mm.play_attack(&"slash", 0.35, 0.15, 0.3)
+	await _sec(0.4)
+	cam.global_position = Vector3(c.x, gy + 0.85, c.z) + Vector3(sin(deg_to_rad(-25.0)), 0.25, cos(deg_to_rad(-25.0))) * 3.6
+	cam.look_at(Vector3(c.x, gy + 0.85, c.z))
+	await _wait(2)
+	await _shot("pixel_pilot_attack")
+	world.camera_rig.set_process(true)
+	world.camera_rig.camera.current = true
+	world.camera_rig._target_distance = 12.0
+	await _wait(60)
+	await _shot("pixel_pilot_game_camera")

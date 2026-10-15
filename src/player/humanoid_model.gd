@@ -307,6 +307,8 @@ func _build() -> void:
 	_fore_r = _pivot(_arm_r, Vector3(0, -0.26, 0))
 	_part(_fore_r, Vector3(0, -0.09, 0), Vector3(0.17, 0.2, 0.19), shirt_color * 0.88)
 	_part(_fore_r, Vector3(0, -0.24, 0), Vector3(0.16, 0.14, 0.16), skin_color)
+	if _class_id in PIXEL_BODIES:
+		_use_pixel_body()
 	_build_class_gear()
 	_weapon = _pivot(_fore_r, Vector3(0, -0.26, 0.05))
 	_shield = _pivot(_fore_l, Vector3(-0.1, -0.09, 0.08))
@@ -316,6 +318,8 @@ func _build() -> void:
 
 
 func _build_class_gear() -> void:
+	if _class_id in PIXEL_BODIES:
+		return
 	var a := _accent
 	match _class_id:
 		&"player":
@@ -710,6 +714,29 @@ func play_spin(duration: float) -> void:
 	_dodge_tween = create_tween()
 	_dodge_tween.tween_property(_root, "rotation:y", TAU * 2.0, duration).from(0.0)
 	_dodge_tween.tween_callback(func() -> void: _root.rotation.y = 0.0)
+
+
+## Art pass pilot: looks drawn pixel by pixel (src/art/) replace the plain boxes.
+const PIXEL_BODIES := [&"mon_skeleton"]
+
+
+func _use_pixel_body() -> void:
+	for p in _parts:
+		p.free()
+	_parts.clear()
+	match _class_id:
+		&"mon_skeleton":
+			PixelSkeleton.build(self)
+
+
+## Adds a ready-made mesh (pixel-art parts) as a body part on `parent`.
+func _add_mesh(parent: Node3D, pos: Vector3, mesh: Mesh) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.position = pos
+	parent.add_child(mi)
+	_parts.append(mi)
+	return mi
 
 
 func _pivot(parent: Node3D, pos: Vector3) -> Node3D:
