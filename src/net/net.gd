@@ -272,6 +272,69 @@ func c2s_profile(profile: Dictionary) -> void:
 		server.on_profile(sender(), profile)
 
 
+# --- RPCs: co-op combat (Milestone 19, logic in NetCombat) ------------------------------------
+
+@rpc("authority", "call_remote", "reliable")
+func s2c_enemy_spawn(list: Array) -> void:
+	if client:
+		client.combat.on_spawn(list)
+
+
+@rpc("authority", "call_remote", "unreliable_ordered")
+func s2c_enemy_states(list: Array) -> void:
+	if client:
+		client.combat.on_states(list)
+
+
+@rpc("authority", "call_remote", "reliable")
+func s2c_enemy_gone(ids: Array) -> void:
+	if client:
+		client.combat.on_gone(ids)
+
+
+@rpc("authority", "call_remote", "reliable")
+func s2c_enemy_event(id: int, method: String, args: Array) -> void:
+	if client:
+		client.combat.on_event(id, method, args)
+
+
+@rpc("authority", "call_remote", "reliable")
+func s2c_fx(kind: String, args: Array) -> void:
+	if client:
+		client.combat.on_fx(kind, args)
+
+
+@rpc("authority", "call_remote", "reliable")
+func s2c_hurt(args: Array) -> void:
+	if client:
+		client.combat.on_hurt(args)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func c2s_hit(id: int, args: Array) -> void:
+	stats.received += 1
+	if server and not server.combat.on_hit(sender(), id, args):
+		stats.rejected += 1
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func c2s_enemy_call(id: int, method: String, args: Array) -> void:
+	if server:
+		server.combat.on_call(sender(), id, method, args)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func c2s_support(kind: String, args: Array) -> void:
+	if server:
+		server.combat.on_support(sender(), kind, args)
+
+
+@rpc("authority", "call_remote", "reliable")
+func s2c_support(from_name: String, kind: String, args: Array) -> void:
+	if client:
+		client.combat.on_support_received(from_name, kind, args)
+
+
 # --- RPCs: requests & authoritative state ---------------------------------------------------
 
 @rpc("any_peer", "call_remote", "reliable")

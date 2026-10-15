@@ -105,6 +105,26 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 19 — Together in Danger: real co-op combat  ✅ (v0.28.0)
+
+- [x] Monsters, bosses, raids and rare events run in co-op; the host simulates them, guests see puppets (NetCombat)
+- [x] Puppets follow position, facing, health, death; attacks, telegraphs, flinches, knock-downs, ice shells replay
+- [x] Monster bolts and ground warnings drawn for guests; monsters hit guests (block/parry/dodge on the guest)
+- [x] Guests' hits, statuses, knock-downs, taunts, parries and blinds reach the host's monster (range, size and rate checked)
+- [x] Monsters target the nearest player; full-detail land streams around each guest on the host
+- [x] Shared kills (45 m): XP and quest credit for everyone close; loot for everyone
+- [x] Support abilities reach friends within 12 m (Holy Light, Rejuvenate, Tundra Howl, Oath of Protection, Cleansing Light)
+- [x] Friends' health in the online list; boss bars for guests
+- [x] Tests `test_m19_rules`, `test_m19_coop` run and pass; `test_m11` and `test_m18d` re-run and pass
+- [ ] NOT IMPLEMENTED: dungeons in co-op (the host can't enter while guests are online; guests never could)
+- [ ] NOT IMPLEMENTED: guests taming beasts; pets and summons of guests (they stay on the guest's screen only)
+- [ ] NOT IMPLEMENTED: reviving a fallen friend; PvP
+- [ ] NOT IMPLEMENTED: guests in caves while the host is on the surface (the host streams one layer: no monsters there for the guest)
+- [ ] NOT IMPLEMENTED: chests, trading, village requests, farming, sleeping and blueprints for guests (unchanged from M11)
+- [ ] Known limitation: a guest's damage numbers are their own estimate; the host's armour/resistance math decides the real damage
+- [ ] Known limitation: monster bolts and ground warnings are visual on guests; the host decides who they hit (with ~0.1 s of delay)
+- [ ] Known limitation: puppets glide to the host's position (10 updates per second), so fast monsters can look slightly behind
+
 ## Milestone 18d — Flow of Battle: a smoother world  ✅ (v0.27.0)
 
 - [x] Chunks and their props fade in (dither) instead of popping; detail changes cross-fade (fade map, `chunk_fade.gdshaderinc`)
@@ -114,7 +134,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Biome borders blend over ~32 m (colour mix + dithered biome per block)
 - [x] Old saves keep their land exactly (shape 3, proven by `tools/terrain_fingerprint.tscn`); co-op guests get the host's shape
 - [x] Streaming: camera-facing chunks first, ~2 ms build budget, one more ring above 12 m/s
-- [~] Tests `test_m18d_*` are written but have not been run yet (waiting for the owner's OK)
+- [x] Tests `test_m18d_*` run and pass (with the M19 work)
 - [ ] NOT IMPLEMENTED: measured "2-minute sprint across 3 biomes, slowest frame under 25 ms" (needs the stress tool on real hardware)
 - [ ] NOT IMPLEMENTED: splitting a chunk build over several frames (one LOD0 chunk with collision can still take a few ms)
 - [ ] Known limitation: rare biomes (Crystal Glade...) keep a hard border; water fades a little when its chunk changes detail
@@ -342,7 +362,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Building synchronisation: place/remove/door through the server (reach, level, rules, materials), owners (guests can't remove others' buildings), host building/raids broadcast, full building list on join
 - [x] Persistence: guests' characters (inventory, equipment, position, profile) saved with the host's world and restored when they rejoin (also on a dedicated server)
 - [x] Tests: protocol/validation unit tests and a real two-process session (host + headless guest over localhost): join, checksum, puppets both ways, gather, build, ownership, drop/pickup, host changes reaching the guest, identical terrain, time sync, cheat correction, chat, records, dedicated server rejoin
-- [ ] NOT IMPLEMENTED: combat in shared sessions (monsters, raids and rare events pause while online), PvP, shared bosses
+- [x] Combat in shared sessions (Milestone 19); PvP NOT IMPLEMENTED
 - [ ] NOT IMPLEMENTED for guests: chests, NPC trading, village requests, farming, sleeping, campfire cooking, blueprints, dungeons (they get a message)
 - [ ] NOT IMPLEMENTED: server-side character progression (level/skills/XP are client-reported), accounts/authentication, encryption, NAT traversal, lobby/server browser
 - [ ] Known limitation: NPCs and settlement life are simulated per machine (same layouts, different NPC positions)

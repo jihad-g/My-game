@@ -22,6 +22,13 @@ var flags := 0
 
 var _label := Label3D.new()
 var _snaps: Array = []  # {t, pos, yaw, move, flags, layer, hp}
+## Milestone 19: on the host, a body monster bolts can hit (NetHitbox).
+var _hitbox: NetHitbox
+
+## The owner is down (dead): monsters leave them alone.
+var is_dead: bool:
+	get:
+		return flags & NetProtocol.F_DEAD != 0
 
 
 func setup(p_peer: int, p_name: String, p_class: StringName) -> void:
@@ -47,6 +54,27 @@ func _ready() -> void:
 	_label.modulate = Color(0.75, 0.9, 1.0)
 	_label.no_depth_test = true
 	add_child(_label)
+	if Net.is_server():
+		_hitbox = NetHitbox.new()
+		_hitbox.collision_layer = Layers.PLAYER
+		_hitbox.collision_mask = 0
+		var cs := CollisionShape3D.new()
+		var cap := CapsuleShape3D.new()
+		cap.radius = 0.4
+		cap.height = 1.8
+		cs.shape = cap
+		cs.position.y = 0.9
+		_hitbox.add_child(cs)
+		add_child(_hitbox)
+
+
+## Milestone 19: a monster on the host hit this guest. The guest's own game
+## resolves it (block, parry, dodge, armour), so it is passed on as it is.
+func receive_hit(info: DamageInfo) -> float:
+	if not Net.is_server() or is_dead or not is_visible_in_tree():
+		return 0.0
+	var nc := NetCombat.host()
+	return nc.hurt_peer(peer_id, info) if nc else 0.0
 
 
 static func _now() -> float:
@@ -151,4 +179,6 @@ func _process(delta: float) -> void:
 	model.set_air_state(flags & NetProtocol.F_AIRBORNE != 0, flags & NetProtocol.F_SWIMMING != 0)
 	var w := World.instance
 	visible = w == null or (w.layer == layer and w.dungeon == null)
+	if _hitbox:
+		_hitbox.collision_layer = Layers.PLAYER if visible and not is_dead else 0
 	_label.text = player_name if flags & NetProtocol.F_DEAD == 0 else "%s (down)" % player_name

@@ -28,13 +28,17 @@ var _pickups: Dictionary = {}  # net id -> Pickup
 var _state_t := 0.0
 var _profile_t := 5.0
 var _teleport := true
+## Puppets of the host's monsters, our hits, support from friends (Milestone 19).
+var combat: NetCombat
 
 
 func _init(p_net: Node) -> void:
 	net = p_net
+	combat = NetCombat.new(p_net)
 
 
 func shutdown() -> void:
+	combat.shutdown()
 	for pid in puppets:
 		if is_instance_valid(puppets[pid]):
 			puppets[pid].queue_free()

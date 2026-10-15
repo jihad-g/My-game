@@ -13,6 +13,9 @@ var _input := LineEdit.new()
 var _lines: Array = []  # [Label, age]
 
 
+var _party_t := 0.0
+
+
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -69,6 +72,11 @@ func _process(delta: float) -> void:
 	for e in _lines:
 		e[1] += delta
 		(e[0] as Label).modulate.a = 1.0 if _input.visible else clampf(LINE_TIME - e[1], 0.0, 1.0)
+	# Milestone 19: friends' health in the list (twice a second).
+	_party_t -= delta
+	if _party_t <= 0.0:
+		_party_t = 0.5
+		_refresh_online()
 
 
 func _refresh_online() -> void:
@@ -77,9 +85,22 @@ func _refresh_online() -> void:
 		return
 	var names := PackedStringArray()
 	for pid in Net.players:
-		names.append(String(Net.players[pid].get("name", "?")))
+		var n := String(Net.players[pid].get("name", "?"))
+		var rp := _puppet_of(int(pid))
+		if rp:
+			n += " (down)" if rp.is_dead else " %d%%" % roundi(rp.health_ratio * 100.0)
+		names.append(n)
 	var role := "Hosting" if Net.is_server() else "Online"
 	_online.text = "%s · %d player%s: %s" % [role, names.size(), "" if names.size() == 1 else "s", ", ".join(names)]
+
+
+## The puppet of another player (host and guests both keep them).
+func _puppet_of(pid: int) -> RemotePlayer:
+	for n in get_tree().get_nodes_in_group(&"remote_players"):
+		var rp := n as RemotePlayer
+		if rp and rp.peer_id == pid:
+			return rp
+	return null
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -96,6 +96,30 @@ are validated by `NetServer` (malformed values, unknown actions, out-of-range sl
 | `door [cell, slot, layer]` | a door within 10 m |
 | `place_object [slot, position]` | placeable item, within 8 m |
 
+## Co-op combat (Milestone 19, `src/net/net_combat.gd`)
+
+The host simulates every monster. Each guest gets the monsters within 90 m of them:
+
+| Message | Dir | Mode | Content |
+|---|---|---|---|
+| `s2c_enemy_spawn` | → | reliable | `[net id, scene, data, {power, damage, levels, xp, affixes, boss}, position, yaw, hp ratio, dead]` |
+| `s2c_enemy_states` | → | unreliable ordered | 10/s: `[net id, x, y, z, yaw, hp ratio, flags (dead, exposed, down)]` |
+| `s2c_enemy_gone` | → | reliable | net ids out of range or despawned |
+| `s2c_enemy_event` | → | reliable | model animation events (`play_attack`, `set_telegraph`, `show_alert`, `play_flinch`, `freeze`, `set_exposed`, `play_bite`), `knock_down`, `ice_shell` |
+| `s2c_fx` | → | reliable | `bolt` / `hazard`: monster projectiles and ground warnings, drawn without damage |
+| `s2c_hurt` | → | reliable | a monster hit this guest: `[amount, type, direction, knockback, poise, statuses, source net id, tag, crit]` |
+| `c2s_hit` | ← | reliable | the guest hit a monster; host checks: monster exists and is alive, within 45 m of the guest, ≤ 40 hits/s, amount ≤ 5000, known damage type, ≤ 4 known statuses with numeric params |
+| `c2s_enemy_call` | ← | reliable | whitelisted: `apply_status`, `knock_down`, `stagger`, `on_parried`, `taunt`, `lose_target` |
+| `c2s_support` / `s2c_support` | ↔ | reliable | `heal`, `regen`, `buff` (`tundra_howl`, `oath`), `cleanse` - delivered to players within 12 m of the caster |
+
+- Guests attack puppets (copies of the host's monsters); the hit shows at once on the guest and is applied on the
+  host with the guest's puppet as the source, so the monster turns on that guest.
+- Monsters choose the nearest player (`Enemy.nearest_player`), including `RemotePlayer` puppets on the host.
+  `RemotePlayer.receive_hit` forwards to the guest; a `NetHitbox` body lets monster bolts hit guests.
+- The host streams full-detail land around every guest on the same layer, so wild monsters spawn there too.
+- Kills: everyone within 45 m gets the XP and quest credit (a guest's puppet dying near them counts); the host gets
+  nothing for kills far from it.
+
 ## Persistence
 
 Guests' characters are stored in the host's world save (`world.net_players`, keyed by player
@@ -116,8 +140,8 @@ gets everything back — also from a dedicated server.
 
 ## Not implemented yet (honest list)
 
-- **Combat in shared sessions**: monsters, raids and rare events are paused while online (host and
-  guests); enemy synchronisation, PvP and shared boss fights are future work.
+- **Combat in shared sessions** works since Milestone 19 (see *Co-op combat* below). Still missing: PvP,
+  dungeons together, reviving fallen friends, guests' pets and summons.
 - **Guests can't**: open chests, trade with NPCs, take village requests, farm, sleep, cook at a
   campfire (crafting at a campfire works), use blueprints, enter dungeons. They get a clear
   message instead.

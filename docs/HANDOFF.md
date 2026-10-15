@@ -3,8 +3,8 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.27.0** (Milestone 18d: a smoother world; Milestone 18 is complete). The Windows build is `releases/Shardlands-v0.27.0-windows.zip`.
-- The owner asked to do the 10 next steps one by one: 1 M18d (done), 2 M19 co-op combat, 3 monster pathfinding, 4 weather + seasons, 5 waystones/horses/boats, 6 multi-storey building, 7 map fog of war + dungeon keys, 8 monster animations + capes/hair, 9 performance + testing pass, 10 release polish.
+- Current version: **v0.28.0** (Milestone 19: real co-op combat). The Windows build is `releases/Shardlands-v0.28.0-windows.zip`.
+- The owner asked to do the 10 next steps one by one: 1 M18d (done), 2 M19 co-op combat (done), 3 monster pathfinding, 4 weather + seasons, 5 waystones/horses/boats, 6 multi-storey building, 7 map fog of war + dungeon keys, 8 monster animations + capes/hair, 9 performance + testing pass, 10 release polish.
 - Read next: `docs/TODO.md` (done and NOT IMPLEMENTED), `docs/CHANGELOG.md`, `docs/M18_PLAN.md` (current milestone) and `docs/ART_BIBLE.md` (art rules).
 - Keys changed in v0.24.0: **Space = jump**, **Left Alt = dodge roll**.
 - **Creative mode** for testing in the game: the ` key (under Esc).
@@ -123,7 +123,13 @@
 - Items, loot and shops: `src/inventory/item_data.gd`, `src/exploration/loot_tables.gd`, `src/living/economy.gd`
 - Full list of abilities, weapons and spells: `docs/ARSENAL_PLAN.md`
 
-## Next step: M19 — real co-op combat (item 2 of the owner's list of 10)
+- **M19 (v0.28.0) co-op combat:** `src/net/net_combat.gd` (host: ids, per-guest sync at 10/s, hits/calls/support
+  checks; guest: puppets, hurt, fx). `Enemy.net_puppet`, `net_id`, `nearest_player()`, `_net_forward()`;
+  model `net_event` signals; `RemotePlayer.receive_hit` + `NetHitbox`; `ChunkManager._guest_centers()`;
+  `PlayerAbilities.share_support()` / `receive_support()`. Tests `test_m19_*` (guest script `--combat`).
+- Testing rule now: the owner allows running only the test groups for what changed (ask if unsure).
+
+## Next step: item 3 - monster pathfinding (A* on the block grid)
 
 ## After that
 - **M19 "Together in Danger":** real co-op combat, plus abilities that help friends.

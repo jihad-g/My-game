@@ -232,7 +232,9 @@ var _offline_max_enemies := -1
 func _apply_online_rules() -> void:
 	if not is_inside_tree():
 		return
-	if Net.is_online():
+	# Milestone 19: the host runs monsters, raids and events for everyone
+	# (guests see puppets of the host's monsters, NetCombat). Guests run none.
+	if Net.is_client():
 		if _offline_max_enemies < 0:
 			_offline_max_enemies = spawner.max_active
 		spawner.max_active = 0
@@ -430,6 +432,9 @@ func enter_dungeon(poi: PoiInfo) -> bool:
 	if dungeon or not is_ready or layer != TerrainGenerator.Layer.SURFACE:
 		return false
 	if Net.client_blocked("Dungeons"):
+		return false
+	if Net.is_server() and not Net.server.peers.is_empty():
+		Events.toast.emit("Dungeons are for one player for now - your friends would be left outside", Color(1, 0.75, 0.5))
 		return false
 	var left := exploration.dungeon_cleared_left(poi)
 	if left > 0.0:

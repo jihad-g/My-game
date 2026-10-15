@@ -5,6 +5,9 @@ extends Node3D
 ## animation calls Enemy/Monster make. Also handles hit flash and the red
 ## telegraph glow for dangerous attacks.
 
+## Milestone 19: animation events, sent to co-op guests by the host (NetCombat).
+signal net_event(method: StringName, args: Array)
+
 const BEASTS := [&"wisp", &"crawler", &"thornmaw", &"wolf", &"scorpion", &"crab", &"deer", &"rabbit"]
 
 var rig: Node3D
@@ -60,11 +63,13 @@ func set_locomotion(speed: float, delta: float) -> void:
 
 
 func play_attack(anim: StringName, windup: float, active: float, recovery: float) -> void:
+	net_event.emit(&"play_attack", [anim, windup, active, recovery])
 	if rig:
 		rig.play_attack(anim, windup, active, recovery)
 
 
 func set_telegraph(on: bool) -> void:
+	net_event.emit(&"set_telegraph", [on])
 	_telegraph = on
 	_update_overlay()
 
@@ -100,6 +105,7 @@ func _process(delta: float) -> void:
 
 
 func show_alert(duration: float = 0.7) -> void:
+	net_event.emit(&"show_alert", [duration])
 	if _alert == null:
 		return
 	_alert.visible = true
@@ -110,6 +116,7 @@ func show_alert(duration: float = 0.7) -> void:
 
 ## Milestone 18b: hit-stop and flinches for humanoid and beast bodies.
 func freeze(seconds: float) -> void:
+	net_event.emit(&"freeze", [seconds])
 	if rig and rig.has_method("freeze"):
 		rig.freeze(seconds)
 	elif rig:
@@ -120,6 +127,7 @@ func freeze(seconds: float) -> void:
 
 
 func play_flinch(strength: float, side: float) -> void:
+	net_event.emit(&"play_flinch", [strength, side])
 	if rig and rig.has_method("play_flinch"):
 		rig.play_flinch(strength, side)
 	elif rig:

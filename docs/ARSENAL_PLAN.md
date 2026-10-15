@@ -53,7 +53,7 @@ Rage · axes, war hammers, greatswords · crowds and raw power.
 | 30 | Second Wind | Active | Spend 40 Rage to heal 25% over 5 s. |
 | 32 | Iron Hide | Passive | 8% less damage taken while you have more than 50 Rage. |
 | 34 | Avalanche | Active | Three slams in a row, each one a step forward. |
-| 36 | Tundra Howl | Active | The war cry of the tundra clans: +15% damage for 10 s (friends in M19). |
+| 36 | Tundra Howl | Active | The war cry of the tundra clans: +15% damage for 10 s, also for friends within 12 m (M19). |
 | 38 | Rampage | Active | Run forward for 4 s and knock down every enemy in your way. |
 | 40 | Execute | Active | Big damage to an enemy below 25% health. Gives all the Rage back if it kills. |
 | 42 | Bone Breaker | Passive | Heavy attacks crack armour: the enemy takes 5% more damage from you (stacks 3 times). |
@@ -101,14 +101,14 @@ Mana · swords, shields, spears, greatswords · defence, holy light, protecting 
 | 12 | Shield Throw | Active | Throw your shield. It bounces between 3 enemies and comes back. |
 | 14 | Heavy Armour Training | Passive | Heavy armour's extra dodge cost and noise are halved. |
 | 16 | Riposte Master | Passive | The time window for a perfect parry is 50% longer. |
-| 18 | Holy Light | Active | Heal 15% of your health. (Healing friends nearby comes with real co-op in M19.) |
+| 18 | Holy Light | Active | Heal 15% of your health; friends within 12 m heal too (M19). |
 | 20 | Spear Wall | Active | For 4 s, enemies that hit you from the front are stunned and take damage. |
 | 22 | Valor | Passive | +2% damage for each enemy near you (up to +10%). |
 | 24 | Consecrate | Active | Holy ground for 6 s. Hurts enemies; undead take double. |
 | 26 | Pommel Strike | Active | A fast hit with the handle that stuns for 1 s. |
 | 28 | Bulwark | Passive | Blocking uses 20% less stamina. |
 | 30 | Charge of the Order | Active | A long 15 m charge that knocks enemies down. |
-| 32 | Oath of Protection | Active | You take 15% less damage for 10 s (linking to a friend comes with co-op in M19). |
+| 32 | Oath of Protection | Active | You and friends within 12 m take 15% less damage for 10 s (M19). |
 | 34 | Smite | Active | Holy lightning strikes your target from the sky. |
 | 36 | Retribution | Passive | Hits you block deal 10% of their damage back to the attacker. |
 | 38 | Shield Combo | Active | Three fast hits with the shield. The last one knocks the enemy back. |
@@ -132,7 +132,7 @@ Mana · swords, shields, spears, greatswords · defence, holy light, protecting 
 | 74 | Heavenly Ward | Passive | Stuns and knockdowns on you last half as long. |
 | 76 | Righteous Fury | Active | For 10 s every hit you land heals you by 2% of your health. |
 | 78 | Royal Guard | Passive | +10 armour while you are in a kingdom village that is at least Friendly with you. |
-| 80 | Cleansing Light | Active | Removes all bad effects from you and burns undead near you with holy light. (Friends: with real co-op in M19.) |
+| 80 | Cleansing Light | Active | Removes all bad effects from you and friends within 12 m, and burns undead near you with holy light (M19). |
 | 82 | Iron Will | Passive | Bad effects on you (poison, burning, chill and others) last 20% shorter. |
 | 84 | Pillar of Light | Active | A beam of light from the sky follows your target for 4 s and burns everything near it. |
 | 86 | Knight's Resolve | Passive | Shield Wall and Hold the Line last 2 s longer. |
@@ -309,7 +309,7 @@ them as rewards. Wizards cast them stronger (their Mana Control talent). They go
 | 3 | Gust | 6 | Tower chests | A strong wind pushes enemies back and puts out fire. Gust into Miasma spreads the cloud. |
 | 4 | Root Snare | 8 | Hidden groves | Vines hold an enemy in place for 3 s. |
 | 5 | Stone Skin | 10 | Ruin chests | +armour for 10 s, but you move slower. |
-| 6 | Rejuvenate | 10 | Temples | Heal 30% over 10 s (healing friends comes with co-op in M19). |
+| 6 | Rejuvenate | 10 | Temples | Heal 30% over 10 s; friends within 12 m too (M19). |
 | 7 | Feather Fall | 12 | Tower chests, royal merchants | You fall slowly for 30 s. |
 | 8 | Frost Path | 14 | Tundra treasure | Freeze water in front of you so you can walk over lakes and rivers. |
 | 9 | Earth Spike | 16 | Ruin chests | A spike of stone shoots out of the ground under an enemy. |

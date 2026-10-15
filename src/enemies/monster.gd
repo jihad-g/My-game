@@ -321,7 +321,7 @@ func _player() -> Node3D:
 	for d in get_tree().get_nodes_in_group(&"decoys"):
 		if d is Node3D and (d as Node3D).global_position.distance_to(global_position) < 14.0:
 			return d
-	var p := get_tree().get_first_node_in_group(&"player") as Node3D
+	var p := nearest_player()  # Milestone 19: guests on a co-op host count too
 	if p == null or p.get("is_dead") or p.get("frozen"):
 		return null
 	if p.has_method("is_stealthed") and p.is_stealthed() and not is_taunted() \
@@ -1256,6 +1256,7 @@ func _fire(tgt: Node3D, spread: float) -> void:
 			h.tag = "Blast"
 	get_parent().add_child(p)
 	p.global_position = origin
+	NetCombat.relay_fx("bolt", origin, [origin, p.velocity, p.color, p.lifetime])
 
 
 func _summon() -> void:
@@ -1431,6 +1432,8 @@ func _on_staggered() -> void:
 
 
 func on_parried() -> void:
+	if _net_forward(&"on_parried", []):
+		return
 	_set_ai(AI.RECOVER, 1.5 if not is_boss() else 0.9)
 	Events.damage_dealt.emit(global_position + Vector3(0, 2.2 * mdata.model_scale, 0), 0.0, false, false, "Stunned")
 
@@ -1472,6 +1475,9 @@ func _elite_death() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if net_puppet:
+		super._physics_process(delta)  # a guest's copy only follows the host
+		return
 	if ai == AI.DORMANT and not is_dead:
 		_apply_gravity(delta)
 		move_and_slide()

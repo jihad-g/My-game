@@ -6,7 +6,7 @@
 script = ExtResource("1_ab")
 id = &"oath_of_protection"
 display_name = "Oath of Protection"
-description = "For 10 s you take 15% less damage. (Linking to a friend comes with co-op.)"
+description = "For 10 s you take 15% less damage - and so do friends within 12 m in co-op."
 effect = &"oath_of_protection"
 unlock_level = 32
 cost_type = 1

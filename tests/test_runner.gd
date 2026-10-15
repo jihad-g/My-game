@@ -130,6 +130,8 @@ func _ready() -> void:
 	_run(&"test_m18d_shape")
 	_run(&"test_m18d_impostors")
 	await _run_async(&"test_m18d_streaming")
+	_run(&"test_m19_rules")
+	await _run_async(&"test_m19_coop")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -4456,7 +4458,7 @@ func test_m11_session() -> void:
 	check(world.is_ready, "host world ready")
 	var port := 24600 + randi() % 800
 	check(Net.host(port) == OK and Net.is_server(), "hosting on port %d" % port)
-	check(world.spawner.max_active == 0, "monsters pause while hosting")
+	check(world.spawner.max_active > 0, "monsters keep running while hosting (Milestone 19)")
 	var out := "user://net_client_result.json"
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(out))
 	var args := ["--headless", "--path", ProjectSettings.globalize_path("res://"), "res://tests/net_client_runner.tscn", "--",
@@ -4532,7 +4534,7 @@ func test_m11_session() -> void:
 	check(res.get("welcome") == true and String(res.get("seed")) == "31337", "welcome with the host's seed")
 	check(res.get("world_loaded") == true, "guest generated the same world locally")
 	check(res.get("remote_inventory") == true and res.get("local_add_refused") == true, "guest inventory is server-owned")
-	check(res.get("monsters_paused") == true, "guest has no local monsters")
+	check(res.get("monsters_paused") == true, "guest has no local monsters (it sees the host's)")
 	check(res.get("host_seen") == true and res.get("spawn_near_host") == true, "guest sees the host next to it (%.1f m)" % float(res.get("host_distance", -1)))
 	check(float(res.get("host_moved", 0.0)) > 1.5, "host movement reaches the guest")
 	check(max_puppet_move > 1.0, "guest movement reaches the host (%.1f m)" % max_puppet_move)
@@ -5174,7 +5176,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.27"), "version 0.27 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.28"), "version 0.28 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -7463,11 +7465,13 @@ func test_m18d_streaming() -> void:
 	cm._process(0.0)
 	check(cm.outer_radius() == cm.lod_radii[cm.lod_radii.size() - 1], "back to normal when slow")
 	# Jump ahead: new chunks dither in instead of popping.
-	p.global_position += Vector3(160, 0, 0)
+	# 3 chunks: new chunks appear at the edge and the rings in between change detail.
+	p.global_position += Vector3(48, 0, 0)
 	p.global_position.y = world.get_ground_height(p.global_position) + 0.5
 	var saw_fade := false
 	var saw_ghost := false
-	for i in 120:
+	var tw := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - tw < 3000:
 		await get_tree().process_frame
 		if cm.fading_count() > 0:
 			saw_fade = true
@@ -7480,11 +7484,146 @@ func test_m18d_streaming() -> void:
 	while cm.pending_count() > 0 and frames < 1500:
 		await get_tree().process_frame
 		frames += 1
-	for i in 40:
-		await get_tree().process_frame
+	await get_tree().create_timer(Chunk.FADE_TIME + 0.3).timeout
+	await get_tree().process_frame
 	check(cm.fading_count() == 0, "every fade finishes")
 	var c0 := cm.get_chunk(TerrainGenerator.world_to_chunk(p.global_position))
 	check(c0 != null and c0.ground_appear() >= 1.0 and not c0._ghost_mi.visible, "settled chunks are fully drawn, no ghost left")
 	check((c0._terrain_mesh.surface_get_material(0) as ShaderMaterial).get_shader_parameter(&"fade_channel") == 0, "the ground reads the ground fade channel")
+	world.queue_free()
+	await get_tree().process_frame
+
+
+# --- Milestone 19: co-op combat -----------------------------------------------------------------
+
+func test_m19_rules() -> void:
+	# Network input is clamped and filtered.
+	var st := NetCombat.sanitize_statuses([["burn", 99.0, {"dps": 5000.0, "source": "x"}], ["nonsense", 3.0], "bad", [&"chilled", 2.0]])
+	check(st.size() == 2 and st[0][0] == &"burn" and float(st[0][1]) <= 30.0 and float(st[0][2]["dps"]) <= 1000.0,
+		"guest statuses are limited and filtered")
+	check(not (st[0][2] as Dictionary).has("source"), "only numbers travel in status params")
+	check(PlayerAbilities.SUPPORT_KINDS.has("heal") and PlayerAbilities.SUPPORT_BUFFS.has(&"tundra_howl"), "support effects are known")
+	check(NetCombat.MODEL_EVENTS.has(&"play_attack") and not NetCombat.ENEMY_CALLS.has(&"queue_free"), "only whitelisted calls are replayed")
+	var mm := MonsterModel.new()
+	check(mm.has_signal(&"net_event"), "monster models announce their animations")
+	mm.free()
+	for path in ["res://data/abilities/knight/holy_light.tres", "res://data/abilities/barbarian/tundra_howl.tres",
+			"res://data/abilities/knight/oath_of_protection.tres", "res://data/abilities/knight/cleansing_light.tres", "res://data/spells/rejuvenate.tres"]:
+		var a := load(path) as AbilityData
+		check(a and a.description.contains("12 m"), "%s helps friends" % path.get_file().get_basename())
+	# Remote players are targets on a host, and have a dead flag.
+	var rp := RemotePlayer.new()
+	check(rp.has_method("receive_hit") and rp.get("is_dead") == false, "guest puppets can be attacked")
+	rp.flags = NetProtocol.F_DEAD
+	check(rp.is_dead, "a fallen guest is left alone")
+	rp.free()
+
+
+func test_m19_coop() -> void:
+	SaveManager.start_transient(31337, &"knight")
+	Net.player_name = "Hosty"
+	var world: World = await _boot_world()
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.wild_enabled = false
+	_clear_enemies(world)
+	var port := 24600 + randi() % 800
+	check(Net.host(port) == OK, "hosting on port %d" % port)
+	check(world._offline_max_enemies == -1 and world.raids.process_mode != Node.PROCESS_MODE_DISABLED
+		and world.events.process_mode != Node.PROCESS_MODE_DISABLED, "monsters, raids and events run while hosting")
+	var out := "user://net_combat_result.json"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(out))
+	var args := ["--headless", "--path", ProjectSettings.globalize_path("res://"), "res://tests/net_client_runner.tscn", "--",
+		"--connect=127.0.0.1:%d" % port, "--out=%s" % out, "--combat"]
+	var pid := OS.create_process(OS.get_executable_path(), args)
+	var msgs := []
+	Net.chat_received.connect(func(_from: String, text: String) -> void:
+		if text.begins_with("TEST "):
+			msgs.append(text.substr(5)))
+	var t0 := Time.get_ticks_msec()
+	while not msgs.has("guest_ready") and Time.get_ticks_msec() - t0 < 90000:
+		await get_tree().process_frame
+	if not check(msgs.has("guest_ready"), "guest joined and loaded"):
+		OS.kill(pid)
+		Net.leave()
+		world.queue_free()
+		return
+	var ps = Net.server.peers.values()[0]
+	t0 = Time.get_ticks_msec()
+	while not (ps.ready and is_instance_valid(ps.puppet)) and Time.get_ticks_msec() - t0 < 20000:
+		await get_tree().process_frame
+	await get_tree().create_timer(0.5).timeout  # a few state packets for the puppet's position
+	if not check(ps.ready and is_instance_valid(ps.puppet), "the guest's figure is in the host's world"):
+		OS.kill(pid)
+		Net.leave()
+		world.queue_free()
+		return
+	# A boar between the host and the guest, a little closer to the guest.
+	var gpos: Vector3 = ps.puppet.global_position
+	var bpos := gpos + Vector3(2.5, 0, 0)
+	bpos.y = world.get_ground_height(bpos) + 0.3
+	var boar := world.spawner.spawn_enemy(world.debug_enemy_scene, bpos, "") as Enemy
+	boar.stagger(30.0)
+	p.global_position = gpos + Vector3(14, 0, 0)
+	p.global_position.y = world.get_ground_height(p.global_position) + 0.3
+	await get_tree().create_timer(0.5).timeout  # a few network ticks (10 per second)
+	check(boar.net_id > 0, "the host gives its monsters network ids")
+	check(boar.nearest_player() == ps.puppet, "the boar goes for the closer player: the guest")
+	Net.say("TEST boar %d" % boar.net_id)
+	var hp_full := boar.health.current
+	t0 = Time.get_ticks_msec()
+	while not msgs.has("guest_hit") and Time.get_ticks_msec() - t0 < 20000:
+		await get_tree().process_frame
+	await get_tree().create_timer(0.5).timeout
+	check(boar.health.current < hp_full, "the guest's hit hurt the host's boar (%.0f -> %.0f)" % [hp_full, boar.health.current])
+	check(Net.server.combat.stats.hits_ok >= 1, "the host accepted the guest's hit")
+	# The boar bites the guest.
+	var bite := DamageInfo.create(6.0, boar, &"physical")
+	ps.puppet.receive_hit(bite)
+	await get_tree().create_timer(1.0).timeout
+	check(Net.server.combat.stats.hurts >= 1, "the bite was sent to the guest")
+	# Finish it near the guest (far from the host): the guest gets the XP.
+	p.health.invulnerable = true
+	p.global_position = gpos + Vector3(60, 0, 0)
+	p.global_position.y = world.get_ground_height(p.global_position) + 0.3
+	var xp0: int = p.character.total_xp
+	boar.health.invulnerable = false
+	var kill := DamageInfo.create(99999.0, ps.puppet, &"true")
+	boar.receive_hit(kill)
+	check(boar.is_dead, "the boar died on the host")
+	Net.say("TEST killed 1")
+	await get_tree().create_timer(0.5).timeout
+	check(p.character.total_xp == xp0, "the host far away gets no XP for the guest's kill")
+	# Support both ways.
+	p.health.invulnerable = false
+	p.health.current = p.health.max_health * 0.5
+	var hp_before := p.health.current
+	t0 = Time.get_ticks_msec()
+	while not msgs.has("guest_healed") and Time.get_ticks_msec() - t0 < 20000:
+		await get_tree().process_frame
+	p.global_position = ps.puppet.global_position + Vector3(2, 0, 0)
+	await get_tree().create_timer(0.3).timeout
+	# The guest's heal was sent while the host was far; heal again from near.
+	Net.server.combat.deliver_support(ps.puppet.global_position, world.layer, "Guesty", "heal", [20.0], ps.id)
+	check(p.health.current > hp_before, "a friend's heal reaches the host (%.0f -> %.0f)" % [hp_before, p.health.current])
+	p.abilities.share_support("buff", ["tundra_howl", 15.0, 6.0])
+	# Collect the guest's report.
+	t0 = Time.get_ticks_msec()
+	while not FileAccess.file_exists(out) and Time.get_ticks_msec() - t0 < 60000:
+		await get_tree().process_frame
+	await get_tree().create_timer(0.3).timeout
+	var res = JSON.parse_string(FileAccess.get_file_as_string(out)) if FileAccess.file_exists(out) else {}
+	if not res is Dictionary:
+		res = {}
+	check(res.get("local_spawner_off") == true, "the guest runs no monsters of its own")
+	check(res.get("puppet_seen") == true and res.get("puppet_is_puppet") == true, "the guest sees a puppet of the host's boar")
+	check(float(res.get("puppet_distance", 99.0)) < 6.0, "the puppet stands where the boar is (%.1f m from the guest)" % float(res.get("puppet_distance", 99.0)))
+	check(res.get("hit_ratio_dropped") == true, "the guest sees the boar's health drop")
+	check(res.get("hurt_received") == true, "the boar's bite hurt the guest")
+	check(res.get("puppet_died") == true, "the guest saw the boar die")
+	check(res.get("xp_shared") == true, "the guest got XP for the kill (%s)" % str(res.get("xp_gain", 0)))
+	check(res.get("buff_received") == true, "the host's war cry reached the guest")
+	OS.kill(pid)
+	Net.leave()
 	world.queue_free()
 	await get_tree().process_frame

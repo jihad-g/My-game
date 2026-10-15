@@ -14,6 +14,8 @@ var _world: World
 var _test_msgs: Array = []
 ## --rejoin: only join, report what the server remembered, leave.
 var _rejoin := false
+## --combat (Milestone 19): fight the host's monster together instead.
+var _combat := false
 
 
 func _ready() -> void:
@@ -29,6 +31,8 @@ func _ready() -> void:
 			_out = a.substr(6)
 		elif a == "--rejoin":
 			_rejoin = true
+		elif a == "--combat":
+			_combat = true
 	Net.player_name = "Guesty"
 	Net.player_class = &"barbarian"
 	Net.welcomed.connect(_on_welcome)
@@ -62,7 +66,10 @@ func _on_welcome(data: Dictionary) -> void:
 	SaveManager.start_transient(GameState.parse_seed(data.seed), StringName(String(data.get("class", "knight"))))
 	_world = (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
 	add_child(_world)
-	_run.call_deferred()
+	if _combat:
+		_run_combat.call_deferred()
+	else:
+		_run.call_deferred()
 
 
 func _wait(cond: Callable, seconds: float) -> bool:
@@ -239,6 +246,54 @@ func _run() -> void:
 	await _frames(30)
 	r.requests_ok = Net.client.replies.ok
 	r.requests_failed = Net.client.replies.failed
+	_finish()
+
+
+## Milestone 19: the host spawns a boar next to us; we see it, hit it, it hits
+## us, the host finishes it, we share the XP; then heals and war cries go both ways.
+func _run_combat() -> void:
+	var w := _world
+	r.world_loaded = await _wait(func() -> bool: return w.is_ready, 60.0)
+	if not r.world_loaded:
+		_finish()
+		return
+	var p := w.player
+	p.health.invulnerable = false
+	r.local_spawner_off = w.spawner.max_active == 0
+	Net.say("TEST guest_ready")
+	await _wait(func() -> bool: return _msg("boar ") != "", 30.0)
+	var id := _msg("boar ").to_int()
+	r.boar_id = id
+	var nc := Net.client.combat
+	r.puppet_seen = await _wait(func() -> bool: return nc.puppets.has(id) and is_instance_valid(nc.puppets[id]), 10.0)
+	if not r.puppet_seen:
+		_finish()
+		return
+	var e: Enemy = nc.puppets[id]
+	r.puppet_is_puppet = e.net_puppet and e.visible
+	await _frames(20)
+	r.puppet_distance = e.global_position.distance_to(p.global_position)
+	# Our hit goes to the host.
+	var info := DamageInfo.create(12.0, p, &"physical")
+	info.direction = Vector3(1, 0, 0)
+	e.receive_hit(info)
+	r.hit_ratio_dropped = await _wait(func() -> bool: return e.health.get_ratio() < 0.999, 5.0)
+	Net.say("TEST guest_hit")
+	# The host makes the boar bite us.
+	var hp0 := p.health.current
+	r.hurt_received = await _wait(func() -> bool: return p.health.current < hp0, 10.0)
+	# The host finishes it: we see it die and get our share of XP.
+	var xp0: int = p.character.total_xp
+	await _wait(func() -> bool: return _msg("killed ") != "", 20.0)
+	r.puppet_died = await _wait(func() -> bool: return not is_instance_valid(e) or e.is_dead, 5.0)
+	r.xp_shared = await _wait(func() -> bool: return p.character.total_xp > xp0, 5.0)
+	r.xp_gain = p.character.total_xp - xp0
+	# Support: our heal reaches the host; the host's war cry reaches us.
+	p.abilities.share_support("heal", [20.0])
+	Net.say("TEST guest_healed")
+	r.buff_received = await _wait(func() -> bool: return p.abilities.has_buff(&"tundra_howl"), 10.0)
+	r.hits_sent = true
+	await _frames(20)
 	_finish()
 
 

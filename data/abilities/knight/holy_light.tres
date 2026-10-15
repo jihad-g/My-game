@@ -6,7 +6,7 @@
 script = ExtResource("1_ab")
 id = &"holy_light"
 display_name = "Holy Light"
-description = "Heal 15% of your health. Friends near you also heal."
+description = "Heal 15% of your health. In co-op, friends within 12 m heal too."
 effect = &"holy_light"
 unlock_level = 18
 cost_type = 1

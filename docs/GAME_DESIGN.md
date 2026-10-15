@@ -1154,7 +1154,11 @@ third spell slot with a tome.
 **Done: Milestone 18d — "Flow of Battle" part 4 (v0.27.0).** A smoother world: chunks and props fade in, detail
 changes cross-fade, far tree clumps and town/POI landmarks on the horizon, smoother land for new worlds
 (domain-warped hills, gentle lowlands, wide beaches, river valleys) and biome borders that blend over ~32 m.
-Old saves keep their land exactly. Milestone 18 is complete. Next: Milestone 19 "Together in Danger" (co-op combat).
+Old saves keep their land exactly. Milestone 18 is complete.
+
+**Done: Milestone 19 — "Together in Danger" (v0.28.0).** Real co-op combat: the host runs every monster, guests
+see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
+friends within 12 m. Next: item 3 of the owner's list, monster pathfinding.
 
 **Done (v0.24.0): jump and the Vibrant art style**, asked for by the owner during M18. Space jumps, the dodge is
 on Left Alt, and the Vibrant style gives richer colours, glow and soft shade.
@@ -1205,7 +1209,10 @@ movement and simple key poses. Making every step, swing and spell feel good mult
 abilities, every weapon and every enemy. It is also needed before co-op: M19 syncs the final animation and combat
 events once, instead of twice.
 
-### Milestone 19 — "Together in Danger" (real co-op)
+### Milestone 19 — "Together in Danger" (real co-op) ✅ Done (v0.28.0)
+**Done:** shared monsters, bosses, raids and events; guests' hits and monsters' hits both ways; shared kills;
+heals, war cries, oaths and cleanses that reach friends. **Still open:** dungeons together, reviving friends,
+guests' pets and summons, emotes, Shield Wall (5c).
 **Goal:** friends can fight, raid, and clear dungeons together.
 **Ideas:** 13a, 13b, 13c, 5c (Shield Wall), 6b (group heal), 2f (emotes).
 **Why fourth:** shared combat is a large networking job. It is better to do it after combat content has

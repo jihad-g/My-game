@@ -6,7 +6,7 @@
 script = ExtResource("1_ab")
 id = &"tundra_howl"
 display_name = "Tundra Howl"
-description = "The war cry of the tundra clans: +15% damage for 10 s."
+description = "The war cry of the tundra clans: +15% damage for 10 s, for you and friends within 12 m."
 effect = &"tundra_howl"
 unlock_level = 36
 cost_type = 2

@@ -35,6 +35,8 @@ var linger_mult := 0.35
 var on_blast: Callable
 ## Visual style of the blast: &"blast" (ring + burst), &"spikes", &"meteor".
 var style: StringName = &"blast"
+## Milestone 19: a copy drawn on a co-op guest's screen (the host deals the damage).
+var visual_only := false
 
 var _t := 0.0
 var _fired := false
@@ -67,6 +69,9 @@ var _setup := false
 ## the hazard (flags, linger, position) right after GroundHazard.spawn().
 func _first_frame() -> void:
 	_setup = true
+	# Milestone 19: guests see the warnings of the host's monsters too.
+	if hurts_player and not visual_only and Net.is_server():
+		NetCombat.relay_fx("hazard", global_position, [global_position, radius, delay, color, String(style), linger])
 	if damage_type == &"poison" and hurts_enemies and linger > 0.0:
 		add_to_group(&"poison_clouds")
 	if not hurts_player and hurts_enemies:
@@ -216,6 +221,8 @@ static func targets_in_radius(tree: SceneTree, c: Vector3, r: float, player: boo
 	var groups: Array[StringName] = []
 	if player:
 		groups.append(&"player")
+		if Net.is_server():
+			groups.append(&"remote_players")  # Milestone 19: guests in co-op
 	if enemies:
 		groups.append(&"enemies")
 		groups.append(&"ward_pylons")

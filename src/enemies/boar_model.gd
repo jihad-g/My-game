@@ -2,6 +2,9 @@ class_name BoarModel
 extends Node3D
 ## Blocky quadruped model for the Thornback Boar with procedural animation.
 
+## Milestone 19: animation events, sent to co-op guests by the host (NetCombat).
+signal net_event(method: StringName, args: Array)
+
 @export var body_color := Color(0.46, 0.3, 0.2)
 @export var belly_color := Color(0.62, 0.45, 0.32)
 @export var thorn_color := Color(0.42, 0.55, 0.3)
@@ -84,20 +87,24 @@ func set_locomotion(speed: float, delta: float) -> void:
 
 
 func set_telegraph(on: bool) -> void:
+	net_event.emit(&"set_telegraph", [on])
 	_telegraph = on
 	_update_overlay()
 
 
 func set_exposed(on: bool) -> void:
+	net_event.emit(&"set_exposed", [on])
 	_exposed = on
 
 
 func show_alert(duration: float = 0.7) -> void:
+	net_event.emit(&"show_alert", [duration])
 	_alert_label.visible = true
 	get_tree().create_timer(duration, false).timeout.connect(func() -> void: _alert_label.visible = false)
 
 
 func play_bite() -> void:
+	net_event.emit(&"play_bite", [])
 	var tw := create_tween()
 	tw.tween_property(_head, "rotation:x", 0.5, 0.12)
 	tw.tween_property(_head, "rotation:x", -0.35, 0.08)

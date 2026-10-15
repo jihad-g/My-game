@@ -43,11 +43,14 @@ var _time_t := 0.0
 var _props_cache: Dictionary = {}  # Vector3i(cx, cz, layer) -> Array of prop dicts
 var _props_order: Array = []
 var _rng := RandomNumberGenerator.new()
+## Shared monsters, guests' hits, support abilities (Milestone 19).
+var combat: NetCombat
 
 
 func _init(p_net: Node) -> void:
 	net = p_net
 	_rng.randomize()
+	combat = NetCombat.new(p_net)
 
 
 func world() -> World:
@@ -58,6 +61,7 @@ func shutdown() -> void:
 	for id in peers.keys():
 		_drop_peer(id)
 	peers.clear()
+	combat.shutdown()
 
 
 # --- Connections -----------------------------------------------------------------------
@@ -80,6 +84,7 @@ func on_peer_disconnected(id: int) -> void:
 
 
 func _drop_peer(id: int) -> void:
+	combat._known.erase(id)
 	var ps: PeerState = peers.get(id)
 	if ps and is_instance_valid(ps.puppet):
 		ps.puppet.queue_free()
@@ -264,6 +269,7 @@ func process(delta: float) -> void:
 	if _state_t <= 0.0:
 		_state_t = 1.0 / NetProtocol.STATE_RATE
 		_broadcast_states()
+	combat.server_process(delta)
 	_time_t -= delta
 	if _time_t <= 0.0:
 		_time_t = 2.0

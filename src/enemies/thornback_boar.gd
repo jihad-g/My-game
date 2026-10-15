@@ -63,7 +63,7 @@ func _set_ai(new_ai: AI, time: float = 0.0) -> void:
 
 
 func _player() -> Node3D:
-	var p := get_tree().get_first_node_in_group(&"player") as Node3D
+	var p := nearest_player()  # Milestone 19: guests on a co-op host count too
 	if p == null or p.get("is_dead") or p.get("frozen"):
 		return null
 	# Stealthed players are only noticed up close (unless we're taunted).
@@ -231,6 +231,8 @@ func _on_staggered() -> void:
 
 
 func on_parried() -> void:
+	if _net_forward(&"on_parried", []):
+		return
 	# A parried charge leaves the boar dazed and exposed.
 	_set_ai(AI.RECOVER, 1.6)
 	_charge_cd = charge_cooldown

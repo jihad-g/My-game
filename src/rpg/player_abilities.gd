@@ -39,6 +39,10 @@ const SLOTS := 6
 const SLOT_KEYS := ["Z", "X", "C", "T", "V", "U"]
 ## How close a bed or campfire must be to change the bar.
 const REST_RANGE := 6.0
+## Milestone 19: support effects that reach friends in co-op (NetCombat).
+const SUPPORT_KINDS := ["heal", "regen", "buff", "cleanse"]
+## Buffs a friend's war cry or oath may give you.
+const SUPPORT_BUFFS := [&"tundra_howl", &"oath"]
 
 ## Ability id per bar slot (&"" = empty).
 var bar: Array[StringName] = []
@@ -1737,6 +1741,7 @@ func _ability_shield_throw(a: AbilityData) -> bool:
 ## Holy Light: heal power% (friends nearby heal too in co-op - NOT IMPLEMENTED until real co-op, M19).
 func _ability_holy_light(a: AbilityData) -> bool:
 	player.health.heal(player.health.max_health * a.power / 100.0)
+	share_support("heal", [a.power])
 	VFX.burst(_parent(), player.global_position + Vector3(0, 1.2, 0), 2.0, Color(1, 0.95, 0.6, 0.7))
 	VFX.ring(_parent(), player.global_position, a.radius, Color(1, 0.95, 0.6, 0.5), 0.5)
 	return true
@@ -2236,6 +2241,7 @@ func _ability_avalanche(a: AbilityData) -> bool:
 func _ability_tundra_howl(a: AbilityData) -> bool:
 	buff_powers[&"tundra_howl"] = a.power
 	add_buff(&"tundra_howl", a.duration)
+	share_support("buff", ["tundra_howl", a.power, a.duration])
 	add_rage(20.0)
 	VFX.ring(_parent(), player.global_position, 6.0, Color(0.7, 0.85, 1.0, 0.6), 0.5)
 	return true
@@ -2353,6 +2359,7 @@ func _ability_crushing_blow(a: AbilityData) -> bool:
 func _ability_oath_of_protection(a: AbilityData) -> bool:
 	buff_powers[&"oath"] = a.power
 	add_buff(&"oath", a.duration)
+	share_support("buff", ["oath", a.power, a.duration])
 	VFX.ring(_parent(), player.global_position, 1.8, Color(0.6, 0.75, 1.0, 0.7), 0.5)
 	return true
 
@@ -2829,6 +2836,7 @@ func _spell_stone_skin(a: AbilityData) -> bool:
 
 func _spell_rejuvenate(a: AbilityData) -> bool:
 	player.afflict(&"regen", a.duration, {"hps": player.health.max_health * a.power / 100.0 / a.duration})
+	share_support("regen", [a.power, a.duration])
 	VFX.burst(_parent(), player.global_position + Vector3(0, 1, 0), 1.4, Color(0.4, 1, 0.5, 0.6))
 	return true
 
@@ -3378,6 +3386,51 @@ func _no_target() -> bool:
 	return false
 
 
+# --- Milestone 19: helping friends in co-op ---------------------------------------------------
+
+## Sends a support effect to the friends near you (NetCombat.SUPPORT_RANGE).
+func share_support(kind: String, args: Array) -> void:
+	if player == null or not Net.is_online():
+		return
+	if Net.is_server():
+		var w := World.instance
+		Net.server.combat.deliver_support(player.global_position, w.layer if w else 0, Net.player_name, kind, args, 1)
+	elif Net.is_client():
+		Net.c2s_support.rpc_id(1, kind, args)
+
+
+## A friend's heal, war cry, oath or cleanse reached you. Values come from the
+## network, so they are clamped.
+func receive_support(kind: String, a: Array, from_name: String) -> void:
+	if player == null or player.is_dead:
+		return
+	var text := ""
+	match kind:
+		"heal":
+			var pct := clampf(float(a[0]) if a.size() > 0 else 0.0, 0.0, 50.0)
+			player.health.heal(player.health.max_health * pct / 100.0)
+			text = "healed you"
+		"regen":
+			var pct := clampf(float(a[0]) if a.size() > 0 else 0.0, 0.0, 60.0)
+			var dur := clampf(float(a[1]) if a.size() > 1 else 10.0, 1.0, 30.0)
+			player.afflict(&"regen", dur, {"hps": player.health.max_health * pct / 100.0 / dur})
+			text = "is healing you"
+		"buff":
+			if a.size() < 3 or not StringName(String(a[0])) in SUPPORT_BUFFS:
+				return
+			var id := StringName(String(a[0]))
+			buff_powers[id] = clampf(float(a[1]), 0.5, 1.5) if id == &"oath" else clampf(float(a[1]), 0.0, 50.0)
+			add_buff(id, clampf(float(a[2]), 1.0, 30.0))
+			text = "Oath of Protection" if id == &"oath" else "war cry"
+		"cleanse":
+			player.status.cleanse()
+			text = "cleansed you"
+		_:
+			return
+	VFX.ring(_parent(), player.global_position, 1.4, Color(0.6, 1.0, 0.7, 0.7), 0.4)
+	_label(player.global_position, "%s: %s" % [from_name, text], true)
+
+
 func _label(pos: Vector3, text: String, friendly: bool = false) -> void:
 	Events.damage_dealt.emit(pos + Vector3(0, 2.2, 0), 0.0, false, friendly, text)
 
@@ -3585,6 +3638,7 @@ func _ability_righteous_fury(a: AbilityData) -> bool:
 ## Cleansing Light: cleanse yourself; undead nearby take holy damage.
 func _ability_cleansing_light(a: AbilityData) -> bool:
 	var n := player.status.cleanse()
+	share_support("cleanse", [])
 	VFX.ring(_parent(), player.global_position, a.radius, Color(1, 0.95, 0.6, 0.8), 0.5)
 	VFX.burst(_parent(), player.global_position + Vector3(0, 1.2, 0), 2.0, Color(1, 0.97, 0.75, 0.7))
 	for t in _enemies_near(player.global_position, a.radius):

@@ -49,6 +49,16 @@ var _far := false
 var _think_acc := 0.0
 var _think_skip := 0
 var _puffed := false
+# Milestone 19 co-op (NetCombat).
+## Network id on a co-op host (0 = not sent yet / offline).
+var net_id := 0
+## True on a guest: a copy of a monster the host simulates. It only follows
+## the host's state; hits and calls on it are sent to the host.
+var net_puppet := false
+var _net_pos := Vector3.ZERO
+var _net_yaw := 0.0
+var _net_speed := 0.0
+var _boss_shown := false
 
 
 func _ready() -> void:
@@ -104,6 +114,7 @@ func on_pool_release() -> void:
 	if is_instance_valid(target) and target.get("lock_target") == self:
 		target.set_lock_target(null)
 	target = null
+	net_id = 0
 	# Milestone 17b/c marks from player abilities must not follow a pooled enemy into its next life.
 	for m in [&"blind_until", &"sunder", &"sunder_until", &"tamed_until", &"spirit", &"training_dummy"]:
 		if has_meta(m):
@@ -131,6 +142,9 @@ func is_tamed() -> bool:
 
 
 func tame(seconds: float) -> void:
+	if net_puppet:
+		Events.toast.emit("Only the host can tame beasts in co-op for now", Color(1, 0.75, 0.5))
+		return
 	set_meta(&"tamed_until", Time.get_ticks_msec() + int(seconds * 1000.0))
 	remove_from_group(&"enemies")
 	add_to_group(&"pets")
@@ -190,6 +204,9 @@ func _on_staggered() -> void:
 # --- Core loop --------------------------------------------------------------------------
 
 func _physics_process(delta: float) -> void:
+	if net_puppet:
+		_puppet_process(delta)
+		return
 	if is_dead:
 		_death_time += delta
 		velocity.x = move_toward(velocity.x, 0.0, 20.0 * delta)
@@ -294,6 +311,8 @@ func face_toward(dir: Vector3) -> void:
 func receive_hit(info: DamageInfo) -> float:
 	if is_dead:
 		return 0.0
+	if net_puppet:
+		return _puppet_hit(info)
 	if exposed and data:
 		info.amount *= data.exposed_damage_multiplier
 		if info.tag == "":
@@ -363,6 +382,8 @@ func _is_boss_enemy() -> bool:
 func knock_down(seconds: float) -> bool:
 	if is_dead or seconds <= 0.0 or _down_left > 0.0 or model == null:
 		return false
+	if _net_forward(&"knock_down", [seconds]):
+		return true
 	if _is_boss_enemy() and Time.get_ticks_msec() - _poise_break_ms > 400:
 		return false
 	if status.immune.has(&"stunned"):
@@ -377,6 +398,7 @@ func knock_down(seconds: float) -> bool:
 	_down_tween.tween_property(model, "rotation:x", 0.0, GET_UP_TIME).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	VFX.dust(get_parent(), global_position, Color(0.7, 0.65, 0.55, 0.8), 6)
 	Events.damage_dealt.emit(global_position + Vector3(0, 1.8, 0), 0.0, false, false, "Knocked down")
+	NetCombat.relay(self, &"knock_down", [seconds])
 	return true
 
 
@@ -398,6 +420,8 @@ func _far_from_players() -> bool:
 func apply_status(id: StringName, duration: float, params: Dictionary) -> void:
 	if is_dead:
 		return
+	if _net_forward(&"apply_status", [String(id), duration, params]):
+		return
 	# The player's passives (Milestone 17b): Ignite (longer burns), Venom Mastery (more poison stacks).
 	var src = params.get("source")
 	if is_instance_valid(src) and src is Player:
@@ -414,6 +438,8 @@ func apply_status(id: StringName, duration: float, params: Dictionary) -> void:
 func taunt(source: Node3D, duration: float) -> void:
 	if is_dead:
 		return
+	if _net_forward(&"taunt", [duration]):
+		return
 	target = source
 	_taunt_left = duration
 	_on_taunted(source)
@@ -425,6 +451,8 @@ func is_taunted() -> bool:
 
 ## Stealth: forget about `source` if it is the current target.
 func lose_target(source: Node3D) -> void:
+	if _net_forward(&"lose_target", []):
+		return
 	if target == source and not is_taunted():
 		target = null
 		_on_lost_target()
@@ -454,6 +482,7 @@ var _ice_shell: MeshInstance3D
 
 
 func _set_ice_shell(on: bool) -> void:
+	NetCombat.relay(self, &"ice_shell", [on])
 	if on and (_ice_shell == null or not is_instance_valid(_ice_shell)):
 		_ice_shell = MeshInstance3D.new()
 		var box := BoxMesh.new()
@@ -490,6 +519,8 @@ func _on_lost_target() -> void:
 
 
 func stagger(duration: float) -> void:
+	if _net_forward(&"stagger", [duration]):
+		return
 	_stagger_left = maxf(_stagger_left, duration)
 	if data:
 		poise = data.max_poise
@@ -512,7 +543,14 @@ func _on_died() -> void:
 		model.play_death()
 	_drop_loot()
 	GameState.mark_enemy_killed(spawn_key)
+	# Milestone 19: on a co-op host, a kill far from the host's hero (a guest's
+	# fight) gives the host no XP or quest credit - the guests nearby get it.
+	var far := Net.is_server() and not _near_local_player()
+	if far:
+		set_meta(&"killed_by_npc", true)
 	Events.enemy_killed.emit(self, data.id if data else &"", global_position)
+	if far:
+		remove_meta(&"killed_by_npc")
 	enemy_died.emit(self)
 
 
@@ -532,5 +570,141 @@ func _on_target_changed(t: Node) -> void:
 
 ## Called by the player when this enemy's attack is parried.
 func on_parried() -> void:
+	if _net_forward(&"on_parried", []):
+		return
 	stagger(1.4)
 	Events.damage_dealt.emit(global_position + Vector3(0, 1.8, 0), 0.0, false, false, "Stunned")
+
+
+# --- Milestone 19: co-op ----------------------------------------------------------------------
+
+## The player this enemy should go for: the nearest one that can be attacked -
+## the local hero and, on a co-op host, the guests (RemotePlayer puppets).
+## The current target is kept unless someone is clearly closer.
+func nearest_player() -> Node3D:
+	var best: Node3D = null
+	var bd := INF
+	var groups: Array[StringName] = [&"player"]
+	if Net.is_server():
+		groups.append(&"remote_players")
+	for g in groups:
+		for n in get_tree().get_nodes_in_group(g):
+			var p := n as Node3D
+			if p == null or p.get("is_dead") == true or p.get("frozen") == true or not p.is_visible_in_tree():
+				continue
+			var d := p.global_position.distance_to(global_position)
+			if p == target:
+				d = d / 1.4 - 2.0  # stick to the current target
+			if d < bd:
+				bd = d
+				best = p
+	return best
+
+
+## True when the local hero is close enough to share this kill.
+func _near_local_player() -> bool:
+	var w := World.instance
+	return w != null and w.player != null and not Net.dedicated \
+		and w.player.global_position.distance_to(global_position) <= NetCombat.KILL_SHARE
+
+
+## On a guest's puppet: sends `method` to the host instead of running it here.
+func _net_forward(method: StringName, args: Array) -> bool:
+	if not net_puppet:
+		return false
+	var nc := NetCombat.guest()
+	if nc and net_id > 0 and not is_dead:
+		nc.send_call(self, method, args)
+	return true
+
+
+## Our hit on a puppet: instant feedback here, the real hit happens on the host.
+func _puppet_hit(info: DamageInfo) -> float:
+	var nc := NetCombat.guest()
+	if nc == null or net_id <= 0:
+		return 0.0
+	nc.send_hit(self, info)
+	if model and model.has_method("flash"):
+		model.flash()
+	var pos := info.hit_position if info.hit_position != Vector3.ZERO else global_position + Vector3(0, 1.4, 0)
+	Events.damage_dealt.emit(pos, info.amount, info.is_crit, false, info.tag)
+	health_bar.set_ratio(health.get_ratio())
+	return info.amount
+
+
+## New state from the host. `snap` places the puppet at once (first sight).
+func net_target(pos: Vector3, yaw: float, hp: float, flags: int, snap: bool = false) -> void:
+	_net_pos = pos
+	_net_yaw = yaw
+	if snap:
+		global_position = pos
+		if model:
+			model.rotation.y = yaw
+	health._set_current(clampf(hp, 0.0, 1.0) * health.max_health)
+	health_bar.set_ratio(clampf(hp, 0.0, 1.0))
+	exposed = flags & NetCombat.F_EXPOSED != 0
+	if flags & NetCombat.F_DEAD != 0 and not is_dead:
+		_puppet_die()
+	# Boss bar for guests near a boss.
+	if not _boss_shown and not is_dead and _is_boss_enemy() and World.instance and World.instance.player \
+			and World.instance.player.global_position.distance_to(global_position) < 30.0:
+		_boss_shown = true
+		Events.boss_started.emit(self)
+
+
+## The host's copy died: play the death here and share the kill if we are close.
+func _puppet_die() -> void:
+	is_dead = true
+	_death_time = 0.0
+	health_bar.hide_now()
+	if model and model.has_method("play_death"):
+		model.play_death()
+	if _boss_shown:
+		Events.boss_ended.emit(self)
+	var w := World.instance
+	if w and w.player and not w.player.is_dead and w.player.global_position.distance_to(global_position) <= NetCombat.KILL_SHARE:
+		Events.enemy_killed.emit(self, data.id if data else &"", global_position)
+
+
+## The host removed the monster (out of range or gone).
+func net_remove() -> void:
+	if _boss_shown and not is_dead:
+		Events.boss_ended.emit(self)
+	queue_free()
+
+
+## Visual knock-down replayed from the host.
+func net_knock_down(seconds: float) -> void:
+	if model == null or is_dead:
+		return
+	if _down_tween:
+		_down_tween.kill()
+	_down_tween = create_tween()
+	_down_tween.tween_property(model, "rotation:x", -1.35, 0.22).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	_down_tween.tween_interval(seconds)
+	_down_tween.tween_property(model, "rotation:x", 0.0, GET_UP_TIME).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	VFX.dust(get_parent(), global_position, Color(0.7, 0.65, 0.55, 0.8), 6)
+
+
+## Puppets glide to the host's position and play their walk from the speed.
+func _puppet_process(delta: float) -> void:
+	if is_dead:
+		_death_time += delta
+		if _death_time > 2.3 and not _puffed:
+			_puffed = true
+			VFX.dust(get_parent(), global_position + Vector3(0, 0.4, 0), Color(0.75, 0.72, 0.68, 0.85), 10)
+			VFX.burst(get_parent(), global_position + Vector3(0, 0.6, 0), 0.9, Color(0.85, 0.82, 0.78, 0.5))
+		if _death_time > 2.5:
+			visible = false
+		return
+	var prev := global_position
+	if prev.distance_to(_net_pos) > 8.0:
+		global_position = _net_pos
+	else:
+		global_position = prev.lerp(_net_pos, 1.0 - exp(-12.0 * delta))
+	var spd := Vector2(global_position.x - prev.x, global_position.z - prev.z).length() / maxf(delta, 0.001)
+	_net_speed = lerpf(_net_speed, spd, 1.0 - exp(-10.0 * delta))
+	if model:
+		model.rotation.y = lerp_angle(model.rotation.y, _net_yaw, 1.0 - exp(-15.0 * delta))
+		if model.has_method("set_locomotion"):
+			model.set_locomotion(_net_speed, delta)

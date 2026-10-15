@@ -2,6 +2,31 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.28.0] — Milestone 19: Together in Danger - real co-op combat
+
+### Added
+- **Monsters in co-op**: monsters, bosses, raids and rare events now run while you play together (before, they
+  were switched off online). The host's game runs every monster; guests see copies that move, attack, warn,
+  flinch, fall down and die exactly like the host's (`src/net/net_combat.gd`).
+- **Guests fight for real**: a guest's hits, spells and arrows hurt the host's monsters (the host checks distance,
+  size and rate), and monsters hit guests - blocking, parrying and dodging work as in single player. Monster
+  bolts and red ground warnings show on the guests' screens too.
+- **Monsters pick the nearest player** - the host or any guest - and turn on whoever hits them.
+- **Land streams around every guest** on the host, so monsters live and fight wherever the guests are.
+- **Shared kills**: everyone within 45 m of a kill gets its XP and quest credit; a guest's kill far from the host
+  gives the host nothing. Loot drops for everyone to pick up.
+- **Abilities that help friends** (within 12 m): Holy Light and Rejuvenate heal friends, Tundra Howl gives them
+  +15% damage, Oath of Protection gives them -15% damage taken, Cleansing Light removes their bad effects.
+- **Friends' health** in the online list (top of the screen), or "(down)" when they have fallen.
+- Bosses show their health bar for guests near them.
+- Tests `test_m19_rules` and `test_m19_coop` (a real host and guest fight a boar together); the guest test
+  script has a new `--combat` mode.
+
+### Changed
+- The host can't enter a dungeon while guests are online (they would be left outside).
+- Guests can't tame beasts yet (the beast would follow the host).
+- Test `test_m11_session`: monsters no longer pause while hosting.
+
 ## [0.27.0] — Milestone 18d: Flow of Battle, part 4 - a smoother world
 
 ### Added

@@ -6,7 +6,7 @@
 script = ExtResource("1_ab")
 id = &"rejuvenate"
 display_name = "Rejuvenate"
-description = "Heal 30% of your health over 10 s. (Healing friends comes with co-op.)"
+description = "Heal 30% of your health over 10 s. In co-op, friends within 12 m are healed too."
 effect = &"rejuvenate"
 unlock_level = 1
 cost_type = 1

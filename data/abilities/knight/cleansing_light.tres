@@ -6,7 +6,7 @@
 script = ExtResource("1_ab")
 id = &"cleansing_light"
 display_name = "Cleansing Light"
-description = "Removes all bad effects from you and burns undead near you with holy light. (Friends: with real co-op in M19.)"
+description = "Removes all bad effects from you and friends within 12 m, and burns undead near you with holy light."
 effect = &"cleansing_light"
 unlock_level = 80
 cost_type = 1

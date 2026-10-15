@@ -88,6 +88,9 @@ var _fade_img := Image.create(FADE_MAP_SIZE, FADE_MAP_SIZE, false, Image.FORMAT_
 var _fade_tex: ImageTexture
 var _fading: Array[Chunk] = []
 var _fade_dirty := true
+## Milestone 19: on a co-op host, the full-detail ring is also streamed around
+## every guest (same layer), so monsters can live and fight where they are.
+var _extra_centers: Array[Vector2i] = []
 var _prewarm_at := Vector2i(0x7FFFFFFF, 0)
 var _stats := {"generated": 0, "discarded": 0, "cache_hits": 0, "prefetched": 0, "evicted": 0,
 	"apply_ms": 0.0, "applied": 0, "apply_ms_max": 0.0, "prewarms": 0}
@@ -128,6 +131,10 @@ func _process(delta: float) -> void:
 	if extra != _extra_ring:
 		_extra_ring = extra
 		_center = Vector2i(0x7FFFFFFF, 0)  # rebuild the rings with the new radius
+	var extras := _guest_centers()
+	if extras != _extra_centers:
+		_extra_centers = extras
+		_center = Vector2i(0x7FFFFFFF, 0)
 	var c := TerrainGenerator.world_to_chunk(focus.global_position)
 	if c != _center:
 		_center = c
@@ -301,6 +308,14 @@ func _update_desired() -> void:
 			var lod := lod_for_distance(Vector2(dx, dz).length())
 			if lod >= 0:
 				_desired[_center + Vector2i(dx, dz)] = lod
+
+	# Co-op guests on a host: full detail around each of them too.
+	var r0: int = lod_radii[0]
+	for ec in _extra_centers:
+		for dz in range(-r0, r0 + 1):
+			for dx in range(-r0, r0 + 1):
+				if Vector2(dx, dz).length() <= r0 + 0.5:
+					_desired[ec + Vector2i(dx, dz)] = 0
 
 	# Unload chunks well outside the view.
 	var unload_dist := r_max + unload_margin
@@ -509,6 +524,21 @@ func _update_fade_map() -> void:
 	var cs := TerrainGenerator.CHUNK_SIZE
 	RenderingServer.global_shader_parameter_set(&"chunk_fade_rect",
 		Vector4(origin.x * cs, origin.y * cs, FADE_MAP_SIZE * cs, FADE_MAP_SIZE))
+
+
+## Chunks the co-op guests stand in (host only, same layer), sorted.
+func _guest_centers() -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	if not Net.is_server():
+		return out
+	for n in get_tree().get_nodes_in_group(&"remote_players"):
+		var rp := n as RemotePlayer
+		if rp and rp.layer == layer:
+			var c := TerrainGenerator.world_to_chunk(rp.global_position)
+			if Vector2(c - TerrainGenerator.world_to_chunk(focus.global_position)).length() > lod_radii[0] and not out.has(c):
+				out.append(c)
+	out.sort()
+	return out
 
 
 ## Chunks still fading in (tests, debug overlay).

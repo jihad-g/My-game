@@ -5,7 +5,11 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.27.0 — Milestone 18d: a smoother world**. Terrain and trees fade in instead of popping, far
+> Status: **v0.28.0 — Milestone 19: Together in Danger**. Real co-op combat: monsters, bosses, raids and events
+> run while friends play together, everyone fights the same monsters, kills share XP, and healing, war cries and
+> cleanses reach friends nearby.
+>
+> Before that, **v0.27.0 — Milestone 18d: a smoother world**. Terrain and trees fade in instead of popping, far
 > forests, towns and towers show on the horizon, new worlds have softer hills, wide beaches, river valleys and
 > biome borders that blend over about 32 m, and streaming loads what the camera sees first. Old saves keep
 > their land exactly.
