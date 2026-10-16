@@ -717,7 +717,7 @@ func play_spin(duration: float) -> void:
 
 
 ## Art pass pilot: looks drawn pixel by pixel (src/art/) replace the plain boxes.
-const PIXEL_BODIES := [&"mon_skeleton"]
+const PIXEL_BODIES := [&"mon_skeleton", &"mon_tusker", &"mon_tusker_brute", &"mon_tusker_chief"]
 
 
 func _use_pixel_body() -> void:
@@ -727,6 +727,8 @@ func _use_pixel_body() -> void:
 	match _class_id:
 		&"mon_skeleton":
 			PixelSkeleton.build(self)
+		&"mon_tusker", &"mon_tusker_brute", &"mon_tusker_chief":
+			PixelTusker.build(self, StringName(String(_class_id).trim_prefix("mon_")))
 
 
 ## Adds a ready-made mesh (pixel-art parts) as a body part on `parent`.

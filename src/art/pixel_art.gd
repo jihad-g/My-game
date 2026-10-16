@@ -34,13 +34,20 @@ const BONE := [Color("5e4c45"), Color("9c8466"), Color("cbb98d"), Color("e9ddb2"
 const CRIMSON := [Color("33102a"), Color("5a1638"), Color("80204a"), Color("a42e5a"), Color("c64a72")]
 const LEATHER := [Color("231215"), Color("44221c"), Color("663324"), Color("874832"), Color("a66242")]
 const IRON := [Color("262a38"), Color("454d61"), Color("6c788d"), Color("9fabbd"), Color("d5dde8")]
+const SKIN_BOAR := [Color("4e2220"), Color("84423a"), Color("b46b56"), Color("d48f74"), Color("eeb596")]
+const GOLD := [Color("4f2a12"), Color("94591e"), Color("cf9534"), Color("efc560"), Color("fff0b0")]
+const RUST := [Color("2b0d0e"), Color("531915"), Color("7b281d"), Color("a03a26"), Color("c05834")]
+const SLATE := [Color("12141e"), Color("1f2433"), Color("2f364a"), Color("434c66"), Color("5a6584")]
+const HAIR_BLACK := [Color("0c0b10"), Color("17151c"), Color("24212b"), Color("34303d"), Color("48434f")]
+const WOOD := [Color("2e1810"), Color("55301c"), Color("7c4a2a"), Color("9d653a"), Color("bd834e")]
 const GLOW := [Color("8a2a10"), Color("e0601a"), Color("ff9a2a"), Color("ffc85a"), Color("fff0b0")]
 
-var _parts: Array = []  # [pivot, pos, size, faces(6 Images), glows(6 Images or null)]
+var _parts: Array = []  # [pivot, pos, size, faces(6 Images), glows(6 Images or null), rot]
 
 
-func add(pivot: StringName, pos: Vector3, size: Vector3i, skin: Array) -> void:
-	_parts.append([pivot, pos, size, skin[0], skin[1]])
+## `rot` (degrees) turns the box around its own centre (baked into the mesh).
+func add(pivot: StringName, pos: Vector3, size: Vector3i, skin: Array, rot := Vector3.ZERO) -> void:
+	_parts.append([pivot, pos, size, skin[0], skin[1], rot])
 
 
 static func face_size(size: Vector3i, f: int) -> Vector2i:
@@ -57,7 +64,7 @@ static func face_size(size: Vector3i, f: int) -> Vector2i:
 ## `stamps` {face: PackedStringArray rows} drawn with `key` {char: Color or
 ## [Color, true] for glow}. "." keeps the fill, "_" cuts a hole.
 ## Returns [faces, glows].
-static func paint(size: Vector3i, ramp: Array, seed: int, stamps := {}, key := {}, speckle := 0.07) -> Array:
+static func paint(size: Vector3i, ramp: Array, seed: int, stamps := {}, key := {}, speckle := 0.035) -> Array:
 	var faces: Array = []
 	var glows: Array = []
 	for f in 6:
@@ -182,6 +189,8 @@ func build() -> Dictionary:
 	for pi in _parts.size():
 		var size: Vector3i = _parts[pi][2]
 		var half := Vector3(size) * PX * 0.5
+		var rot: Vector3 = _parts[pi][5]
+		var basis := Basis.from_euler(Vector3(deg_to_rad(rot.x), deg_to_rad(rot.y), deg_to_rad(rot.z)))
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
 		for f in 6:
@@ -191,9 +200,9 @@ func build() -> Dictionary:
 			var uvs := [uv0, Vector2(uv1.x, uv0.y), uv1, Vector2(uv0.x, uv1.y)]
 			var c: Array = CORNERS[f]
 			for k in [0, 1, 2, 0, 2, 3]:
-				st.set_normal(NORMALS[f])
+				st.set_normal(basis * NORMALS[f])
 				st.set_uv(uvs[k])
-				st.add_vertex(c[k] * half)
+				st.add_vertex(basis * (c[k] * half))
 		st.set_material(mat)
 		out.append([_parts[pi][0], _parts[pi][1], st.commit()])
 	return {"parts": out, "material": mat, "atlas": atlas}

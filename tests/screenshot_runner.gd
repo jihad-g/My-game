@@ -22,6 +22,10 @@ func _ready() -> void:
 		await _pixel_pilot_showcase()
 		get_tree().quit()
 		return
+	if "--only=tuskers" in OS.get_cmdline_user_args():
+		await _tusker_showcase()
+		get_tree().quit()
+		return
 	if "--only=pixelstyle" in OS.get_cmdline_user_args():
 		await _pixel_style_showcase()
 		get_tree().quit()
@@ -1909,3 +1913,68 @@ func _pixel_pilot_showcase() -> void:
 	world.camera_rig._target_distance = 12.0
 	await _wait(60)
 	await _shot("pixel_pilot_game_camera")
+
+
+## Art pass: the Tusker warband (src/art/pixel_tusker.gd) as real monsters.
+## Not in the game's spawn lists yet: the showcase makes their MonsterData.
+func _tusker_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 10.5
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	var c := _dry_center(world, p.global_position, 26.0)
+	await _teleport(world, c + Vector3(0, 0, 14))
+	_clear_monsters(world)
+	var foes: Array[Monster] = []
+	var line := [[&"tusker", 1.0, -2.1, 0.3], [&"tusker_brute", 1.3, -0.9, -0.2], [&"tusker_chief", 1.15, 0.6, -0.5],
+		[&"tusker_brute", 1.1, 1.9, -0.1], [&"tusker", 0.8, 2.9, 0.3]]
+	for spec in line:
+		var d := (load("res://data/enemies/skeleton_minion.tres") as MonsterData).duplicate() as MonsterData
+		d.look = spec[0]
+		d.model_scale = spec[1]
+		var pos := c + Vector3(spec[2], 0, spec[3])
+		pos.y = world.get_ground_height(pos) + 0.3
+		var m := world.spawner.spawn_enemy(load("res://scenes/enemies/monster.tscn"), pos, "", d) as Monster
+		if m:
+			m.make_dormant(-1.0)
+			m.set_meta(&"training_dummy", true)
+			m.health.invulnerable = true
+			m.rotation.y = 0.0
+			foes.append(m)
+	await _wait(40)
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var cam := Camera3D.new()
+	cam.fov = 35.0
+	world.add_child(cam)
+	cam.current = true
+	var gy := world.get_ground_height(c)
+	for sh in [["tuskers_warband", 0.0, 0.3, 7.6, 6.0, 1.1], ["tuskers_side", 30.0, 0.3, 6.6, 12.0, 1.1], ["tuskers_chief_close", 8.0, 0.6, 3.4, 8.0, 1.5]]:
+		var target := Vector3(c.x + float(sh[2]), gy + float(sh[5]), c.z)
+		var yaw := deg_to_rad(float(sh[1]))
+		var pitch := deg_to_rad(float(sh[4]))
+		cam.global_position = target + Vector3(sin(yaw) * cos(pitch), sin(pitch), cos(yaw) * cos(pitch)) * float(sh[3])
+		cam.look_at(target)
+		await _wait(8)
+		await _shot(sh[0])
+	for m in foes:
+		for ch in m.get_children():
+			if ch is MonsterModel:
+				ch.play_attack(&"slash", 0.35, 0.15, 0.3)
+	await _sec(0.4)
+	await _shot("tuskers_attack")
+	await _teleport(world, c + Vector3(0, 0, 3.5))
+	world.camera_rig.set_process(true)
+	world.camera_rig.camera.current = true
+	world.camera_rig._target_distance = 12.0
+	await _wait(60)
+	await _shot("tuskers_game_camera")
