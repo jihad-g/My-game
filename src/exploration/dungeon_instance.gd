@@ -17,6 +17,8 @@ var monsters: Array[Monster] = []
 var boss: Monster
 var cleared := false
 var boss_started := false
+## Milestone 22: every monster on this floor is beaten (a Delver's Cache appears).
+var floor_cleared := false
 var _gate: StaticBody3D
 var _rng := RandomNumberGenerator.new()
 var _check := 0.0
@@ -121,6 +123,8 @@ func _build_rooms() -> void:
 					for z in range(rr.position.y + 1, rr.end.y - 1, 2):
 						if (x + z) % 4 == 0:
 							_trap(Vector3(x + 0.5, 0, z + 0.5))
+				# Milestone 22: risk pays - a chest waits in the middle of the spikes.
+				_chest(&"dungeon_chest", center, false)
 				for k in 1 + poi.rank / 3:
 					_monster(mons[1], plan.room_point(i, _rng), false)
 			DungeonPlan.Room.TREASURE:
@@ -218,12 +222,16 @@ func _spawn_boss(room: int) -> void:
 
 
 func _process(delta: float) -> void:
-	if World.instance == null or boss == null or boss_started or cleared:
+	if World.instance == null:
 		return
 	_check -= delta
 	if _check > 0.0:
 		return
 	_check = 0.25
+	if not floor_cleared and not plan.is_final and not monsters.is_empty() and alive_count() == 0:
+		_on_floor_cleared()
+	if boss == null or boss_started or cleared:
+		return
 	# Entering the arena seals the way back until the boss falls.
 	var local := to_local(World.instance.player.global_position)
 	var idx := plan.room_at(local)
@@ -272,6 +280,16 @@ func _close_gate(room: int) -> void:
 	Events.camera_shake.emit(0.3)
 
 
+## Milestone 22: a floor with every monster beaten leaves a Delver's Cache by the stairs.
+func _on_floor_cleared() -> void:
+	floor_cleared = true
+	var center := plan.room_center(plan.end_room)
+	_chest(&"dungeon_cache", center + Vector3(2.0, 0, 1.5), true)
+	if World.instance:
+		World.instance.player.character.grant_xp(30 + poi.rank * 25, Progression.Source.DUNGEON)
+	Events.toast.emit("Floor cleared! A Delver's Cache waits by the stairs.", UITheme.GOLD)
+
+
 func _on_boss_died(_e: Enemy) -> void:
 	cleared = true
 	if _gate and is_instance_valid(_gate):
@@ -280,10 +298,27 @@ func _on_boss_died(_e: Enemy) -> void:
 	var center := plan.room_center(room)
 	_chest(&"dungeon_boss", center + Vector3(0, 0, -3.5), true)
 	_door(DungeonDoor.Kind.EXIT, center + Vector3(0, 0, 2.5))
-	if World.instance:
-		World.instance.exploration.set_state("dungeon:" + poi.id)
-		World.instance.player.character.grant_xp(100 + poi.rank * 80, Progression.Source.DUNGEON)
-	Events.toast.emit("%s cleared! A portal home has opened." % poi.title(), UITheme.GOLD)
+	# Everything on the last floor beaten too: a Delver's Cache next to the boss chest.
+	var full := alive_count() == 0
+	if full:
+		floor_cleared = true
+		_chest(&"dungeon_cache", center + Vector3(2.0, 0, -3.5), true)
+	var xp := 100 + poi.rank * 80
+	var w := World.instance
+	var first := w != null and w.exploration.is_first_clear(poi)
+	if w:
+		w.exploration.set_state("dungeon:" + poi.id)
+		if first:
+			# First clear of this dungeon: double XP, a purse of coins and Delver's Marks.
+			w.exploration.set_state("first_clear:" + poi.id)
+			xp *= 2
+			var coins := 150 * (poi.rank + 1)
+			w.player.coins += coins
+			Events.coins_changed.emit(w.player.coins)
+			w.player.give_item(&"delvers_mark", 2 + poi.rank)
+			Events.toast.emit("First clear! +%s and %d Delver's Marks" % [Economy.format_coins(coins), 2 + poi.rank], UITheme.GOLD)
+		w.player.character.grant_xp(xp, Progression.Source.DUNGEON)
+	Events.toast.emit("%s cleared%s! A portal home has opened." % [poi.title(), " - every foe beaten" if full else ""], UITheme.GOLD)
 
 
 func _exit_tree() -> void:

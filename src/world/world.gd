@@ -438,7 +438,7 @@ func enter_dungeon(poi: PoiInfo) -> bool:
 		return false
 	var left := exploration.dungeon_cleared_left(poi)
 	if left > 0.0:
-		Events.toast.emit("%s lies empty. Its dead stir again in %d hours." % [poi.title(), ceili(left / 50.0)], Color(0.85, 0.85, 0.85))
+		Events.toast.emit("%s lies empty. Its dead stir again in %d hours." % [poi.title(), ceili(left / exploration.seconds_per_hour())], Color(0.85, 0.85, 0.85))
 		return false
 	_load_dungeon_floor(poi, 0, player.global_position + Vector3(0, 0.3, 2.5))
 	Events.toast.emit("Entered %s" % poi.title(), Color(1.0, 0.8, 0.5))
@@ -451,6 +451,7 @@ func next_dungeon_floor() -> void:
 	var poi := dungeon.poi
 	var f := dungeon.floor_index + 1
 	var ret := dungeon.return_position
+	gather_dungeon_loot()
 	_load_dungeon_floor(poi, f, ret)
 	Events.toast.emit("Floor %d of %d" % [f + 1, dungeon.plan.floor_count], Color(1.0, 0.8, 0.5))
 
@@ -482,10 +483,35 @@ func _load_dungeon_floor(poi: PoiInfo, floor_index: int, ret: Vector3) -> void:
 	Events.dungeon_entered.emit(poi.id, floor_index)
 
 
-## Leaves the dungeon (portal, death). `to` defaults to the entrance.
-func exit_dungeon(to: Vector3 = Vector3.INF) -> void:
+## Milestone 22: loot left on the floor goes into your bag when you take the
+## stairs or the portal (before, it was lost). Returns how many stacks moved.
+func gather_dungeon_loot() -> int:
+	if dungeon == null:
+		return 0
+	var moved := 0
+	for n in pickup_pool.active_nodes():
+		var pk := n as Pickup
+		if pk == null or not pk.visible:
+			continue
+		var left: int = player.give_item(pk.item_id, pk.count)
+		if left < pk.count:
+			moved += 1
+		if left <= 0:
+			NodePool.release_or_free(pk)
+		else:
+			pk.count = left
+	if moved > 0:
+		Events.toast.emit("You gather the loot you left behind (%d)." % moved, UITheme.GOLD)
+	return moved
+
+
+## Leaves the dungeon (portal, death). `to` defaults to the entrance. Loot on
+## the floor is gathered unless you were carried out (`gather` false).
+func exit_dungeon(to: Vector3 = Vector3.INF, gather: bool = true) -> void:
 	if dungeon == null:
 		return
+	if gather:
+		gather_dungeon_loot()
 	var poi := dungeon.poi
 	var cleared := dungeon.cleared
 	var dest := dungeon.return_position if to == Vector3.INF else to
@@ -517,7 +543,7 @@ func _on_player_respawned() -> void:
 	if Net.is_client():
 		Net.client.mark_teleport()
 	if dungeon:
-		exit_dungeon(player.spawn_point)
+		exit_dungeon(player.spawn_point, false)
 		Events.toast.emit("You were carried out of the dungeon...", Color(1, 0.7, 0.5))
 		return
 	if layer != TerrainGenerator.Layer.SURFACE:

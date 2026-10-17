@@ -102,6 +102,17 @@ func finish_sites() -> void:
 	pass  # POI sites build synchronously
 
 
+## Real seconds in one game hour (the day length can change).
+func seconds_per_hour() -> float:
+	var w := World.instance
+	return (w.day_night.day_length if w and w.day_night else 1200.0) / 24.0
+
+
+## Milestone 22: true until the dungeon's boss has fallen once (first-clear rewards).
+func is_first_clear(poi: PoiInfo) -> bool:
+	return not has_state("first_clear:" + poi.id)
+
+
 ## Dungeon state: cleared and when it repopulates.
 func dungeon_cleared_left(poi: PoiInfo) -> float:
 	if not has_state("dungeon:" + poi.id):
@@ -112,7 +123,9 @@ func dungeon_cleared_left(poi: PoiInfo) -> float:
 func entrance_text(poi: PoiInfo) -> String:
 	var left := dungeon_cleared_left(poi)
 	if left > 0.0:
-		return "Enter %s (cleared - the dead stir again in %d h)" % [poi.title(), ceili(left / 50.0)]
+		return "Enter %s (cleared - the dead stir again in %d h)" % [poi.title(), ceili(left / seconds_per_hour())]
+	if is_first_clear(poi):
+		return "Enter %s (first clear: double XP, coins and Delver's Marks)" % poi.title()
 	return "Enter %s" % poi.title()
 
 

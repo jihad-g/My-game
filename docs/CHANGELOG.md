@@ -2,6 +2,32 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.30.0] — Milestones 21 and 22: Pixel World and Deeper Dungeons
+
+### Added
+- **The pixel style is the standard (M21)**: every box of every character, monster, animal, outfit, villager and
+  weapon is now pixel painted, 16 pixels per metre (`src/art/pixel_auto.gd`): a 5-shade ramp made from the
+  part's colour (shades lean blue, lights lean warm), light on the top-left edges and shade on the bottom-right,
+  a metal sheen for steel, wood grain for handles and shafts, soft patches for cloth and skin. Painted parts are
+  shared (one mesh per size and colour) on 512 x 512 atlas pages.
+- Skeleton Archers and the Bone King now use the hand-drawn pixel skeleton body too.
+- **Dungeons pay better (M22)**:
+  - **Delver's Cache**: beat every monster on a floor and a golden cache appears by the stairs (on the last floor,
+    next to the boss chest);
+  - **first clear** of each dungeon: double XP, 150 coins × rank and 2 + rank **Delver's Marks** (a new trophy
+    item that sells for 45); the entrance tells you while the bonus is still waiting;
+  - trap rooms hide a chest in the middle of the spikes;
+  - dungeon chests pay more coins (40 base) and give gear more often (45%); dungeon gear can be **Fine or
+    Masterwork**; S-rank bosses can drop **legendary gear**; boss chests always hold Delver's Marks.
+- `tests/dungeon_audit.gd`: checks 2,160 generated dungeon floors (reachable rooms, no overlaps, secret walls,
+  stairs, boss rooms, exit spots). Tests `test_m21_pixel_world`, `test_m22_dungeon_audit` (monsters, chests and
+  doors on the floor in every theme and rank), `test_m22_loot`, `test_m22_rewards`. Screenshot mode `--only=pixelworld`.
+
+### Fixed
+- Loot left on a dungeon floor was lost when you took the stairs or the portal home. It now goes into your bag
+  (not when you are carried out after dying).
+- "The dead stir again in N hours" used a fixed day length; it now follows the real one.
+
 ## [0.29.0] — Milestone 20: The Tuskers - pixel-art monsters
 
 ### Added

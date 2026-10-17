@@ -136,6 +136,8 @@ func _ready() -> void:
 	await _run_async(&"test_m20_tuskers_ingame")
 	_run(&"test_m21_pixel_world")
 	await _run_async(&"test_m22_dungeon_audit")
+	_run(&"test_m22_loot")
+	await _run_async(&"test_m22_rewards")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5180,7 +5182,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.29"), "version 0.29 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.30"), "version 0.30 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -7840,5 +7842,119 @@ func test_m22_dungeon_audit() -> void:
 			world.exit_dungeon()
 			await _wait_ready(world)
 			check(world.dungeon == null, "left the dungeon")
+	world.queue_free()
+	await _frames(5)
+
+
+func test_m22_loot() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2222
+	var legendary := false
+	var fine := false
+	var masterwork := false
+	var marks := true
+	for i in 400:
+		var r := LootTables.roll(&"dungeon_boss", 5, rng)
+		marks = marks and int(r.items.get(&"delvers_mark", 0)) >= 2
+		for id in r.items:
+			var q := ItemQuality.quality_of(id)
+			fine = fine or q == ItemQuality.FINE
+			masterwork = masterwork or q == ItemQuality.MASTERWORK
+			legendary = legendary or LootTables.GEAR[4].has(ItemQuality.base_id(id))
+			if not ItemDB.has_item(id):
+				check(false, "loot item %s exists" % id)
+	check(legendary, "S-rank bosses can drop legendary gear")
+	check(fine and masterwork, "dungeon gear can be Fine or Masterwork")
+	check(marks, "every boss chest holds Delver's Marks")
+	check(ItemDB.get_item(&"delvers_mark") != null and ItemDB.get_item(&"delvers_mark").base_value >= 40, "Delver's Marks sell well")
+	var c0 := 0
+	var c5 := 0
+	for i in 200:
+		c0 += int(LootTables.roll(&"dungeon_chest", 0, rng).coins)
+		c5 += int(LootTables.roll(&"dungeon_chest", 5, rng).coins)
+	check(c5 > c0 * 3, "higher ranks pay much more (%d vs %d coins)" % [c5 / 200, c0 / 200])
+	var cache := LootTables.roll(&"dungeon_cache", 2, rng)
+	check(int(cache.items.get(&"delvers_mark", 0)) >= 1 and int(cache.coins) > 0, "a Delver's Cache pays coins and a mark")
+
+
+func test_m22_rewards() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 80
+	var poi := _test_dungeon_poi(world, 2, PoiInfo.DungeonTheme.CRYPT, 77)
+	check(world.exploration.is_first_clear(poi), "a new dungeon promises first-clear rewards")
+	check(world.enter_dungeon(poi), "entered a C-rank crypt (%d floors)" % DungeonPlan.FLOORS[2])
+	await _frames(20)
+	var d := world.dungeon
+	# Trap rooms hide a chest among the spikes.
+	var trap_chest := false
+	for c in d.get_children():
+		if c is LootChest:
+			var ri := d.plan.room_at(c.position)
+			trap_chest = trap_chest or (ri >= 0 and d.plan.rooms[ri].type == DungeonPlan.Room.TRAP)
+	check(trap_chest, "a chest waits in the trap room")
+	# Clear the floor: a Delver's Cache appears by the stairs.
+	var frames := 0
+	while not d.floor_cleared and frames < 240:
+		if frames % 10 == 0:
+			for m in d.monsters:
+				_kill(m, world)  # shielded elites may shrug off the first blow
+		await get_tree().physics_frame
+		frames += 1
+	var cache := false
+	for c in d.get_children():
+		cache = cache or (c is LootChest and c.table == &"dungeon_cache")
+	check(d.floor_cleared and cache, "clearing a floor brings a Delver's Cache (alive %d, final %s)" % [d.alive_count(), d.plan.is_final])
+	# Loot left on the floor is gathered when you take the stairs.
+	var ore0 := p.inventory.count_of(&"iron_ore")
+	world.spawn_pickup(&"iron_ore", 3, d.to_global(d.plan.room_center(d.plan.start_room) + Vector3(2, 1, 2)))
+	await _frames(2)
+	world.next_dungeon_floor()
+	await _frames(10)
+	check(p.inventory.count_of(&"iron_ore") >= ore0 + 3, "loot left behind goes into your bag on the stairs")
+	d = world.dungeon
+	check(d.plan.is_final, "on the last floor")
+	# Beat everything and the boss: first clear. (Shield bearers may block a blow: retry.)
+	for k in 12:
+		for m in d.monsters:
+			if is_instance_valid(m) and not m.is_boss():
+				_kill(m, world)
+		await _frames(10)
+		if d.alive_count() <= 1:
+			break
+	var arena := d.to_global(d.plan.room_center(d.plan.end_room) + Vector3(0, 0.3, 3.0))
+	var f2 := 0
+	while not d.boss_started and f2 < 120:
+		p.global_position = arena
+		await get_tree().physics_frame
+		f2 += 1
+	var coins0 := p.coins
+	var marks0 := p.inventory.count_of(&"delvers_mark")
+	_kill(d.boss, world)
+	await _frames(5)
+	check(d.cleared and not world.exploration.is_first_clear(poi), "the boss falls: first clear recorded")
+	check(p.coins >= coins0 + 450 and p.inventory.count_of(&"delvers_mark") >= marks0 + 4, "first clear: +%d coins, +%d marks" % [p.coins - coins0, p.inventory.count_of(&"delvers_mark") - marks0])
+	var full_cache := false
+	for c in d.get_children():
+		full_cache = full_cache or (c is LootChest and c.table == &"dungeon_cache")
+	check(full_cache, "every foe beaten: a cache next to the boss chest")
+	world.exit_dungeon()
+	await _wait_ready(world)
+	# A second run pays the normal rewards only.
+	world.exploration.state.erase("dungeon:" + poi.id)
+	check(world.enter_dungeon(poi), "entered again after it repopulated")
+	await _frames(10)
+	while not world.dungeon.plan.is_final:
+		world.next_dungeon_floor()
+		await _frames(5)
+	d = world.dungeon
+	var coins1 := p.coins
+	_kill(d.boss, world)
+	await _frames(5)
+	check(d.cleared and p.coins < coins1 + 450, "no first-clear purse the second time")
+	world.exit_dungeon()
+	await _wait_ready(world)
 	world.queue_free()
 	await _frames(5)

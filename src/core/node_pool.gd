@@ -57,6 +57,15 @@ func release_all() -> void:
 			release(n)
 
 
+## Every instance currently in use.
+func active_nodes() -> Array:
+	var out := []
+	for n in _all:
+		if is_instance_valid(n) and not _free.has(n):
+			out.append(n)
+	return out
+
+
 func active_count() -> int:
 	return _all.size() - _free.size()
 

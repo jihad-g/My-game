@@ -105,6 +105,23 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestones 21 + 22 — Pixel World and Deeper Dungeons  ✅ (v0.30.0)
+
+- [x] Every model box pixel painted (`PixelAuto`): characters, monsters, animals, outfits, villagers, weapons
+- [x] Skeleton Archer and Bone King on the hand-drawn pixel skeleton
+- [x] Dungeon structure audit (2,160 floors) and a live audit in every theme and rank: no faults found
+- [x] Fixed: loot left on a floor is gathered on the stairs and the portal (it was lost)
+- [x] Fixed: the "dead stir again" hours follow the real day length
+- [x] Delver's Cache per cleared floor, first-clear bonus (XP ×2, coins, Delver's Marks), chests in trap rooms
+- [x] Better dungeon loot: more coins and gear, Fine/Masterwork gear, legendary gear from S-rank bosses
+- [x] Tests `test_m21_*`, `test_m22_*` run and pass; `m4_data`, `m5`, `m6`, `m7`, `m10`, `m12`, `m14`, `m15`, `m16`,
+  `m17c`, `m18a`, `m18b`, `m18c`, `m19`, `m20` re-run and pass
+- [ ] NOT IMPLEMENTED: hand-drawn faces and details for every monster (they use the automatic painting; skeletons and Tuskers are hand-drawn)
+- [ ] NOT IMPLEMENTED: pixel painting for props, pickups, chests, projectiles and buildings' small parts (they keep their old look or block textures)
+- [ ] NOT IMPLEMENTED: a shop that trades Delver's Marks for special gear (they sell for coins for now)
+- [ ] NOT IMPLEMENTED: dungeon fog of war, keys and puzzles (item 7 of the list); dungeons in co-op
+- [ ] Known limitation: monsters still walk straight at you and can get caught on corridor corners (item 3, pathfinding)
+
 ## Milestone 20 — The Tuskers: pixel-art monsters  ✅ (v0.29.0)
 
 - [x] Pixel-art model system (`PixelArt`): exact pixel faces, one atlas, see-through and glowing pixels, rotated parts

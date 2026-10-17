@@ -1167,6 +1167,10 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestones 21 and 22 (v0.30.0).** The pixel style is the standard for every model (automatic painting
+from each part's colour, hand-drawn skeletons and Tuskers). Dungeons were audited (no structural faults), a loot
+bug was fixed, and they pay better: Delver's Caches, first-clear bonuses, trap-room chests, quality and legendary gear.
+
 **Done: Milestone 20 — "The Tuskers" (v0.29.0).** The owner asked for Blockbench-style pixel art. Monsters can now
 be drawn pixel by pixel (16 px per metre, see-through and glowing pixels) on the normal rig. Skeletons are redrawn,
 and a new boar-folk faction, the Tuskers (grunts, brutes, and Rokka Ironhide their chief), roams the wilds and

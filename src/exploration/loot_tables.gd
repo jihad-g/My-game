@@ -21,7 +21,12 @@ const GEAR := [
 		&"embers_tome", &"mithril_staff"],
 	[&"moonpetal_pendant", &"mithril_sword", &"mithril_waraxe", &"mithril_dirk", &"crystal_ring", &"shadow_cloak",
 		&"mithril_longbow", &"mithril_halberd", &"frostbite_warhammer", &"stormcaller_wand"],
+	# Milestone 22: S-rank dungeon bosses and caches can give legendary gear.
+	[&"sunforged_blade", &"shadowfang", &"titans_greataxe", &"staff_of_the_archmage", &"starfall_blade", &"starfall_bow",
+		&"shardbreaker", &"mithril_plate", &"crown_of_stars", &"aegis_of_dawn"],
 ]
+## Gear band per rank E..S (S rank reaches the legendary band).
+const GEAR_BAND := [0, 1, 2, 3, 3, 4]
 const TABLES := {
 	# Milestone 15: wild treasure spots (TreasureSpots).
 	&"wild_camp": {"coins": 12, "gear": 0.2, "items": [
@@ -54,11 +59,19 @@ const TABLES := {
 		[&"tome_rejuvenate", 1, 1, 0.35, 0],
 		[&"sunstone", 1, 2, 1.0, 0], [&"elixir_of_might", 1, 1, 0.4, 0], [&"stoneskin_elixir", 1, 1, 0.4, 0],
 		[&"healing_draught", 2, 3, 0.8, 0], [&"mithril_ingot", 1, 3, 0.5, 2]]},
-	&"dungeon_chest": {"coins": 30, "gear": 0.25, "items": [
+	&"dungeon_chest": {"coins": 40, "gear": 0.45, "quality": [[0.0, 0.08, 0.15, 0.2, 0.25, 0.3], [0.0, 0.0, 0.02, 0.05, 0.08, 0.12]], "items": [
 		[&"healing_draught", 1, 2, 0.5, 0], [&"mana_tonic", 1, 1, 0.3, 0], [&"iron_ore", 2, 4, 0.4, 0],
 		[&"coal", 2, 4, 0.4, 0], [&"crystal_shard", 1, 2, 0.3, 1], [&"iron_arrow", 6, 12, 0.3, 1], [&"fire_arrow", 4, 8, 0.15, 2], [&"mithril_ore", 1, 3, 0.4, 2],
 		[&"elixir_of_might", 1, 1, 0.15, 2], [&"void_shard", 1, 1, 0.1, 4]]},
-	&"dungeon_boss": {"coins": 150, "gear": 1.0, "scroll": [0.0, 0.0, 0.02, 0.08, 0.35, 0.6], "tome": [0.15, 0.2, 0.25, 0.3, 0.4, 0.5], "items": [
+	# Milestone 22: a Delver's Cache appears when every monster on a floor is beaten.
+	&"dungeon_cache": {"coins": 60, "gear": 0.7, "tome": [0.1, 0.12, 0.15, 0.18, 0.2, 0.25],
+		"quality": [[0.05, 0.15, 0.25, 0.3, 0.35, 0.4], [0.0, 0.02, 0.05, 0.08, 0.12, 0.18]], "items": [
+		[&"delvers_mark", 1, 2, 1.0, 0], [&"healing_draught", 1, 2, 0.6, 0], [&"mana_tonic", 1, 2, 0.4, 0],
+		[&"gold_nugget", 1, 2, 0.4, 0], [&"gemstone", 1, 1, 0.25, 1], [&"crystal_shard", 1, 2, 0.4, 1],
+		[&"mithril_ingot", 1, 2, 0.35, 2], [&"elixir_of_might", 1, 1, 0.2, 1], [&"void_shard", 1, 1, 0.15, 3]]},
+	&"dungeon_boss": {"coins": 200, "gear": 1.0, "scroll": [0.0, 0.02, 0.05, 0.12, 0.35, 0.6], "tome": [0.2, 0.25, 0.3, 0.35, 0.45, 0.55],
+		"quality": [[0.1, 0.2, 0.3, 0.4, 0.45, 0.5], [0.0, 0.03, 0.08, 0.12, 0.2, 0.3]], "items": [
+		[&"delvers_mark", 2, 4, 1.0, 0],
 		[&"tome_fire_ring", 1, 1, 0.12, 1], [&"tome_lightning_dash", 1, 1, 0.1, 2], [&"tome_drain_life", 1, 1, 0.1, 2],
 		[&"healing_draught", 2, 3, 0.8, 0], [&"mithril_ingot", 2, 4, 0.6, 2], [&"elixir_of_starlight", 1, 1, 0.3, 3],
 		[&"stoneskin_elixir", 1, 1, 0.4, 1], [&"elixir_of_might", 1, 1, 0.4, 1],
@@ -95,8 +108,18 @@ static func roll(table: StringName, rank: int, rng: RandomNumberGenerator, first
 		if rank >= int(e[4]) and rng.randf() < float(e[3]):
 			_add(out, e[0], rng.randi_range(int(e[1]), int(e[2])))
 	if rng.randf() < float(t.get("gear", 0.0)):
-		var band: Array = GEAR[mini(rank, GEAR.size() - 1)]
-		_add(out, band[rng.randi() % band.size()], 1)
+		var band: Array = GEAR[GEAR_BAND[clampi(rank, 0, 5)]]
+		var gear: StringName = band[rng.randi() % band.size()]
+		# Milestone 22: dungeon gear can come out Fine or Masterwork.
+		var qc: Array = t.get("quality", [])
+		if not qc.is_empty() and ItemQuality.can_have_quality(ItemDB.get_item(gear) if ItemDB.has_item(gear) else null):
+			var r := rng.randf()
+			var r5 := clampi(rank, 0, 5)
+			if r < float(qc[1][r5]):
+				gear = ItemQuality.with_quality(gear, ItemQuality.MASTERWORK)
+			elif r < float(qc[1][r5]) + float(qc[0][r5]):
+				gear = ItemQuality.with_quality(gear, ItemQuality.FINE)
+		_add(out, gear, 1)
 	var tc: Array = t.get("tome", [])
 	if not tc.is_empty() and rng.randf() < float(tc[clampi(rank, 0, 5)]):
 		# Low ranks find the simpler tomes; every rank step unlocks one more.

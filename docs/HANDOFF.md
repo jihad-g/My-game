@@ -3,7 +3,7 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.29.0** (Milestone 20: The Tuskers, pixel-art monsters). The Windows build is `releases/Shardlands-v0.29.0-windows.zip`.
+- Current version: **v0.30.0** (Milestones 21 + 22: Pixel World and Deeper Dungeons). The Windows build is `releases/Shardlands-v0.30.0-windows.zip`.
 - The owner wants the art to look like Blockbench-style pixel art (16 px per metre, hand-placed pixels). `src/art/pixel_art.gd` does this; skeletons and the Tuskers use it. Next art steps: weapons/shields, other monsters, player classes, villagers. Use our own designs in that style, not pixel copies of other artists' models.
 - The owner asked to do the 10 next steps one by one: 1 M18d (done), 2 M19 co-op combat (done), 3 monster pathfinding, 4 weather + seasons, 5 waystones/horses/boats, 6 multi-storey building, 7 map fog of war + dungeon keys, 8 monster animations + capes/hair, 9 performance + testing pass, 10 release polish.
 - Read next: `docs/TODO.md` (done and NOT IMPLEMENTED), `docs/CHANGELOG.md`, `docs/M18_PLAN.md` (current milestone) and `docs/ART_BIBLE.md` (art rules).
@@ -76,6 +76,12 @@
   - Settings `movement_feel` (Snappy/Weighty) and `fixed_camera`; camera lead; dodge v2 (`can_dodge_cancel`);
   - tests `test_m18a_*` (run and pass since v0.23.1).
 
+- **M21 Pixel World:** `PixelAuto.mesh(size, color, glow)` paints every `_part` box (HumanoidModel, BeastModel,
+  BoarModel) on shared atlas pages; `PixelAuto.enabled` switches back to flat boxes; `kind_for` picks metal/wood/cloth.
+- **M22 Deeper Dungeons:** `World.gather_dungeon_loot()`, `DungeonInstance.floor_cleared` + `_on_floor_cleared()`
+  (Delver's Cache, table `dungeon_cache`), first clear (`exploration.is_first_clear`, state `first_clear:<id>`),
+  `LootTables.GEAR_BAND` and per-table `quality` chances, item `delvers_mark`; `tests/dungeon_audit.gd`.
+
 - **M20 The Tuskers:**
   - `PixelArt` (`src/art/pixel_art.gd`): boxes with exact pixel faces in one atlas, `paint()` with shading + ASCII
     stamps ("." keep, "_" hole, digits = ramp, letters from a key, `[Color, true]` = glow), rotated parts;
@@ -138,7 +144,7 @@
   `PlayerAbilities.share_support()` / `receive_support()`. Tests `test_m19_*` (guest script `--combat`).
 - Testing rule now: the owner allows running only the test groups for what changed (ask if unsure).
 
-## Next step: the owner chooses - more pixel art (weapons and shields, other monsters, classes), or item 3 - monster pathfinding (A* on the block grid)
+## Next step: item 3 - monster pathfinding (A* on the block grid; also fixes monsters caught on dungeon corridor corners), or hand-drawn details for more monsters
 
 ## After that
 - **M19 "Together in Danger":** real co-op combat, plus abilities that help friends.
