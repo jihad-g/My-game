@@ -5,7 +5,10 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.37.0 — Travel**. Waystones in every village and at every dungeon (unlock them, then travel for a few
+> Status: **v0.38.0 — Multi-storey building**. Build up to four floors: upper floors on your walls, balconies,
+> stairs, ladders and stone foundations that level out slopes. Monsters follow you up the stairs and ladders.
+>
+> Before that, **v0.37.0 — Travel**. Waystones in every village and at every dungeon (unlock them, then travel for a few
 > coins), wild horses to tame with carrots, saddles and a gallop bar, a whistle to call your horse, and a rowboat
 > for lakes and the sea.
 >

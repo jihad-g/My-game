@@ -1397,11 +1397,25 @@ func _move_to(goal: Vector3, speed: float) -> void:
 		return
 	_following = true
 	_move_dir(dir, speed)
+	# Milestone 30: a waypoint well above us, close by, with a ladder right here - climb.
+	# Once climbing, keep going until we are over the top. (Walls raiders must
+	# break also sit "above" a path; without a ladder they are smashed, not climbed.)
+	var above := wp.y - global_position.y
+	if dir.length() < 1.8 and (above > 1.3 or (climb_t > 0.0 and above > -0.3)) and _ladder_near():
+		climb_t = 0.25
 	# Raiders whose path goes through a building hit it when they reach it.
 	if _is_raider() and _stuck_t > 0.4 and _alive(_blocker) and _blocker is BuildPiece and target != _blocker:
 		target = _blocker
 		_blocker = null
 		_set_ai(AI.CHASE)
+
+
+func _ladder_near() -> bool:
+	for n in get_tree().get_nodes_in_group(&"ladders"):
+		var lad := n as Node3D
+		if lad and Vector2(lad.global_position.x - global_position.x, lad.global_position.z - global_position.z).length() < 1.6:
+			return true
+	return false
 
 
 ## Creative mode's "Show monster paths": a line along the current path.

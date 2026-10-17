@@ -1167,6 +1167,10 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 30 — Multi-storey building (v0.38.0).** The building grid has storeys (`floor@1`, `edge_n@2`...)
+with support rules (`BuildingManager._storey_rules`), stairs and ladders lead up, foundations level slopes, and
+NavGrid searches over (cell, level) so monsters climb too.
+
 **Done: Milestone 29 — Travel (v0.37.0).** Waystones (`src/travel/waystone.gd`, `travel_manager.gd`) turn found
 places into a paid fast-travel network; horses (`horse.gd`) are tamed with food, need a saddle and have their own
 gallop stamina; rowboats (`boat.gd`) open lakes and the sea. The rider's body does the moving

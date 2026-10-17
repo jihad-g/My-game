@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"wood_stairs"
+display_name = "Wooden Stairs"
+description = "Six steps up one storey over 3 cells (R turns them). Leave the floor above them open; you arrive on the cell past the top step."
+category = 13
+placement = 1
+behavior = 11
+cost = {
+&"plank": 6,
+&"wood": 2
+}
+mesh = &"wood_stairs"
+collision_size = Vector3(1, 1, 1)
+collision_center = Vector3(0, 0.5, 0)
+blocks_movement = true
+required_level = 4
+fade_near_camera = true

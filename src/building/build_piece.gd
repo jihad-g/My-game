@@ -26,6 +26,11 @@ var _crop_mesh: MeshInstance3D
 var _crop_stage := -1
 var _crop_tick := 0.0
 
+## Milestone 30: the other grid keys a staircase fills, a foundation's height.
+var extra_keys: Array[String] = []
+var found_top := 0.0
+var found_base := 0.0
+
 var _mesh_instance := MeshInstance3D.new()
 var _leaf: Node3D
 var _spike_area: Area3D
@@ -44,7 +49,7 @@ func setup(p_data: BuildPieceData) -> void:
 	add_to_group(&"build_pieces")
 	if data.behavior == BuildPieceData.Behavior.BED:
 		add_to_group(&"rest_spots")  # change the ability bar here (Milestone 17b)
-	name = "%s_%d_%d_%s" % [data.id, cell.x, cell.y, slot]
+	name = "%s_%d_%d_%s" % [data.id, cell.x, cell.y, slot.replace("@", "_s")]
 	collision_layer = Layers.BUILDING
 	if data.behavior in [BuildPieceData.Behavior.DOOR, BuildPieceData.Behavior.CHEST, BuildPieceData.Behavior.BED,
 			BuildPieceData.Behavior.CLAIM, BuildPieceData.Behavior.FARM, BuildPieceData.Behavior.BELL]:
@@ -52,16 +57,42 @@ func setup(p_data: BuildPieceData) -> void:
 	if not data.blocks_movement:
 		collision_layer = Layers.INTERACTABLE if collision_layer & Layers.INTERACTABLE else 0
 	collision_mask = 0
-	_mesh_instance.mesh = BuildMeshes.get_mesh(data.mesh)
+	var mesh_name := data.mesh
+	# Milestone 30: upper floors are thin decks (no foundation hanging into the room below).
+	if BuildingManager.storey_of(slot) > 0 and data.placement == BuildPieceData.Placement.FLOOR \
+			and (load("res://src/building/build_meshes.gd") as GDScript).has_method("build_%s_upper" % data.mesh):
+		mesh_name = StringName("%s_upper" % data.mesh)
+	_mesh_instance.mesh = BuildMeshes.get_mesh(mesh_name)
 	if data.fade_near_camera:
 		_mesh_instance.material_override = Materials.vertex_color_occluder()
 	add_child(_mesh_instance)
-	var cs := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = data.collision_size
-	cs.shape = box
-	cs.position = data.collision_center
-	add_child(cs)
+	if data.behavior == BuildPieceData.Behavior.STAIRS:
+		# Six solid steps (0.43 m each: you and monsters step up them).
+		add_to_group(&"stairs")
+		var rise := BuildingManager.WALL_HEIGHT / 6.0
+		for i in 6:
+			var top := (i + 1) * rise
+			var scs := CollisionShape3D.new()
+			var sbox := BoxShape3D.new()
+			sbox.size = Vector3(1.0, top, 0.5)
+			scs.shape = sbox
+			scs.position = Vector3(0, top * 0.5, -0.25 + i * 0.5)
+			add_child(scs)
+	elif data.behavior == BuildPieceData.Behavior.LADDER:
+		add_to_group(&"ladders")
+		var lcs := CollisionShape3D.new()
+		var lbox := BoxShape3D.new()
+		lbox.size = Vector3(0.7, 2.9, 0.15)
+		lcs.shape = lbox
+		lcs.position = Vector3(0, 1.45, 0.38)
+		add_child(lcs)
+	else:
+		var cs := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = data.collision_size
+		cs.shape = box
+		cs.position = data.collision_center
+		add_child(cs)
 	match data.behavior:
 		BuildPieceData.Behavior.DOOR:
 			_leaf = Node3D.new()
@@ -112,6 +143,45 @@ func setup(p_data: BuildPieceData) -> void:
 			_crop_mesh = MeshInstance3D.new()
 			_crop_mesh.position.y = 0.1
 			add_child(_crop_mesh)
+
+
+# --- Milestone 30: storeys -----------------------------------------------------------------
+
+## A foundation from below the ground (`ground` - 0.5) up to `top`: the piece sits
+## at the ground, its mesh and collision are made to fit.
+func set_foundation(ground: float, top: float) -> void:
+	found_base = ground
+	found_top = top
+	set_meta(&"top", top)
+	var h := top - ground + 0.5
+	var b := BlockMesh.new()
+	b.texture = &"stone_bricks"
+	b.box(Vector3(0, top - ground - h * 0.5, 0), Vector3(1.0, h, 1.0), BuildMeshes.STONE * 0.85)
+	b.texture = &"stone_tiles"
+	b.box(Vector3(0, top - ground - 0.03, 0), Vector3(1.02, 0.06, 1.02), BuildMeshes.STONE)
+	_mesh_instance.mesh = b.commit()
+	for c in get_children():
+		if c is CollisionShape3D:
+			var box := BoxShape3D.new()
+			box.size = Vector3(1.0, h, 1.0)
+			c.shape = box
+			c.position = Vector3(0, top - ground - h * 0.5, 0)
+
+
+## Stairs: the cell where the top step arrives (one storey up).
+func stairs_top_cell() -> Vector2i:
+	return cell + BuildingManager.rot_dir(rot) * BuildingManager.STAIR_CELLS
+
+
+## Ladders: the cell you climb onto at the top (one storey up), and the way to face.
+func ladder_dir() -> Vector3:
+	var d := BuildingManager.rot_dir(rot)
+	return Vector3(d.x, 0, d.y)
+
+
+## Height of the ladder's foot and top.
+func ladder_span() -> Vector2:
+	return Vector2(global_position.y, global_position.y + BuildingManager.WALL_HEIGHT)
 
 
 func _add_light(color: Color, energy: float, range_m: float, pos: Vector3) -> void:
@@ -468,6 +538,8 @@ func save_data() -> Dictionary:
 		d["grow_t"] = grow_t
 	if is_damaged():
 		d["hp"] = health
+	if data.behavior == BuildPieceData.Behavior.FOUNDATION:
+		d["top"] = found_top
 	return d
 
 
@@ -479,6 +551,8 @@ func load_data(d: Dictionary) -> void:
 	if d.has("hp"):
 		health = clampf(float(d.hp), 1.0, max_health())
 		_update_damage_look()
+	if d.has("top") and data.behavior == BuildPieceData.Behavior.FOUNDATION:
+		set_foundation(found_base, float(d.top))
 	if d.has("crop"):
 		crop = StringName(d.crop)
 		planted_at = float(d.get("planted_at", 0.0))

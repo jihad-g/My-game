@@ -166,6 +166,10 @@ func untame() -> void:
 ## sets it every frame: fog 0.45 ... clear 1.0). It only changes noticing, not fighting.
 static var weather_sight := 1.0
 
+## Milestone 30: seconds left of climbing (ladders), and how fast.
+var climb_t := 0.0
+const CLIMB_SPEED := 3.0
+
 
 ## Distance at which this enemy notices `t` while idle or wandering: its sight
 ## range scaled by the target's outfit (light armour is noticed later, heavy
@@ -276,7 +280,12 @@ func _physics_process(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, _desired_velocity.x, accel)
 	velocity.z = move_toward(velocity.z, _desired_velocity.z, accel)
 	velocity += _knockback
-	_apply_gravity(delta)
+	if climb_t > 0.0:
+		# Milestone 30: climbing a ladder (Monster._move_to starts it).
+		climb_t -= delta
+		velocity.y = CLIMB_SPEED
+	else:
+		_apply_gravity(delta)
 	# Only probe for a step when something stopped us last tick (saves physics queries).
 	if is_on_floor() and is_on_wall() and _blocked_by_world():
 		GroundMotion.try_step_up(self, Vector3(velocity.x, 0, velocity.z) * delta, max_step_height)

@@ -20,6 +20,8 @@ var _bad_mat := StandardMaterial3D.new()
 var _address: Dictionary = {}
 var _reason := ""
 var _claim_ring: MeshInstance3D
+## Milestone 30: build this many storeys above the one you stand on (= / - keys).
+var storey_offset := 0
 
 
 func _ready() -> void:
@@ -56,6 +58,7 @@ func set_active(on: bool) -> void:
 	if on and world.blueprints and world.blueprints.placer.active:
 		world.blueprints.placer.end()
 	active = on
+	storey_offset = 0
 	_ghost.visible = on
 	_claim_ring.visible = false
 	if on:
@@ -91,6 +94,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			repair_under_cursor()
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"build_storey_up"):
+		storey_offset = mini(storey_offset + 1, BuildingManager.MAX_STOREY)
+		Events.toast.emit("Building on storey %d" % (build_storey() + 1), Color(0.8, 0.9, 1.0))
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"build_storey_down"):
+		storey_offset = maxi(storey_offset - 1, -BuildingManager.MAX_STOREY)
+		Events.toast.emit("Building on storey %d" % (build_storey() + 1), Color(0.8, 0.9, 1.0))
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"build_rotate"):
 		rot = (rot + 1) % 4
 		get_viewport().set_input_as_handled()
@@ -99,8 +110,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+## The storey new pieces go on: the one you stand on plus the = / - offset.
+func build_storey() -> int:
+	return clampi(world.building.storey_at(world.player.global_position) + storey_offset, 0, BuildingManager.MAX_STOREY)
+
+
 func _cursor() -> Vector3:
-	return world.camera_rig.get_mouse_world_point(world.player.global_position.y)
+	var y := world.player.global_position.y + (build_storey() - world.building.storey_at(world.player.global_position)) * BuildingManager.WALL_HEIGHT
+	return world.camera_rig.get_mouse_world_point(y)
 
 
 func _process(_delta: float) -> void:
@@ -116,9 +133,11 @@ func _process(_delta: float) -> void:
 
 ## Updates the preview for a world point (also used by tests/automation).
 func _update_target(point: Vector3) -> void:
-	_address = world.building.address_for(selected, point)
+	_address = world.building.address_for(selected, point, build_storey())
 	_ghost.global_transform = world.building.transform_for(selected, _address.cell, _address.slot, rot)
 	var reason := world.building.check_place(selected, _address.cell, _address.slot, world.player)
+	if reason == "" and selected.behavior == BuildPieceData.Behavior.STAIRS:
+		reason = world.building.check_stairs(_address.cell, rot, BuildingManager.storey_of(_address.slot))
 	_ghost.material_override = _ok_mat if reason == "" else _bad_mat
 	if selected.behavior == BuildPieceData.Behavior.CLAIM:
 		_claim_ring.visible = true
@@ -147,7 +166,7 @@ func place_current() -> BuildPiece:
 
 
 func remove_under_cursor() -> void:
-	var piece := world.building.piece_at(_cursor())
+	var piece := world.building.piece_at(_cursor(), build_storey())
 	if piece and Net.is_client():
 		Net.client.remove_piece(piece)
 	elif piece:
@@ -155,7 +174,7 @@ func remove_under_cursor() -> void:
 
 
 func repair_under_cursor() -> void:
-	var piece := world.building.piece_at(_cursor())
+	var piece := world.building.piece_at(_cursor(), build_storey())
 	if piece == null:
 		return
 	var err := world.building.repair(piece, world.player)

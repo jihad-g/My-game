@@ -105,6 +105,19 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 30 — Multi-storey building  ✅ (v0.38.0)
+
+- [x] Storeys 1-3: upper floors on walls, balconies (2 cells), upper walls/doors/windows/fences, furniture, roofs
+- [x] Stairs (wood, stone; 3 cells), ladders, stone foundations that level slopes
+- [x] Storey keys in build mode (= / -), support rules, can't remove what holds things up
+- [x] NavGrid decks, stair steps and ladder links: monsters climb to upper floors
+- [x] Creative demo house; tests `test_m30_*` run and pass
+- [ ] NOT IMPLEMENTED: blueprints with upper storeys (blueprints still save and build the ground floor only)
+- [ ] NOT IMPLEMENTED: pieces collapsing when their support is destroyed by raiders (they stay up)
+- [ ] NOT IMPLEMENTED: a staircase that crosses a 16 m grid tile line only counts the steps in its own tile for pathfinding
+- [ ] NOT IMPLEMENTED: trapdoors in floors, spiral stairs, stair railings that block
+- [ ] Known limitation: melee monsters below an upper floor can still reach a hero standing right above them
+
 ## Milestone 29 — Travel: waystones, horses, boats  ✅ (v0.37.0)
 
 - [x] Waystones in villages, capitals and at dungeon entrances; unlock by touch, travel for coins (saved)

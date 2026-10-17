@@ -210,7 +210,9 @@ func _buildings_payload() -> Array:
 	var out := []
 	var w := world()
 	for k in w.building.pieces:
-		out.append(piece_entry(w.building.pieces[k]))
+		var bp: BuildPiece = w.building.pieces[k]
+		if k == BuildingManager.key(bp.cell, bp.slot, bp.layer):  # stairs fill several cells
+			out.append(piece_entry(bp))
 	return out
 
 
@@ -716,7 +718,8 @@ func _act_place(ps: PeerState, a: Array) -> Dictionary:
 	if data == null or cell == null:
 		return _no("Bad request")
 	var kind := BuildingManager.slot_kind(data)
-	if not (slot == kind or (kind == "edge" and slot in ["edge_n", "edge_w"])):
+	var base := BuildingManager.base_slot(slot)
+	if not (base == kind or (kind == "edge" and base in ["edge_n", "edge_w"])) or BuildingManager.storey_of(slot) > BuildingManager.MAX_STOREY:
 		return _no("Wrong placement")
 	if ps.layer != layer or Vector2(cell.x + 0.5 - ps.pos.x, cell.y + 0.5 - ps.pos.z).length() > NetProtocol.BUILD_REACH:
 		return _no("Too far away")
@@ -724,6 +727,8 @@ func _act_place(ps: PeerState, a: Array) -> Dictionary:
 		return _no("Requires level %d" % data.required_level)
 	var w := world()
 	var why: String = with_layer(layer, func() -> String: return w.building.check_place(data, cell, slot, null, false))
+	if why == "" and data.behavior == BuildPieceData.Behavior.STAIRS:
+		why = with_layer(layer, func() -> String: return w.building.check_stairs(cell, rot, BuildingManager.storey_of(slot)))
 	if why != "":
 		return _no(why)
 	for item in data.cost:

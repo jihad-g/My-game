@@ -2,15 +2,17 @@ class_name BuildPieceData
 extends Resource
 ## A buildable piece: cost, grid placement, looks and behaviour.
 
-enum Category { FLOOR, WALL, DOOR, WINDOW, FENCE, ROOF, FURNITURE, STORAGE, STATION, DEFENSE, LIGHT, CLAIM, FARMING }
+enum Category { FLOOR, WALL, DOOR, WINDOW, FENCE, ROOF, FURNITURE, STORAGE, STATION, DEFENSE, LIGHT, CLAIM, FARMING, STAIRS, FOUNDATION }
 const CATEGORY_NAMES := ["Floors", "Walls", "Doors", "Windows", "Fences", "Roofs", "Furniture", "Storage",
-	"Stations", "Defenses", "Lights", "Claims", "Farming"]
+	"Stations", "Defenses", "Lights", "Claims", "Farming", "Stairs & ladders", "Foundations"]
 
 ## Grid slot: FLOOR/OBJECT sit in a cell, EDGE on a cell edge, ROOF above a cell.
-enum Placement { FLOOR, OBJECT, EDGE, ROOF }
+## FOUNDATION (Milestone 30) levels a cell on a slope; the cell's other pieces stand on it.
+enum Placement { FLOOR, OBJECT, EDGE, ROOF, FOUNDATION }
 
 ## Behaviours implemented by BuildPiece. TURRET shoots raiders, BELL warns of raids (Milestone 7).
-enum Behavior { NONE, DOOR, CHEST, BED, SPIKES, STATION, LIGHT, CLAIM, FARM, TURRET, BELL }
+## Milestone 30: STAIRS climb a storey over 3 cells, LADDER climbs one straight up, FOUNDATION levels a cell.
+enum Behavior { NONE, DOOR, CHEST, BED, SPIKES, STATION, LIGHT, CLAIM, FARM, TURRET, BELL, STAIRS, LADDER, FOUNDATION }
 
 @export var id: StringName
 @export var display_name: String = ""

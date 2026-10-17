@@ -587,6 +587,8 @@ func _build_world() -> void:
 	sea.append(["Next season", _next_season])
 	_row(v, "Season", sea)
 	# Milestone 29: travel.
+	# Milestone 30.
+	_row(v, "Build", [["A two-storey house here", _demo_house]])
 	_row(v, "Travel", [["Unlock waystones within 3 km", _unlock_waystones], ["A saddled horse", _spawn_horse],
 		["A boat on the nearest water", _spawn_boat]])
 	_row(v, "Nature", [["Lightning on a tree", _lightning_tree], ["Set the nearest tree on fire", _fire_tree],
@@ -638,6 +640,12 @@ func _weather(k: int) -> void:
 		ws.force(k, 1.0)
 		ws.settle()
 		_say("weather: %s" % WeatherSystem.KIND_NAMES[k])
+
+
+func _demo_house() -> void:
+	var c := Vector2i(floori(player.global_position.x) + 3, floori(player.global_position.z) - 2)
+	var n := world.building.build_demo_house(c)
+	_say("built a two-storey house (%d pieces) - stairs on the east side, a ladder on the west" % n)
 
 
 func _unlock_waystones() -> void:

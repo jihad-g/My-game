@@ -2,6 +2,39 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.38.0] — Milestone 30: Multi-storey building
+
+### Added
+- **Storeys**: build up to 3 storeys above the ground floor. In build mode press **=** to build a storey higher
+  and **-** to go back down (it starts at the storey you stand on).
+  - **Upper floors** rest on the walls below, and can reach out up to 2 more cells from a floor that does:
+    **balconies** (add fences as railings). The thin upper floors have joists instead of a foundation.
+  - **Upper walls, doors, windows and fences** stand on an upper floor or on the wall below; **furniture**
+    upstairs needs a floor. **Roofs** go on any storey.
+  - You can't remove a wall that holds up a wall above it, a floor with furniture on it, or a foundation with
+    something built on it.
+  - An upper floor keeps the rain off the room below it (campfires and crops count it as a roof), and the
+    storeys above you hide when you are inside, like roofs.
+- **Wooden Stairs** and **Stone Stairs**: six steps up one storey over 3 cells (R turns them). Leave the floor
+  above them open; you arrive on the cell past the top step, which counts as supported for an upper floor.
+- **Ladder**: walk into it (or hold Space) to climb one storey; at the top you step onto the cell it faces.
+- **Stone Foundation**: levels a cell on a slope. Walls, floors and furniture in that cell stand on its top; a
+  foundation next to another one matches its height.
+- **Monster pathfinding follows storeys**: the grid now has upper decks, stair steps and ladder links, so monsters
+  and raiders walk up stairs, climb ladders and come after you on the upper floor. They can jump down from it.
+- Creative mode → World → Build: "A two-storey house here" (stone ground floor, timber upper storey with windows,
+  a bed and a chest, a balcony, outside stairs and a ladder).
+- Tests `test_m30_data`, `test_m30_storeys`, `test_m30_climbing`; screenshot mode `--only=storeys`.
+
+### Changed
+- Building slots on upper storeys are saved as `floor@1`, `edge_n@2` and so on; old saves load unchanged.
+- Fewer spring blossoms on grass and leaves (M28 looked too busy).
+- The web blueprint designer (`web/blueprint-designer/`) knows the stairs, ladder and foundation pieces.
+- Path searches skip the upper storeys of 16 m tiles that have no upper floors, so storeys cost nothing in the open.
+
+### Fixed
+- The `--only=travel` screenshot mode had a script error and did nothing (M29).
+
 ## [0.37.0] — Milestone 29: Travel - waystones, horses and boats
 
 ### Added

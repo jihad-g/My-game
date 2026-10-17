@@ -715,3 +715,66 @@ static func build_alarm_bell(b: BlockMesh) -> void:
 	b.box(Vector3(0, 1.72, 0), Vector3(0.3, 0.3, 0.3), brass)
 	b.box(Vector3(0, 1.52, 0), Vector3(0.42, 0.14, 0.42), brass * 0.9)
 	b.box(Vector3(0, 1.4, 0), Vector3(0.08, 0.1, 0.08), IRON * 0.7)
+
+
+# --- Milestone 30: storeys ------------------------------------------------------------------
+
+## Upper floors: a thin plank deck on joists (no foundation hanging into the room below).
+static func build_wood_floor_upper(b: BlockMesh) -> void:
+	b.texture = &"wood_beam"
+	for k in 3:
+		b.box(Vector3(-0.33 + k * 0.33, -0.06, 0), Vector3(0.1, 0.12, 1.0), WOOD_DARK)
+	b.box(Vector3(0, 0.04, 0), Vector3(1.0, 0.06, 1.0), WOOD_DARK)
+	for k in 4:
+		b.texture = &"planks_vertical"
+		b.box(Vector3(-0.375 + k * 0.25, 0.11, 0), Vector3(0.24, 0.04, 0.98), WOOD * (0.95 + 0.05 * (k % 2)))
+
+
+static func build_stone_floor_upper(b: BlockMesh) -> void:
+	b.texture = &"stone_tiles"
+	b.box(Vector3(0, 0.0, 0), Vector3(1.0, 0.18, 1.0), STONE * 0.8)
+	for i in 2:
+		for j in 2:
+			b.box(Vector3(-0.25 + i * 0.5, 0.11, -0.25 + j * 0.5), Vector3(0.47, 0.04, 0.47), STONE * (0.95 + 0.07 * ((i + j) % 2)))
+
+
+## Stairs: 6 steps rising one storey (2.6 m) over 3 cells along +Z, from the
+## foot cell's centre (local z -0.5 .. 2.5), with side stringers and a rail.
+static func build_wood_stairs(b: BlockMesh) -> void:
+	var rise := 2.6 / 6.0
+	for i in 6:
+		var top := (i + 1) * rise
+		b.texture = &"wood_beam"
+		b.box(Vector3(0, top - 0.05, -0.25 + i * 0.5), Vector3(0.96, 0.1, 0.5), WOOD * (0.95 + 0.05 * (i % 2)))
+		b.texture = &"planks_wall"
+		b.box(Vector3(0, (top - 0.1) * 0.5, -0.25 + i * 0.5), Vector3(0.9, top - 0.1, 0.5), WOOD_DARK * 0.9)
+	b.texture = &"wood_beam"
+	for sx in [-0.5, 0.5]:
+		b.box(Vector3(sx, 1.35, 1.0), Vector3(0.08, 0.12, 3.4), WOOD_DARK, Basis(Vector3.RIGHT, -atan2(2.6, 3.0)))
+		for i in 3:
+			b.box(Vector3(sx, 0.75 + i * 0.866, -0.25 + i * 1.0), Vector3(0.08, 1.0, 0.08), WOOD_DARK)
+
+
+static func build_stone_stairs(b: BlockMesh) -> void:
+	var rise := 2.6 / 6.0
+	for i in 6:
+		var top := (i + 1) * rise
+		b.texture = &"stone_bricks"
+		b.box(Vector3(0, top * 0.5, -0.25 + i * 0.5), Vector3(1.0, top, 0.5), STONE * (0.9 + 0.06 * (i % 2)))
+
+
+## Ladder: two rails and rungs against the cell's far (+Z) side, one storey plus a bit.
+static func build_wood_ladder(b: BlockMesh) -> void:
+	b.texture = &"wood_beam"
+	for sx in [-0.28, 0.28]:
+		b.box(Vector3(sx, 1.45, 0.38), Vector3(0.08, 2.9, 0.08), WOOD_DARK)
+	for i in 9:
+		b.box(Vector3(0, 0.3 + i * 0.3, 0.38), Vector3(0.56, 0.05, 0.06), WOOD)
+
+
+## Foundation icon/ghost shape (the placed one is sized to the slope by BuildPiece).
+static func build_stone_foundation(b: BlockMesh) -> void:
+	b.texture = &"stone_bricks"
+	b.box(Vector3(0, 0.0, 0), Vector3(1.0, 1.0, 1.0), STONE * 0.85)
+	b.texture = &"stone_tiles"
+	b.box(Vector3(0, 0.52, 0), Vector3(1.02, 0.06, 1.02), STONE)

@@ -314,6 +314,8 @@ func _physics_process(delta: float) -> void:
 				_move_swimming(input, delta)
 			elif Input.is_action_just_pressed(&"dodge") and _dodge_cooldown_left <= 0.0 and combat.can_dodge_cancel():
 				_start_dodge(input)
+			elif _try_ladder(input, delta):
+				pass  # Milestone 30: climbing a ladder
 			else:
 				_try_jump()
 				_consume_attack_requests()
@@ -341,7 +343,7 @@ func _physics_process(delta: float) -> void:
 		# Buoyancy: float with the head above the surface.
 		var float_y := TerrainGenerator.WATER_Y - swim_depth
 		velocity.y = (float_y - global_position.y) * 4.0
-	else:
+	elif not climbing:
 		_apply_gravity(delta)
 	var horizontal := Vector3(velocity.x, 0.0, velocity.z) * delta
 	var y0 := global_position.y
@@ -603,6 +605,50 @@ func _apply_gravity(delta: float) -> void:
 		velocity.y -= gravity * delta
 		if abilities.has_buff(&"feather_fall") and velocity.y < -2.5:
 			velocity.y = -2.5  # Feather Fall (Milestone 17c)
+
+
+# --- Ladders (Milestone 30) ------------------------------------------------------------
+
+const CLIMB_SPEED := 3.2
+## True while climbing a ladder (no gravity).
+var climbing := false
+
+
+## The ladder you stand at, or null.
+func _ladder_here() -> BuildPiece:
+	for n in get_tree().get_nodes_in_group(&"ladders"):
+		var lad := n as BuildPiece
+		if lad == null or not lad.is_visible_in_tree():
+			continue
+		var d := lad.ladder_dir()
+		var foot := lad.global_position + d * 0.15
+		var span := lad.ladder_span()
+		if Vector2(global_position.x - foot.x, global_position.z - foot.z).length() < 0.75 \
+				and global_position.y > span.x - 0.4 and global_position.y < span.y + 0.1:
+			return lad
+	return null
+
+
+## Walk into a ladder (or hold jump) to climb it; at the top you step onto the cell it faces.
+func _try_ladder(input: Vector3, delta: float) -> bool:
+	var lad := _ladder_here()
+	if lad == null:
+		climbing = false
+		return false
+	var d := lad.ladder_dir()
+	var pushing := input.dot(d) > 0.3 or Input.is_action_pressed(&"jump")
+	if not pushing:
+		climbing = false
+		return false
+	climbing = true
+	var span := lad.ladder_span()
+	if global_position.y >= span.y - 0.15:
+		velocity = d * 3.0 + Vector3(0, 2.0, 0)  # over the top
+	else:
+		velocity = d * 0.6 + Vector3(0, CLIMB_SPEED, 0)
+	face_direction(d, false)
+	hunger.activity_multiplier = 1.5
+	return true
 
 
 # --- Riding (Milestone 29) ------------------------------------------------------------

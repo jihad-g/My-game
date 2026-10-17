@@ -81,6 +81,9 @@ const KEY_BINDINGS := {
 	&"creative_menu": [KEY_QUOTELEFT],
 	## Milestone 29: call your horse.
 	&"whistle": [KEY_9],
+	## Milestone 30: build mode, one storey up / down.
+	&"build_storey_up": [KEY_EQUAL],
+	&"build_storey_down": [KEY_MINUS],
 }
 
 const MOUSE_BINDINGS := {
@@ -140,7 +143,8 @@ const REBINDABLE := [
 	["Menus", [[&"inventory", "Inventory"], [&"character_screen", "Character"], [&"crafting", "Crafting"],
 		[&"spellbook", "Spellbook"], [&"journal", "Journal"], [&"world_map", "World map"], [&"reputation", "Reputation"],
 		[&"blueprints", "Blueprints"], [&"toggle_help", "Guide"], [&"quick_save", "Quick save"], [&"pause", "Pause"]]],
-	["Building", [[&"build_mode", "Build mode"], [&"build_rotate", "Rotate piece"], [&"build_repair", "Repair"]]],
+	["Building", [[&"build_mode", "Build mode"], [&"build_rotate", "Rotate piece"], [&"build_repair", "Repair"],
+		[&"build_storey_up", "Build a storey higher"], [&"build_storey_down", "Build a storey lower"]]],
 	["Camera", [[&"cam_rotate_left", "Rotate left"], [&"cam_rotate_right", "Rotate right"], [&"cam_pitch_up", "Tilt up"],
 		[&"cam_pitch_down", "Tilt down"], [&"cam_pan_forward", "Pan forward"], [&"cam_pan_back", "Pan back"],
 		[&"cam_pan_left", "Pan left"], [&"cam_pan_right", "Pan right"], [&"cam_recenter", "Recenter"]]],

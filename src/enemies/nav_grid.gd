@@ -14,6 +14,12 @@ extends RefCounted
 ## A step may go up at most STEP_UP blocks (monsters hop 1 m) and down at
 ## most STEP_DOWN blocks. Diagonal steps can't cut corners.
 ##
+## Milestone 30 - storeys: a cell can also have walkable decks on storeys 1..3
+## (upper floors, and the steps of a staircase, which climb to the next storey).
+## A search node is (cell, level); level 0 is the ground (or a foundation's top).
+## Stairs are walked like any slope; ladders are links between their foot and
+## the cell they lead onto one storey up (monsters climb them).
+##
 ## find_path() returns waypoints (cell centres, smoothed so straight runs are a
 ## single waypoint) and whether the goal was reached. If the goal can't be
 ## reached it returns the way to the closest cell. Raiders may plan through
@@ -39,6 +45,15 @@ const F_BREAK := 8
 const F_WATER := 16
 const F_SOLID_HARD := 32   # a solid that is NOT a player building (raiders can't break it)
 const F_EDGE_HARD := 64    # an edge wall that is NOT a player building
+const F_NONE := 128        # no deck on this level (upper levels only)
+## Upper levels (storeys) a cell can have.
+const LEVELS := 3
+const NO_DECK := Vector2i(0, F_SOLID | F_SOLID_HARD | F_NONE)
+## Levels a search tries from each level (same as _levels_to_try, precomputed).
+const TRIES := [[0, 1], [1, 2, 0], [2, 3, 1, 0], [3, 2, 0]]
+const GROUND_ONLY := [0]
+## Extra cost of climbing a ladder (in cells).
+const LADDER_COST := 4.0
 
 const OBSTACLE_MASK := Layers.BUILDING | Layers.PROP
 const ORTHO := [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
@@ -151,8 +166,116 @@ static func _build_tile(world: World, t: Vector2i) -> Dictionary:
 			for k in TILE * TILE:
 				if h[k] < deep:
 					f[k] = F_WATER
+	var tile := {"t": Time.get_ticks_msec(), "h": h, "f": f, "uh": [], "uf": []}
+	for l in LEVELS:
+		var uh := PackedInt32Array()
+		uh.resize(TILE * TILE)
+		var uf := PackedByteArray()
+		uf.resize(TILE * TILE)
+		uf.fill(F_NONE)
+		tile.uh.append(uh)
+		tile.uf.append(uf)
+	var mine := _pieces_in_tile(world, t) if d == null else []
+	_add_foundations(world, mine, ox, oz, h)
 	_add_obstacles(world, t, h, f)
-	return {"t": Time.get_ticks_msec(), "h": h, "f": f}
+	_add_storeys(world, mine, ox, oz, h, f, tile.uh, tile.uf)
+	# Searches skip the upper levels of tiles without any deck (most of the world).
+	var decks := false
+	for l in LEVELS:
+		var lf: PackedByteArray = tile.uf[l]
+		for k in TILE * TILE:
+			if not (lf[k] & F_NONE):
+				decks = true
+				break
+		if decks:
+			break
+	tile["decks"] = decks
+	return tile
+
+
+## Player building pieces with their cell in tile `t` (each piece once).
+static func _pieces_in_tile(world: World, t: Vector2i) -> Array:
+	var out := []
+	if world.building == null:
+		return out
+	var x0 := t.x * TILE
+	var z0 := t.y * TILE
+	for k in world.building.pieces:
+		var p: BuildPiece = world.building.pieces[k]
+		if not is_instance_valid(p) or p.layer != world.layer or p.is_queued_for_deletion():
+			continue
+		if k != BuildingManager.key(p.cell, p.slot, p.layer):
+			continue
+		if p.cell.x >= x0 and p.cell.x < x0 + TILE and p.cell.y >= z0 and p.cell.y < z0 + TILE:
+			out.append(p)
+	return out
+
+
+## Foundations raise the ground of their cell to their top.
+static func _add_foundations(_world: World, mine: Array, ox: int, oz: int, h: PackedInt32Array) -> void:
+	var bh := TerrainGenerator.BLOCK_HEIGHT
+	for p: BuildPiece in mine:
+		if p.data.behavior == BuildPieceData.Behavior.FOUNDATION:
+			h[(p.cell.y - oz) * TILE + (p.cell.x - ox)] = roundi(p.found_top / bh)
+
+
+## Upper floors, their walls and furniture, and the steps of staircases.
+## (Packed arrays inside an Array are copied when read, so each level is read
+## into a local, changed and written back at the end.)
+static func _add_storeys(world: World, mine: Array, ox: int, oz: int, h: PackedInt32Array, f: PackedByteArray,
+		uh: Array, uf: Array) -> void:
+	if mine.is_empty():
+		return
+	var bh := TerrainGenerator.BLOCK_HEIGHT
+	var bm := world.building
+	var lh: Array[PackedInt32Array] = []
+	var lf: Array[PackedByteArray] = []
+	for l in LEVELS:
+		lh.append(uh[l])
+		lf.append(uf[l])
+	# Floors first (they make the decks), then what stands on them.
+	for p: BuildPiece in mine:
+		var parts := BuildingManager.split_slot(p.slot)
+		var st: int = parts[1]
+		if parts[0] == "floor" and st >= 1 and st <= LEVELS:
+			var k := (p.cell.y - oz) * TILE + (p.cell.x - ox)
+			lh[st - 1][k] = roundi((bm.storey_y(p.cell, st) + BuildingManager.FLOOR_TOP) / bh)
+			lf[st - 1][k] = 0
+	for p: BuildPiece in mine:
+		var parts := BuildingManager.split_slot(p.slot)
+		var base: String = parts[0]
+		var st: int = parts[1]
+		if p.data.behavior == BuildPieceData.Behavior.STAIRS:
+			# The steps: decks of the next storey rising cell by cell; the cells
+			# they stand on can't be walked under.
+			var rise := BuildingManager.WALL_HEIGHT / 6.0
+			var cells: Array[Vector2i] = bm.stair_cells(p.cell, p.rot)
+			for i in cells.size():
+				var c: Vector2i = cells[i]
+				if c.x < ox or c.x >= ox + TILE or c.y < oz or c.y >= oz + TILE:
+					continue  # NOT IMPLEMENTED: a staircase that crosses into the next tile only counts its own tile's steps
+				var k := (c.y - oz) * TILE + (c.x - ox)
+				if st + 1 <= LEVELS:
+					lh[st][k] = roundi((bm.storey_y(p.cell, st) + (2 * i + 1.5) * rise) / bh)
+					lf[st][k] = 0
+				if st == 0:
+					f[k] |= F_SOLID | F_BREAK
+				elif st <= LEVELS:
+					lf[st - 1][k] |= F_SOLID | F_BREAK
+			continue
+		if st < 1 or st > LEVELS:
+			continue
+		var k := (p.cell.y - oz) * TILE + (p.cell.x - ox)
+		if base == "edge_n" or base == "edge_w":
+			if p.data.behavior == BuildPieceData.Behavior.DOOR and p.is_open:
+				continue
+			if p.data.blocks_movement:
+				lf[st - 1][k] |= (F_WALL_N if base == "edge_n" else F_WALL_W) | F_BREAK
+		elif base == "object" and p.data.blocks_movement and p.data.behavior != BuildPieceData.Behavior.LADDER:
+			lf[st - 1][k] |= F_SOLID | F_BREAK
+	for l in LEVELS:
+		uh[l] = lh[l]
+		uf[l] = lf[l]
 
 
 ## Marks solid cells and walled edges from the physics shapes in the tile.
@@ -185,6 +308,8 @@ static func _add_obstacles(world: World, t: Vector2i, h: PackedInt32Array, f: Pa
 		if cs == null or cs.disabled or cs.shape == null:
 			continue
 		var breakable := body is BuildPiece
+		if breakable and (body as BuildPiece).data.behavior in [BuildPieceData.Behavior.STAIRS, BuildPieceData.Behavior.FOUNDATION]:
+			continue  # walkable: handled by _add_storeys / _add_foundations
 		_rasterize(cs.shape, cs.global_transform, breakable, ox, oz, h, f)
 
 
@@ -309,6 +434,21 @@ static func cell(world: World, x: int, z: int) -> Vector2i:
 	return Vector2i((tile.h as PackedInt32Array)[k], (tile.f as PackedByteArray)[k])
 
 
+## [height, flags] of a cell on a level (0 = ground); NO_DECK if that level has no deck there.
+static func cell_at(world: World, x: int, z: int, level: int) -> Vector2i:
+	if level <= 0:
+		return cell(world, x, z)
+	var t := Vector2i(floori(float(x) / TILE), floori(float(z) / TILE))
+	var tile := _tile(world, t)
+	if tile.is_empty() or not tile.has("uh") or level > LEVELS:
+		return NO_DECK
+	var k := (z - t.y * TILE) * TILE + (x - t.x * TILE)
+	var fl: int = (tile.uf[level - 1] as PackedByteArray)[k]
+	if fl & F_NONE:
+		return NO_DECK
+	return Vector2i((tile.uh[level - 1] as PackedInt32Array)[k], fl)
+
+
 ## Can a walker step from a to the next cell b (orthogonal)? `breaker` walks
 ## through player buildings.
 static func _step_ok(ca: Vector2i, cb: Vector2i, a: Vector2i, b: Vector2i, breaker: bool, goal: Vector2i) -> bool:
@@ -349,6 +489,57 @@ static func _unkey(k: int) -> Vector2i:
 	return Vector2i((k >> 20) - 0x40000, (k & 0xFFFFF) - 0x40000)
 
 
+## Node key: cell and level (Milestone 30).
+static func _nkey(c: Vector2i, level: int) -> int:
+	return (_key(c) << 2) | level
+
+
+static func _nunkey(k: int) -> Vector3i:
+	var c := _unkey(k >> 2)
+	return Vector3i(c.x, c.y, k & 3)
+
+
+## The level at a cell whose walking height is closest to `y` (ground if none is close).
+static func level_for(world: World, c: Vector2i, y: float) -> int:
+	var bh := TerrainGenerator.BLOCK_HEIGHT
+	var best := 0
+	var bd := absf(float(cell(world, c.x, c.y).x) * bh - y)
+	for l in range(1, LEVELS + 1):
+		var cl := cell_at(world, c.x, c.y, l)
+		if cl.y & F_NONE:
+			continue
+		var dd := absf(float(cl.x) * bh - y)
+		if dd < bd:
+			bd = dd
+			best = l
+	return best
+
+
+## Ladders near `centre`: node key -> [node keys], both ways (foot <-> top).
+static func _ladder_links(world: World, centre: Vector2i) -> Dictionary:
+	var out := {}
+	if world.dungeon or world.building == null or not world.is_inside_tree():
+		return out
+	for n in world.get_tree().get_nodes_in_group(&"ladders"):
+		var lad := n as BuildPiece
+		if lad == null or lad.layer != world.layer or lad.is_queued_for_deletion():
+			continue
+		if absi(lad.cell.x - centre.x) > MAX_RADIUS + 2 or absi(lad.cell.y - centre.y) > MAX_RADIUS + 2:
+			continue
+		var st := BuildingManager.storey_of(lad.slot)
+		if st >= LEVELS:
+			continue
+		var foot := _nkey(lad.cell, st)
+		var top := _nkey(lad.cell + BuildingManager.rot_dir(lad.rot), st + 1)
+		if not out.has(foot):
+			out[foot] = []
+		if not out.has(top):
+			out[top] = []
+		out[foot].append(top)
+		out[top].append(foot)
+	return out
+
+
 ## {"points": PackedVector3Array, "reached": bool, "breach": bool}.
 ## `breaker`: raiders - player buildings cost a lot but can be passed.
 static func find_path(world: World, from: Vector3, to: Vector3, breaker: bool = false) -> Dictionary:
@@ -358,22 +549,25 @@ static func find_path(world: World, from: Vector3, to: Vector3, breaker: bool = 
 	var s := Vector2i(floori(from.x), floori(from.z))
 	var g := Vector2i(floori(to.x), floori(to.z))
 	var out := {"points": PackedVector3Array(), "reached": false, "breach": false}
-	if s == g:
+	var cells := {}  # node key -> Vector2i(height, flags), per search
+	var sl := level_for(world, s, from.y)
+	var gl := level_for(world, g, to.y)
+	if s == g and sl == gl:
 		out.points.append(to)
 		out.reached = true
 		return out
-	var cells := {}  # key -> Vector2i(height, flags), per search
+	var links := _ladder_links(world, s)
 	var open_f: Array[float] = []
 	var open_k: Array[int] = []
 	var g_cost := {}
 	var came := {}
 	var closed := {}
-	var sk := _key(s)
-	var gk := _key(g)
+	var sk := _nkey(s, sl)
+	var gk := _nkey(g, gl)
 	g_cost[sk] = 0.0
 	_push(open_f, open_k, _octile(s, g), sk)
 	var best_k := sk
-	var best_h := _octile(s, g)
+	var best_h := _octile(s, g) + absi(sl - gl)
 	var nodes := 0
 	while not open_k.is_empty() and nodes < MAX_NODES:
 		var ck := _pop(open_f, open_k)
@@ -384,67 +578,97 @@ static func find_path(world: World, from: Vector3, to: Vector3, breaker: bool = 
 		if ck == gk:
 			best_k = gk
 			break
-		var cpos := _unkey(ck)
-		var hc := _octile(cpos, g)
+		var cn := _nunkey(ck)
+		var cpos := Vector2i(cn.x, cn.y)
+		var cl := cn.z
+		var hc := _octile(cpos, g) + absi(cl - gl) * 2.0
 		if hc < best_h:
 			best_h = hc
 			best_k = ck
-		var ccell := _cached(world, cells, cpos)
+		var ccell := _cached_l(world, cells, cpos, cl)
 		var cg: float = g_cost[ck]
+		var ctile := Vector2i(floori(float(cpos.x) / TILE), floori(float(cpos.y) / TILE))
+		var cdecks := _decks_in(world, ctile)
+		# Ladders.
+		for lk: int in links.get(ck, []):
+			if closed.has(lk):
+				continue
+			var ln := _nunkey(lk)
+			if _cached_l(world, cells, Vector2i(ln.x, ln.y), ln.z).y & F_NONE:
+				continue
+			var lg := cg + LADDER_COST
+			if lg < float(g_cost.get(lk, INF)):
+				g_cost[lk] = lg
+				came[lk] = ck
+				_push(open_f, open_k, lg + _octile(Vector2i(ln.x, ln.y), g) * 1.001, lk)
 		for dir: Vector2i in ORTHO + DIAG:
 			var npos := cpos + dir
 			if absi(npos.x - s.x) > MAX_RADIUS or absi(npos.y - s.y) > MAX_RADIUS:
 				continue
-			var nk := _key(npos)
-			if closed.has(nk):
-				continue
-			var ncell := _cached(world, cells, npos)
-			var cost := 1.0
-			if dir.x != 0 and dir.y != 0:
-				# No corner cutting: both L-shaped routes must be open.
-				var ax := cpos + Vector2i(dir.x, 0)
-				var az := cpos + Vector2i(0, dir.y)
-				var cax := _cached(world, cells, ax)
-				var caz := _cached(world, cells, az)
-				if not (_step_ok(ccell, cax, cpos, ax, breaker, g) and _step_ok(cax, ncell, ax, npos, breaker, g)
-						and _step_ok(ccell, caz, cpos, az, breaker, g) and _step_ok(caz, ncell, az, npos, breaker, g)):
+			var diag := dir.x != 0 and dir.y != 0
+			# Which level of the next cell? The same, one up or down (stairs), or the ground (a drop).
+			var tries: Array = TRIES[cl]
+			if cl == 0:
+				var ntile := Vector2i(floori(float(npos.x) / TILE), floori(float(npos.y) / TILE))
+				if not (cdecks if ntile == ctile else _decks_in(world, ntile)):
+					tries = GROUND_ONLY
+			for nl: int in tries:
+				if diag and nl != cl:
 					continue
-				if cax.y & F_SOLID or caz.y & F_SOLID:
+				var nk := _nkey(npos, nl)
+				if closed.has(nk):
 					continue
-				if breaker and (ccell.y | ncell.y | cax.y | caz.y) & F_BREAK:
-					continue  # raiders break walls head-on, never slip past a corner
-				cost = 1.4142
-			elif not _step_ok(ccell, ncell, cpos, npos, breaker, g):
-				continue
-			var dh := ncell.x - ccell.x
-			if dh > 0:
-				cost += 0.35 * dh
-			if ncell.y & F_WATER:
-				cost *= 3.0
-			if breaker and (ncell.y | ccell.y) & F_BREAK:
-				cost += 12.0
-			var ng := cg + cost
-			if ng < float(g_cost.get(nk, INF)):
-				g_cost[nk] = ng
-				came[nk] = ck
-				_push(open_f, open_k, ng + _octile(npos, g) * 1.001, nk)
+				var ncell := _cached_l(world, cells, npos, nl)
+				if ncell.y & F_NONE:
+					continue
+				var cost := 1.0
+				if diag:
+					# No corner cutting: both L-shaped routes must be open.
+					var ax := cpos + Vector2i(dir.x, 0)
+					var az := cpos + Vector2i(0, dir.y)
+					var cax := _cached_l(world, cells, ax, cl)
+					var caz := _cached_l(world, cells, az, cl)
+					if (cax.y | caz.y) & F_NONE:
+						continue
+					if not (_step_ok(ccell, cax, cpos, ax, breaker, g) and _step_ok(cax, ncell, ax, npos, breaker, g)
+							and _step_ok(ccell, caz, cpos, az, breaker, g) and _step_ok(caz, ncell, az, npos, breaker, g)):
+						continue
+					if cax.y & F_SOLID or caz.y & F_SOLID:
+						continue
+					if breaker and (ccell.y | ncell.y | cax.y | caz.y) & F_BREAK:
+						continue  # raiders break walls head-on, never slip past a corner
+					cost = 1.4142
+				elif not _step_ok(ccell, ncell, cpos, npos, breaker, g):
+					continue
+				var dh := ncell.x - ccell.x
+				if dh > 0:
+					cost += 0.35 * dh
+				if ncell.y & F_WATER:
+					cost *= 3.0
+				if breaker and (ncell.y | ccell.y) & F_BREAK:
+					cost += 12.0
+				var ng := cg + cost
+				if ng < float(g_cost.get(nk, INF)):
+					g_cost[nk] = ng
+					came[nk] = ck
+					_push(open_f, open_k, ng + _octile(npos, g) * 1.001 + absi(nl - gl) * 0.5, nk)
 	stats.nodes += nodes
 	out.reached = best_k == gk
 	if out.reached:
 		stats.reached += 1
 	else:
 		stats.partial += 1
-	# Walk back from the best cell.
-	var chain: Array[Vector2i] = []
+	# Walk back from the best node.
+	var chain: Array[Vector3i] = []
 	var k := best_k
 	while k != sk:
-		chain.push_front(_unkey(k))
+		chain.push_front(_nunkey(k))
 		if not came.has(k):
 			break
 		k = came[k]
-	chain.push_front(s)
+	chain.push_front(Vector3i(s.x, s.y, sl))
 	for c in chain:
-		if breaker and int(_cached(world, cells, c).y) & F_BREAK:
+		if breaker and int(_cached_l(world, cells, Vector2i(c.x, c.y), c.z).y) & F_BREAK:
 			out.breach = true
 	out.points = _smooth(world, cells, chain, breaker, g)
 	if out.reached and out.points.size() > 0:
@@ -453,11 +677,32 @@ static func find_path(world: World, from: Vector3, to: Vector3, breaker: bool = 
 	return out
 
 
+## Does this tile have any upper deck (floor, stair step) at all?
+static func _decks_in(world: World, t: Vector2i) -> bool:
+	return bool(_tile(world, t).get("decks", false))
+
+
+## Levels worth trying from level `l`: the same, one up and one down (stairs), the ground (drops).
+static func _levels_to_try(l: int) -> Array[int]:
+	var out: Array[int] = [l]
+	if l + 1 <= LEVELS:
+		out.append(l + 1)
+	if l - 1 >= 0:
+		out.append(l - 1)
+	if l >= 2:
+		out.append(0)
+	return out
+
+
 static func _cached(world: World, cells: Dictionary, c: Vector2i) -> Vector2i:
-	var k := _key(c)
+	return _cached_l(world, cells, c, 0)
+
+
+static func _cached_l(world: World, cells: Dictionary, c: Vector2i, level: int) -> Vector2i:
+	var k := _nkey(c, level)
 	if cells.has(k):
 		return cells[k]
-	var v := cell(world, c.x, c.y)
+	var v := cell_at(world, c.x, c.y, level)
 	cells[k] = v
 	return v
 
@@ -519,21 +764,22 @@ static func _pop(fs: Array[float], ks: Array[int]) -> int:
 # --- Smoothing ---------------------------------------------------------------------------
 
 ## Keeps only the cells where the path has to turn: from each kept cell, jump
-## to the farthest later cell that can be walked to in a straight line.
-static func _smooth(world: World, cells: Dictionary, chain: Array[Vector2i], breaker: bool, goal: Vector2i) -> PackedVector3Array:
+## to the farthest later cell that can be walked to in a straight line (on the
+## same level - stairs and ladders always keep their points).
+static func _smooth(world: World, cells: Dictionary, chain: Array[Vector3i], breaker: bool, goal: Vector2i) -> PackedVector3Array:
 	var pts := PackedVector3Array()
 	var bh := TerrainGenerator.BLOCK_HEIGHT
 	var i := 0
 	while i < chain.size() - 1:
 		var j := chain.size() - 1
-		while j > i + 1 and not _straight(world, cells, chain[i], chain[j], breaker, goal):
+		while j > i + 1 and not _straight(world, cells, chain, i, j, breaker, goal):
 			j -= 1
 		var c := chain[j]
-		pts.append(Vector3(c.x + 0.5, _cached(world, cells, c).x * bh, c.y + 0.5))
+		pts.append(Vector3(c.x + 0.5, _cached_l(world, cells, Vector2i(c.x, c.y), c.z).x * bh, c.y + 0.5))
 		i = j
 	if pts.is_empty():
 		var c := chain[0]
-		pts.append(Vector3(c.x + 0.5, _cached(world, cells, c).x * bh, c.y + 0.5))
+		pts.append(Vector3(c.x + 0.5, _cached_l(world, cells, Vector2i(c.x, c.y), c.z).x * bh, c.y + 0.5))
 	return pts
 
 
@@ -542,35 +788,47 @@ static func _smooth(world: World, cells: Dictionary, chain: Array[Vector2i], bre
 const BODY_HALF := 0.35
 
 
-## A straight walk from cell a to cell b, checked cell by cell along the
-## centre line and both sides of the body.
-static func _straight(world: World, cells: Dictionary, a: Vector2i, b: Vector2i, breaker: bool, goal: Vector2i) -> bool:
+## A straight walk from chain[i] to chain[j], checked cell by cell along the
+## centre line and both sides of the body. Only on one level.
+static func _straight(world: World, cells: Dictionary, chain: Array[Vector3i], i: int, j: int, breaker: bool, goal: Vector2i) -> bool:
+	var level := chain[i].z
+	for m in range(i, j + 1):
+		if chain[m].z != level:
+			return false
+		if m > i and absi(chain[m].x - chain[m - 1].x) + absi(chain[m].y - chain[m - 1].y) > 2:
+			return false  # a ladder jump
+	var a := Vector2i(chain[i].x, chain[i].y)
+	var b := Vector2i(chain[j].x, chain[j].y)
 	var p := Vector2(a.x + 0.5, a.y + 0.5)
 	var q := Vector2(b.x + 0.5, b.y + 0.5)
 	var side := (q - p).orthogonal().normalized() * BODY_HALF
 	for off in [Vector2.ZERO, side, -side]:
-		if not _line_ok(world, cells, p + off, q + off, breaker, goal):
+		if not _line_ok(world, cells, p + off, q + off, breaker, goal, level):
 			return false
 	return true
 
 
-static func _line_ok(world: World, cells: Dictionary, p: Vector2, q: Vector2, breaker: bool, goal: Vector2i) -> bool:
+static func _line_ok(world: World, cells: Dictionary, p: Vector2, q: Vector2, breaker: bool, goal: Vector2i, level: int = 0) -> bool:
 	var a := Vector2i(floori(p.x), floori(p.y))
 	var n := ceili(p.distance_to(q) / 0.25)
 	var prev := a
-	var pc := _cached(world, cells, a)
+	var pc := _cached_l(world, cells, a, level)
 	for s in range(1, n + 1):
 		var m := p.lerp(q, float(s) / n)
 		var c := Vector2i(floori(m.x), floori(m.y))
 		if c == prev:
 			continue
-		var cc := _cached(world, cells, c)
+		var cc := _cached_l(world, cells, c, level)
+		if cc.y & F_NONE:
+			return false
 		if c.x != prev.x and c.y != prev.y:
 			# Crossed a corner: both side cells must be open too.
 			var sx := Vector2i(c.x, prev.y)
 			var sz := Vector2i(prev.x, c.y)
-			var csx := _cached(world, cells, sx)
-			var csz := _cached(world, cells, sz)
+			var csx := _cached_l(world, cells, sx, level)
+			var csz := _cached_l(world, cells, sz, level)
+			if (csx.y | csz.y) & F_NONE:
+				return false
 			if not (_step_ok(pc, csx, prev, sx, breaker, goal) and _step_ok(csx, cc, sx, c, breaker, goal)
 					and _step_ok(pc, csz, prev, sz, breaker, goal) and _step_ok(csz, cc, sz, c, breaker, goal)):
 				return false

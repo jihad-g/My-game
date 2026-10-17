@@ -151,6 +151,9 @@ func _ready() -> void:
 	await _run_async(&"test_m28_weather_ingame")
 	_run(&"test_m29_travel_data")
 	await _run_async(&"test_m29_travel_ingame")
+	_run(&"test_m30_data")
+	await _run_async(&"test_m30_storeys")
+	await _run_async(&"test_m30_climbing")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5200,7 +5203,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.37"), "version 0.37 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.38"), "version 0.38 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -8928,5 +8931,215 @@ func test_m29_travel_ingame() -> void:
 			check(p.stop_riding(false, true) and boat.rider == null, "out of the boat")
 			boat.pick_up(p)
 			check(p.inventory.count_of(&"rowboat") == 1, "the boat goes back into the bag")
+	world.queue_free()
+	await _frames(5)
+
+
+# --- Milestone 30: multi-storey building ---------------------------------------------------
+
+func test_m30_data() -> void:
+	for id in [&"wood_stairs", &"stone_stairs", &"wood_ladder", &"stone_foundation"]:
+		var d := BuildingManager.get_piece_data(id)
+		check(d != null and BuildMeshes.get_mesh(d.mesh).get_surface_count() > 0, "piece %s exists with a mesh" % id)
+	check(BuildingManager.split_slot("edge_n@2") == ["edge_n", 2] and BuildingManager.split_slot("floor") == ["floor", 0], "storey slots")
+	check(BuildingManager.slot_at("roof", 1) == "roof@1" and BuildingManager.slot_at("roof", 0) == "roof", "slot names")
+	check(InputMap.has_action(&"build_storey_up") and InputMap.has_action(&"build_storey_down"), "storey keys")
+
+
+## Builds a closed room of walls x0..x0+w-1, z0..z0+d-1 on `storey` (no checks).
+func _room(world: World, x0: int, z0: int, w: int, d: int, storey: int = 0, id: StringName = &"wood_wall") -> void:
+	var data := BuildingManager.get_piece_data(id)
+	for x in range(x0, x0 + w):
+		world.building._spawn(data, Vector2i(x, z0), BuildingManager.slot_at("edge_n", storey), 0, world.layer)
+		world.building._spawn(data, Vector2i(x, z0 + d), BuildingManager.slot_at("edge_n", storey), 0, world.layer)
+	for z in range(z0, z0 + d):
+		world.building._spawn(data, Vector2i(x0, z), BuildingManager.slot_at("edge_w", storey), 0, world.layer)
+		world.building._spawn(data, Vector2i(x0 + w, z), BuildingManager.slot_at("edge_w", storey), 0, world.layer)
+
+
+func test_m30_storeys() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	var c := _flat_area(world, 10)
+	await _teleport_to(world, c + Vector3(-6, 0, 0))
+	var bm := world.building
+	var x0 := floori(c.x) - 1
+	var z0 := floori(c.z) - 1
+	_room(world, x0, z0, 3, 3)
+	var floor_d := BuildingManager.get_piece_data(&"wood_floor")
+	var wall_d := BuildingManager.get_piece_data(&"wood_wall")
+	# Upper floors rest on walls; the middle one reaches from its neighbours.
+	check(bm.check_place(floor_d, Vector2i(x0, z0), "floor@1", null, false) == "", "an upper floor on the walls")
+	for i in 3:
+		for j in 3:
+			bm.place(floor_d, Vector2i(x0 + i, z0 + j), "floor@1", 0, null, false)
+	check(bm.pieces.has(BuildingManager.key(Vector2i(x0 + 1, z0 + 1), "floor@1", world.layer)), "the whole upper floor is down (the middle too)")
+	var up: BuildPiece = bm.pieces[BuildingManager.key(Vector2i(x0, z0), "floor@1", world.layer)]
+	check(absf(up.global_position.y - (bm._base(Vector2i(x0, z0)) + BuildingManager.WALL_HEIGHT)) < 0.01, "it sits one storey up")
+	check("need walls" in bm.check_place(floor_d, Vector2i(x0 + 8, z0), "floor@1", null, false), "no floating floors")
+	# Balconies: the cell over the wall, then up to 2 more cells out.
+	check(bm.place(floor_d, Vector2i(x0 + 3, z0 + 1), "floor@1", 0, null, false) != null, "a floor over the outside of the wall")
+	check(bm.place(floor_d, Vector2i(x0 + 4, z0 + 1), "floor@1", 0, null, false) != null, "a balcony 1 cell further")
+	check(bm.place(floor_d, Vector2i(x0 + 5, z0 + 1), "floor@1", 0, null, false) != null, "and 2 cells further")
+	check(bm.check_place(floor_d, Vector2i(x0 + 6, z0 + 1), "floor@1", null, false) != "", "but not 3")
+	check(bm.place(BuildingManager.get_piece_data(&"wood_fence"), Vector2i(x0 + 6, z0 + 1), "edge_w@1", 0, null, false) != null,
+		"a railing on the balcony")
+	# Upper walls and furniture.
+	check(bm.place(wall_d, Vector2i(x0, z0), "edge_n@1", 0, null, false) != null, "a wall on the upper floor")
+	check(bm.check_place(wall_d, Vector2i(x0 + 9, z0 + 9), "edge_n@1", null, false) != "", "no walls in the air")
+	var chest := bm.place(BuildingManager.get_piece_data(&"storage_chest"), Vector2i(x0 + 1, z0 + 1), "object@1", 0, null, false)
+	check(chest != null and chest.global_position.y > up.global_position.y + 0.1, "a chest upstairs")
+	var chest_y := chest.global_position.y if chest else 0.0
+	check("Put a floor" in bm.check_place(BuildingManager.get_piece_data(&"storage_chest"), Vector2i(x0 + 9, z0), "object@1", null, false),
+		"furniture needs a floor")
+	# What holds things up can't be taken away.
+	var low_wall: BuildPiece = bm.pieces[BuildingManager.key(Vector2i(x0, z0), "edge_n", world.layer)]
+	check(not bm.remove(low_wall, p), "the wall under an upper wall stays")
+	check(bm.is_sheltered(Vector3(x0 + 1.5, bm._base(Vector2i(x0 + 1, z0 + 1)) + 0.2, z0 + 1.5)), "the upper floor is a roof for the room below")
+	check(bm.check_place(BuildingManager.get_piece_data(&"thatch_roof"), Vector2i(x0, z0), "roof@1", null, false) == "", "a roof on storey 2")
+	# Stairs: three cells, arriving on a landing one storey up.
+	var stairs_d := BuildingManager.get_piece_data(&"wood_stairs")
+	var foot := Vector2i(x0 - 3, z0 + 1)
+	check(bm.check_stairs(foot, 1, 0) == "", "stairs fit")
+	var st := bm.place(stairs_d, foot, "object", 1, null, false)
+	check(st != null and st.extra_keys.size() == 2, "the stairs fill 3 cells")
+	check(st.stairs_top_cell() == foot + Vector2i(3, 0), "they lead to the cell past the top step")
+	check(bm.floor_supported(foot + Vector2i(3, 0), 1), "the landing is supported by the stairs")
+	var n_saved := 0
+	for e in bm.to_save():
+		if e.id == "wood_stairs":
+			n_saved += 1
+	check(n_saved == 1, "the stairs are saved once")
+	# Pathfinding: from the ground up the stairs onto the upper floor.
+	NavGrid.clear()
+	await _frames(2)
+	var from := Vector3(foot.x - 1.5, bm._base(foot), foot.y + 0.5)
+	var goal := Vector3(x0 + 1.5, bm.storey_y(Vector2i(x0 + 1, z0 + 1), 1) + 0.13, z0 + 1.5)
+	await _teleport_to(world, from)
+	NavGrid.clear()
+	var r := NavGrid.find_path(world, from, goal)
+	var highest := -INF
+	for pt in r.points:
+		highest = maxf(highest, pt.y)
+	check(r.reached and highest > goal.y - 0.6, "monsters can walk up the stairs to the upper floor (%s, top %.1f m)" % [r.reached, highest - from.y])
+	# Save and load: the storeys come back at the right height.
+	var saved := bm.to_save()
+	for k in bm.pieces.keys():
+		var bp: BuildPiece = bm.pieces.get(k)
+		if bp and is_instance_valid(bp):
+			bp.queue_free()
+	bm.pieces.clear()
+	await _frames(2)
+	bm.from_save(saved)
+	var up2: BuildPiece = bm.pieces.get(BuildingManager.key(Vector2i(x0 + 1, z0 + 1), "object@1", world.layer))
+	check(up2 != null and absf(up2.global_position.y - chest_y) < 0.01, "the upstairs chest is back where it was")
+	check(bm.pieces.has(BuildingManager.key(foot + Vector2i(2, 0), "stair", world.layer)), "the stairs are back, all 3 cells")
+	# Foundations level a slope.
+	var slope := Vector2i.ZERO
+	var found_ok := false
+	for rr in range(4, 60):
+		for k in 16:
+			var q := Vector2i(floori(c.x + cos(TAU * k / 16.0) * rr), floori(c.z + sin(TAU * k / 16.0) * rr))
+			var g0 := bm._ground(q)
+			var hi := g0
+			for dz in [-1, 0, 1]:
+				for dx in [-1, 0, 1]:
+					hi = maxf(hi, bm._ground(q + Vector2i(dx, dz)))
+			if hi - g0 >= 0.5 and hi - g0 <= 1.5 and g0 > TerrainGenerator.WATER_Y + 0.5:
+				slope = q
+				found_ok = true
+				break
+		if found_ok:
+			break
+	check(found_ok, "a slope nearby")
+	if found_ok:
+		await _teleport_to(world, Vector3(slope.x + 0.5, 0, slope.y + 2.5))
+		var fd := BuildingManager.get_piece_data(&"stone_foundation")
+		check(bm.check_place(fd, slope, "found", null, false) == "", "a foundation fits on the slope")
+		var fp := bm.place(fd, slope, "found", 0, null, false)
+		check(fp != null and fp.found_top > bm._ground(slope) + 0.4, "it rises above the low ground (%.1f m)" % (fp.found_top - bm._ground(slope) if fp else 0.0))
+		var w2 := bm.place(wall_d, slope, "edge_n", 0, null, false)
+		check(w2 != null and absf(w2.global_position.y - maxf(fp.found_top, bm._base(slope - Vector2i(0, 1)))) < 0.01, "a wall stands on the foundation")
+		var fp2 := bm.place(fd, slope + Vector2i(1, 0), "found", 0, null, false)
+		check(fp2 != null and is_equal_approx(fp2.found_top, fp.found_top) or bm._ground(slope + Vector2i(1, 0)) > fp.found_top - 0.2,
+			"the next foundation is level with it")
+		var fsave: Dictionary = fp.save_data()
+		check(fsave.has("top"), "the foundation's height is saved")
+	world.queue_free()
+	await _frames(5)
+
+
+## Presses the move key that points most along `d` (camera-relative controls).
+func _press_toward(world: World, d: Vector3) -> StringName:
+	var f := world.camera_rig.get_forward_flat()
+	var r := world.camera_rig.get_right_flat()
+	var best: StringName = &"move_forward"
+	var bd := -INF
+	for pair in [[&"move_forward", f], [&"move_back", -f], [&"move_right", r], [&"move_left", -r]]:
+		var v: float = (pair[1] as Vector3).dot(d)
+		if v > bd:
+			bd = v
+			best = pair[0]
+	Input.action_press(best)
+	return best
+
+
+func test_m30_climbing() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	var c := _flat_area(world, 10)
+	await _teleport_to(world, c + Vector3(-5, 0, 0))
+	var bm := world.building
+	var x0 := floori(c.x) - 1
+	var z0 := floori(c.z) - 1
+	_room(world, x0, z0, 3, 3)
+	var floor_d := BuildingManager.get_piece_data(&"wood_floor")
+	for i in 3:
+		for j in 3:
+			bm.place(floor_d, Vector2i(x0 + i, z0 + j), "floor@1", 0, null, false)
+	# A ladder outside the west wall, climbing onto the upper floor (it faces +X).
+	var lad := bm.place(BuildingManager.get_piece_data(&"wood_ladder"), Vector2i(x0 - 1, z0 + 1), "object", 1, null, false)
+	check(lad != null, "a ladder against the wall")
+	NavGrid.clear()
+	await _frames(2)
+	var from := Vector3(x0 - 3.5, bm._base(Vector2i(x0 - 3, z0 + 1)), z0 + 1.5)
+	var goal := Vector3(x0 + 1.5, bm.storey_y(Vector2i(x0 + 1, z0 + 1), 1) + 0.13, z0 + 1.5)
+	var r := NavGrid.find_path(world, from, goal)
+	check(r.reached, "a path up the ladder onto the upper floor")
+	# The hero climbs it.
+	p.global_position = lad.global_position + Vector3(-0.2, 0.2, 0)
+	p.velocity = Vector3.ZERO
+	await _frames(3)
+	var key := _press_toward(world, lad.ladder_dir())
+	var y0 := p.global_position.y
+	var top := -INF
+	for i in 120:
+		await _frames(1)
+		top = maxf(top, p.global_position.y)
+		if p.global_position.y > goal.y - 0.3 and not p.climbing:
+			break
+	Input.action_release(key)
+	check(top > y0 + 2.0, "the hero climbs the ladder (%.1f m up)" % (top - y0))
+	check(p.global_position.y > goal.y - 0.5 and absf(p.global_position.x - (x0 + 0.5)) < 1.5, "and steps onto the upper floor")
+	# A raider climbs the ladder to reach the hero upstairs.
+	p.global_position = goal + Vector3(0, 0.2, 0)
+	world.spawner.max_active = 5
+	var data := load("res://data/enemies/skeleton_warrior.tres") as EnemyData
+	var m := world.spawner.spawn_enemy(load(Monster.MONSTER_SCENE_PATH), from + Vector3(0, 0.3, 0), "", data) as Monster
+	check(m != null, "a skeleton below")
+	if m:
+		m.health.invulnerable = true
+		var best := INF
+		for i in 900:
+			await _frames(1)
+			best = minf(best, m.global_position.distance_to(p.global_position))
+			if best < 2.0:
+				break
+		check(best < 2.0, "the skeleton climbs the ladder and reaches the hero (%.1f m)" % best)
+		NodePool.release_or_free(m)
 	world.queue_free()
 	await _frames(5)

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"stone_stairs"
+display_name = "Stone Stairs"
+description = "Solid stone steps up one storey over 3 cells. Raiders find them hard to break."
+category = 13
+placement = 1
+behavior = 11
+cost = {
+&"stone": 12
+}
+mesh = &"stone_stairs"
+collision_size = Vector3(1, 1, 1)
+collision_center = Vector3(0, 0.5, 0)
+blocks_movement = true
+required_level = 8
+fade_near_camera = true

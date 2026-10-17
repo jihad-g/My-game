@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"wood_ladder"
+display_name = "Ladder"
+description = "Climb one storey straight up: walk into it (or hold Space). Put it against a wall; you climb out onto the cell it faces."
+category = 13
+placement = 1
+behavior = 12
+cost = {
+&"wood": 4,
+&"rope": 1
+}
+mesh = &"wood_ladder"
+collision_size = Vector3(1, 1, 1)
+collision_center = Vector3(0, 0.5, 0)
+blocks_movement = false
+required_level = 3
+fade_near_camera = true

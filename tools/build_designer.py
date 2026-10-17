@@ -14,8 +14,8 @@ import json, os, re, sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 CATEGORIES = ["Floors", "Walls", "Doors", "Windows", "Fences", "Roofs", "Furniture", "Storage",
-              "Stations", "Defenses", "Lights", "Claims", "Farming"]
-PLACEMENT = ["floor", "object", "edge", "roof"]
+              "Stations", "Defenses", "Lights", "Claims", "Farming", "Stairs", "Foundations"]
+PLACEMENT = ["floor", "object", "edge", "roof", "found"]
 
 
 def tres_fields(path):

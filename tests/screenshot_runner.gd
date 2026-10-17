@@ -26,6 +26,10 @@ func _ready() -> void:
 		await _new_folk_showcase()
 		get_tree().quit()
 		return
+	if "--only=storeys" in OS.get_cmdline_user_args():
+		await _storeys_showcase()
+		get_tree().quit()
+		return
 	if "--only=travel" in OS.get_cmdline_user_args():
 		await _travel_showcase()
 		get_tree().quit()
@@ -2298,6 +2302,64 @@ func _rich_world_showcase() -> void:
 
 
 
+## Milestone 30: a two-storey house with stairs, a balcony and a ladder.
+func _storeys_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 15.0
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	world.weather.settle()
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var cam := Camera3D.new()
+	cam.fov = 42.0
+	world.add_child(cam)
+	cam.current = true
+	var flat := _dry_center(world, p.global_position, 14.0)
+	await _teleport(world, flat + Vector3(-8, 0, 8))
+	_clear_monsters(world)
+	var c := Vector2i(floori(flat.x) - 2, floori(flat.z) - 2)
+	world.building.build_demo_house(c)
+	world.building.set_process(false)  # keep the roof on for the pictures
+	await _wait(10)
+	var centre := Vector3(c.x + 3.0, world.building._base(c) + 2.6, c.y + 3.0)
+	cam.global_position = centre + Vector3(11, 8, 13)
+	cam.look_at(centre)
+	await _wait(20)
+	await _shot("storeys_1_house")
+	# The hero on the balcony, a skeleton coming up the stairs.
+	p.global_position = Vector3(c.x + 2.5, world.building.storey_y(Vector2i(c.x + 2, c.y + 4), 1) + 0.2, c.y + 4.5)
+	p.face_direction(Vector3(0, 0, 1), true)
+	var data := load("res://data/enemies/skeleton_warrior.tres") as EnemyData
+	world.spawner.max_active = 3
+	var m := world.spawner.spawn_enemy(load(Monster.MONSTER_SCENE_PATH), Vector3(c.x + 5.5, world.building._base(c) + 1.7, c.y + 2.6), "", data)
+	if m:
+		m.set_physics_process(false)
+		m.model.rotation.y = 0.0
+	cam.global_position = centre + Vector3(9, 3, 11)
+	cam.look_at(centre + Vector3(1.5, 0, 1.5))
+	await _wait(20)
+	await _shot("storeys_2_balcony")
+	# Inside: the roof lifts away over you, the upper room with bed and chest.
+	for k in world.building.pieces:
+		var bp: BuildPiece = world.building.pieces[k]
+		if BuildingManager.base_slot(bp.slot) == "roof":
+			bp.visible = false
+	cam.global_position = centre + Vector3(2, 9, 6)
+	cam.look_at(centre + Vector3(0, 0, -0.5))
+	await _wait(10)
+	await _shot("storeys_3_upstairs")
+
+
 ## Milestone 29: a horse herd, riding with a saddle, a waystone and a rowboat.
 func _travel_showcase() -> void:
 	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
@@ -2347,7 +2409,7 @@ func _travel_showcase() -> void:
 			for r in range(4, 80, 4):
 				var found := false
 				for k in 12:
-					var q := herds[0][1] + Vector3(cos(TAU * k / 12.0), 0, sin(TAU * k / 12.0)) * r
+					var q: Vector3 = herds[0][1] + Vector3(cos(TAU * k / 12.0), 0, sin(TAU * k / 12.0)) * r
 					q.y = world.get_ground_height(q)
 					if TreeFire.trees_near(world, q, 6.0).is_empty() and q.y > TerrainGenerator.WATER_Y + 0.5:
 						spot = q

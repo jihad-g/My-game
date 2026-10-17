@@ -208,7 +208,7 @@ kbd { font-family: var(--font-mono); font-size: 11px; border: 1px solid var(--ru
 const CATALOG = /*CATALOG*/null;
 const STANDALONE = /*STANDALONE*/false;
 const PIECES = Object.fromEntries(CATALOG.pieces.filter(p => p.behavior !== 7).map(p => [p.id, p]));
-const ORDER = { floor: 0, edge_n: 1, edge_w: 1, object: 2, roof: 3 };
+const ORDER = { found: -1, floor: 0, edge_n: 1, edge_w: 1, object: 2, roof: 3 };
 
 // ---- State ---------------------------------------------------------------------------------
 const state = {
@@ -320,6 +320,7 @@ function pieceColor(p) {
     case "Fences": return colors["c-fence"];
     case "Roofs": return colors["c-roof"];
     case "Defenses": return colors["c-defense"];
+    case "Stairs": return /stone/.test(p.id) ? colors["c-stone"] : colors["c-wall"];
     case "Farming": return colors["c-farm"];
     case "Lights": return colors["c-light"];
     default: return colors["c-object"];
@@ -349,6 +350,7 @@ function draw() {
   }
   const list = [...state.pieces.values()];
   const by = slot => list.filter(e => slot === "edge" ? e.slot.startsWith("edge") : e.slot === slot);
+  for (const e of by("found")) drawPiece(e, 1);
   for (const e of by("floor")) drawPiece(e, 1);
   for (const e of by("object")) drawPiece(e, 1);
   for (const e of by("edge")) drawPiece(e, 1);
@@ -374,7 +376,11 @@ function drawPiece(e, alpha) {
   const p = PIECES[e.id]; if (!p) return;
   const s = state.view.scale, [sx, sy] = toScreen(e.x, e.z), col = pieceColor(p);
   ctx.fillStyle = col; ctx.strokeStyle = col;
-  if (e.slot === "floor") {
+  if (e.slot === "found") {
+    // Foundation: a solid stone block under the cell.
+    ctx.fillStyle = colors["c-stone"]; ctx.fillRect(sx, sy, s, s);
+    ctx.strokeStyle = colors.sheet; ctx.lineWidth = 1; ctx.strokeRect(sx + 2.5, sy + 2.5, s - 5, s - 5);
+  } else if (e.slot === "floor") {
     if (p.category === "Farming") { ctx.fillRect(sx + 3, sy + 3, s - 6, s - 6); ctx.strokeStyle = colors.sheet; ctx.lineWidth = 1;
       for (let i = 1; i < 3; i++) { ctx.beginPath(); ctx.moveTo(sx + 3, sy + i * s / 3); ctx.lineTo(sx + s - 3, sy + i * s / 3); ctx.stroke(); } }
     else if (p.category === "Defenses") { ctx.fillStyle = colors["c-defense"]; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) ctx.fillRect(sx + s * (0.2 + i * 0.25), sy + s * (0.2 + j * 0.25), s * 0.1, s * 0.1); }
