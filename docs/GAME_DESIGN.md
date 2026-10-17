@@ -1167,6 +1167,11 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 28 — Weather that matters, and seasons (v0.36.0).** Four 4-day seasons change the look of the
+land (blossoms, autumn colours, snow), the temperature, the weather odds and which crops grow. Rain soaks
+campfires and speeds crops, lightning can burn trees down, and bad weather shortens monster sight. Seasons are
+worked out from the day number (`src/world/seasons.gd`), so saves need nothing new except a farm plot's growth.
+
 **Done: Milestone 27 — New mobs and gear (v0.35.0).** Ten creatures and three gear sets with signature weapons,
 designed in the style of the owner's reference sheets.
 

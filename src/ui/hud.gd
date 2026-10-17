@@ -963,7 +963,7 @@ func _process(delta: float) -> void:
 	if world and world.day_night:
 		var extra := ""
 		if world.weather and world.layer == TerrainGenerator.Layer.SURFACE and world.dungeon == null:
-			extra = "\n%s" % world.weather.kind_name()
+			extra = "\n%s · %s" % [Seasons.season_name(Seasons.season_of(world.day_night.day)), world.weather.kind_name()]
 			if world.day_night.is_night():
 				extra += " · %s" % world.day_night.moon_phase_name()
 		_clock.text = world.day_night.time_string() + extra

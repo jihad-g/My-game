@@ -6,6 +6,8 @@ extends StaticBody3D
 ## ambient temperature, so standing near a fire counters cold exposure.
 ## Cooking: interact to cook one raw ingredient (data: COOK_RECIPES); it is
 ## also the "campfire" crafting station for campfire recipes (G).
+## Milestone 28: rain puts it out. In the open, RAIN_OUT_TIME seconds of rain
+## (less in a storm) and the fire dies; under a roof it keeps burning.
 
 const COOK_RECIPES := {&"raw_meat": &"cooked_meat"}
 
@@ -17,6 +19,10 @@ var _time_left := 0.0
 var _light: OmniLight3D
 var _flames: Array[MeshInstance3D] = []
 var _t := 0.0
+## Seconds of rain the fire has taken (0..RAIN_OUT_TIME).
+var rain_soak := 0.0
+var _rain_tick := 0.0
+const RAIN_OUT_TIME := 20.0
 
 
 func _ready() -> void:
@@ -76,13 +82,35 @@ func _process(delta: float) -> void:
 	if _time_left <= 0.0:
 		queue_free()
 		return
-	var fade := clampf(_time_left / 30.0, 0.0, 1.0)  # dies down in the last 30 s
+	_rain_tick -= delta
+	if _rain_tick <= 0.0:
+		_rain_tick = 1.0
+		var w := World.instance
+		var rain := w.weather.rain_at(global_position) if w and w.weather else 0.0
+		if rain > 0.15:
+			rain_soak += 1.0 * (0.5 + rain)
+		else:
+			rain_soak = maxf(0.0, rain_soak - 0.5)
+		if rain_soak >= RAIN_OUT_TIME:
+			put_out_by_rain()
+			return
+	var fade := clampf(_time_left / 30.0, 0.0, 1.0) * (1.0 - 0.6 * rain_soak / RAIN_OUT_TIME)  # dies down in the last 30 s
 	for k in _flames.size():
 		var f := _flames[k]
 		var s := (0.85 + sin(_t * (7.0 + k * 3.0) + k) * 0.15) * fade
 		f.scale = Vector3(s, s * (1.0 + sin(_t * 11.0 + k) * 0.1), s)
 		f.rotation.y = _t * (1.5 + k)
 	_light.light_energy = (2.0 + sin(_t * 13.0) * 0.25 + sin(_t * 7.3) * 0.2) * fade
+
+
+## The rain put the fire out: a puff of steam and it is gone.
+func put_out_by_rain() -> void:
+	VFX.dust(get_parent(), global_position + Vector3(0, 0.6, 0), Color(0.7, 0.7, 0.72, 0.7), 10)
+	Audio.play_at(&"splash", global_position, -4.0)
+	var w := World.instance
+	if w and w.player and w.player.global_position.distance_to(global_position) < 30.0:
+		Events.toast.emit("The rain put out your campfire (build a roof over it)", Color(0.7, 0.85, 1.0))
+	queue_free()
 
 
 func save_data() -> Dictionary:
@@ -98,7 +126,7 @@ func heat_at(pos: Vector3) -> float:
 	var d := pos.distance_to(global_position)
 	if d >= radius:
 		return 0.0
-	var fade := clampf(_time_left / 30.0, 0.0, 1.0)
+	var fade := clampf(_time_left / 30.0, 0.0, 1.0) * (1.0 - 0.6 * rain_soak / RAIN_OUT_TIME)
 	return heat * (1.0 - d / radius) * fade
 
 

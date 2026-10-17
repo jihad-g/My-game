@@ -27,6 +27,16 @@ static func terrain() -> Material:
 	return _cache[&"terrain"]
 
 
+## Milestone 28: the horizon terrain. Same as vertex_color(), but seasons change it
+## even though it has no texture data (snow and autumn colours reach the horizon).
+static func far_terrain() -> Material:
+	if not _cache.has(&"far_terrain"):
+		var m := (vertex_color() as ShaderMaterial).duplicate() as ShaderMaterial
+		m.set_shader_parameter(&"season_all", true)
+		_cache[&"far_terrain"] = m
+	return _cache[&"far_terrain"]
+
+
 ## Milestone 18d: the old ground of a chunk that changes detail, dithering out
 ## on exactly the pixels where the new ground dithers in.
 static func terrain_ghost() -> Material:

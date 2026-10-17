@@ -17,7 +17,7 @@ void fragment() {
 	if (appear_hidden(FRAGCOORD.xy, (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz)) {
 		discard;
 	}
-	ALBEDO = block_albedo(COLOR.rgb, UV, UV2, v_dist);
+	ALBEDO = season_albedo(block_albedo(COLOR.rgb, UV, UV2, v_dist), COLOR.rgb, UV, UV2, (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz, (INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz, false);
 	ROUGHNESS = 0.95;
 	SPECULAR = 0.2;
 }

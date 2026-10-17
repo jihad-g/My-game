@@ -162,11 +162,17 @@ func untame() -> void:
 
 
 ## True while performing a charge/rush (spikes punish it harder).
+## Milestone 28: how much of their sight monsters keep in this weather (WeatherSystem
+## sets it every frame: fog 0.45 ... clear 1.0). It only changes noticing, not fighting.
+static var weather_sight := 1.0
+
+
 ## Distance at which this enemy notices `t` while idle or wandering: its sight
 ## range scaled by the target's outfit (light armour is noticed later, heavy
 ## armour sooner - Milestone 14). Once a fight starts the normal range applies.
 func notice_range(t: Node3D) -> float:
 	var r: float = data.aggro_range if data else 10.0
+	r *= weather_sight  # Milestone 28: fog and storms hide you
 	if t and t.has_method("notice_mult"):
 		r *= float(t.notice_mult())
 	return r

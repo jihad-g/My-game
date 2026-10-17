@@ -580,6 +580,14 @@ func _build_world() -> void:
 	for k in WeatherSystem.KIND_NAMES.size():
 		w.append([WeatherSystem.KIND_NAMES[k], func() -> void: _weather(k)])
 	_row(v, "Weather", w)
+	# Milestone 28: seasons and weather effects.
+	var sea: Array = [["Natural", func() -> void: _season(-1)]]
+	for k in 4:
+		sea.append([Seasons.NAMES[k], func() -> void: _season(k)])
+	sea.append(["Next season", _next_season])
+	_row(v, "Season", sea)
+	_row(v, "Nature", [["Lightning on a tree", _lightning_tree], ["Set the nearest tree on fire", _fire_tree],
+		["Ripen all crops", _ripen_crops]])
 	_row(v, "Air temp", [["-10°C", func() -> void: _temp(-10.0)], ["+10°C", func() -> void: _temp(10.0)],
 		["Normal", func() -> void: _temp(0.0, true)]])
 	_row(v, "Go to", [["Nearest town", _go_town], ["Nearest dungeon", func() -> void: _go_poi(PoiInfo.Kind.DUNGEON)],
@@ -627,6 +635,55 @@ func _weather(k: int) -> void:
 		ws.force(k, 1.0)
 		ws.settle()
 		_say("weather: %s" % WeatherSystem.KIND_NAMES[k])
+
+
+func _season(k: int) -> void:
+	Seasons.forced = k
+	if world.weather:
+		world.weather._retarget(true)
+	_say("season: %s" % ("natural (%s)" % Seasons.season_name(Seasons.season_of(world.day_night.day)) if k < 0 else Seasons.NAMES[k]))
+
+
+## Skips whole days to the first day of the next season.
+func _next_season() -> void:
+	Seasons.forced = -1
+	var dn := world.day_night
+	var days := Seasons.DAYS_PER_SEASON - Seasons.day_in_season(dn.day) + 1
+	dn.advance_hours(24.0 * days)
+	GameState.world_time += days * dn.day_length
+	if world.weather:
+		world.weather._retarget(true)
+	_say("%s, day %d" % [Seasons.season_name(Seasons.season_of(dn.day)), dn.day])
+
+
+func _lightning_tree() -> void:
+	if world.weather == null or world.weather.strike_tree(player.global_position) == null:
+		_say("no tree within 70 m")
+		return
+	_say("lightning struck a tree")
+
+
+func _fire_tree() -> void:
+	var trees := TreeFire.trees_near(world, player.global_position, 40.0)
+	var best: PropBody = null
+	for t in trees:
+		if best == null or t.global_position.distance_to(player.global_position) < best.global_position.distance_to(player.global_position):
+			best = t
+	if best == null or TreeFire.ignite(best) == null:
+		_say("no tree within 40 m (or too many fires)")
+		return
+	_say("a tree %.0f m away is burning" % best.global_position.distance_to(player.global_position))
+
+
+func _ripen_crops() -> void:
+	var n := 0
+	for plot in get_tree().get_nodes_in_group(&"farm_plots"):
+		if plot.crop != &"":
+			plot.growth = 1.0
+			plot.grow_t = GameState.world_time
+			plot.update_crop_visual()
+			n += 1
+	_say("%d crops are ripe" % n)
 
 
 func _temp(delta: float, reset: bool = false) -> void:
@@ -875,8 +932,9 @@ func perf_text() -> String:
 		lines.append("Chunks %d loaded · %d pending · cache %.1f MB" % [s.loaded, s.pending, s.cache_mb])
 		lines.append("Enemies %d (in the world) · pickups %d" % [get_tree().get_nodes_in_group(&"enemies").size(),
 			world.pickup_pool.active_count()])
-		lines.append("Weather %s · %s, day %d" % [world.weather.kind_name() if world.weather else "-", world.day_night.time_string(),
-			world.day_night.day])
+		lines.append("Weather %s · %s, day %d · %s%s · monster sight x%.2f" % [world.weather.kind_name() if world.weather else "-",
+			world.day_night.time_string(), world.day_night.day, Seasons.season_name(Seasons.season_of(world.day_night.day)),
+			" (forced)" if Seasons.forced >= 0 else "", Enemy.weather_sight])
 		var p := player.global_position
 		lines.append("Position %.1f, %.1f, %.1f · biome %s · %s" % [p.x, p.y, p.z,
 			world.current_biome.display_name if world.current_biome else "-",

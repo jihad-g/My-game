@@ -18,6 +18,7 @@ uniform vec3 focus_pos = vec3(0.0, -1000000.0, 0.0);
 uniform float focus_radius = 2.6;
 
 varying float v_depth;
+varying vec3 v_rest;
 varying vec3 v_world;
 
 // v0.26.0: leaves, bark and bushes get pixel-art block textures (UV/UV2 from BlockMesh).
@@ -25,6 +26,7 @@ varying vec3 v_world;
 
 void vertex() {
 	vec3 wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	v_rest = wp;
 	vec3 base = (MODEL_MATRIX * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
 	float h = max(wp.y - base.y, 0.0);
 	float ph = base.x * 0.37 + base.z * 0.23;
@@ -41,7 +43,7 @@ void fragment() {
 	if (appear_hidden(FRAGCOORD.xy, (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz)) {
 		discard;
 	}
-	ALBEDO = block_albedo(COLOR.rgb, UV, UV2, v_depth);
+	ALBEDO = season_albedo(block_albedo(COLOR.rgb, UV, UV2, v_depth), COLOR.rgb, UV, UV2, v_rest, (INV_VIEW_MATRIX * vec4(NORMAL, 0.0)).xyz, true);
 	ROUGHNESS = 0.95;
 	SPECULAR = 0.2;
 	float a = 1.0;

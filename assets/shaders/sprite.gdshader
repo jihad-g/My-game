@@ -11,6 +11,10 @@ uniform float sway = 0.25;
 uniform float emission = 0.0;      // glowing plants (glowcap, moonpetal)
 
 varying float v_layer;
+// Milestone 28: seasons (see block_texture.gdshaderinc). Grass tufts and ferns turn
+// olive-gold in autumn and dull in winter; snow dusts the tops of all small plants.
+global uniform vec4 season_mix;
+global uniform float snow_cover;
 // Milestone 18d: fades in with its chunk.
 #include "res://assets/shaders/chunk_fade.gdshaderinc"
 
@@ -41,6 +45,16 @@ void fragment() {
 	// Tinted sprites (tufts, ferns) carry 0.8 grey; full-colour ones are real colours.
 	vec3 c = UV2.y < -0.5 ? srgb_to_linear(t.rgb) : srgb_to_linear(t.rgb * 1.25);
 	vec3 col = tint * c;
+	float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+	if (UV2.y >= -0.5) {
+		float green = smoothstep(0.02, 0.12, COLOR.g - max(COLOR.r, COLOR.b));
+		vec3 gold = srgb_to_linear(vec3(0.66, 0.6, 0.26));
+		col = mix(col, gold * (lum / 0.31) * 1.2, season_mix.z * green * 0.6);
+		col = mix(col, vec3(dot(col, vec3(0.2126, 0.7152, 0.0722))) * vec3(1.06, 1.0, 0.86), season_mix.w * green * 0.5);
+		col = mix(col, vec3(0.78, 0.82, 0.88), snow_cover * green * clamp(1.1 - UV.y, 0.0, 1.0) * 0.8);
+	} else if (emission <= 0.0) {
+		col = mix(col, vec3(0.78, 0.82, 0.88), snow_cover * clamp(0.8 - UV.y, 0.0, 1.0) * 0.45);
+	}
 	ALBEDO = col;
 	ALPHA = t.a;
 	ALPHA_SCISSOR_THRESHOLD = 0.5;

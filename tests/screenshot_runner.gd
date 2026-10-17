@@ -26,6 +26,10 @@ func _ready() -> void:
 		await _new_folk_showcase()
 		get_tree().quit()
 		return
+	if "--only=seasons" in OS.get_cmdline_user_args():
+		await _seasons_showcase()
+		get_tree().quit()
+		return
 	if "--only=richworld" in OS.get_cmdline_user_args():
 		await _rich_world_showcase()
 		get_tree().quit()
@@ -2288,6 +2292,59 @@ func _rich_world_showcase() -> void:
 			n += 1
 			await _shot("richworld_%d_%s" % [n, biome])
 
+
+
+## Milestone 28: one forest view in each season, a burning tree, and rain on a farm.
+func _seasons_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 10.5
+	world.day_night.advance_hours(0.0)
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var cam := Camera3D.new()
+	cam.fov = 45.0
+	world.add_child(cam)
+	cam.current = true
+	var spot := _find_biome(world.generator, p.global_position, &"whispering_forest")
+	if spot == Vector3.INF:
+		spot = p.global_position
+	await _teleport(world, spot)
+	_clear_monsters(world)
+	var g := world.get_ground_height(spot)
+	var target := Vector3(spot.x, g + 1.0, spot.z)
+	cam.global_position = target + Vector3(14, 13, 18)
+	cam.look_at(target)
+	for k in 4:
+		Seasons.forced = k
+		world.weather.force(WeatherSystem.Kind.SNOW if k == 3 else WeatherSystem.Kind.CLEAR, 0.6)
+		world.weather.settle()
+		await _wait(25)
+		await _shot("seasons_%d_%s" % [k + 1, String(Seasons.IDS[k])])
+	# A tree struck by lightning, in autumn.
+	Seasons.forced = Seasons.Season.AUTUMN
+	world.weather.force(WeatherSystem.Kind.CLOUDY, 1.0)
+	world.weather.settle()
+	world.day_night.hour = 17.2
+	world.day_night.advance_hours(0.0)
+	var trees := TreeFire.trees_near(world, target, 25.0)
+	if not trees.is_empty():
+		var f := TreeFire.ignite(trees[0])
+		if f:
+			f.age = 6.0
+			cam.global_position = f.global_position + Vector3(9, 9, 12)
+			cam.look_at(f.global_position + Vector3(0, 2.5, 0))
+	await _wait(25)
+	await _shot("seasons_5_tree_fire")
+	Seasons.forced = -1
 
 
 ## Milestone 27: the new mobs and the new gear.

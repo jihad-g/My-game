@@ -3,7 +3,13 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.35.0** (Milestone 27: new mobs and gear; bodies in `src/enemies/beast_model.gd`, weapon shapes in `HumanoidModel._special_weapon()`). The Windows build is `releases/Shardlands-v0.35.0-windows.zip`. Earlier: M26 Rich World textures, M25 pathfinding. Earlier: M25 monster pathfinding (`src/enemies/nav_grid.gd`).
+- Current version: **v0.36.0** (Milestone 28: weather that matters and seasons; `src/world/seasons.gd`, `src/world/tree_fire.gd`, season colours in `assets/shaders/block_texture.gdshaderinc`). The Windows build is `releases/Shardlands-v0.36.0-windows.zip`. Earlier: M27 new mobs and gear (`src/enemies/beast_model.gd`), M26 Rich World textures, M25 monster pathfinding (`src/enemies/nav_grid.gd`).
+- **The owner's current plan (asked on 2026-10-17):** build 10 milestones in a row, M28-M37, without waiting between them:
+  M28 weather + seasons (done), M29 travel (waystones, horses, boats), M30 multi-storey building, M31 dungeons (fog of war,
+  keys, levers, plates, hidden rooms), M32 monster animations, M33 more mobs from the sheets, M34 textures (sand, snow, ice,
+  cave stone, stairs/paths, water ripples), M35 icons and item uses, M36 performance, M37 release polish. For each one:
+  tests (new + related groups), docs, version bump, Windows build, commit, push, a screenshot and a short report.
+- Test frames: `_frames(n)` waits physics ticks; use `_pframes(n)` when a check needs `_process` to have run (weather, HUD).
 - Textures: edit `art/tools/texgen.py` / `texgen_extra.py`, then run `texgen.py`, `build_atlas.py`, `export_game.py` (needs `pip install numpy pillow`).
 - The owner's reference sheets were used for M27 (our own designs in that style, never copies). More mobs from those sheets are listed as NOT IMPLEMENTED in TODO.
 - Tests that boot a world must end with `world.queue_free()` and `await _frames(5)`, or the old hero stays in the "player" group and confuses later tests.

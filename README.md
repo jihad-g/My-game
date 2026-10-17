@@ -5,7 +5,11 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.35.0 — New mobs and gear**. Ten new creatures (bees, hedgehogs, acorn sprouts, frost foxes, blossom
+> Status: **v0.36.0 — Weather that matters, and seasons**. Spring blossoms, golden autumn forests and snowy winters
+> (4 in-game days each). Crops grow in their seasons and faster in the rain, rain puts out campfires, lightning sets
+> trees on fire, and fog hides you from monsters.
+>
+> Before that, **v0.35.0 — New mobs and gear**. Ten new creatures (bees, hedgehogs, acorn sprouts, frost foxes, blossom
 > stags, cave spiders, witch cats, candle skulls, pumpkin creepers and the ember phoenix) and new gear: the Explorer's
 > Gear with its big pack, the Gilded Paladin, Pilgrim's robes, the Prismheart Blade, Sporecrown Staff and Starlance.
 >

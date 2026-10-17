@@ -101,9 +101,23 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: NPC relationships, families, schedules by weekday, NPCs reacting to weather or combat (other than guards)
 - [ ] NOT IMPLEMENTED: full quests (multi-step, story), dialogue trees with choices beyond the fixed options
 - [ ] NOT IMPLEMENTED: buying houses, renting beds at an inn, kingdom wars/politics (raids on settlements: Milestone 7)
-- [ ] NOT IMPLEMENTED: crop watering, seasons, animals/livestock; village crops can't be harvested by the player
+- [ ] NOT IMPLEMENTED: crop watering, animals/livestock; village crops can't be harvested by the player (seasons: M28)
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
+
+## Milestone 28 — Weather that matters, and seasons  ✅ (v0.36.0)
+
+- [x] Four seasons (4 days each) with blended changes: spring blossoms, autumn leaves, winter snow on grass and trees
+- [x] Season temperatures (never lethal) and season weather odds (snow in cool lands in winter)
+- [x] Crops grow only in their seasons; greenhouses (a roof) grow all year at 60%; rain +60%
+- [x] Rain puts out campfires in the open; lightning sets trees on fire (spreads, burns down, rain can save it)
+- [x] Fog, sandstorms, storms, snow and rain shorten monster sight
+- [x] Creative mode controls; tests `test_m28_*` run and pass
+- [ ] NOT IMPLEMENTED: snow that piles up as blocks, frozen lakes you can walk on, puddles, wet-look ground
+- [ ] NOT IMPLEMENTED: seasonal animals and events (migrating birds, a harvest festival, winter wolves)
+- [ ] NOT IMPLEMENTED: village crops follow the seasons (they only look the same all year)
+- [ ] Known limitation: the season look is a colour change in the shaders; flower props don't disappear in winter
+      (they get a dusting of snow), and leafy trees keep their leaves (gold in autumn, snowy in winter)
 
 ## Milestone 27 — New mobs and gear  ✅ (v0.35.0)
 

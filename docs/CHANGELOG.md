@@ -2,7 +2,39 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
-## [0.35.0] — Milestone 27: New mobs and gear (from the owner's reference sheets)
+## [0.36.0] — Milestone 28: Weather that matters, and seasons
+
+### Added
+- **Four seasons**, 4 in-game days each (a day is 20 minutes): spring, summer, autumn, winter, then spring again.
+  The last half day of a season blends into the next one. The clock shows the season under the time.
+  - **Spring:** fresher green and little pink, white, yellow and lilac blossoms on the grass and in the trees.
+  - **Summer:** the normal look; warmer (+3 °C) with more thunderstorms.
+  - **Autumn:** leafy trees turn gold, orange and red (pines stay green), grass turns olive-gold; more fog.
+  - **Winter:** snow covers the grass and the tops of trees in every land that isn't hot; dull, dry greens;
+    -7 °C. Rain falls as snow in cool lands (not only in the tundra). Jungles, deserts and savannas never get snow.
+  - The horizon terrain changes with the season too.
+- **Crops grow only in some seasons:** wheat in spring and summer, carrots in spring, autumn and winter,
+  pumpkins in summer and autumn. Out of season a crop rests (it keeps its progress). Under a roof (a greenhouse)
+  every crop grows all year at 60% speed. The farm plot tells you why a crop isn't growing.
+- **Rain makes crops grow faster** (+60% at full rain) on open plots.
+- **Rain puts out campfires** in the open (about 20 seconds of rain, less in a storm). A campfire under a roof keeps
+  burning. The flames shrink as the rain soaks the fire.
+- **Lightning sets trees on fire.** In a thunderstorm, about 1 strike in 3 hits a tree 20-70 m from you. The tree
+  burns for 18 seconds, can spread to trees next to it, warms you, sets you on fire if you stand in it, and then falls,
+  leaving its wood and a lump of coal (it regrows later). Heavy rain can put the fire out and save the tree.
+- **Fog hides you from monsters:** fog leaves monsters 45% of their sight, sandstorms 55%, storms 75%, snow 80%,
+  rain 88%. It only changes when they notice you, not fights already going.
+- **Creative mode → World:** force a season (or "Next season", which skips the days), "Lightning on a tree",
+  "Set the nearest tree on fire" and "Ripen all crops". The Debug overlay shows the season and monster sight.
+- Tests `test_m28_seasons` and `test_m28_weather_ingame`; screenshot mode `--only=seasons`.
+
+### Changed
+- Farm plots keep their own growth and save it (`growth`, `grow_t`). Old saves keep their crops' progress.
+- `test_m10_world_polish` waits for drawn frames (not physics ticks) before checking the fog, and reads the lightning
+  flash right after the strike; `test_save_load` allows for health that regenerates while the world loads. Both
+  checks depended on how fast frames are drawn.
+
+: New mobs and gear (from the owner's reference sheets)
 
 Our own designs in the style of the owner's pixel-art reference sheets.
 

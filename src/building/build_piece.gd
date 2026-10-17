@@ -19,6 +19,9 @@ var is_open := false
 ## FARM: planted crop (&"" = empty) and when it was planted (world time).
 var crop: StringName = &""
 var planted_at := 0.0
+## Milestone 28: growth 0..1 and the world time it was last brought up to date.
+var growth := 0.0
+var grow_t := 0.0
 var _crop_mesh: MeshInstance3D
 var _crop_stage := -1
 var _crop_tick := 0.0
@@ -133,7 +136,8 @@ func _process(delta: float) -> void:
 func update_crop_visual() -> void:
 	if _crop_mesh == null:
 		return
-	var st := -1 if crop == &"" else Farming.stage(crop, planted_at, GameState.world_time)
+	advance_growth()
+	var st := -1 if crop == &"" else Farming.stage_of(growth)
 	if st != _crop_stage:
 		_crop_stage = st
 		_crop_mesh.mesh = null if st < 0 else BuildMeshes.get_mesh(StringName("crop_%s_%d" % [crop, st]))
@@ -346,6 +350,30 @@ func interact(player: Node) -> void:
 
 # --- Farming ------------------------------------------------------------------------------
 
+## Season, rain on the plot and whether it has a roof over it.
+func _grow_conditions() -> Dictionary:
+	var w := World.instance
+	var season := Seasons.season_of(w.day_night.day) if w and w.day_night else Seasons.Season.SPRING
+	var sheltered := w != null and w.building != null and w.building.is_sheltered(global_position)
+	var rain := 0.0
+	if w and w.weather and not sheltered:
+		rain = w.weather.rain_at(global_position)
+	return {"season": season, "sheltered": sheltered, "rain": rain}
+
+
+## Adds the growth since the last update (seasons and rain decide the speed).
+func advance_growth() -> void:
+	if crop == &"":
+		return
+	var now := GameState.world_time
+	var dt := now - grow_t
+	grow_t = now
+	if dt <= 0.0 or growth >= 1.0:
+		return
+	var c := _grow_conditions()
+	growth = Farming.grow(crop, growth, dt, Farming.rate(crop, c.season, c.rain, c.sheltered))
+
+
 func _seed_in(player: Node) -> StringName:
 	if player == null or not "inventory" in player:
 		return &""
@@ -363,8 +391,18 @@ func _farm_text() -> String:
 		var d: ItemData = ItemDB.get_item(seed)
 		return "Plant %s" % (d.display_name if d else String(seed))
 	var name_ := String(crop).capitalize()
-	var p := Farming.progress(crop, planted_at, GameState.world_time)
-	return "Harvest %s" % name_ if p >= 1.0 else "%s: %d%% grown" % [name_, floori(p * 100.0)]
+	advance_growth()
+	if growth >= 1.0:
+		return "Harvest %s" % name_
+	var c := _grow_conditions()
+	var note := ""
+	if c.sheltered:
+		note = " (under a roof: slow, all year)"
+	elif not Farming.grows_in(crop, c.season):
+		note = " (resting: grows in %s)" % Farming.season_text(crop)
+	elif c.rain > 0.15:
+		note = " (rain: growing faster)"
+	return "%s: %d%% grown%s" % [name_, floori(growth * 100.0), note]
 
 
 ## Plants the first seed you carry, or harvests a ripe crop. Returns what happened.
@@ -377,9 +415,15 @@ func farm_interact(player: Node) -> StringName:
 		player.inventory.remove_item(seed, 1)
 		crop = Farming.crop_for_seed(seed)
 		planted_at = GameState.world_time
+		growth = 0.0
+		grow_t = planted_at
 		update_crop_visual()
+		var c := _grow_conditions()
+		if not c.sheltered and not Farming.grows_in(crop, c.season):
+			Events.toast.emit("%s only grows in %s (or under a roof)" % [String(crop).capitalize(), Farming.season_text(crop)], Color(1, 0.85, 0.55))
 		return &"planted"
-	if Farming.progress(crop, planted_at, GameState.world_time) < 1.0:
+	advance_growth()
+	if growth < 1.0:
 		Events.toast.emit(_farm_text(), Color(0.8, 1, 0.7))
 		return &"growing"
 	var c: Dictionary = Farming.CROPS[crop]
@@ -391,6 +435,7 @@ func farm_interact(player: Node) -> StringName:
 	if "character" in player:
 		player.character.grant_xp(Farming.XP_PER_HARVEST, Progression.Source.FARMING)
 	crop = &""
+	growth = 0.0
 	update_crop_visual()
 	return &"harvested"
 
@@ -418,6 +463,9 @@ func save_data() -> Dictionary:
 	if crop != &"":
 		d["crop"] = String(crop)
 		d["planted_at"] = planted_at
+		advance_growth()
+		d["growth"] = growth
+		d["grow_t"] = grow_t
 	if is_damaged():
 		d["hp"] = health
 	return d
@@ -434,4 +482,10 @@ func load_data(d: Dictionary) -> void:
 	if d.has("crop"):
 		crop = StringName(d.crop)
 		planted_at = float(d.get("planted_at", 0.0))
+		if d.has("growth"):
+			growth = float(d.growth)
+			grow_t = float(d.get("grow_t", GameState.world_time))
+		else:  # saves from before Milestone 28: the plain clock
+			growth = Farming.progress(crop, planted_at, GameState.world_time)
+			grow_t = GameState.world_time
 		update_crop_visual()

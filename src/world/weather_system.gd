@@ -13,8 +13,16 @@ extends Node3D
 ## terrain via a heightfield collider), sky cover, dimmer sun, closer fog,
 ## lightning flashes with delayed thunder, wind on foliage and water, ambience
 ## loops, colder air when wet, and the Wet status when you stand in the rain.
+##
+## Milestone 28 - weather that matters, and seasons:
+##   - rain puts out campfires in the open (Campfire asks rain_at());
+##   - rain makes crops grow faster (Farming.rate());
+##   - lightning can strike a tree near you and set it on fire (TreeFire);
+##   - fog, sandstorms and heavy rain shorten how far monsters see (Enemy.weather_sight);
+##   - seasons (Seasons) change the weather odds and the look of the world.
 
 signal weather_changed(kind: StringName)
+signal season_changed(season: int)
 
 enum Kind { CLEAR, CLOUDY, RAIN, STORM, SNOW, FOG, SANDSTORM }
 const KIND_IDS := [&"clear", &"cloudy", &"rain", &"storm", &"snow", &"fog", &"sandstorm"]
@@ -40,6 +48,14 @@ var particles_enabled := true
 var forced_kind := -1
 var forced_intensity := 1.0
 var lightning_strikes := 0
+## Lightning strikes that set a tree on fire (Milestone 28).
+var tree_fires := 0
+## Chance that a strike hits a tree near the player instead of far away.
+const TREE_STRIKE_CHANCE := 0.3
+## How much of the monsters' sight is left at full strength of each kind.
+const SIGHT := {Kind.FOG: 0.45, Kind.SANDSTORM: 0.55, Kind.STORM: 0.75, Kind.RAIN: 0.88, Kind.SNOW: 0.8}
+var season := -1
+var _season_t := 0.0
 
 var _target := {"kind": Kind.CLEAR, "intensity": 0.0, "clouds": 0.25, "wind": 0.3, "fog": 0.0}
 var _retarget_t := 0.0
@@ -139,22 +155,29 @@ func settle() -> void:
 
 
 ## Natural weather for a moment and place (pure: same inputs, same weather).
-func roll(time: float, climate_t: float, climate_m: float, biome_id: StringName) -> Dictionary:
+## Milestone 28: `p_season` (Seasons.Season, -1 = none) shifts the odds - wet
+## springs, clear summers with more storms, foggy autumns, and snow in winter
+## wherever it is cool enough.
+func roll(time: float, climate_t: float, climate_m: float, biome_id: StringName, p_season: int = -1) -> Dictionary:
 	var spell := floori(time / SPELL_SECONDS)
 	var h := HashUtils.hash3(GameState.world_seed, spell, 0x7e47)
 	var r := HashUtils.to_unit(h, 0)
 	var strength := 0.45 + HashUtils.to_unit(h, 1) * 0.55
 	var wet := climate_m
+	var precip_add: float = [0.08, -0.06, 0.02, 0.0][p_season] if p_season >= 0 else 0.0
+	var storm_add: float = [0.0, 0.15, 0.0, -0.15][p_season] if p_season >= 0 else 0.0
+	var fog_add: float = [0.0, -0.03, 0.08, 0.02][p_season] if p_season >= 0 else 0.0
 	var k: int = Kind.CLEAR
-	var p_precip := 0.12 + wet * 0.38
+	var p_precip := 0.12 + wet * 0.38 + precip_add
 	if r < p_precip:
-		k = Kind.STORM if HashUtils.to_unit(h, 2) < 0.25 + wet * 0.2 else Kind.RAIN
+		k = Kind.STORM if HashUtils.to_unit(h, 2) < 0.25 + wet * 0.2 + storm_add else Kind.RAIN
 	elif r < p_precip + 0.22:
 		k = Kind.CLOUDY
-	elif r < p_precip + 0.22 + 0.06 + wet * 0.08:
+	elif r < p_precip + 0.22 + 0.06 + wet * 0.08 + fog_add:
 		k = Kind.FOG
-	# The climate decides what falls.
-	var cold := climate_t < 0.3 or biome_id in [&"snowy_tundra", &"frostpine_taiga"]
+	# The climate decides what falls (in winter, cool lands get snow too).
+	var cold_line := 0.3 + (0.22 if p_season == Seasons.Season.WINTER else 0.0)
+	var cold := climate_t < cold_line or biome_id in [&"snowy_tundra", &"frostpine_taiga"]
 	var desert := biome_id == &"sunscorch_desert" or (climate_t > 0.68 and climate_m < 0.25)
 	if (k == Kind.RAIN or k == Kind.STORM) and cold:
 		k = Kind.SNOW
@@ -200,7 +223,8 @@ func _retarget(snap: bool = false) -> void:
 	if world and world.player and world.generator:
 		var p := world.player.global_position
 		var biome := world.current_biome.id if world.current_biome else &""
-		t = roll(GameState.world_time, world.generator.temperature01(p.x, p.z), world.generator.moisture01(p.x, p.z), biome)
+		t = roll(GameState.world_time, world.generator.temperature01(p.x, p.z), world.generator.moisture01(p.x, p.z), biome,
+			Seasons.season_of(world.day_night.day) if world.day_night else -1)
 	if forced_kind >= 0:
 		t = roll(0.0, 0.5, 0.5, &"")
 		t.kind = forced_kind
@@ -240,6 +264,7 @@ func _process(delta: float) -> void:
 	_update_lightning(delta, outdoor)
 	_apply(outdoor)
 	_update_gameplay(delta, outdoor)
+	_update_season(delta, outdoor)
 
 
 func _update_lightning(delta: float, outdoor: bool) -> void:
@@ -250,6 +275,8 @@ func _update_lightning(delta: float, outdoor: bool) -> void:
 	if _next_strike > 0.0:
 		return
 	_next_strike = randf_range(5.0, 16.0) / intensity
+	if randf() < TREE_STRIKE_CHANCE and strike_tree() != null:
+		return
 	strike()
 
 
@@ -313,6 +340,77 @@ func _apply(outdoor: bool = true) -> void:
 	else:
 		for l in [&"rain", &"rain_heavy", &"wind_strong"]:
 			Audio.set_ambience(l, 0.0)
+
+
+## Milestone 28: lightning hits a tree 20-70 m from the player and sets it on
+## fire. Returns the fire, or null when no tree is near (then nothing happens).
+func strike_tree(p_center = null) -> TreeFire:
+	if world == null or world.player == null:
+		return null
+	var center: Vector3 = p_center if p_center is Vector3 else world.player.global_position
+	var trees := TreeFire.trees_near(world, center, 70.0, 1.0 if p_center is Vector3 else 20.0)
+	if trees.is_empty():
+		return null
+	var tree: PropBody = trees[randi() % trees.size()]
+	lightning_strikes += 1
+	_flash = 0.15 if Settings.reduce_flashing() else 1.0
+	var ground := tree.global_position
+	var pts := PackedVector3Array()
+	var top := ground + Vector3(randf_range(-6, 6), 80, randf_range(-6, 6))
+	for k in 8:
+		pts.append(top.lerp(ground + Vector3(0, tree.data.collision_height, 0), k / 7.0)
+			+ Vector3(randf_range(-3, 3), 0, randf_range(-3, 3)) * (1.0 if k in [1, 2, 3, 4, 5, 6] else 0.0))
+	VFX.bolt(get_parent(), pts, Color(0.9, 0.92, 1.0, 1.0), 0.25)
+	var dist := ground.distance_to(world.player.global_position)
+	get_tree().create_timer(dist / 340.0).timeout.connect(func() -> void:
+		Audio.play(&"thunder", lerpf(2.0, -6.0, dist / 120.0), 0.1))
+	var fire := TreeFire.ignite(tree)
+	if fire:
+		tree_fires += 1
+		if dist < 60.0:
+			Events.toast.emit("Lightning set a tree on fire!", Color(1.0, 0.7, 0.35))
+	return fire
+
+
+## How much rain falls on an open spot right now (0..1): 0 under a roof,
+## underground, in dungeons and when it isn't raining.
+func rain_at(pos: Vector3) -> float:
+	if world == null or world.layer != TerrainGenerator.Layer.SURFACE or world.dungeon:
+		return 0.0
+	if not kind in [Kind.RAIN, Kind.STORM] or intensity < 0.2:
+		return 0.0
+	if world.building and world.building.is_sheltered(pos):
+		return 0.0
+	return intensity
+
+
+## How far monsters see compared to clear weather (0..1).
+func sight_mult() -> float:
+	return lerpf(1.0, float(SIGHT.get(kind, 1.0)), clampf(intensity, 0.0, 1.0))
+
+
+func _update_season(delta: float, outdoor: bool) -> void:
+	Enemy.weather_sight = sight_mult() if outdoor else 1.0
+	var dn := world.day_night
+	if dn == null:
+		return
+	if outdoor:
+		var mix := Seasons.blend(dn.day, dn.hour)
+		var ct := 0.5
+		if world.player and world.generator:
+			var p := world.player.global_position
+			ct = world.generator.temperature01(p.x, p.z)
+		var snowing := intensity if kind == Kind.SNOW else 0.0
+		Seasons.apply_globals(mix, Seasons.snow_cover(dn.day, dn.hour, ct, snowing))
+	else:
+		Seasons.apply_globals(Vector4(0, 1, 0, 0), 0.0)  # caves and dungeons have no seasons
+	var s := Seasons.season_of(dn.day)
+	if s != season:
+		var first := season < 0
+		season = s
+		season_changed.emit(s)
+		if not first:
+			Events.toast.emit("%s has come" % Seasons.season_name(s), Color(0.85, 0.95, 0.75))
 
 
 func _set_emitter(p: GPUParticles3D, amount: float, visible_ok: bool) -> void:

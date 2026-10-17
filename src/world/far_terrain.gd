@@ -205,7 +205,7 @@ func _apply_mesh(t: Vector2i, r: Dictionary) -> void:
 	var terrain: Array = r.terrain
 	if not (terrain[Mesh.ARRAY_VERTEX] as PackedVector3Array).is_empty():
 		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, terrain)
-		mesh.surface_set_material(mesh.get_surface_count() - 1, Materials.vertex_color())
+		mesh.surface_set_material(mesh.get_surface_count() - 1, Materials.far_terrain())
 	var water: Array = r.water
 	if not (water[Mesh.ARRAY_VERTEX] as PackedVector3Array).is_empty():
 		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, water)

@@ -91,6 +91,8 @@ func _exit_tree() -> void:
 
 
 func _ready() -> void:
+	Seasons.forced = -1  # a forced season (Creative) never carries over to another world
+	Enemy.weather_sight = 1.0
 	generator = TerrainGenerator.new(GameState.world_seed, worldgen, GameState.terrain_shape)
 	Chunk.preload_features()  # Milestone 18d: no load spike at the first cave entrance
 	building = BuildingManager.new()
@@ -613,6 +615,8 @@ func get_air_temperature(pos: Vector3) -> float:
 		t -= 5.0  # wet and chilled while wading or swimming
 	if weather:
 		t += weather.temperature_offset()
+	# Milestone 28: seasons (summer warmer, winter colder; never lethal).
+	t += Seasons.temperature_offset(day_night.day, day_night.hour)
 	return t + debug_temperature_offset
 
 
