@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"leather_saddle"
+result_item = &"leather_saddle"
+result_count = 1
+ingredients = {
+&"leather": 4,
+&"rope": 2,
+&"plank": 1
+}
+station = 3
+tier = 1
+source = 1
+discovered_by = &"leather"
+xp = 12

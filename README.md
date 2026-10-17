@@ -5,7 +5,11 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.36.0 — Weather that matters, and seasons**. Spring blossoms, golden autumn forests and snowy winters
+> Status: **v0.37.0 — Travel**. Waystones in every village and at every dungeon (unlock them, then travel for a few
+> coins), wild horses to tame with carrots, saddles and a gallop bar, a whistle to call your horse, and a rowboat
+> for lakes and the sea.
+>
+> Before that, **v0.36.0 — Weather that matters, and seasons**. Spring blossoms, golden autumn forests and snowy winters
 > (4 in-game days each). Crops grow in their seasons and faster in the rain, rain puts out campfires, lightning sets
 > trees on fire, and fog hides you from monsters.
 >

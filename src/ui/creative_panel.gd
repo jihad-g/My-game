@@ -586,6 +586,9 @@ func _build_world() -> void:
 		sea.append([Seasons.NAMES[k], func() -> void: _season(k)])
 	sea.append(["Next season", _next_season])
 	_row(v, "Season", sea)
+	# Milestone 29: travel.
+	_row(v, "Travel", [["Unlock waystones within 3 km", _unlock_waystones], ["A saddled horse", _spawn_horse],
+		["A boat on the nearest water", _spawn_boat]])
 	_row(v, "Nature", [["Lightning on a tree", _lightning_tree], ["Set the nearest tree on fire", _fire_tree],
 		["Ripen all crops", _ripen_crops]])
 	_row(v, "Air temp", [["-10°C", func() -> void: _temp(-10.0)], ["+10°C", func() -> void: _temp(10.0)],
@@ -635,6 +638,42 @@ func _weather(k: int) -> void:
 		ws.force(k, 1.0)
 		ws.settle()
 		_say("weather: %s" % WeatherSystem.KIND_NAMES[k])
+
+
+func _unlock_waystones() -> void:
+	var n := 0
+	for spot in world.travel.spots_near(player.global_position, 3000.0):
+		if not world.travel.is_unlocked(spot[0]):
+			world.travel.unlock(spot[0], spot[1], spot[2])
+			n += 1
+	world.travel.update_now()
+	for ws in get_tree().get_nodes_in_group(&"waystones"):
+		ws.refresh()
+	_say("unlocked %d waystones (use one to travel)" % n)
+
+
+func _spawn_horse() -> void:
+	var h := (load(Horse.SCENE_PATH) as PackedScene).instantiate() as Horse
+	var q := player.global_position + player.get_facing() * 3.0
+	q.y = world.get_ground_height(q) + 0.2
+	h.setup_wild(randi(), q, "")
+	world.placed_root.add_child(h)
+	h.global_position = q
+	h.make_tame()
+	h.saddle = &"leather_saddle"
+	h.model.set_saddle(true)
+	_say("%s is ready to ride" % h.horse_name)
+
+
+func _spawn_boat() -> void:
+	for r in range(4, 400, 4):
+		for k in 16:
+			var q := player.global_position + Vector3(cos(TAU * k / 16.0), 0, sin(TAU * k / 16.0)) * r
+			if world.is_deep_water(q):
+				Boat.launch(world, q)
+				_say("a boat is waiting %d m away" % r)
+				return
+	_say("no deep water within 400 m")
 
 
 func _season(k: int) -> void:

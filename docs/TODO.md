@@ -105,6 +105,18 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 29 — Travel: waystones, horses, boats  ✅ (v0.37.0)
+
+- [x] Waystones in villages, capitals and at dungeon entrances; unlock by touch, travel for coins (saved)
+- [x] Wild horse herds, taming with food, names, saddle slot (2 saddles), riding with a gallop bar, whistle
+- [x] Craftable rowboat; rowing on deep water; saved horses and boats
+- [x] Creative controls; tests `test_m29_*` run and pass
+- [ ] NOT IMPLEMENTED: fighting from the saddle (mounted attacks), horse armour, horse health (horses can't be hurt)
+- [ ] NOT IMPLEMENTED: waystones in co-op; guests riding horses or boats (only the host)
+- [ ] NOT IMPLEMENTED: waystones on the world map (the list is at the waystone); building your own waystone
+- [ ] NOT IMPLEMENTED: sailing ships, carrying cargo in boats, fishing from a boat
+- [ ] Known limitation: a horse's body is longer than the rider's collision capsule, so its head can poke into walls
+
 ## Milestone 28 — Weather that matters, and seasons  ✅ (v0.36.0)
 
 - [x] Four seasons (4 days each) with blended changes: spring blossoms, autumn leaves, winter snow on grass and trees

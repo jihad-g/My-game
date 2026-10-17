@@ -68,6 +68,8 @@ var events: WorldEvents
 var blueprints: BlueprintManager
 ## Rain, storms, snow, fog, sandstorms (Milestone 10).
 var weather: WeatherSystem
+## Milestone 29: waystones, wild horse herds, the whistle.
+var travel: TravelManager
 ## Fireflies, leaves, mist... plus music and ambience beds (Milestone 10).
 var ambient: AmbientEffects
 var _autosave_left := AUTOSAVE_INTERVAL
@@ -127,6 +129,10 @@ func _ready() -> void:
 	weather.name = "Weather"
 	weather.world = self
 	add_child(weather)
+	travel = TravelManager.new()
+	travel.name = "Travel"
+	travel.world = self
+	add_child(travel)
 	ambient = AmbientEffects.new()
 	ambient.name = "AmbientEffects"
 	ambient.world = self
@@ -394,6 +400,8 @@ func debug_next_event() -> void:
 
 ## Moves the player to the other layer at the same XZ position (cave passages).
 func travel_to_layer(target_layer: int, at: Vector3) -> void:
+	if player and player.is_riding():
+		player.stop_riding(false, true)
 	if not is_ready:
 		return  # already travelling / still loading
 	is_ready = false
@@ -441,6 +449,7 @@ func teleport_to(to: Vector3) -> bool:
 	if layer != TerrainGenerator.Layer.SURFACE:
 		return false
 	is_ready = false
+	player.stop_riding(false, true)  # Milestone 29: you arrive on foot (TravelManager brings the horse)
 	player.frozen = true
 	player.set_lock_target(null)
 	spawner.despawn_all()
@@ -461,6 +470,8 @@ func teleport_to(to: Vector3) -> bool:
 
 ## Enters a dungeon from its entrance on the surface.
 func enter_dungeon(poi: PoiInfo) -> bool:
+	if player and player.is_riding():
+		player.stop_riding(false, true)
 	if dungeon or not is_ready or layer != TerrainGenerator.Layer.SURFACE:
 		return false
 	if Net.client_blocked("Dungeons"):
@@ -758,6 +769,7 @@ func to_save() -> Dictionary:
 		"day": day_night.day,
 		"hour": day_night.hour,
 		"placed": placed,
+		"travel": travel.to_save(),
 		"net_players": _net_records(),
 	}
 
@@ -780,6 +792,7 @@ func from_save(data: Dictionary) -> void:
 	day_night.day = int(data.get("day", 1))
 	day_night.hour = float(data.get("hour", day_night.start_hour))
 	load_placed(data.get("placed", []))
+	travel.from_save(data.get("travel", {}))
 	Net.player_records = (data.get("net_players", {}) as Dictionary).duplicate(true)
 
 

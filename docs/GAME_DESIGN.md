@@ -1167,6 +1167,11 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 29 — Travel (v0.37.0).** Waystones (`src/travel/waystone.gd`, `travel_manager.gd`) turn found
+places into a paid fast-travel network; horses (`horse.gd`) are tamed with food, need a saddle and have their own
+gallop stamina; rowboats (`boat.gd`) open lakes and the sea. The rider's body does the moving
+(`Player._physics_mounted`); the mount follows it.
+
 **Done: Milestone 28 — Weather that matters, and seasons (v0.36.0).** Four 4-day seasons change the look of the
 land (blossoms, autumn colours, snow), the temperature, the weather odds and which crops grow. Rain soaks
 campfires and speeds crops, lightning can burn trees down, and bad weather shortens monster sight. Seasons are

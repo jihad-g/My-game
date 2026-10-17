@@ -122,7 +122,7 @@ vec3 season_albedo(vec3 alb, vec3 col_srgb, vec2 uv, vec2 meta, vec3 wpos, vec3 
 	if (sp > 0.001) {
 		c = mix(c, c * vec3(0.94, 1.1, 0.9), sp * green);
 		vec3 cell = floor(wpos * 8.0 + 0.001);
-		float chance = foliage ? 0.06 * (1.0 - conifer) : 0.018 * up;
+		float chance = foliage ? 0.04 * (1.0 - conifer) : 0.011 * up;
 		if (!season_all && season_hash(cell) < chance * sp * green) {
 			float k = season_hash(cell + vec3(17.0, 3.0, 5.0));
 			vec3 b = k < 0.3 ? vec3(1.0, 0.6, 0.75) : (k < 0.6 ? vec3(1.0, 0.97, 0.92) : (k < 0.85 ? vec3(1.0, 0.86, 0.3) : vec3(0.8, 0.65, 1.0)));

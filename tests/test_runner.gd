@@ -149,6 +149,8 @@ func _ready() -> void:
 	await _run_async(&"test_m27_ingame")
 	_run(&"test_m28_seasons")
 	await _run_async(&"test_m28_weather_ingame")
+	_run(&"test_m29_travel_data")
+	await _run_async(&"test_m29_travel_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5198,7 +5200,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.36"), "version 0.36 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.37"), "version 0.37 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -8779,3 +8781,152 @@ func _find_biome_near(g: TerrainGenerator, origin: Vector3, id: StringName) -> V
 func _pframes(n: int) -> void:
 	for i in n:
 		await get_tree().process_frame
+
+
+# --- Milestone 29: travel - waystones, horses, boats --------------------------------------
+
+func test_m29_travel_data() -> void:
+	for id in [&"rowboat", &"leather_saddle", &"riding_saddle"]:
+		check(ItemDB.has_item(id), "item %s exists" % id)
+		check(RecipeBook.get_recipe(id) != null, "%s can be crafted" % id)
+	for s in Horse.SADDLES:
+		check(ItemDB.has_item(s), "saddle %s is an item" % s)
+	for f in Horse.FOODS:
+		check(ItemDB.has_item(f), "horse food %s is an item" % f)
+	check(ResourceLoader.exists(Horse.SCENE_PATH) and ResourceLoader.exists(Boat.SCENE_PATH), "horse and boat scenes exist")
+	check(InputMap.has_action(&"whistle"), "there is a whistle key")
+	var sc := SelfCheck.run()
+	check(sc.ok(), "self check is clean (%s)" % ", ".join(sc.errors))
+
+
+func test_m29_travel_ingame() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	var tm := world.travel
+	# Waystones: one in a village, one at a dungeon.
+	var towns := world.living.settlements().near(p.global_position, 4000.0)
+	check(not towns.is_empty(), "a settlement nearby")
+	if towns.is_empty():
+		world.queue_free()
+		await _frames(5)
+		return
+	var town: SettlementInfo = towns[0]
+	await _teleport_to(world, town.world_center() + Vector3(6, 0, 6))
+	tm.update_now()
+	var ws := tm.waystone("s:" + town.id)
+	check(ws != null, "the village has a waystone")
+	if ws:
+		check(not ws.is_unlocked() and "Touch" in ws.get_interact_text(), "it starts locked")
+		ws.interact(p)
+		check(tm.is_unlocked("s:" + town.id) and ws.is_unlocked(), "touching it unlocks it")
+	var dungeon: PoiInfo = null
+	for poi in world.exploration.pois().near(town.world_center(), 6000.0):
+		if poi.kind == PoiInfo.Kind.DUNGEON:
+			dungeon = poi
+			break
+	check(dungeon != null, "a dungeon nearby")
+	if dungeon:
+		await _teleport_to(world, dungeon.world_center() + Vector3(0, 0, 8))
+		tm.update_now()
+		var dws := tm.waystone("d:" + dungeon.id)
+		check(dws != null, "the dungeon entrance has a waystone")
+		if dws:
+			dws.interact(p)
+		var dests := tm.destinations(p.global_position, "d:" + dungeon.id)
+		check(dests.size() == 1 and dests[0].key == "s:" + town.id, "the travel list shows the village")
+		var cost: int = tm.travel_cost(p.global_position, "s:" + town.id)
+		check(cost >= TravelManager.TRAVEL_BASE and cost <= TravelManager.TRAVEL_MAX, "travel costs %d coins" % cost)
+		p.coins = 0
+		check(tm.travel("s:" + town.id) != "", "no coins, no travel")
+		p.coins = 100
+		check(tm.travel("s:" + town.id) == "", "travel to the village")
+		await _wait_ready_after_teleport(world)
+		await _frames(5)
+		check(p.coins == 100 - cost, "paid %d coins" % cost)
+		check(Vector2(p.global_position.x, p.global_position.z).distance_to(Vector2(tm.position_of("s:" + town.id).x,
+			tm.position_of("s:" + town.id).z)) < 6.0, "arrived at the village waystone")
+		p.creative = true
+		check(tm.travel_cost(p.global_position, "d:" + dungeon.id) == 0, "travel is free in Creative mode")
+		p.creative = false
+	# Horses: find a herd, tame one with carrots, saddle it, ride it.
+	var herds := tm.herds_near(p.global_position, 3000.0)
+	check(not herds.is_empty(), "wild horses live nearby")
+	if not herds.is_empty():
+		await _teleport_to(world, herds[0][1] + Vector3(4, 0, 0))
+		tm.update_now()
+		await _frames(5)
+		var horse: Horse = null
+		for h in get_tree().get_nodes_in_group(&"horses"):
+			if not h.tame and (horse == null or h.global_position.distance_to(p.global_position) < horse.global_position.distance_to(p.global_position)):
+				horse = h
+		check(horse != null and horse.model.parts.size() > 20, "a wild horse with a body (%d parts)" % (horse.model.parts.size() if horse else 0))
+		if horse:
+			p.inventory.add_item(&"carrot", 3)
+			horse.interact(p)
+			check(not horse.tame and horse.trust == 2, "one carrot: it trusts you a little")
+			horse.interact(p)
+			check(horse.tame and horse.get_parent() == world.placed_root and horse.horse_name != "", "two carrots: %s is tame" % horse.horse_name)
+			check(not horse.mount(p), "no saddle, no riding")
+			p.inventory.add_item(&"leather_saddle", 1)
+			horse.interact(p)
+			check(horse.saddle == &"leather_saddle" and p.inventory.count_of(&"leather_saddle") == 0, "the saddle goes on")
+			await _frames(2)
+			check(horse.mount(p) and p.is_riding() and p.mount == horse and p.model.riding, "riding the horse")
+			var start := p.global_position
+			var st0 := horse.stamina
+			Input.action_press(&"move_forward")
+			Input.action_press(&"sprint")
+			await _frames(40)
+			Input.action_release(&"sprint")
+			Input.action_release(&"move_forward")
+			var moved := Vector2(p.global_position.x - start.x, p.global_position.z - start.z).length()
+			check(moved > 4.0, "the horse gallops (%.1f m in 40 ticks)" % moved)
+			check(horse.stamina < st0, "galloping uses the horse's stamina (%.0f -> %.0f)" % [st0, horse.stamina])
+			check(horse.global_position.distance_to(p.global_position) < 0.5, "the horse moves with its rider")
+			world.hud._process(0.1)
+			check(world.hud._mount_row.visible, "the HUD shows the gallop bar")
+			check(p.stop_riding() and not p.is_riding() and horse.rider == null, "getting off")
+			var d := horse.save_data()
+			check(d.saddle == "leather_saddle" and bool(d.tame), "the horse is saved with its saddle")
+			var placed_scenes := []
+			for e in world.to_save().placed:
+				placed_scenes.append(e.scene)
+			check(Horse.SCENE_PATH in placed_scenes, "the tame horse is in the world save")
+			# Whistle: it comes running.
+			await _teleport_to(world, horse.global_position + Vector3(25, 0, 0))
+			var d0 := horse.global_position.distance_to(p.global_position)
+			check(tm.whistle() == horse, "whistling calls your horse")
+			await _frames(90)
+			check(horse.global_position.distance_to(p.global_position) < d0 - 5.0, "it comes running (%.0f -> %.0f m)" % [d0,
+				horse.global_position.distance_to(p.global_position)])
+	# Boats: put one on deep water, row, can't row onto land.
+	var water := Vector3.INF
+	for r in range(20, 2000, 20):
+		for k in 24:
+			var q := p.global_position + Vector3(cos(TAU * k / 24.0), 0, sin(TAU * k / 24.0)) * r
+			if world.generator.get_height_at(q) < TerrainGenerator.WATER_Y - 4.0:
+				water = q
+				break
+		if water != Vector3.INF:
+			break
+	check(water != Vector3.INF, "deep water nearby")
+	if water != Vector3.INF:
+		await _teleport_to(world, water)
+		var boat := Boat.launch(world, p.global_position)
+		check(boat != null and boat.get_parent() == world.placed_root, "the boat floats on the water")
+		if boat:
+			check(boat.board(p) and p.is_riding() and p.mount == boat, "climbed into the boat")
+			var b0 := p.global_position
+			Input.action_press(&"move_forward")
+			await _frames(40)
+			Input.action_release(&"move_forward")
+			check(Vector2(p.global_position.x - b0.x, p.global_position.z - b0.z).length() > 2.0, "rowing moves the boat")
+			check(absf(p.global_position.y - Boat.water_y()) < 0.05 and not p.is_swimming, "sitting in the boat, not swimming")
+			check(world.is_deep_water(p.global_position), "the boat stays on deep water")
+			check(p.stop_riding(false, true) and boat.rider == null, "out of the boat")
+			boat.pick_up(p)
+			check(p.inventory.count_of(&"rowboat") == 1, "the boat goes back into the bag")
+	world.queue_free()
+	await _frames(5)

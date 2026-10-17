@@ -85,6 +85,11 @@ var frozen: bool = true
 var camera_rig: CameraRig
 var lock_target: Node3D
 var spawn_point := Vector3.ZERO
+## Milestone 29: the horse or boat you ride (null on foot). See start_riding().
+var mount: Node3D = null
+## How high the rider sits above the ground (horse) or the deck (boat).
+const SADDLE_HEIGHT := 1.0
+const BOAT_SEAT := 0.3
 
 @onready var stats: StatBlock = $Stats
 @onready var health: HealthComponent = $Health
@@ -218,6 +223,21 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.is_action_pressed(&"attack_light") or event.is_action_pressed(&"attack_heavy") \
 				or event.is_action_pressed(&"ability_6"):
 			return  # clicks (and U = repair) belong to build mode
+	if mount != null:
+		# Riding (Milestone 29): interact or dodge gets off; no fighting from the saddle.
+		if event.is_action_pressed(&"interact") or event.is_action_pressed(&"dodge"):
+			stop_riding()
+		elif event.is_action_pressed(&"whistle") and World.instance and World.instance.travel:
+			World.instance.travel.whistle()
+		else:
+			for i in InputSetup.HOTBAR_ACTIONS.size():
+				if event.is_action_pressed(InputSetup.HOTBAR_ACTIONS[i]):
+					use_slot(i)
+					break
+		return
+	if event.is_action_pressed(&"whistle") and World.instance and World.instance.travel:
+		World.instance.travel.whistle()
+		return
 	if event.is_action_pressed(&"jump") and not (event is InputEventJoypadButton and _interact_target != null):
 		_jump_buffer = JUMP_BUFFER  # a gamepad A near something usable interacts instead
 		if event is InputEventJoypadButton:
@@ -275,6 +295,10 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, acceleration * delta)
 		velocity.z = move_toward(velocity.z, 0.0, acceleration * delta)
 		move_and_slide()
+		return
+
+	if mount != null:
+		_physics_mounted(delta)
 		return
 
 	_update_lock_target()
@@ -417,6 +441,10 @@ func _on_footstep(_left: bool) -> void:
 
 
 func _update_water() -> void:
+	if mount is Boat:
+		_in_water = false
+		is_swimming = false
+		return
 	var w := World.instance
 	_in_water = w != null and w.is_in_water(global_position)
 	if _in_water and not is_dead:
@@ -575,6 +603,141 @@ func _apply_gravity(delta: float) -> void:
 		velocity.y -= gravity * delta
 		if abilities.has_buff(&"feather_fall") and velocity.y < -2.5:
 			velocity.y = -2.5  # Feather Fall (Milestone 17c)
+
+
+# --- Riding (Milestone 29) ------------------------------------------------------------
+
+func is_riding() -> bool:
+	return mount != null and is_instance_valid(mount)
+
+
+## Gets on a horse or into a boat. The mount calls this from its interact().
+func start_riding(m: Node3D) -> bool:
+	if mount != null or is_dead or state != State.NORMAL or m == null:
+		return false
+	if m is Horse and is_swimming:
+		return false
+	combat.cancel()
+	is_blocking = false
+	model.set_blocking(false)
+	set_lock_target(null)
+	mount = m
+	if m is Boat:
+		global_position = Vector3(m.global_position.x, Boat.water_y(), m.global_position.z)
+	else:
+		global_position = m.global_position + Vector3(0, 0.05, 0)
+	velocity = Vector3.ZERO
+	model.riding = true
+	model.ride_kind = 1 if m is Boat else 0
+	model.position.y = BOAT_SEAT if m is Boat else SADDLE_HEIGHT
+	face_direction(m.global_transform.basis.z, true)
+	Events.toast.emit("%s - hold %s to %s, %s to get off" % ["Rowing" if m is Boat else "Riding",
+		InputSetup.action_label(&"sprint"), "row hard" if m is Boat else "gallop", InputSetup.action_label(&"interact")],
+		Color(0.8, 0.95, 1.0))
+	return true
+
+
+## Gets off. In a boat you step onto the nearest land (within 4.5 m); with
+## `force` (travel, death, caves) you get off anyway. Returns false if you can't.
+func stop_riding(announce: bool = true, force: bool = false) -> bool:
+	if mount == null:
+		return true
+	var m := mount
+	var yaw := model.rotation.y
+	if not is_instance_valid(m):
+		mount = null
+		model.riding = false
+		model.position.y = 0.0
+		return true
+	var to := global_position
+	if m is Boat:
+		var land := _land_near(global_position, 4.5)
+		if land == Vector3.INF and not force:
+			if announce:
+				Events.toast.emit("Row closer to the shore to get out", Color(1, 0.85, 0.55))
+			return false
+		m.on_dismounted(m.global_position, yaw)
+		if land != Vector3.INF:
+			to = land + Vector3(0, 0.3, 0)
+	else:
+		m.on_dismounted(global_position, yaw)
+		var side := Vector3(cos(yaw), 0, -sin(yaw))
+		to = global_position + side * 1.1 + Vector3(0, 0.2, 0)
+	mount = null
+	model.riding = false
+	model.position.y = 0.0
+	global_position = to
+	velocity = Vector3.ZERO
+	return true
+
+
+## Dry (or shallow) ground near `pos` to step out of a boat onto.
+func _land_near(pos: Vector3, radius: float) -> Vector3:
+	var w := World.instance
+	if w == null:
+		return Vector3.INF
+	for r in [1.5, 2.5, 3.5, radius]:
+		for k in 16:
+			var a := TAU * k / 16.0
+			var q: Vector3 = pos + Vector3(cos(a), 0, sin(a)) * r
+			var g := w.get_ground_height(q)
+			if g > TerrainGenerator.WATER_Y - 0.6:
+				return Vector3(q.x, g, q.z)
+	return Vector3.INF
+
+
+func _physics_mounted(delta: float) -> void:
+	var m := mount
+	if not is_instance_valid(m):
+		stop_riding(false, true)
+		return
+	var w := World.instance
+	var input := _get_move_input()
+	var moving := input != Vector3.ZERO
+	var speed: float = m.ride_speed(_sprint_held(), moving, delta)
+	_sprinting = false
+	hunger.activity_multiplier = 1.0
+	var accel := acceleration * (0.55 if m is Horse else 0.3) * delta
+	velocity.x = move_toward(velocity.x, input.x * speed, accel)
+	velocity.z = move_toward(velocity.z, input.z * speed, accel)
+	var prev := global_position
+	if m is Boat:
+		velocity.y = 0.0
+		global_position.y = Boat.water_y()
+		move_and_slide()
+		global_position.y = Boat.water_y()
+		# Boats stay on deep water.
+		if w and not w.is_deep_water(global_position):
+			global_position = Vector3(prev.x, Boat.water_y(), prev.z)
+			velocity.x = 0.0
+			velocity.z = 0.0
+	else:
+		_apply_gravity(delta)
+		var horizontal := Vector3(velocity.x, 0.0, velocity.z) * delta
+		if is_on_floor():
+			GroundMotion.try_step_up(self, horizontal, 1.1)
+		move_and_slide()
+		# Horses don't swim: they stop at deep water.
+		if w and w.is_deep_water(global_position):
+			global_position = prev
+			velocity.x = 0.0
+			velocity.z = 0.0
+	if moving:
+		face_direction(input, false)
+	var target_yaw := atan2(_facing.x, _facing.z)
+	model.rotation.y = lerp_angle(model.rotation.y, target_yaw, 1.0 - exp(-(4.0 if m is Horse else 2.5) * delta))
+	var planar := Vector2(velocity.x, velocity.z).length()
+	model.set_locomotion_speed(0.0, delta)
+	m.follow_rider(global_position, model.rotation.y, planar, delta)
+	# A little bounce in the saddle.
+	if m is Horse:
+		model.position.y = SADDLE_HEIGHT + absf(sin(Time.get_ticks_msec() * 0.001 * (14.0 if m.is_galloping() else 9.0))) * 0.06 * minf(planar / 6.0, 1.0)
+		_update_air(0.0)
+	else:
+		model.set_air_state(false, false)
+	if velocity.y < -30.0:
+		stop_riding(false, true)
+		_rescue_to_surface()
 
 
 # --- Facing / aiming ----------------------------------------------------------------
@@ -888,6 +1051,7 @@ func _on_exhausted() -> void:
 
 
 func _on_died() -> void:
+	stop_riding(false, true)
 	is_dead = true
 	state = State.DEAD
 	combat.cancel()
@@ -1249,6 +1413,14 @@ func _consume(item: ItemData) -> void:
 
 func _place(item: ItemData) -> bool:
 	if World.instance == null:
+		return false
+	if item.id == Boat.ITEM_ID:
+		# Milestone 29: a boat goes on the deep water in front of you (up to 5 m out).
+		for d in [1.6, 2.5, 3.5, 5.0]:
+			var q: Vector3 = global_position + _facing * d
+			if World.instance.is_deep_water(q):
+				return Boat.launch(World.instance, q) != null
+		Events.toast.emit("Face deep water to put the boat in", Color(1, 0.7, 0.5))
 		return false
 	return World.instance.place_object(item.placeable_scene, _place_target()) != null
 

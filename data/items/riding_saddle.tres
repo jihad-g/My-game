@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"riding_saddle"
+display_name = "Riding Saddle"
+description = "A light saddle stitched with spider silk. Your horse gallops 12% faster and for 50% longer."
+category = 6
+rarity = 2
+max_stack = 1
+base_value = 110
+icon_color = Color(0.62, 0.36, 0.2, 1)
+icon_glyph = "RS"

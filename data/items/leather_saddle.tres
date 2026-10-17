@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"leather_saddle"
+display_name = "Leather Saddle"
+description = "A plain saddle with stirrups and a red blanket. Put it on a tame horse to ride it."
+category = 6
+rarity = 1
+max_stack = 1
+base_value = 35
+icon_color = Color(0.5, 0.3, 0.16, 1)
+icon_glyph = "Sa"

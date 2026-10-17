@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="PackedScene" path="res://scenes/world/rowboat.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"rowboat"
+display_name = "Rowboat"
+description = "A small wooden boat with two oars. Use it while facing deep water to put it in, then climb in (F) and row across lakes and the sea. Hold Shift to row hard. Shift + F picks it up again."
+category = 5
+rarity = 1
+max_stack = 1
+base_value = 40
+icon_color = Color(0.58, 0.4, 0.24, 1)
+icon_glyph = "Bo"
+placeable_scene = ExtResource("2_scene")

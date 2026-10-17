@@ -2,6 +2,30 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.37.0] — Milestone 29: Travel - waystones, horses and boats
+
+### Added
+- **Waystones**: a rune pillar on every village and capital plaza and in front of every dungeon entrance. Touch one
+  (F) to unlock it; its runes light up. At any unlocked waystone, pick another one from the list and travel there
+  for 3 coins plus 1 per 120 m (at most 40; free in Creative mode). Your horse travels with you. Waystones work on
+  the surface only, and not in co-op yet.
+- **Horses**: wild herds of 2-3 graze on meadows, forests and beaches (six coats: bay, chestnut, black, white,
+  grey, palomino). Feed one carrots, wheat, pumpkins or honeycomb until it trusts you (4 trust) and it's yours,
+  with a name. It is saved where you leave it.
+  - **Saddle slot**: interact with a saddle in your bag to put it on; Shift + F opens the horse panel (take the
+    saddle off, ride). Leather Saddle (tailoring, found with leather) and Riding Saddle (+12% speed, +50% gallop;
+    found with spider silk).
+  - **Riding**: F to get on, F or Alt to get off. Trot at 7.5 m/s; hold Shift to gallop at 13.5 m/s. Galloping uses
+    the horse's own stamina - the new **Gallop bar** under your stamina. Horses step up blocks but won't go into
+    deep water. No fighting from the saddle.
+  - **Whistle (9)**: your nearest horse within 160 m comes running.
+- **Rowboat** (workbench: 12 planks, 2 rope, 4 wood): use it while facing deep water to put it in, F to climb in,
+  row with the move keys (hold Shift to row hard, it costs your stamina). The boat can't go onto land; get out near
+  the shore. Shift + F picks it back up. Saved where you leave it.
+- A riding and rowing pose for the hero; a horse body (with mane, blaze and saddle) for the beast models.
+- Creative mode → World → Travel: unlock waystones within 3 km, a saddled horse, a boat on the nearest water.
+- Tests `test_m29_travel_data`, `test_m29_travel_ingame`; screenshot mode `--only=travel`.
+
 ## [0.36.0] — Milestone 28: Weather that matters, and seasons
 
 ### Added

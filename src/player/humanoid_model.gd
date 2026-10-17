@@ -1202,6 +1202,12 @@ func reset_pose() -> void:
 	_torso.rotation = Vector3.ZERO
 
 
+## Milestone 29: sitting on a horse or in a boat (legs forward and bent, hands on the reins or oars).
+var riding := false
+## 0 = horse, 1 = boat (rowing).
+var ride_kind := 0
+
+
 ## Jumping/falling and swimming poses (the player calls this every frame).
 func set_air_state(airborne: bool, swimming: bool) -> void:
 	_airborne = airborne
@@ -1384,6 +1390,17 @@ func _base_pose(delta: float) -> Dictionary:
 		p[&"leg_r"] = lerpf(p[&"leg_r"], -sin(st * 2.0) * 0.4, _swim_blend)
 		p[&"shin_l"] = lerpf(p[&"shin_l"], 0.15, _swim_blend)
 		p[&"shin_r"] = lerpf(p[&"shin_r"], 0.15, _swim_blend)
+	if riding:
+		var row := sin(_time * 3.2) if ride_kind == 1 else 0.0
+		p[&"leg_l"] = -1.25
+		p[&"leg_r"] = -1.25
+		p[&"shin_l"] = 1.35 if ride_kind == 0 else 1.6
+		p[&"shin_r"] = 1.35 if ride_kind == 0 else 1.6
+		p[&"arm_l"] = Vector3(-0.85 - row * 0.5, 0.15, -0.1)
+		p[&"arm_r"] = Vector3(-0.85 - row * 0.5, -0.15, 0.1)
+		p[&"fore_l"] = -0.9
+		p[&"fore_r"] = -0.9
+		p[&"torso"] = Vector3(0.08 + row * 0.12, 0.0, 0.0)
 	return p
 
 

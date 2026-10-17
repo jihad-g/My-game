@@ -5,7 +5,7 @@ extends Node3D
 ## animals: four-legged wolf, deer and rabbit, a scorpion with a curled tail
 ## and a sideways-walking crab.
 
-const QUADRUPEDS := [&"wolf", &"deer", &"rabbit", &"fox", &"stag", &"hedgehog", &"cat"]
+const QUADRUPEDS := [&"wolf", &"deer", &"rabbit", &"fox", &"stag", &"hedgehog", &"cat", &"horse"]
 ## Milestone 27: new looks (bee, phoenix and candle skull fly; the others walk).
 const HOVER := {&"bee": 1.1, &"phoenix": 1.35, &"candle_skull": 1.35}
 
@@ -27,6 +27,8 @@ var _hover := 0.0
 var _phase := 0.0
 var _move := 0.0
 var parts: Array[MeshInstance3D] = []
+## Milestone 29: the horse's saddle (shown when it wears one) and its colours.
+var _saddle: Node3D
 
 
 func build(p_look: StringName, p_tint: Color, p_accent: Color) -> void:
@@ -42,12 +44,13 @@ func build(p_look: StringName, p_tint: Color, p_accent: Color) -> void:
 	_tail = null
 	_head = null
 	_wings.clear()
+	_saddle = null
 	_hover = float(HOVER.get(look, 0.0))
 	_quad = look in QUADRUPEDS
 	_body = Node3D.new()
 	add_child(_body)
 	match look:
-		&"wolf", &"deer", &"rabbit", &"fox", &"stag", &"hedgehog", &"cat":
+		&"wolf", &"deer", &"rabbit", &"fox", &"stag", &"hedgehog", &"cat", &"horse":
 			_build_quadruped()
 		&"bee":
 			_build_bee()
@@ -111,6 +114,7 @@ func _build_quadruped() -> void:
 		&"stag": {"body": Vector3(0.52, 0.56, 1.12), "leg": 0.78, "head": Vector3(0.32, 0.36, 0.42)},
 		&"hedgehog": {"body": Vector3(0.42, 0.3, 0.55), "leg": 0.07, "head": Vector3(0.24, 0.22, 0.24)},
 		&"cat": {"body": Vector3(0.32, 0.3, 0.62), "leg": 0.24, "head": Vector3(0.34, 0.3, 0.3)},
+		&"horse": {"body": Vector3(0.62, 0.7, 1.55), "leg": 0.92, "head": Vector3(0.3, 0.34, 0.62)},
 	}[look]
 	var body: Vector3 = dims.body
 	var leg_len: float = dims.leg
@@ -183,6 +187,32 @@ func _build_quadruped() -> void:
 				var spine := _part(_body, Vector3(sx, body.y * 0.55, sz), Vector3(0.06, 0.2, 0.06),
 					accent if i % 3 else accent.lightened(0.35))
 				spine.rotation = Vector3(-0.6, 0, sx * 1.6)
+		&"horse":
+			# Horse (Milestone 29): long neck, mane in the accent colour, a blaze, and a saddle when tamed.
+			_head.position = Vector3(0, body.y * 0.95, body.z * 0.56)
+			_head.rotation.x = 0.55
+			var neck := _part(_body, Vector3(0, body.y * 0.62, body.z * 0.47), Vector3(0.26, 0.62, 0.3), tint)
+			neck.rotation.x = 0.5
+			for i in 5:
+				var m := _part(_body, Vector3(0, body.y * 0.68 + i * 0.07, body.z * 0.36 + i * 0.065), Vector3(0.1, 0.16, 0.12), accent)
+				m.rotation.x = 0.5
+			_part(_head, Vector3(0, hd.y * 0.05, hd.z * 0.95), Vector3(0.24, 0.24, 0.2), tint.darkened(0.12))  # muzzle
+			_part(_head, Vector3(0, hd.y * 0.62, hd.z * 0.62), Vector3(0.08, 0.06, 0.34), Color(0.95, 0.94, 0.9))  # blaze
+			_part(_head, Vector3(0, hd.y * 0.9, hd.z * 0.05), Vector3(0.1, 0.1, 0.14), accent)  # forelock
+			for sx in [-0.09, 0.09]:
+				_part(_head, Vector3(sx, hd.y * 1.0, hd.z * -0.05), Vector3(0.07, 0.16, 0.06), tint.darkened(0.08))  # ears
+			_saddle = Node3D.new()
+			_saddle.position = Vector3(0, body.y * 0.5, -0.05)
+			_body.add_child(_saddle)
+			var leather := Color(0.42, 0.24, 0.12)
+			_part(_saddle, Vector3(0, 0.04, 0), Vector3(body.x + 0.06, 0.1, 0.62), leather)
+			_part(_saddle, Vector3(0, 0.12, 0.26), Vector3(0.3, 0.14, 0.1), leather.darkened(0.15))  # pommel
+			_part(_saddle, Vector3(0, 0.12, -0.27), Vector3(0.42, 0.12, 0.08), leather.darkened(0.15))  # cantle
+			_part(_saddle, Vector3(0, -0.05, 0), Vector3(body.x + 0.1, 0.06, 0.7), Color(0.65, 0.18, 0.16))  # blanket
+			for sx in [-1.0, 1.0]:
+				_part(_saddle, Vector3(sx * (body.x * 0.5 + 0.05), -0.32, 0.04), Vector3(0.03, 0.5, 0.05), leather.darkened(0.3))
+				_part(_saddle, Vector3(sx * (body.x * 0.5 + 0.06), -0.58, 0.04), Vector3(0.06, 0.06, 0.12), Color(0.7, 0.7, 0.72))  # stirrup
+			_saddle.visible = false
 		&"cat":
 			# Witch cat: pointed ears and a crooked purple witch hat.
 			for sx in [-0.11, 0.11]:
@@ -216,11 +246,15 @@ func _build_quadruped() -> void:
 			_tail.rotation.x = 0.5
 			_part(_tail, Vector3(0, 0, -0.25), Vector3(0.2, 0.2, 0.5), tint)
 			_part(_tail, Vector3(0, 0, -0.55), Vector3(0.18, 0.18, 0.16), Color(0.96, 0.97, 1.0))
+		&"horse":
+			_tail.rotation.x = 0.35
+			_part(_tail, Vector3(0, -0.12, -0.1), Vector3(0.14, 0.3, 0.16), accent)
+			_part(_tail, Vector3(0, -0.42, -0.16), Vector3(0.16, 0.42, 0.14), accent.darkened(0.08))
 		&"cat":
 			_tail.rotation.x = -0.9
 			_part(_tail, Vector3(0, 0, -0.22), Vector3(0.07, 0.07, 0.44), tint)
 			_part(_tail, Vector3(0, 0, -0.46), Vector3(0.07, 0.07, 0.07), tint.lightened(0.15))
-	var leg_w := 0.1 if look in [&"rabbit", &"hedgehog", &"cat"] else (0.12 if look in [&"deer", &"stag", &"fox"] else 0.15)
+	var leg_w := 0.1 if look in [&"rabbit", &"hedgehog", &"cat"] else (0.12 if look in [&"deer", &"stag", &"fox"] else (0.17 if look == &"horse" else 0.15))
 	for fz in [body.z * 0.35, -body.z * 0.35]:
 		for sx in [-body.x * 0.32, body.x * 0.32]:
 			var leg := Node3D.new()
@@ -308,6 +342,12 @@ func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color, glow: bool
 	parent.add_child(mi)
 	parts.append(mi)
 	return mi
+
+
+## Horses: show or hide the saddle.
+func set_saddle(on: bool) -> void:
+	if _saddle:
+		_saddle.visible = on
 
 
 func set_locomotion(speed_ratio: float, delta: float) -> void:

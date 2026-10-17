@@ -79,6 +79,8 @@ const KEY_BINDINGS := {
 	&"debug_event": [KEY_F12],
 	## Milestone 18c: Creative mode for testing (the key under Esc).
 	&"creative_menu": [KEY_QUOTELEFT],
+	## Milestone 29: call your horse.
+	&"whistle": [KEY_9],
 }
 
 const MOUSE_BINDINGS := {
@@ -133,7 +135,8 @@ const REBINDABLE := [
 		[&"spell_1", "Spell 1"], [&"spell_2", "Spell 2"], [&"spell_3", "Spell 3 (with a tome)"]]],
 	["Interaction", [[&"interact", "Interact / gather"], [&"hotbar_1", "Hotbar 1"], [&"hotbar_2", "Hotbar 2"],
 		[&"hotbar_3", "Hotbar 3"], [&"hotbar_4", "Hotbar 4"], [&"hotbar_5", "Hotbar 5"], [&"hotbar_6", "Hotbar 6"],
-		[&"hotbar_7", "Hotbar 7"], [&"hotbar_8", "Hotbar 8"], [&"respawn", "Respawn"], [&"chat", "Chat"]]],
+		[&"hotbar_7", "Hotbar 7"], [&"hotbar_8", "Hotbar 8"], [&"respawn", "Respawn"], [&"chat", "Chat"],
+		[&"whistle", "Whistle for your horse"]]],
 	["Menus", [[&"inventory", "Inventory"], [&"character_screen", "Character"], [&"crafting", "Crafting"],
 		[&"spellbook", "Spellbook"], [&"journal", "Journal"], [&"world_map", "World map"], [&"reputation", "Reputation"],
 		[&"blueprints", "Blueprints"], [&"toggle_help", "Guide"], [&"quick_save", "Quick save"], [&"pause", "Pause"]]],

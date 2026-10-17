@@ -51,6 +51,11 @@ var _land_label := Label.new()
 var _dialogue := DialoguePanel.new()
 var _trade := TradePanel.new()
 var _requests := RequestsPanel.new()
+## Milestone 29: waystone travel and the horse's saddle slot.
+var travel_panel := TravelPanel.new()
+var _mount_row: HBoxContainer
+var _mount_bar: ProgressBar
+var _mount_label: Label
 var _reputation := ReputationPanel.new()
 var _spellbook := SpellbookPanel.new()
 ## Milestone 18c: Creative mode for testing (the ` key).
@@ -129,6 +134,7 @@ func _ready() -> void:
 	_root.add_child(_dialogue)
 	_root.add_child(_trade)
 	_root.add_child(_requests)
+	_root.add_child(travel_panel)
 	_root.add_child(_reputation)
 	_root.add_child(_spellbook)
 	_root.add_child(journal)
@@ -192,7 +198,7 @@ func _ready() -> void:
 	Events.target_changed.connect(_on_target_changed)
 	Events.player_died.connect(func() -> void: _death.visible = true)
 	Events.player_respawned.connect(func() -> void: _death.visible = false)
-	for panel in [_inv_panel, _map, _character, _crafting, _chest, _dialogue, _trade, _requests, _reputation, _spellbook, _blueprints, _settings, guide, journal, story]:
+	for panel in [_inv_panel, _map, _character, _crafting, _chest, _dialogue, _trade, _requests, travel_panel, _reputation, _spellbook, _blueprints, _settings, guide, journal, story]:
 		UIFx.attach(panel)
 
 
@@ -276,6 +282,13 @@ func _build_status() -> void:
 	_st_bar = st[0]
 	_st_label = st[1]
 	box.add_child(_row("Stamina", st))
+	# Milestone 29: the horse's gallop (shown while riding).
+	var mb := _make_bar(Color(0.85, 0.6, 0.3), 220)
+	_mount_bar = mb[0]
+	_mount_label = mb[1]
+	_mount_row = _row("Gallop", mb)
+	_mount_row.visible = false
+	box.add_child(_mount_row)
 	var hu := _make_bar(UITheme.HUNGER, 220)
 	_hu_bar = hu[0]
 	_hu_label = hu[1]
@@ -876,6 +889,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_dialogue.close()
 		elif _requests.visible:
 			_requests.close()
+		elif travel_panel.visible:
+			travel_panel.close()
 		elif _reputation.visible:
 			_reputation.visible = false
 		elif story.visible:
@@ -954,6 +969,7 @@ func _process(delta: float) -> void:
 	if player == null:
 		return
 	_creative_label.visible = player.creative
+	_update_mount_bar()
 	_update_temperature()
 	_update_ammo()
 	_quest_t -= delta
@@ -1049,6 +1065,23 @@ func _update_land() -> void:
 	if world.building.is_sheltered(p):
 		parts.append("Sheltered")
 	_land_label.text = " · ".join(parts)
+
+
+func _update_mount_bar() -> void:
+	var h := player.mount as Horse if player.is_riding() else null
+	_mount_row.visible = h != null
+	if h:
+		_set_bar(_mount_bar, _mount_label, h.stamina, h.stamina_max())
+
+
+## Milestone 29: an unlocked waystone's travel list.
+func open_travel_panel(from_key: String) -> void:
+	travel_panel.open_travel(from_key)
+
+
+## Milestone 29: your horse's saddle slot.
+func open_horse_panel(h: Horse) -> void:
+	travel_panel.open_horse(h)
 
 
 func _set_bar(bar: ProgressBar, label: Label, current: float, maximum: float) -> void:

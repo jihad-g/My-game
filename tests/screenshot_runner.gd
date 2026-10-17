@@ -26,6 +26,10 @@ func _ready() -> void:
 		await _new_folk_showcase()
 		get_tree().quit()
 		return
+	if "--only=travel" in OS.get_cmdline_user_args():
+		await _travel_showcase()
+		get_tree().quit()
+		return
 	if "--only=seasons" in OS.get_cmdline_user_args():
 		await _seasons_showcase()
 		get_tree().quit()
@@ -2292,6 +2296,117 @@ func _rich_world_showcase() -> void:
 			n += 1
 			await _shot("richworld_%d_%s" % [n, biome])
 
+
+
+## Milestone 29: a horse herd, riding with a saddle, a waystone and a rowboat.
+func _travel_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 10.5
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	world.weather.settle()
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var cam := Camera3D.new()
+	cam.fov = 40.0
+	world.add_child(cam)
+	cam.current = true
+	var tm := world.travel
+	# 1: a wild herd.
+	var herds := tm.herds_near(p.global_position, 3000.0)
+	if not herds.is_empty():
+		await _teleport(world, herds[0][1] + Vector3(6, 0, 6))
+		_clear_monsters(world)
+		tm.update_now()
+		await _wait(30)
+		var c: Vector3 = herds[0][1]
+		c.y = world.get_ground_height(c) + 1.0
+		cam.global_position = c + Vector3(7, 5, 9)
+		cam.look_at(c)
+		await _wait(5)
+		await _shot("travel_1_herd")
+		# 2: riding a saddled horse.
+		var horse: Horse = null
+		for h in get_tree().get_nodes_in_group(&"horses"):
+			horse = h
+		if horse:
+			horse.make_tame()
+			p.inventory.add_item(&"leather_saddle", 1)
+			horse.put_saddle(p, &"leather_saddle")
+			# A clearing without trees for the riding picture.
+			var spot := p.global_position
+			for r in range(4, 80, 4):
+				var found := false
+				for k in 12:
+					var q := herds[0][1] + Vector3(cos(TAU * k / 12.0), 0, sin(TAU * k / 12.0)) * r
+					q.y = world.get_ground_height(q)
+					if TreeFire.trees_near(world, q, 6.0).is_empty() and q.y > TerrainGenerator.WATER_Y + 0.5:
+						spot = q
+						found = true
+						break
+				if found:
+					break
+			p.global_position = spot + Vector3(0, 0.3, 0)
+			horse.global_position = spot
+			await _wait(5)
+			horse.mount(p)
+			p.face_direction(Vector3(1, 0, 0.3), true)
+			for i in 20:
+				horse.follow_rider(p.global_position, p.model.rotation.y, 6.0, 0.05)
+				await get_tree().process_frame
+			var hp := p.global_position + Vector3(0, 1.4, 0)
+			cam.global_position = hp + Vector3(-2.0, 2.8, 6.5)
+			cam.look_at(hp)
+			await _wait(5)
+			await _shot("travel_2_riding")
+			p.stop_riding(false, true)
+	# 3: a waystone in a village.
+	var towns := world.living.settlements().near(p.global_position, 4000.0)
+	if not towns.is_empty():
+		await _teleport(world, towns[0].world_center() + Vector3(6, 0, 2))
+		_clear_monsters(world)
+		tm.update_now()
+		var ws := tm.waystone("s:" + towns[0].id)
+		if ws:
+			ws.interact(p)
+			var q := ws.global_position + Vector3(0, 1.3, 0)
+			cam.global_position = q + Vector3(4, 2.5, 5)
+			cam.look_at(q)
+			await _wait(25)
+			await _shot("travel_3_waystone")
+	# 4: rowing a boat.
+	var water := Vector3.INF
+	for r in range(20, 2000, 20):
+		for k in 24:
+			var q := p.global_position + Vector3(cos(TAU * k / 24.0), 0, sin(TAU * k / 24.0)) * r
+			if world.generator.get_height_at(q) < TerrainGenerator.WATER_Y - 4.0:
+				water = q
+				break
+		if water != Vector3.INF:
+			break
+	if water != Vector3.INF:
+		await _teleport(world, water)
+		var boat := Boat.launch(world, water)
+		if boat:
+			boat.board(p)
+			p.face_direction(Vector3(1, 0, 0), true)
+			for i in 10:
+				boat.follow_rider(p.global_position, p.model.rotation.y, 0.0, 0.05)
+				await get_tree().process_frame
+			var bq := boat.global_position + Vector3(0, 0.8, 0)
+			cam.global_position = bq + Vector3(-3, 3.5, 5.5)
+			cam.look_at(bq)
+			await _wait(20)
+			await _shot("travel_4_boat")
 
 
 ## Milestone 28: one forest view in each season, a burning tree, and rain on a farm.
