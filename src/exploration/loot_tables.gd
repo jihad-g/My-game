@@ -20,10 +20,15 @@ const GEAR := [
 	[&"crystal_staff", &"shadow_cloak", &"crystal_ring", &"tusk_charm", &"copper_pickaxe", &"mithril_dirk",
 		&"embers_tome", &"mithril_staff"],
 	[&"moonpetal_pendant", &"mithril_sword", &"mithril_waraxe", &"mithril_dirk", &"crystal_ring", &"shadow_cloak",
-		&"mithril_longbow", &"mithril_halberd", &"frostbite_warhammer", &"stormcaller_wand"],
+		&"mithril_longbow", &"mithril_halberd", &"frostbite_warhammer", &"stormcaller_wand",
+		# Milestone 27
+		&"prismheart_blade", &"sporecrown_staff", &"starlance", &"pilgrim_hood", &"pilgrim_robe"],
 	# Milestone 22: S-rank dungeon bosses and caches can give legendary gear.
 	[&"sunforged_blade", &"shadowfang", &"titans_greataxe", &"staff_of_the_archmage", &"starfall_blade", &"starfall_bow",
-		&"shardbreaker", &"mithril_plate", &"crown_of_stars", &"aegis_of_dawn"],
+		&"shardbreaker", &"mithril_plate", &"crown_of_stars", &"aegis_of_dawn",
+		# Milestone 27: the Gilded Paladin
+		&"paladin_helm", &"paladin_plate", &"paladin_gauntlets", &"paladin_greaves", &"gilded_greatsword",
+		&"gilded_halberd", &"gilded_kite_shield"],
 ]
 ## Milestone 23: every elemental armour piece (a table's "elemental" chance rolls one).
 static var _elemental: Array = []

@@ -1,0 +1,49 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/pumpkin_lash.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"pumpkin"
+min_count = 1
+max_count = 1
+chance = 0.9
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"sunbloom"
+min_count = 1
+max_count = 1
+chance = 0.1
+
+[resource]
+script = ExtResource("1_md")
+id = &"pumpkin_creeper"
+display_name = "Pumpkin Creeper"
+category = 1
+level = 6
+max_health = 85.0
+walk_speed = 1.3
+run_speed = 2.6
+turn_speed = 9.0
+aggro_range = 9.0
+leash_range = 36.0
+max_poise = 26.0
+damage_multipliers = {
+&"fire": 1.6,
+&"poison": 0.5
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 22
+respawn_time = 480.0
+style = 0
+look = &"pumpkin"
+model_scale = 1.0
+tint = Color(0.95, 0.5, 0.12, 1)
+accent = Color(1.0, 0.82, 0.3, 1)
+melee = ExtResource("2_melee")
+burrow_range = 6.0

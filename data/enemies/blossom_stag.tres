@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/animal_kick.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"raw_meat"
+min_count = 1
+max_count = 2
+chance = 0.8
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"wild_hide"
+min_count = 1
+max_count = 1
+chance = 0.6
+
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"blossom_petal"
+min_count = 1
+max_count = 2
+chance = 0.7
+
+[resource]
+script = ExtResource("1_md")
+id = &"blossom_stag"
+display_name = "Blossom Stag"
+category = 0
+level = 3
+max_health = 70.0
+walk_speed = 2.2
+run_speed = 8.8
+turn_speed = 9.0
+aggro_range = 12.0
+leash_range = 36.0
+max_poise = 20.0
+damage_multipliers = {}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2")]
+xp_reward = 8
+respawn_time = 480.0
+style = 0
+look = &"stag"
+model_scale = 1.0
+tint = Color(0.66, 0.46, 0.3, 1)
+accent = Color(1.0, 0.66, 0.8, 1)
+melee = ExtResource("2_melee")
+flee_below = 1.0
+pack_alert = 0.0
+can_be_elite = false
+timid = true

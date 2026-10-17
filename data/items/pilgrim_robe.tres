@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"pilgrim_robe"
+display_name = "Pilgrim's Robe"
+description = "Layered travelling robes tied with a rose sash. Part of the Pilgrim's Vestments."
+category = 4
+rarity = 3
+max_stack = 1
+base_value = 380
+icon_color = Color(0.86, 0.84, 0.8, 1)
+icon_glyph = "Pr"
+equip_slot = 4
+required_level = 24
+stat_bonuses = {
+&"armor": 6,
+&"spell_power": 10,
+&"mana_regen": 10
+}
+set_id = &"pilgrim"
+armor_weight = 1
+outfit_look = &"pilgrim_robe"

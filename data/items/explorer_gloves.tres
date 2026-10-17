@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"explorer_gloves"
+display_name = "Explorer's Gloves"
+description = "Worn leather gloves with brass buckles. Part of the Explorer's Gear."
+category = 4
+rarity = 2
+max_stack = 1
+base_value = 90
+icon_color = Color(0.55, 0.36, 0.22, 1)
+icon_glyph = "EG"
+equip_slot = 5
+required_level = 12
+stat_bonuses = {
+&"armor": 3,
+&"crafting": 1
+}
+set_id = &"explorer"
+armor_weight = 1
+outfit_look = &"gloves"

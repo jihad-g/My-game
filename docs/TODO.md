@@ -105,6 +105,19 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 27 — New mobs and gear  ✅ (v0.35.0)
+
+- [x] 10 mobs with new bodies (bee, hedgehog, acorn, frost fox, blossom stag, spider, witch cat, candle skull, pumpkin, phoenix)
+- [x] Spawns in 8 biomes and 3 dungeon themes; drops (silk, feather, petal, quill, wax, honeycomb, acorn, pumpkin)
+- [x] Explorer's Gear, Gilded Paladin (set + shield + greatsword + halberd), Pilgrim's Vestments
+- [x] Prismheart Blade, Sporecrown Staff, Starlance with their own weapon shapes
+- [x] Recipes (tailoring, arcane altar) and dungeon loot
+- [x] Tests `test_m27_*` run and pass
+- [ ] NOT IMPLEMENTED: the other mobs on the sheets (bone dragon, shadow serpent, door mimic, ghost cat, diver zombie, cute food
+      critters, top-hat bear, turkey) - pick the next ones
+- [ ] NOT IMPLEMENTED: hand-drawn inventory icons for the new items (code-drawn by shape for now)
+- [ ] NOT IMPLEMENTED: honey/silk crafting uses beyond the new recipes; the Ember Feather has no recipe yet
+
 ## Milestone 26 — Rich World  ✅ (v0.34.0)
 
 - [x] New grass, soil, grass-lip and stone textures in the style of the owner's references

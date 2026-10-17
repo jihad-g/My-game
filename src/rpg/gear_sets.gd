@@ -77,6 +77,22 @@ const SETS := {
 		"element": &"all",
 		"bonuses": {2: {&"attack_speed": 8}, 4: {&"all_resist": 8, &"crafting": 3}},
 	},
+	# Milestone 27 (owner's reference sheets).
+	&"explorer": {
+		"name": "Explorer's Gear",
+		"feel": "Travel",
+		"bonuses": {2: {&"move_speed": 5}, 4: {&"max_stamina": 25, &"insulation": 4, &"crafting": 2}},
+	},
+	&"paladin": {
+		"name": "Gilded Paladin",
+		"feel": "Holy knight",
+		"bonuses": {2: {&"holy_damage": 10}, 4: {&"max_health": 40, &"block": 10, &"holy_resist": 15}},
+	},
+	&"pilgrim": {
+		"name": "Pilgrim's Vestments",
+		"feel": "Holy caster",
+		"bonuses": {2: {&"mana_regen": 20, &"holy_damage": 12}},
+	},
 }
 ## Elements with their own resistance and damage stats (Milestone 23).
 const ELEMENTS: Array[StringName] = [&"fire", &"frost", &"lightning", &"poison", &"arcane", &"holy", &"physical"]

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"explorer_pack"
+display_name = "Explorer's Pack"
+description = "A travel coat and a huge pack with a blue bedroll and two little lanterns. Part of the Explorer's Gear."
+category = 4
+rarity = 2
+max_stack = 1
+base_value = 180
+icon_color = Color(0.55, 0.36, 0.22, 1)
+icon_glyph = "EP"
+equip_slot = 4
+required_level = 12
+stat_bonuses = {
+&"armor": 7,
+&"max_stamina": 10,
+&"insulation": 2
+}
+set_id = &"explorer"
+armor_weight = 1
+outfit_look = &"explorer_pack"

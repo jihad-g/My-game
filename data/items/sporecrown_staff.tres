@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+[ext_resource type="Resource" path="res://data/movesets/staff.tres" id="2_ms"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"sporecrown_staff"
+display_name = "Sporecrown Staff"
+description = "A staff grown, not made: a glowing mushroom cap on a striped stalk."
+category = 3
+rarity = 4
+max_stack = 1
+base_value = 980
+icon_color = Color(0.2, 0.72, 0.66, 1)
+icon_glyph = "Sc"
+equip_slot = 1
+required_level = 22
+stat_bonuses = {
+&"spell_power": 30,
+&"max_mana": 30,
+&"poison_damage": 12
+}
+moveset = ExtResource("2_ms")
+weapon_type = &"staff"

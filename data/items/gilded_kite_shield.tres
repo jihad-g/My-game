@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"gilded_kite_shield"
+display_name = "Gilded Kite Shield"
+description = "A golden kite shield with a red field and a sun. Part of the Gilded Paladin arms."
+category = 4
+rarity = 4
+max_stack = 1
+base_value = 700
+icon_color = Color(0.95, 0.74, 0.3, 1)
+icon_glyph = "GK"
+equip_slot = 2
+required_level = 36
+stat_bonuses = {
+&"armor": 20,
+&"block": 18,
+&"holy_resist": 6,
+&"move_speed": -3
+}
+weapon_type = &"shield"
+armor_weight = 3
+outfit_look = &"gilded_kite"

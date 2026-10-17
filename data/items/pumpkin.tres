@@ -6,10 +6,11 @@
 script = ExtResource("1_item")
 id = &"pumpkin"
 display_name = "Pumpkin"
-description = "A big orange pumpkin. Cook it into vegetable stew."
-category = 0
+description = "A heavy, sweet pumpkin. Good food."
+category = 1
 rarity = 1
-max_stack = 20
-base_value = 8
-icon_color = Color(0.95, 0.55, 0.12, 1)
-icon_glyph = "Pu"
+max_stack = 99
+base_value = 6
+icon_color = Color(0.95, 0.5, 0.12, 1)
+icon_glyph = "Pk"
+hunger_restore = 28.0

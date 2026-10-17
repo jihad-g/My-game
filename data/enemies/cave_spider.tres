@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/spider_bite.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"spider_silk"
+min_count = 1
+max_count = 2
+chance = 0.8
+
+[resource]
+script = ExtResource("1_md")
+id = &"cave_spider"
+display_name = "Cave Spider"
+category = 1
+level = 5
+max_health = 52.0
+walk_speed = 2.8
+run_speed = 6.4
+turn_speed = 9.0
+aggro_range = 12.0
+leash_range = 36.0
+max_poise = 16.0
+damage_multipliers = {
+&"fire": 1.4
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0")]
+xp_reward = 17
+respawn_time = 480.0
+style = 0
+look = &"spider"
+model_scale = 1.0
+tint = Color(0.34, 0.24, 0.22, 1)
+accent = Color(1.0, 0.3, 0.6, 1)
+melee = ExtResource("2_melee")
+melee_status = [&"poison", 4.0, {"dps": 2.5}]
+pack_alert = 14.0
+dodge_chance = 0.15

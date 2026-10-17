@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/phoenix_rake.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"ember_feather"
+min_count = 1
+max_count = 1
+chance = 0.7
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"raw_meat"
+min_count = 1
+max_count = 2
+chance = 0.5
+
+[resource]
+script = ExtResource("1_md")
+id = &"ember_phoenix"
+display_name = "Ember Phoenix"
+category = 4
+level = 14
+max_health = 150.0
+walk_speed = 3.0
+run_speed = 6.0
+turn_speed = 9.0
+aggro_range = 18.0
+leash_range = 36.0
+max_poise = 24.0
+damage_multipliers = {
+&"fire": 0.0,
+&"frost": 1.6
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 70
+respawn_time = 480.0
+style = 1
+look = &"phoenix"
+model_scale = 1.2
+tint = Color(0.86, 0.26, 0.12, 1)
+accent = Color(1.0, 0.76, 0.22, 1)
+melee = ExtResource("2_melee")
+projectile_damage = 20.0
+projectile_type = &"fire"
+projectile_speed = 16.0
+projectile_color = Color(1, 0.6, 0.15, 1)
+projectile_windup = 0.55
+projectile_cooldown = 1.9
+preferred_min = 6.0
+preferred_max = 12.0
+projectile_status = [&"burn", 3.0, {"dps": 5.0}]
+flying = true
+dodge_chance = 0.2

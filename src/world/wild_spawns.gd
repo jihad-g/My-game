@@ -16,10 +16,13 @@ const MONSTER_SCENE := "res://scenes/enemies/monster.tscn"
 
 const TABLE := {
 	&"verdant_meadow": [
+		# Milestone 27
+		[&"bumblebee", 0.04, 2, 4, 401], [&"hedgehog", 0.03, 1, 1, 402], [&"pumpkin_creeper", 0.012, 1, 1, 403],
 		[&"bandit_recruit", 0.02, 5, 9, 304], [&"deer", 0.05, 1, 2, 301], [&"rabbit", 0.08, 1, 2, 302], [&"bandit_thug", 0.02, 2, 3, 303],
 		[&"tusker_grunt", 0.015, 2, 3, 305],
 	],
 	&"whispering_forest": [
+		[&"acorn_sprout", 0.03, 2, 4, 411], [&"cave_spider", 0.02, 1, 2, 412], [&"hedgehog", 0.03, 1, 1, 413], [&"blossom_stag", 0.012, 1, 1, 414],
 		[&"bandit_recruit", 0.02, 5, 8, 315], [&"deer", 0.06, 1, 3, 311], [&"rabbit", 0.05, 1, 2, 312], [&"thorn_crawler", 0.04, 1, 2, 313],
 		[&"bandit_archer", 0.015, 1, 2, 314], [&"tusker_grunt", 0.025, 2, 4, 316], [&"tusker_brute", 0.01, 1, 1, 317],
 	],
@@ -27,25 +30,31 @@ const TABLE := {
 		[&"cultist_acolyte", 0.025, 5, 9, 324], [&"thorn_crawler", 0.07, 1, 2, 321], [&"grotto_cultist", 0.025, 1, 1, 322], [&"deer", 0.03, 1, 2, 323],
 	],
 	&"murk_swamp": [
+		[&"hexpaw", 0.02, 1, 1, 421], [&"candle_skull", 0.015, 1, 1, 422],
 		[&"skeleton_minion", 0.03, 6, 10, 334], [&"thorn_crawler", 0.07, 1, 2, 331], [&"arcane_wisp", 0.04, 1, 2, 332], [&"skeleton_warrior", 0.035, 1, 2, 333],
 	],
 	&"sandy_beach": [
 		[&"bandit_recruit", 0.015, 4, 7, 343], [&"shore_crab", 0.1, 1, 3, 341], [&"bandit_thug", 0.02, 1, 2, 342],
 	],
 	&"sunscorch_desert": [
+		[&"ember_phoenix", 0.005, 1, 1, 431],
 		[&"bandit_recruit", 0.02, 5, 9, 354], [&"sand_scorpion", 0.09, 1, 1, 351], [&"bandit_archer", 0.025, 1, 2, 352], [&"bandit_thug", 0.025, 2, 2, 353],
 		[&"tusker_brute", 0.012, 1, 1, 355],
 	],
 	&"snowy_tundra": [
+		[&"frost_fox", 0.03, 2, 3, 441],
 		[&"frost_wolf", 0.06, 2, 4, 361], [&"rabbit", 0.04, 1, 2, 362],
 	],
 	&"frostpine_taiga": [
+		[&"frost_fox", 0.035, 2, 3, 451],
 		[&"frost_wolf", 0.045, 2, 3, 371], [&"deer", 0.05, 1, 2, 372], [&"rabbit", 0.03, 1, 1, 373],
 	],
 	&"stonecrown_mountains": [
+		[&"ember_phoenix", 0.006, 1, 1, 461], [&"cave_spider", 0.015, 1, 2, 462],
 		[&"skeleton_minion", 0.025, 6, 10, 384], [&"frost_wolf", 0.035, 2, 3, 381], [&"arcane_sentinel", 0.025, 1, 1, 382], [&"skeleton_archer", 0.03, 1, 2, 383],
 	],
 	&"crystal_glade": [
+		[&"blossom_stag", 0.03, 1, 1, 471], [&"hexpaw", 0.015, 1, 1, 472],
 		[&"cultist_acolyte", 0.02, 5, 8, 394], [&"arcane_wisp", 0.07, 1, 2, 391], [&"arcane_sentinel", 0.035, 1, 1, 392], [&"rabbit", 0.03, 1, 1, 393],
 	],
 }

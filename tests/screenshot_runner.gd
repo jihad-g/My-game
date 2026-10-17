@@ -22,6 +22,10 @@ func _ready() -> void:
 		await _pixel_pilot_showcase()
 		get_tree().quit()
 		return
+	if "--only=newfolk" in OS.get_cmdline_user_args():
+		await _new_folk_showcase()
+		get_tree().quit()
+		return
 	if "--only=richworld" in OS.get_cmdline_user_args():
 		await _rich_world_showcase()
 		get_tree().quit()
@@ -2284,3 +2288,93 @@ func _rich_world_showcase() -> void:
 			n += 1
 			await _shot("richworld_%d_%s" % [n, biome])
 
+
+
+## Milestone 27: the new mobs and the new gear.
+func _new_folk_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 10.5
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	world.weather.settle()
+	var c := _dry_center(world, p.global_position, 26.0)
+	await _teleport(world, c + Vector3(0, 0, 18))
+	_clear_monsters(world)
+	for ch in world.chunk_manager.get_children():
+		for n in ch.get_children():
+			if n is MultiMeshInstance3D or n is PropBody:
+				n.visible = false
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var cam := Camera3D.new()
+	cam.fov = 36.0
+	world.add_child(cam)
+	cam.current = true
+	var groups := [
+		[&"bumblebee", &"hedgehog", &"acorn_sprout", &"frost_fox", &"blossom_stag"],
+		[&"cave_spider", &"hexpaw", &"candle_skull", &"pumpkin_creeper", &"ember_phoenix"],
+	]
+	var made: Array = []
+	for gi in groups.size():
+		for m in made:
+			m.queue_free()
+		made.clear()
+		var ids: Array = groups[gi]
+		for i in ids.size():
+			var data := load("res://data/enemies/%s.tres" % ids[i]) as MonsterData
+			var mm := MonsterModel.new()
+			world.add_child(mm)
+			mm.build(data)
+			var pos := c + Vector3((i - 2) * 1.9, 0, 0)
+			pos.y = world.get_ground_height(pos)
+			mm.global_position = pos
+			mm.rotation.y = 0.35
+			made.append(mm)
+		var gy := world.get_ground_height(c)
+		var target := Vector3(c.x, gy + 0.8, c.z)
+		cam.global_position = target + Vector3(0, 2.6, 8.6)
+		cam.look_at(target)
+		for f in 20:
+			for mm in made:
+				(mm as MonsterModel).set_locomotion(0.0, 1.0 / 60.0)
+			await get_tree().process_frame
+		await _shot("newfolk_mobs_%d" % (gi + 1))
+	for m in made:
+		m.queue_free()
+	made.clear()
+	# Heroes in the new gear.
+	var outfits := [
+		[["explorer_hood", "explorer_pack", "explorer_gloves", "explorer_boots"], &"sporecrown_staff", false],
+		[["paladin_helm", "paladin_plate", "paladin_gauntlets", "paladin_greaves", "gilded_kite_shield"], &"prismheart_blade", true],
+		[["paladin_helm", "paladin_plate", "paladin_gauntlets", "paladin_greaves"], &"gilded_greatsword", false],
+		[["pilgrim_hood", "pilgrim_robe"], &"starlance", false],
+		[["paladin_helm", "paladin_plate", "paladin_gauntlets", "paladin_greaves"], &"gilded_halberd", false],
+	]
+	for i in outfits.size():
+		var o: Array = outfits[i]
+		var h := HumanoidModel.new()
+		world.add_child(h)
+		h.set_appearance()
+		var w: ItemData = ItemDB.get_item(o[1])
+		h.set_weapon(w.weapon_type, o[2])
+		h.set_outfit(PackedStringArray(o[0]), w.id)
+		var pos := c + Vector3((i - 2) * 1.35, 0, 0)
+		pos.y = world.get_ground_height(pos)
+		h.global_position = pos
+		h.rotation.y = 0.3 if i != 0 else PI * 0.85  # the explorer shows the pack
+		made.append(h)
+	var gy2 := world.get_ground_height(c)
+	var t2 := Vector3(c.x, gy2 + 1.0, c.z)
+	cam.global_position = t2 + Vector3(0, 1.0, 7.4)
+	cam.look_at(t2)
+	await _wait(15)
+	await _shot("newfolk_gear")

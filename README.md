@@ -5,7 +5,11 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.34.0 — Rich World**. New block textures (fine grass, dark soil with pebbles, cracked stone slabs) and
+> Status: **v0.35.0 — New mobs and gear**. Ten new creatures (bees, hedgehogs, acorn sprouts, frost foxes, blossom
+> stags, cave spiders, witch cats, candle skulls, pumpkin creepers and the ember phoenix) and new gear: the Explorer's
+> Gear with its big pack, the Gilded Paladin, Pilgrim's robes, the Prismheart Blade, Sporecrown Staff and Starlance.
+>
+> Before that, **v0.34.0 — Rich World**. New block textures (fine grass, dark soil with pebbles, cracked stone slabs) and
 > much more ground cover: flowering shrubs, ferns, daisies, marigolds, pebbles, mossy boulders, fallen logs and stumps.
 >
 > Before that, **v0.33.0 — Monster pathfinding**. Monsters now find their way around walls, houses, trees, cliffs and

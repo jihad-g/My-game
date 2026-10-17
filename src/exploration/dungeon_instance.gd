@@ -117,7 +117,10 @@ func _build_rooms() -> void:
 				_door(DungeonDoor.Kind.EXIT, center + Vector3(0, 0, -2.0))
 			DungeonPlan.Room.NORMAL:
 				for k in 2 + poi.rank / 2 + _rng.randi_range(0, 1):
-					_monster(mons[0] if _rng.randf() < 0.6 else mons[1], plan.room_point(i, _rng), _rng.randf() < 0.08 * poi.rank)
+					var pick: StringName = mons[0] if _rng.randf() < 0.6 else mons[1]
+					if _rng.randf() < 0.15:
+						pick = PoiLayout.THEME_EXTRAS[poi.theme]  # Milestone 27
+					_monster(pick, plan.room_point(i, _rng), _rng.randf() < 0.08 * poi.rank)
 			DungeonPlan.Room.TRAP:
 				for x in range(rr.position.x + 1, rr.end.x - 1, 2):
 					for z in range(rr.position.y + 1, rr.end.y - 1, 2):

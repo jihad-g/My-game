@@ -1167,6 +1167,9 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 27 — New mobs and gear (v0.35.0).** Ten creatures and three gear sets with signature weapons,
+designed in the style of the owner's reference sheets.
+
 **Done: Milestone 26 — Rich World (v0.34.0).** Restyled grass, soil and stone textures and nine ground-cover props
 make the green biomes look lived-in.
 

@@ -11,6 +11,8 @@ const RANK_DAMAGE := [1.0, 1.35, 1.8, 2.5, 3.4, 4.6]
 const RANK_LEVELS := [0, 6, 14, 24, 38, 54]
 const RANK_XP := [1.0, 1.7, 2.8, 4.6, 7.5, 12.0]
 ## Monsters per dungeon theme: [melee, ranged/caster, boss]
+## Milestone 27: a third kind of monster that sometimes joins each dungeon theme.
+const THEME_EXTRAS := [&"candle_skull", &"hexpaw", &"cave_spider"]
 const THEME_MONSTERS := [
 	[&"skeleton_warrior", &"skeleton_archer", &"bone_king"],
 	[&"arcane_sentinel", &"arcane_wisp", &"arcane_colossus"],

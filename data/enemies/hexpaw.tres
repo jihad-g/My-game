@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/wisp_touch.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"arcane_dust"
+min_count = 1
+max_count = 2
+chance = 0.6
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"wild_hide"
+min_count = 1
+max_count = 1
+chance = 0.3
+
+[resource]
+script = ExtResource("1_md")
+id = &"hexpaw"
+display_name = "Hexpaw"
+category = 4
+level = 7
+max_health = 46.0
+walk_speed = 2.8
+run_speed = 5.6
+turn_speed = 9.0
+aggro_range = 14.0
+leash_range = 36.0
+max_poise = 10.0
+damage_multipliers = {
+&"holy": 1.4,
+&"arcane": 0.6
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 24
+respawn_time = 480.0
+style = 2
+look = &"cat"
+model_scale = 1.0
+tint = Color(0.17, 0.16, 0.22, 1)
+accent = Color(0.78, 0.42, 1.0, 1)
+melee = ExtResource("2_melee")
+projectile_damage = 11.0
+projectile_type = &"arcane"
+projectile_speed = 12.0
+projectile_color = Color(0.78, 0.42, 1, 1)
+projectile_windup = 0.55
+projectile_cooldown = 2.2
+preferred_min = 5.0
+preferred_max = 9.0
+projectile_status = [&"weakened", 4.0, {}]
+dodge_chance = 0.3

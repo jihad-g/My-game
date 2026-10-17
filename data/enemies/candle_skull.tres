@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/wisp_touch.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"candle_wax"
+min_count = 1
+max_count = 1
+chance = 0.6
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"ancient_bone"
+min_count = 1
+max_count = 2
+chance = 0.5
+
+[resource]
+script = ExtResource("1_md")
+id = &"candle_skull"
+display_name = "Candle Skull"
+category = 3
+level = 9
+max_health = 62.0
+walk_speed = 2.4
+run_speed = 4.4
+turn_speed = 9.0
+aggro_range = 14.0
+leash_range = 36.0
+max_poise = 10.0
+damage_multipliers = {
+&"holy": 1.6,
+&"physical": 1.15,
+&"poison": 0.0
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 30
+respawn_time = 480.0
+style = 2
+look = &"candle_skull"
+model_scale = 1.0
+tint = Color(0.9, 0.87, 0.78, 1)
+accent = Color(0.76, 0.45, 1.0, 1)
+melee = ExtResource("2_melee")
+projectile_damage = 14.0
+projectile_type = &"fire"
+projectile_speed = 11.0
+projectile_color = Color(0.78, 0.45, 1, 1)
+projectile_windup = 0.7
+projectile_cooldown = 2.4
+preferred_min = 5.0
+preferred_max = 10.0
+projectile_status = [&"burn", 3.0, {"dps": 3.0}]
+flying = true

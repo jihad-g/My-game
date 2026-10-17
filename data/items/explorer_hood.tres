@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"explorer_hood"
+display_name = "Explorer's Hood"
+description = "A leather hood with brass goggles pushed up. Part of the Explorer's Gear."
+category = 4
+rarity = 2
+max_stack = 1
+base_value = 120
+icon_color = Color(0.55, 0.36, 0.22, 1)
+icon_glyph = "EH"
+equip_slot = 3
+required_level = 12
+stat_bonuses = {
+&"armor": 4,
+&"insulation": 2
+}
+set_id = &"explorer"
+armor_weight = 1
+outfit_look = &"explorer_hood"

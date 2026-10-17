@@ -145,6 +145,8 @@ func _ready() -> void:
 	await _run_async(&"test_m25_nav_grid")
 	await _run_async(&"test_m25_nav_monsters")
 	await _run_async(&"test_m25_nav_dungeon")
+	_run(&"test_m27_data")
+	await _run_async(&"test_m27_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5192,7 +5194,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.34"), "version 0.34 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.35"), "version 0.35 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -8485,3 +8487,91 @@ func _teleport_to(world: World, c: Vector3) -> void:
 	world.teleport_to(c)
 	await _wait_ready_after_teleport(world)
 	await _frames(10)
+
+
+# --- Milestone 27: new mobs and gear from the owner's reference sheets ---------------------
+
+const M27_MOBS := [&"bumblebee", &"frost_fox", &"cave_spider", &"hexpaw", &"candle_skull", &"ember_phoenix",
+	&"blossom_stag", &"hedgehog", &"pumpkin_creeper", &"acorn_sprout"]
+const M27_GEAR := [&"explorer_hood", &"explorer_pack", &"explorer_gloves", &"explorer_boots", &"paladin_helm",
+	&"paladin_plate", &"paladin_gauntlets", &"paladin_greaves", &"gilded_kite_shield", &"pilgrim_hood", &"pilgrim_robe",
+	&"prismheart_blade", &"sporecrown_staff", &"gilded_greatsword", &"gilded_halberd", &"starlance"]
+
+
+func test_m27_data() -> void:
+	var looks := {}
+	for id in M27_MOBS:
+		var d := load("res://data/enemies/%s.tres" % id) as MonsterData
+		check(d != null and d.melee != null and not d.loot.is_empty(), "%s loads with an attack and loot" % id)
+		if d:
+			looks[d.look] = true
+			check(d.look in MonsterModel.BEASTS, "%s has a beast body (%s)" % [id, d.look])
+	check(looks.size() == 10, "ten different new bodies")
+	var spawned := {}
+	for b in WildSpawns.TABLE:
+		for rule: Array in WildSpawns.TABLE[b]:
+			spawned[rule[0]] = true
+	var missing := M27_MOBS.filter(func(m: StringName) -> bool: return not spawned.has(m))
+	check(missing.is_empty(), "every new mob lives somewhere in the wild %s" % [missing])
+	for id in M27_GEAR:
+		var it := ItemDB.get_item(id)
+		check(it != null and it.is_equippable(), "%s is wearable" % id)
+		if it and it.outfit_look != &"":
+			check(it.outfit_look in HumanoidModel.OUTFIT_LOOKS, "%s has a look the model knows" % id)
+	check(GearSets.full_size(&"explorer") == 4 and GearSets.full_size(&"paladin") == 4 and GearSets.full_size(&"pilgrim") == 2,
+		"explorer and paladin are 4-piece sets, pilgrim is 2")
+	var band3: Array = LootTables.GEAR[3]
+	var band4: Array = LootTables.GEAR[4]
+	check(band3.has(&"prismheart_blade") and band3.has(&"starlance") and band4.has(&"gilded_greatsword") and band4.has(&"paladin_plate"),
+		"rare dungeons drop the new weapons, S-rank bosses the Gilded Paladin")
+	for r in [&"explorer_pack", &"pilgrim_robe", &"sporecrown_staff"]:
+		var rd := RecipeBook.get_recipe(r)
+		check(rd != null and rd.source == RecipeData.Source.DISCOVERY, "%s is crafted (found through %s)" % [r, rd.discovered_by if rd else &"?"])
+	check(PoiLayout.THEME_EXTRAS.size() == 3, "each dungeon theme has a new extra monster")
+	check(SelfCheck.run().ok(), "the data check finds no broken links")
+
+
+func test_m27_ingame() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	world.spawner.set_process(false)
+	for id in M27_MOBS:
+		var data := load("res://data/enemies/%s.tres" % id) as MonsterData
+		var pos := p.global_position + p.get_facing() * 7.0
+		pos.y = world.get_ground_height(pos) + 0.3
+		var m := world.spawner.spawn_enemy(load(Monster.MONSTER_SCENE_PATH), pos, "", data) as Monster
+		check(m != null, "%s spawns" % id)
+		if m == null:
+			continue
+		await _frames(3)
+		var rig := (m.model as MonsterModel).rig as BeastModel
+		check(rig != null and rig.parts.size() >= 8, "%s has a built body (%d parts)" % [id, rig.parts.size() if rig else 0])
+		if data.flying:
+			check(rig._hover > 0.5, "%s flies" % id)
+		var xp := p.character.total_xp
+		m.health.invulnerable = false
+		m.health.apply_damage(DamageInfo.create(m.health.current + 10.0, p, &"true"))
+		await _frames(2)
+		check(m.is_dead and p.character.total_xp > xp, "%s can be killed for XP" % id)
+		NodePool.release_or_free(m)
+	# The gear: sets give their bonus, models draw the looks.
+	for id in [&"explorer_hood", &"explorer_pack", &"explorer_gloves", &"explorer_boots"]:
+		p.equipment.equip(ItemDB.get_item(id))
+	await _frames(2)
+	check(int(p.equipment.set_counts().get(&"explorer", 0)) == 4, "the full Explorer's Gear is worn")
+	check(p.stats.get_mult(Stats.MOVE_SPEED) > 1.05, "and makes you faster")
+	var h := HumanoidModel.new()
+	world.add_child(h)
+	h.set_appearance()
+	h.set_weapon(&"sword", true)
+	var before := 0
+	h.set_outfit(PackedStringArray(), &"iron_sword")
+	before = h._parts.size()
+	h.set_outfit(PackedStringArray(["paladin_helm", "paladin_plate", "gilded_kite_shield"]), &"prismheart_blade")
+	check(h._parts.size() > before + 15, "the paladin helm, plate, shield and the Prismheart Blade are drawn (%d parts)" % h._parts.size())
+	h.queue_free()
+	world.queue_free()
+	await _frames(5)

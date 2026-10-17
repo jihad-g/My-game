@@ -2,7 +2,39 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
-## [0.34.0] — Milestone 26: Rich World (new block textures and ground cover)
+## [0.35.0] — Milestone 27: New mobs and gear (from the owner's reference sheets)
+
+Our own designs in the style of the owner's pixel-art reference sheets.
+
+### Added
+- **10 new mobs**, each with its own pixel-painted body:
+  - **Meadow Bumbler** (bee, flies, poison sting, drops honeycomb) - meadows;
+  - **Hedgehog** (peaceful, drops quills) - meadows and forests;
+  - **Acorn Sprout** (walking acorn, packs, drops acorns) - forests;
+  - **Frost Fox** (chilling bite, howls for its pack) - taiga and tundra;
+  - **Blossom Stag** (peaceful, cherry-blossom antlers, drops blossom petals) - forests and the crystal glade;
+  - **Cave Spider** (poison bite, drops spider silk) - forests, mountains, and Thornwild Grotto dungeons;
+  - **Hexpaw** (witch cat in a purple hat, casts weakening hexes) - swamps, crystal glade, Arcane Sanctums;
+  - **Candle Skull** (floating skull with purple candles, fire bolts) - swamps and crypt dungeons;
+  - **Pumpkin Creeper** (hides as a pumpkin until you come close, vine lash, drops a pumpkin) - meadows;
+  - **Ember Phoenix** (rare fire bird, burning bolts, drops an ember feather) - desert and mountains.
+- **New gear**:
+  - **Explorer's Gear** (light, level 12): hood with brass goggles, a coat with a big pack, bedroll and lanterns,
+    gloves, boots. 2 pieces: faster; 4: more stamina and warmth, better crafting. Crafted at the tailoring table
+    (found when you first pick up spider silk).
+  - **Gilded Paladin** (heavy, level 36): plumed golden helm, golden plate with red tabard and cape, gauntlets,
+    greaves, plus the Gilded Kite Shield, Gilded Greatsword and Gilded Halberd. Holy damage and resistance,
+    health and block. S-rank dungeon bosses and caches.
+  - **Pilgrim's Vestments** (light, level 24): cowl and layered robe with a rose sash; holy caster set. Tailoring
+    (found with blossom petals) or A-rank dungeons.
+  - **Prismheart Blade** (crystal sword with a living gem), **Sporecrown Staff** (glowing mushroom staff,
+    craftable at the arcane altar), **Starlance** (star-headed silver lance) - A-rank dungeons.
+- New materials and food: spider silk, ember feather, blossom petal, hedgehog quill, haunted wax, honeycomb,
+  acorn, pumpkin.
+- Each dungeon theme sometimes has a new extra monster (candle skulls, Hexpaws, cave spiders).
+- Tests `test_m27_data`, `test_m27_ingame`; screenshot mode `--only=newfolk`.
+
+
 
 ### Changed
 - **New block textures** (made by `art/tools/texgen.py`, in the style of the owner's tile references):

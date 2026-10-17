@@ -435,6 +435,8 @@ const OUTFIT_LOOKS := [
 	&"sunflare_helm", &"sunflare_plate", &"amethyst_crown", &"amethyst_robe", &"wraithbone_mask", &"wraithbone_coat",
 	&"sporecap_hat", &"sporecap_vest", &"dawnbloom_crown", &"dawnbloom_mantle", &"stoneheart_helm", &"stoneheart_plate",
 	&"stormcopper_helm", &"stormcopper_plate", &"brass_tophat", &"brass_coat",
+	# Milestone 27: explorer, gilded paladin and pilgrim.
+	&"explorer_hood", &"explorer_pack", &"paladin_helm", &"paladin_plate", &"pilgrim_hood", &"pilgrim_robe", &"gilded_kite",
 ]
 
 
@@ -688,6 +690,60 @@ func _build_outfit_piece(look: StringName, c: Color) -> void:
 			_part(_torso, Vector3(0, 0.3, -0.26), Vector3(0.36, 0.42, 0.16), Color(0.55, 0.55, 0.58))  # boiler pack
 			_part(_torso, Vector3(0.12, 0.62, -0.26), Vector3(0.06, 0.24, 0.06), Color(0.85, 0.65, 0.3))  # pipe
 			_sleeves(c)
+		# --- Milestone 27 ---
+		&"explorer_hood":
+			_part(_head, Vector3(0, 0.34, -0.03), Vector3(0.54, 0.42, 0.5), c)  # leather hood
+			_part(_head, Vector3(0, 0.12, -0.02), Vector3(0.52, 0.1, 0.5), c.darkened(0.2))  # neck flap
+			_part(_head, Vector3(0, 0.44, 0.24), Vector3(0.48, 0.07, 0.04), Color(0.3, 0.2, 0.12))  # goggle strap
+			for sx in [-0.1, 0.1]:
+				_part(_head, Vector3(sx, 0.45, 0.27), Vector3(0.13, 0.11, 0.05), Color(0.78, 0.6, 0.3))  # brass rim
+				_part(_head, Vector3(sx, 0.45, 0.295), Vector3(0.08, 0.07, 0.02), Color(0.55, 0.85, 0.95), true)  # lens
+		&"explorer_pack":
+			_part(_torso, Vector3(0, 0.3, 0), Vector3(0.6, 0.58, 0.36), Color(0.14, 0.13, 0.16))  # dark travel shirt
+			_part(_torso, Vector3(0, 0.44, 0.0), Vector3(0.64, 0.24, 0.4), c)  # leather shoulder cape
+			_part(_torso, Vector3(-0.14, 0.3, 0.19), Vector3(0.06, 0.5, 0.02), c.darkened(0.25))  # straps
+			_part(_torso, Vector3(0.14, 0.3, 0.19), Vector3(0.06, 0.5, 0.02), c.darkened(0.25))
+			_part(_torso, Vector3(0, 0.3, 0.2), Vector3(0.06, 0.06, 0.02), Color(0.82, 0.82, 0.86))  # buckle
+			_part(_torso, Vector3(0, 0.3, -0.36), Vector3(0.56, 0.62, 0.36), c)  # the pack
+			_part(_torso, Vector3(0, 0.12, -0.55), Vector3(0.44, 0.26, 0.06), c.lightened(0.12))  # front pocket
+			_part(_torso, Vector3(0, 0.68, -0.38), Vector3(0.78, 0.2, 0.22), Color(0.22, 0.38, 0.85))  # bedroll
+			for sx in [-0.25, 0.25]:
+				_part(_torso, Vector3(sx, 0.68, -0.38), Vector3(0.04, 0.21, 0.23), Color(0.95, 0.75, 0.25))  # gold bands
+				_part(_torso, Vector3(sx * 1.2, -0.02, -0.24), Vector3(0.1, 0.16, 0.1), Color(0.95, 0.72, 0.25))  # lanterns
+				_part(_torso, Vector3(sx * 1.2, -0.02, -0.24), Vector3(0.06, 0.1, 0.11), Color(1.0, 0.85, 0.4), true)
+			_sleeves(Color(0.14, 0.13, 0.16))
+		&"paladin_helm":
+			_part(_head, Vector3(0, 0.27, 0), Vector3(0.54, 0.54, 0.52), c)
+			_part(_head, Vector3(0, 0.29, 0.265), Vector3(0.36, 0.05, 0.02), slit)  # visor slits
+			_part(_head, Vector3(0, 0.2, 0.265), Vector3(0.3, 0.03, 0.02), slit)
+			_part(_head, Vector3(0, 0.27, 0.27), Vector3(0.05, 0.3, 0.02), light)  # nose ridge
+			_part(_head, Vector3(0, 0.56, 0), Vector3(0.12, 0.08, 0.5), light)  # crest
+			for k in 4:
+				_part(_head, Vector3(0, 0.64 + k * 0.04, -0.12 - k * 0.09), Vector3(0.1, 0.12, 0.12), Color(0.82, 0.16, 0.14))  # red plume
+		&"paladin_plate":
+			_part(_torso, Vector3(0, 0.32, 0), Vector3(0.6, 0.6, 0.36), c)
+			_part(_torso, Vector3(0, 0.38, 0.185), Vector3(0.4, 0.34, 0.02), light)  # breastplate
+			_part(_torso, Vector3(0, 0.38, 0.2), Vector3(0.06, 0.24, 0.02), Color(0.82, 0.16, 0.14))  # red cross
+			_part(_torso, Vector3(0, 0.42, 0.2), Vector3(0.2, 0.06, 0.02), Color(0.82, 0.16, 0.14))
+			_part(_torso, Vector3(0, -0.12, 0.13), Vector3(0.3, 0.34, 0.06), Color(0.72, 0.14, 0.12))  # tabard
+			_part(_torso, Vector3(0, -0.06, -0.2), Vector3(0.56, 0.62, 0.04), Color(0.62, 0.12, 0.12))  # cape
+			_part(_torso, Vector3(0, 0.03, 0.0), Vector3(0.62, 0.08, 0.38), dark)
+			for sx: float in [-1.0, 1.0]:
+				_part(_torso, Vector3(sx * 0.4, 0.6, 0), Vector3(0.28, 0.16, 0.32), c)  # pauldrons
+				_part(_torso, Vector3(sx * 0.4, 0.69, 0), Vector3(0.22, 0.04, 0.26), light)
+			_sleeves(c)
+		&"pilgrim_hood":
+			_part(_head, Vector3(0, 0.33, -0.04), Vector3(0.56, 0.5, 0.52), c)  # deep cowl
+			_part(_head, Vector3(0, 0.3, 0.215), Vector3(0.42, 0.36, 0.02), c.darkened(0.55))  # shadowed face edge
+			_part(_head, Vector3(0, 0.05, 0.0), Vector3(0.6, 0.12, 0.56), c.darkened(0.12))  # mantle
+			_part(_head, Vector3(0, 0.06, 0.29), Vector3(0.08, 0.08, 0.03), Color(0.75, 0.8, 0.9))  # silver clasp
+		&"pilgrim_robe":
+			_part(_torso, Vector3(0, 0.31, 0), Vector3(0.6, 0.62, 0.36), c)
+			_part(_torso, Vector3(0, -0.16, 0), Vector3(0.64, 0.44, 0.4), c.darkened(0.1))  # long skirt
+			_part(_torso, Vector3(0, 0.46, 0.0), Vector3(0.64, 0.2, 0.4), Color(0.3, 0.32, 0.42))  # dark layer
+			_part(_torso, Vector3(0, 0.05, 0.0), Vector3(0.62, 0.08, 0.38), Color(0.88, 0.45, 0.55))  # rose sash
+			_part(_torso, Vector3(0.12, -0.1, 0.2), Vector3(0.06, 0.24, 0.02), Color(0.88, 0.45, 0.55))  # sash tail
+			_sleeves(c)
 		# --- Amulet ---
 		&"pendant":
 			_part(_torso, Vector3(0, 0.5, 0.18), Vector3(0.08, 0.08, 0.03), c)
@@ -700,7 +756,8 @@ func _build_hair() -> void:
 	var looks := outfit_looks()
 	var covered := false
 	for l in [&"hood_padded", &"fur_cap", &"helm_plume", &"horned_helm", &"hood_mask", &"great_helm",
-			&"sunflare_helm", &"amethyst_crown", &"wraithbone_mask", &"stoneheart_helm", &"stormcopper_helm"]:
+			&"sunflare_helm", &"amethyst_crown", &"wraithbone_mask", &"stoneheart_helm", &"stormcopper_helm",
+			&"explorer_hood", &"paladin_helm", &"pilgrim_hood"]:
 		covered = covered or l in looks
 	var style := CharacterLook.hair_style(_body)
 	if not covered and style != &"bald":
@@ -726,6 +783,64 @@ func _sleeves(c: Color) -> void:
 	_part(_arm_r, Vector3(0, -0.13, 0), Vector3(0.21, 0.3, 0.23), c * 0.92)
 
 
+## Milestone 27: hand-designed weapons (from the owner's reference sheets).
+## Returns false for every other item (they use their weapon type's shape).
+func _special_weapon(id: StringName) -> bool:
+	var gold := Color(0.98, 0.78, 0.3)
+	match id:
+		&"prismheart_blade":
+			for k in 4:  # blue and gold striped grip
+				_part(_weapon, Vector3(0, 0, 0.04 + k * 0.05), Vector3(0.07, 0.07, 0.05), Color(0.25, 0.32, 0.8) if k % 2 == 0 else gold)
+			_part(_weapon, Vector3(0, 0, 0.26), Vector3(0.18, 0.1, 0.1), Color(0.3, 0.14, 0.36))  # violet guard
+			_part(_weapon, Vector3(0, 0, 0.26), Vector3(0.09, 0.11, 0.09), Color(0.7, 0.95, 1.0), true)  # gem
+			for sx in [-1.0, 1.0]:  # teal swirls
+				_part(_weapon, Vector3(sx * 0.15, 0, 0.3), Vector3(0.05, 0.04, 0.14), Color(0.2, 0.75, 0.62))
+				_part(_weapon, Vector3(sx * 0.19, 0, 0.38), Vector3(0.07, 0.04, 0.04), Color(0.2, 0.75, 0.62))
+			for k in 6:  # white crystal blade, curving a little
+				_part(_weapon, Vector3(k * 0.012, 0, 0.38 + k * 0.11), Vector3(0.12 - k * 0.006, 0.04, 0.12), Color(0.94, 0.96, 1.0))
+			_part(_weapon, Vector3(0.09, 0, 1.0), Vector3(0.06, 0.04, 0.08), Color(0.94, 0.96, 1.0))  # hooked tip
+			_part(_weapon, Vector3(-0.06, 0, 0.6), Vector3(0.03, 0.03, 0.03), Color(0.6, 0.85, 1.0), true)  # sparkle
+		&"sporecrown_staff":
+			for k in 10:  # striped stalk
+				var col: Color = [Color(0.24, 0.16, 0.32), Color(0.2, 0.34, 0.72), gold][k % 3]
+				_part(_weapon, Vector3(0, 0, -0.2 + k * 0.13), Vector3(0.08, 0.08, 0.13), col)
+			_part(_weapon, Vector3(0, 0, 1.18), Vector3(0.16, 0.16, 0.12), Color(1.0, 0.62, 0.25), true)  # glowing gills
+			_part(_weapon, Vector3(0, 0, 1.28), Vector3(0.5, 0.5, 0.1), Color(0.18, 0.66, 0.6))  # teal cap
+			_part(_weapon, Vector3(0, 0, 1.35), Vector3(0.36, 0.36, 0.06), Color(0.22, 0.76, 0.68))
+			for p in [Vector3(0.14, 0.1, 1.39), Vector3(-0.12, -0.08, 1.39), Vector3(0.0, -0.17, 1.39), Vector3(-0.16, 0.14, 1.36)]:
+				_part(_weapon, p, Vector3(0.07, 0.07, 0.03), Color(1.0, 0.72, 0.4), true)  # spots
+		&"gilded_greatsword":
+			_part(_weapon, Vector3(0, 0, 0.14), Vector3(0.08, 0.08, 0.3), Color(0.5, 0.12, 0.1))
+			_part(_weapon, Vector3(0, 0, 0.32), Vector3(0.5, 0.08, 0.1), gold)
+			_part(_weapon, Vector3(0, 0, 0.32), Vector3(0.08, 0.1, 0.12), Color(0.85, 0.15, 0.12))  # ruby
+			_part(_weapon, Vector3(0, 0, 0.9), Vector3(0.17, 0.05, 1.1), gold)
+			_part(_weapon, Vector3(0, 0, 0.9), Vector3(0.05, 0.06, 0.9), gold.darkened(0.25))  # fuller
+			_part(_weapon, Vector3(0, 0, 1.5), Vector3(0.08, 0.04, 0.12), gold.lightened(0.2))
+		&"gilded_halberd":
+			_part(_weapon, Vector3(0, 0, 0.5), Vector3(0.07, 0.07, 1.6), Color(0.45, 0.1, 0.1))
+			for k in 3:
+				_part(_weapon, Vector3(0, 0, 0.1 + k * 0.45), Vector3(0.09, 0.09, 0.04), gold)  # gold rings
+			_part(_weapon, Vector3(0, 0, 1.38), Vector3(0.08, 0.04, 0.28), gold)  # spike
+			_part(_weapon, Vector3(0.18, 0, 1.12), Vector3(0.3, 0.05, 0.34), gold)  # axe blade
+			_part(_weapon, Vector3(0.32, 0, 1.12), Vector3(0.05, 0.05, 0.42), gold.lightened(0.15))
+			_part(_weapon, Vector3(-0.1, 0, 1.14), Vector3(0.14, 0.04, 0.08), gold.darkened(0.2))  # back hook
+		&"starlance":
+			var silver := Color(0.78, 0.86, 1.0)
+			_part(_weapon, Vector3(0, 0, 0.5), Vector3(0.06, 0.06, 1.6), Color(0.32, 0.36, 0.5))
+			for k in 2:
+				_part(_weapon, Vector3(0, 0, 0.3 + k * 0.6), Vector3(0.09, 0.09, 0.05), silver)
+			_part(_weapon, Vector3(0, 0, 1.38), Vector3(0.1, 0.1, 0.1), Color(0.65, 0.85, 1.0), true)  # star core
+			_part(_weapon, Vector3(0, 0, 1.56), Vector3(0.06, 0.04, 0.3), silver)  # four points
+			_part(_weapon, Vector3(0, 0, 1.22), Vector3(0.05, 0.04, 0.14), silver)
+			_part(_weapon, Vector3(0.14, 0, 1.38), Vector3(0.2, 0.04, 0.06), silver)
+			_part(_weapon, Vector3(-0.14, 0, 1.38), Vector3(0.2, 0.04, 0.06), silver)
+			_part(_weapon, Vector3(0.12, 0, 1.18), Vector3(0.05, 0.05, 0.05), silver)  # hanging square rings
+			_part(_weapon, Vector3(-0.12, 0, 1.18), Vector3(0.05, 0.05, 0.05), silver)
+		_:
+			return false
+	return true
+
+
 ## The off-hand item's shield look and colour, if the player carries one.
 func _shield_item() -> ItemData:
 	for item: ItemData in _outfit:
@@ -742,7 +857,8 @@ func _build_weapon() -> void:
 			c.free()
 	var wood := Color(0.42, 0.28, 0.16)
 	var steel := weapon_color
-	match _weapon_type:
+	var special := _weapon_item != null and _special_weapon(_weapon_item.id)
+	match &"" if special else _weapon_type:
 		&"sword":
 			_part(_weapon, Vector3(0, 0, 0.12), Vector3(0.08, 0.08, 0.2), Color(0.35, 0.22, 0.12))
 			_part(_weapon, Vector3(0, 0, 0.24), Vector3(0.3, 0.06, 0.06), Color(0.75, 0.6, 0.25))
@@ -828,6 +944,14 @@ func _build_weapon() -> void:
 				_part(_shield, Vector3(-0.05, -0.32, 0.1), Vector3(0.08, 0.14, 0.24), c)  # point
 				_part(_shield, Vector3(-0.1, 0.04, 0.1), Vector3(0.04, 0.46, 0.08), Color(0.7, 0.2, 0.2))  # cross
 				_part(_shield, Vector3(-0.1, 0.12, 0.1), Vector3(0.04, 0.08, 0.32), Color(0.7, 0.2, 0.2))
+			&"gilded_kite":
+				_part(_shield, Vector3(-0.05, 0.04, 0.1), Vector3(0.08, 0.66, 0.5), c)  # gold rim
+				_part(_shield, Vector3(-0.05, -0.34, 0.1), Vector3(0.08, 0.16, 0.26), c)  # point
+				_part(_shield, Vector3(-0.09, 0.04, 0.1), Vector3(0.03, 0.56, 0.4), Color(0.72, 0.14, 0.12))  # red field
+				_part(_shield, Vector3(-0.11, 0.06, 0.1), Vector3(0.03, 0.16, 0.16), Color(1.0, 0.85, 0.4))  # sun
+				for k in 4:
+					var ang := k * TAU / 4.0
+					_part(_shield, Vector3(-0.11, 0.06 + sin(ang) * 0.14, 0.1 + cos(ang) * 0.14), Vector3(0.02, 0.06, 0.06), Color(1.0, 0.85, 0.4))
 			&"aegis":
 				_part(_shield, Vector3(-0.05, 0, 0.1), Vector3(0.08, 0.62, 0.52), c)
 				_part(_shield, Vector3(-0.1, 0, 0.1), Vector3(0.04, 0.26, 0.26), Color(1.0, 0.95, 0.7))  # sun

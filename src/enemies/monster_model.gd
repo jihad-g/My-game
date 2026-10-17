@@ -8,7 +8,9 @@ extends Node3D
 ## Milestone 19: animation events, sent to co-op guests by the host (NetCombat).
 signal net_event(method: StringName, args: Array)
 
-const BEASTS := [&"wisp", &"crawler", &"thornmaw", &"wolf", &"scorpion", &"crab", &"deer", &"rabbit"]
+const BEASTS := [&"wisp", &"crawler", &"thornmaw", &"wolf", &"scorpion", &"crab", &"deer", &"rabbit",
+	# Milestone 27
+	&"fox", &"stag", &"hedgehog", &"cat", &"bee", &"phoenix", &"candle_skull", &"spider", &"pumpkin", &"acorn"]
 
 var rig: Node3D
 var _look: StringName = &""
