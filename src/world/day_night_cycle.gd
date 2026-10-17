@@ -85,7 +85,7 @@ func set_art_style(style: int) -> void:
 		env.ssao_radius = 1.2
 		env.ssao_intensity = 1.6
 		env.ssao_power = 1.3
-		env.adjustment_contrast = 1.2 if v else 1.0
+		env.adjustment_contrast = 1.12 if v else 1.0
 	if sun:
 		sun.shadow_blur = 1.6 if vibrant > 0.5 else 1.0
 	_apply()
@@ -234,7 +234,7 @@ func _apply() -> void:
 		env.ambient_light_energy = lerpf(0.28, 0.55 - 0.05 * vibrant, daylight) * (1.0 - dim * 0.45) + weather_flash * 0.6
 		# Overcast: duller, darker colours. Vibrant: a little richer, with more contrast
 		# (light and shade) rather than louder colours.
-		env.adjustment_saturation = 1.05 + 0.12 * vibrant - dim * 0.4
+		env.adjustment_saturation = 1.0 + 0.1 * vibrant - dim * 0.4
 		env.adjustment_brightness = 1.0 - 0.05 * vibrant - dim * 0.22 + weather_flash * 0.3
 		var f := clampf(weather_fog, 0.0, 1.0)
 		env.fog_depth_begin = lerpf(FOG_BEGIN, 0.0, sqrt(f))

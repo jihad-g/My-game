@@ -22,6 +22,10 @@ func _ready() -> void:
 		await _pixel_pilot_showcase()
 		get_tree().quit()
 		return
+	if "--only=richworld" in OS.get_cmdline_user_args():
+		await _rich_world_showcase()
+		get_tree().quit()
+		return
 	if "--only=creative" in OS.get_cmdline_user_args():
 		await _creative_showcase()
 		get_tree().quit()
@@ -2206,3 +2210,77 @@ func _creative_showcase() -> void:
 		await _wait(8)
 		await _shot("creative_%d" % (tab + 1))
 	p.creative = false
+
+
+## Milestone 26: the new ground textures and ground cover, seen from above like a diorama.
+func _rich_world_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 10.0
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	world.weather.settle()
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var cam := Camera3D.new()
+	cam.fov = 40.0
+	world.add_child(cam)
+	cam.current = true
+	var n := 0
+	# Close-up: one of each new ground-cover prop in a row.
+	var flat := _dry_center(world, p.global_position, 14.0)
+	await _teleport(world, flat + Vector3(0, 0, 8))
+	_clear_monsters(world)
+	var hidden: Array = []
+	for ch in world.chunk_manager.get_children():
+		for c in ch.get_children():
+			if (c is MultiMeshInstance3D or c is PropBody) and c.visible:
+				c.visible = false
+				hidden.append(c)
+	var ids := [&"flower_bush", &"fern", &"wildflowers_white", &"wildflowers_orange", &"pebbles", &"mossy_boulder", &"fallen_log", &"tree_stump", &"old_gravestone", &"rock"]
+	var holders: Array = []
+	for i in ids.size():
+		var mi := MeshInstance3D.new()
+		mi.mesh = world.props.get_mesh(ids[i])
+		world.add_child(mi)
+		var q := flat + Vector3((i % 5 - 2) * 2.6, 0, (i / 5) * 3.2 - 1.6)
+		q.y = world.get_ground_height(q)
+		mi.global_position = q
+		holders.append(mi)
+	var tgt := Vector3(flat.x, world.get_ground_height(flat) + 0.4, flat.z)
+	cam.global_position = tgt + Vector3(0, 5.5, 10.5)
+	cam.look_at(tgt)
+	await _wait(20)
+	await _shot("richworld_0_props")
+	for h in holders:
+		h.queue_free()
+	for c in hidden:
+		if is_instance_valid(c):
+			c.visible = true
+	for biome in [&"verdant_meadow", &"whispering_forest", &"emerald_jungle", &"frostpine_taiga"]:
+		var spot := _find_biome(world.generator, p.global_position, biome)
+		if spot == Vector3.INF:
+			print("no ", biome)
+			continue
+		await _teleport(world, spot)
+		_clear_monsters(world)
+		var g := world.get_ground_height(spot)
+		for view in 2:
+			var yaw := deg_to_rad(35.0 + view * 120.0)
+			var dist := 16.0 if view == 0 else 26.0
+			var pitch := deg_to_rad(42.0)
+			var target := Vector3(spot.x, g + 0.5, spot.z)
+			cam.global_position = target + Vector3(sin(yaw) * cos(pitch), sin(pitch), cos(yaw) * cos(pitch)) * dist
+			cam.look_at(target)
+			await _wait(20)
+			n += 1
+			await _shot("richworld_%d_%s" % [n, biome])
+

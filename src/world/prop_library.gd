@@ -28,6 +28,8 @@ const SWAY := {
 	&"tree_jungle": 0.003, &"tree_swamp": 0.003, &"grass_tuft": 0.3, &"flowers": 0.25, &"reeds": 0.15,
 	&"berry_bush": 0.03, &"frostberry_bush": 0.03, &"dead_bush": 0.02, &"sunbloom": 0.06, &"moonpetal": 0.06,
 	&"starlight_orchid": 0.06, &"frost_lotus": 0.04, &"emberroot": 0.04,
+	# Milestone 26 ("Rich World")
+	&"flower_bush": 0.03, &"fern": 0.2, &"wildflowers_white": 0.25, &"wildflowers_orange": 0.25,
 }
 
 
@@ -113,8 +115,9 @@ func _build_tree_pine(b: BlockMesh) -> void:
 
 
 func _build_rock(b: BlockMesh) -> void:
-	var stone := Color(0.5, 0.48, 0.45)
-	var stone_dark := Color(0.4, 0.38, 0.37)
+	# Milestone 26: lighter grey stone, like the rest of the Rich World ground cover.
+	var stone := Color(0.62, 0.61, 0.6)
+	var stone_dark := Color(0.52, 0.51, 0.5)
 	b.texture = &"boulder"
 	b.box(Vector3(0, 0.35, 0), Vector3(1.3, 0.7, 1.1), stone)
 	b.box(Vector3(0.25, 0.8, 0.1), Vector3(0.8, 0.4, 0.7), stone_dark)
@@ -137,11 +140,11 @@ func _build_berry_bush(b: BlockMesh) -> void:
 
 func _build_flowers(b: BlockMesh) -> void:
 	# v0.26.0: a clump of pixel-art flowers on crossed cards (was 4 tiny boxes).
-	b.card(Vector3.ZERO, &"flowers_mixed", 0.75, 0.75)
+	b.card(Vector3.ZERO, &"flowers_mixed", 0.9, 0.85)
 
 
 func _build_grass_tuft(b: BlockMesh) -> void:
-	b.card(Vector3.ZERO, &"grass_tuft", 0.6, 0.6, Color(0.32, 0.66, 0.24))
+	b.card(Vector3.ZERO, &"grass_tuft", 0.85, 0.75, Color(0.42, 0.7, 0.3))
 
 
 func _build_stick_pile(b: BlockMesh) -> void:
@@ -402,3 +405,100 @@ func _build_starlight_orchid(b: BlockMesh) -> void:
 
 func _build_ore_mithril(b: BlockMesh) -> void:
 	_ore_rock(b, Color(0.55, 0.75, 1.0), &"ore_silver")
+
+
+# --- Milestone 26: Rich World ground cover ------------------------------------------------
+
+## A round leafy shrub dotted with yellow and orange blossoms.
+func _build_flower_bush(b: BlockMesh) -> void:
+	var leaf := Color(0.27, 0.52, 0.22)
+	b.texture = &"bush_leaves"
+	b.box(Vector3(0, 0.3, 0), Vector3(0.95, 0.6, 0.9), leaf)
+	b.box(Vector3(-0.1, 0.62, 0.05), Vector3(0.65, 0.3, 0.6), leaf * 1.12)
+	b.box(Vector3(0.32, 0.45, -0.25), Vector3(0.4, 0.3, 0.4), leaf * 0.92)
+	b.texture = &""
+	var blossoms := [Color(1.0, 0.8, 0.22), Color(0.98, 0.56, 0.16), Color(1.0, 0.92, 0.45)]
+	var pts := [Vector3(0.38, 0.55, 0.3), Vector3(-0.35, 0.5, 0.38), Vector3(0.1, 0.8, -0.12), Vector3(-0.4, 0.42, -0.3),
+		Vector3(0.45, 0.35, -0.1), Vector3(-0.05, 0.62, 0.42), Vector3(0.22, 0.78, 0.2), Vector3(-0.25, 0.78, -0.05),
+		Vector3(0.0, 0.3, -0.47)]
+	for i in pts.size():
+		b.box(pts[i], Vector3(0.13, 0.13, 0.13), blossoms[i % blossoms.size()])
+
+
+func _build_fern(b: BlockMesh) -> void:
+	b.card(Vector3.ZERO, &"fern", 1.15, 1.0, Color(0.34, 0.62, 0.28))
+
+
+func _build_wildflowers_white(b: BlockMesh) -> void:
+	b.card(Vector3.ZERO, &"flowers_white", 0.9, 0.8)
+
+
+func _build_wildflowers_orange(b: BlockMesh) -> void:
+	b.card(Vector3.ZERO, &"flowers_orange", 0.95, 0.85)
+
+
+## A few small stones lying in the grass.
+func _build_pebbles(b: BlockMesh) -> void:
+	var s := Color(0.62, 0.6, 0.58)
+	b.texture = &"boulder"
+	b.box(Vector3(0.0, 0.04, 0.0), Vector3(0.16, 0.08, 0.13), s)
+	b.box(Vector3(0.24, 0.03, 0.12), Vector3(0.1, 0.06, 0.1), s * 0.88)
+	b.box(Vector3(-0.2, 0.035, 0.2), Vector3(0.12, 0.07, 0.09), s * 1.06)
+	b.box(Vector3(0.1, 0.03, -0.25), Vector3(0.09, 0.06, 0.08), s * 0.95)
+	b.texture = &""
+
+
+## A big grey boulder with a cap of moss and a tuft of grass.
+func _build_mossy_boulder(b: BlockMesh) -> void:
+	var stone := Color(0.55, 0.54, 0.52)
+	var moss := Color(0.33, 0.55, 0.24)
+	b.texture = &"boulder"
+	b.box(Vector3(0, 0.45, 0), Vector3(1.5, 0.9, 1.3), stone)
+	b.box(Vector3(-0.2, 1.0, 0.05), Vector3(1.0, 0.35, 0.9), stone * 1.06)
+	b.box(Vector3(0.6, 0.25, 0.55), Vector3(0.55, 0.5, 0.5), stone * 0.88)
+	b.texture = &"grass_forest_top_0"
+	b.box(Vector3(-0.25, 1.2, 0.0), Vector3(0.85, 0.08, 0.75), moss)
+	b.box(Vector3(-0.55, 0.92, -0.2), Vector3(0.45, 0.08, 0.6), moss * 0.92)
+	b.texture = &""
+	b.card(Vector3(0.75, 0.0, -0.55), &"grass_tuft", 0.5, 0.45, moss * 1.1)
+
+
+## A mossy log lying on the ground, with a broken end and a small fungus.
+func _build_fallen_log(b: BlockMesh) -> void:
+	var bark := Color(0.54, 0.38, 0.24)
+	var moss := Color(0.33, 0.55, 0.24)
+	b.texture = &"bark"
+	b.box(Vector3(0, 0.27, 0), Vector3(2.4, 0.5, 0.5), bark)
+	b.box(Vector3(1.0, 0.22, 0.32), Vector3(0.18, 0.12, 0.22), bark * 0.9)
+	b.texture = &"wood_beam"
+	b.box(Vector3(-1.21, 0.27, 0), Vector3(0.04, 0.42, 0.42), Color(0.72, 0.56, 0.36))
+	b.texture = &"grass_forest_top_0"
+	b.box(Vector3(0.2, 0.54, 0.0), Vector3(1.3, 0.06, 0.4), moss)
+	b.texture = &""
+	b.box(Vector3(-0.6, 0.4, 0.27), Vector3(0.22, 0.05, 0.12), Color(0.86, 0.62, 0.3))
+	b.card(Vector3(0.6, 0.0, -0.35), &"fern", 0.6, 0.5, moss)
+
+
+func _build_tree_stump(b: BlockMesh) -> void:
+	var bark := Color(0.56, 0.4, 0.26)
+	b.texture = &"bark"
+	b.box(Vector3(0, 0.22, 0), Vector3(0.6, 0.44, 0.6), bark)
+	b.box(Vector3(0.3, 0.06, 0.15), Vector3(0.22, 0.12, 0.18), bark * 0.9)
+	b.box(Vector3(-0.22, 0.06, -0.3), Vector3(0.18, 0.12, 0.2), bark * 0.9)
+	b.texture = &"wood_beam"
+	b.box(Vector3(0, 0.45, 0), Vector3(0.52, 0.03, 0.52), Color(0.78, 0.6, 0.38))
+	b.texture = &""
+	b.card(Vector3(-0.35, 0.0, 0.3), &"mushroom_patch", 0.4, 0.4)
+
+
+## A weathered headstone, leaning a little, with moss at its feet.
+func _build_old_gravestone(b: BlockMesh) -> void:
+	var stone := Color(0.6, 0.6, 0.62)
+	var lean := Basis(Vector3(0, 0, 1), 0.08)
+	b.texture = &"boulder"
+	b.box(Vector3(0, 0.42, 0), Vector3(0.55, 0.84, 0.16), stone, lean)
+	b.box(Vector3(-0.035, 0.9, 0), Vector3(0.42, 0.14, 0.16), stone * 1.04, lean)
+	b.texture = &""
+	b.box(Vector3(-0.03, 0.55, 0.085), Vector3(0.06, 0.3, 0.02), stone * 0.7, lean)
+	b.box(Vector3(-0.03, 0.62, 0.085), Vector3(0.22, 0.06, 0.02), stone * 0.7, lean)
+	b.card(Vector3(0.0, 0.0, 0.2), &"grass_tuft", 0.6, 0.35, Color(0.33, 0.55, 0.24))

@@ -2,7 +2,27 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
-## [0.33.0] — Milestone 25: Monster pathfinding
+## [0.34.0] — Milestone 26: Rich World (new block textures and ground cover)
+
+### Changed
+- **New block textures** (made by `art/tools/texgen.py`, in the style of the owner's tile references):
+  - grass tops: fine mottled grass with little lit blade tips instead of big soft blobs;
+  - soil sides: darker soil in soft layers with outlined pebbles;
+  - grass lips hang deeper over the block edge, with a dark shadow line under them;
+  - stone: big slabs with dark cracks, lit top-left and shaded bottom-right edges.
+- Greens are softer and more natural (meadow, forest, jungle), soils darker; the per-block checker is softer;
+  the Vibrant colour grade adds a little less saturation and contrast.
+- Rocks are light grey.
+
+### Added
+- **Ground cover** (9 new props): flowering shrub (yellow and orange blossoms), fern, white daisies, orange
+  marigolds, pebbles, mossy boulder (mine it for stone), fallen log and tree stump (chop them for wood), old
+  gravestone (rare, forests and swamps).
+- Much more grass and many more flowers in the meadows and forests; new ground cover in the jungle, taiga,
+  swamp, mountains and crystal glade.
+- Screenshot mode `--only=richworld` (a diorama view of four biomes and a close-up of the new props).
+
+
 
 ### Added
 - **Monsters find their way** (`src/enemies/nav_grid.gd`): A* on the 1 m building grid. Monsters walk around

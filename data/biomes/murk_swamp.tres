@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BiomeData" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="BiomeData" load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://src/world/biome_data.gd" id="1_biome"]
 [ext_resource type="Script" path="res://src/world/prop_rule.gd" id="2_rule"]
@@ -108,6 +108,66 @@ show_in_lod1 = false
 on_water = false
 salt = 123
 
+[sub_resource type="Resource" id="Rule_RW0"]
+script = ExtResource("2_rule")
+prop_id = &"fallen_log"
+cell_size = 16
+density = 0.12
+clustering = 0.4
+min_height = 1
+max_height = 40
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = true
+on_water = false
+salt = 7065
+
+[sub_resource type="Resource" id="Rule_RW1"]
+script = ExtResource("2_rule")
+prop_id = &"fern"
+cell_size = 4
+density = 0.08
+clustering = 0.6
+min_height = 1
+max_height = 40
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 7066
+
+[sub_resource type="Resource" id="Rule_RW2"]
+script = ExtResource("2_rule")
+prop_id = &"old_gravestone"
+cell_size = 16
+density = 0.02
+clustering = 0.2
+min_height = 1
+max_height = 40
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 7067
+
+[sub_resource type="Resource" id="Rule_RW3"]
+script = ExtResource("2_rule")
+prop_id = &"grass_tuft"
+cell_size = 2
+density = 0.15
+clustering = 0.6
+min_height = 1
+max_height = 40
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = false
+on_water = false
+salt = 7068
+
 [resource]
 script = ExtResource("1_biome")
 id = &"murk_swamp"
@@ -123,5 +183,5 @@ top_color_alt = Color(0.424, 0.478, 0.235, 1)
 side_color = Color(0.31, 0.263, 0.188, 1)
 shore_color = Color(0.42, 0.392, 0.251, 1)
 underwater_color = Color(0.29, 0.298, 0.204, 1)
-prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6")]
+prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_RW0"), SubResource("Rule_RW1"), SubResource("Rule_RW2"), SubResource("Rule_RW3")]
 enemy_spawns = []

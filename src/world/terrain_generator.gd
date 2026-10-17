@@ -816,7 +816,7 @@ func _top_color(biome: BiomeData, h: int, wx: int, wz: int, surface: bool) -> Co
 			var bl := blended_top_colors(wx, wz)
 			c0 = bl[0]
 			c1 = bl[1]
-		c = c0.lerp(c1, clampf(t * t * 0.7 + patch * 0.55, 0.0, 1.0))
+		c = c0.lerp(c1, clampf(t * t * 0.45 + patch * 0.55, 0.0, 1.0))  # Milestone 26: softer per-block checker
 		# A small warm or cool shift per block (a few blocks look slightly yellow).
 		var hue := HashUtils.to_unit(HashUtils.hash3(wx, wz, world_seed + 5), 7) - 0.5
 		c = Color(c.r * (1.0 + hue * 0.14), c.g, c.b * (1.0 - hue * 0.14))

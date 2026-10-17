@@ -1167,6 +1167,9 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 26 — Rich World (v0.34.0).** Restyled grass, soil and stone textures and nine ground-cover props
+make the green biomes look lived-in.
+
 **Done: Milestone 25 — Monster pathfinding (v0.33.0).** A* on the 1 m building grid with tiles made on demand from
 terrain heights and physics obstacles; raiders plan through player walls to smash them.
 

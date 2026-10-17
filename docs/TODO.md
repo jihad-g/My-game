@@ -105,6 +105,15 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 26 — Rich World  ✅ (v0.34.0)
+
+- [x] New grass, soil, grass-lip and stone textures in the style of the owner's references
+- [x] Softer greens, darker soil, softer checker, gentler colour grade
+- [x] 9 new ground-cover props, denser grass and flowers, cover in 7 biomes
+- [x] Tests: terrain, biomes, props, data, m10, m18d, m21, m24, m25 re-run and pass
+- [ ] NOT IMPLEMENTED: water with patterned ripples like the diorama reference, grass that overhangs as 3D lips
+- [ ] NOT IMPLEMENTED: stairs and path tiles in the terrain (tile-set reference); desert, snow and cave textures were not restyled yet
+
 ## Milestone 25 — Monster pathfinding  ✅ (v0.33.0)
 
 - [x] A* on the 1 m grid: terrain heights (climb 1 m, drop 4 m), walls and edges, houses, trees, rocks, deep water, doors

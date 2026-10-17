@@ -5,7 +5,10 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.33.0 — Monster pathfinding**. Monsters now find their way around walls, houses, trees, cliffs and
+> Status: **v0.34.0 — Rich World**. New block textures (fine grass, dark soil with pebbles, cracked stone slabs) and
+> much more ground cover: flowering shrubs, ferns, daisies, marigolds, pebbles, mossy boulders, fallen logs and stumps.
+>
+> Before that, **v0.33.0 — Monster pathfinding**. Monsters now find their way around walls, houses, trees, cliffs and
 > water, through doors and dungeon corridors; raiders smash the wall in their way. Creative mode can draw their paths.
 >
 > Before that, **v0.32.0 — Creative Mode**. Tick **Creative world** on the main menu (or press ` in any world) for a

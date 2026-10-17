@@ -227,8 +227,20 @@ G6 = [0.62, 0.70, 0.78, 0.86, 0.94, 1.0]   # generic 6-shade ramp (index 0..5)
 
 
 def grass_base(seed, shares=(1, 3, 4, 2)):
-    lv = rank_levels(fbm(seed, 2, 4, 0.4), list(shares)) + 1   # levels 1..4
-    return clean_lonely(lv)
+    # Milestone 26 ("Rich World"): finer mottling, like dense short grass.
+    lv = rank_levels(fbm(seed, 4, 8, 0.55), list(shares)) + 1   # levels 1..4
+    return clean_lonely(lv, passes=1)
+
+
+BLADES = [["L", "M"], ["L.", "LM"], [".L", "LM"], ["L", "L", "M"]]
+
+
+def add_blades(lv: np.ndarray, r: np.random.Generator, count: int, light=5, mid=1, dark=0):
+    """Short grass blades: a lit tip over a darker root, plus a few dark gaps between."""
+    for (x, y) in scatter(r, count, 2.6, 2, 3, margin=0):
+        stamp(lv, x, y, BLADES[int(r.integers(0, len(BLADES)))], {"L": light, "M": mid})
+    for (x, y) in scatter(r, count // 3, 3.0, 1, 1, margin=0):
+        stamp(lv, x, y, ["D"], {"D": dark})
 
 
 def grass_top(style: str, seed: int, n_var=3):
@@ -268,6 +280,8 @@ def grass_top(style: str, seed: int, n_var=3):
         elif style == "crystal":    # violet moss with little sparkles
             for (x, y) in scatter(r, 3, 5.0, 3, 3):
                 stamp(lv, x, y, SPARK, {"L": 4, "W": 5})
+        if style in ("meadow", "forest", "jungle", "alpine", "taiga"):
+            add_blades(lv, r, {"meadow": 12, "forest": 9, "jungle": 8, "alpine": 7, "taiga": 6}[style])
         return lv
     return [to_rgb(lv, G6) for lv in family(n_var, make)]
 
@@ -277,11 +291,18 @@ def grass_top(style: str, seed: int, n_var=3):
 # 16x16 covers TWO blocks (1 m). World-space v = y / 1 m.
 # ---------------------------------------------------------------------------
 
+PEBBLE_OUT = [".LL.", "LMMD", ".DD."]
+PEBBLE_SMALL = ["LM", "DD"]
+
+
 def dirt_side(seed=101):
-    lv = clean_lonely(rank_levels(fbm(seed, 2, 4, 0.4, sy=1.5), [1, 3, 4, 2]) + 1)
+    """Milestone 26: rich dark soil in soft layers, with outlined pebbles."""
+    lv = clean_lonely(rank_levels(fbm(seed, 2, 6, 0.5, sx=1.0, sy=2.0), [3, 4, 2]) + 1)
     r = rng(seed)
-    for (x, y) in scatter(r, 4, 5.0, 2, 2, margin=1):
-        stamp(lv, x, y, PEBBLE, {"L": 4, "M": 3, "D": 0})
+    for (x, y) in scatter(r, 3, 5.5, 4, 3, margin=0):
+        stamp(lv, x, y, PEBBLE_OUT, {"L": 5, "M": 4, "D": 0})
+    for (x, y) in scatter(rng(seed + 3), 4, 4.0, 2, 2, margin=0):
+        stamp(lv, x, y, PEBBLE_SMALL, {"L": 5, "M": 4, "D": 0})
     return lv
 
 
@@ -376,7 +397,7 @@ def stone_top(seed=401, n=3):
         idx, crack = voronoi(border_pts + inner)
         tones = np.array([2, 3, 2, 3, 3, 2])
         lv = tones[idx]
-        lv = bevel(lv, crack, 4, None, 1)
+        lv = bevel(lv, crack, 4, 1, 0)
         for (x, y) in scatter(r, 1, 6, 2, 1):
             stamp(lv, x, y, ["LL"], {"L": 4})
         return lv
@@ -391,7 +412,7 @@ def stone_side(seed=411, n=2):
         inner = [(float(r.uniform(4, 12)), float(r.uniform(5, 11)))]
         idx, crack = voronoi(border_pts + inner, sx=0.6, sy=1.4)   # wide flat slabs
         lv = np.array([2, 3, 2, 3, 2, 3])[idx]
-        return bevel(lv, crack, 4, None, 1)
+        return bevel(lv, crack, 5, 1, 0)
     return [to_rgb(lv, S_STONE, warm=0.02) for lv in family(n, make)]
 
 
@@ -415,7 +436,7 @@ def mountain_rock_top(seed=431, n=2):
         inner = [(float(r.uniform(5, 11)), float(r.uniform(5, 11)))]
         idx, crack = voronoi(border_pts + inner, sx=1.0, sy=1.0)
         lv = np.array([2, 3, 2, 3, 2, 3])[idx]
-        return bevel(lv, crack, 4, None, 0)
+        return bevel(lv, crack, 4, 1, 0)
     return [to_rgb(lv, S_STONE, warm=0.03) for lv in family(n, make)]
 
 
@@ -716,7 +737,7 @@ def main():
         for k, v in enumerate(vs):
             save(f"{base}_top_{k}", v, "tinted", desc[style] + f" Variant {k}.", "top", group=grp)
         side_rgb = side_for.get(style, dirt_s)
-        e_rgb, e_a = edge_band(vs[0], side_rgb, 2000 + s)
+        e_rgb, e_a = edge_band(vs[0], side_rgb, 2000 + s, depth_min=3, depth_max=6, drips=5, under=0.6)
         save(f"{base}_edge", e_rgb, "tinted_edge",
              "Side band of the top block. Rows 0-7 are used (0.5 m). alpha 255 = top part (top colour), "
              "alpha 0 = side part (side colour + side texture).", "edge", alpha=e_a, group=grp)

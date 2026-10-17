@@ -481,6 +481,10 @@ def build():
         "flowers_yellow": (flower_clump(3011, [(hexc("#C98A12"), hexc("#F4C430"), hexc("#FFE680"), hexc("#B5541A"))] * 3), "full", "Yellow flower clump."),
         "flowers_pink": (flower_clump(3021, [(hexc("#B04878"), hexc("#EE82B4"), hexc("#FFC4DE"), hexc("#FFE680"))] * 3), "full", "Pink flower clump."),
         "flowers_violet": (flower_clump(3031, [(hexc("#6A55C0"), hexc("#A796F4"), hexc("#D9D0FF"), hexc("#FFE680"))] * 3), "full", "Violet flower clump."),
+        # Milestone 26 ("Rich World"): more wild flowers.
+        "flowers_white": (flower_clump(3041, [(hexc("#B9B3A6"), hexc("#F4F1EA"), hexc("#FFFFFF"), hexc("#F4C430"))] * 4), "full", "White daisies."),
+        "flowers_orange": (flower_clump(3051, [(hexc("#B4501A"), hexc("#F08A2A"), hexc("#FFC870"), hexc("#7A3A12")),
+            (hexc("#C98A12"), hexc("#F4C430"), hexc("#FFE680"), hexc("#B5541A"))] * 2), "full", "Orange and yellow marigolds."),
         "grass_tuft": (tuft_sprite(), "tinted", "Grass tuft (tint with the biome top colour)."),
         "fern": (fern_sprite(), "tinted", "Fern (forest/jungle floor; tint green)."),
         "reeds": (reeds_sprite(), "full", "Reeds with cattail heads (shores)."),
