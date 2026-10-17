@@ -22,6 +22,10 @@ func _ready() -> void:
 		await _pixel_pilot_showcase()
 		get_tree().quit()
 		return
+	if "--only=pixelworld" in OS.get_cmdline_user_args():
+		await _pixel_world_showcase()
+		get_tree().quit()
+		return
 	if "--only=tuskers" in OS.get_cmdline_user_args():
 		await _tusker_showcase()
 		get_tree().quit()
@@ -1976,3 +1980,137 @@ func _tusker_showcase() -> void:
 	world.camera_rig._target_distance = 12.0
 	await _wait(60)
 	await _shot("tuskers_game_camera")
+
+
+## Milestone 21: the pixel style on every model - all monsters, animals, heroes
+## and townsfolk, a row at a time, close up.
+func _pixel_world_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 10.5
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	var c := _dry_center(world, p.global_position, 26.0)
+	await _teleport(world, c + Vector3(0, 0, 16))
+	_clear_monsters(world)
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var cam := Camera3D.new()
+	cam.fov = 38.0
+	world.add_child(cam)
+	cam.current = true
+	var rows := [
+		["pixel_world_undead", [&"skeleton_minion", &"skeleton_warrior", &"skeleton_archer", &"bone_king"]],
+		["pixel_world_bandits", [&"bandit_recruit", &"bandit_thug", &"bandit_archer", &"bandit_hexer", &"bandit_bomber", &"bandit_brute", &"bandit_warlord"]],
+		["pixel_world_magic", [&"cultist_acolyte", &"grotto_cultist", &"tower_warden", &"arcane_wisp", &"arcane_sentinel", &"temple_guardian"]],
+		["pixel_world_giants", [&"arcane_colossus", &"starborn_colossus", &"tusker_chief"]],
+		["pixel_world_beasts", [&"thornback_boar", &"frost_wolf", &"sand_scorpion", &"shore_crab", &"thorn_crawler", &"treasure_goblin", &"deer", &"rabbit"]],
+		["pixel_world_thornmaw", [&"elder_thornmaw"]],
+	]
+	for row in rows:
+		var ids: Array = row[1]
+		var nodes: Array = []
+		var width := 0.0
+		for id in ids:
+			var d := load("res://data/enemies/%s.tres" % id) as EnemyData
+			width += 1.1 + (d.get("model_scale") if d.get("model_scale") != null else 1.0) * 0.6
+		var x := -width * 0.5
+		for id in ids:
+			var d := load("res://data/enemies/%s.tres" % id) as EnemyData
+			var sc: float = d.get("model_scale") if d.get("model_scale") != null else 1.0
+			x += (1.1 + sc * 0.6) * 0.5
+			var pos := c + Vector3(x, 0, 0)
+			pos.y = world.get_ground_height(pos) + 0.3
+			var scene: PackedScene = load(Monster.MONSTER_SCENE_PATH) if d is MonsterData else load("res://scenes/enemies/thornback_boar.tscn")
+			var m := world.spawner.spawn_enemy(scene, pos, "", d) as Enemy
+			if m:
+				if m is Monster:
+					(m as Monster).make_dormant(-1.0)
+				m.set_meta(&"training_dummy", true)
+				m.health.invulnerable = true
+				nodes.append(m)
+			x += (1.1 + sc * 0.6) * 0.5
+		await _wait(20)
+		for m in nodes:
+			if is_instance_valid(m):
+				m.look_at(m.global_position + Vector3(0, 0, 1), Vector3.UP)
+				m.rotate_y(PI)
+		await _wait(4)
+		var gy := world.get_ground_height(c)
+		var tall := 1.0 if row[0] != "pixel_world_giants" and row[0] != "pixel_world_thornmaw" else 2.0
+		var target := Vector3(c.x, gy + tall, c.z)
+		var dist := maxf(4.5, width * 1.05) * (1.3 if tall > 1.5 else 1.0)
+		cam.global_position = target + Vector3(0, sin(deg_to_rad(10.0)), cos(deg_to_rad(10.0))) * dist
+		cam.look_at(target)
+		await _wait(6)
+		await _shot(row[0])
+		for m in nodes:
+			if is_instance_valid(m):
+				NodePool.release_or_free(m)
+		await _wait(4)
+	# Heroes in their starting and late outfits, and townsfolk.
+	var outfits := [
+		[&"rough_handaxe", [&"horned_helm", &"padded_vest"]],
+		[&"squire_sword", [&"squire_helm", &"padded_vest", &"wooden_buckler"]],
+		[&"apprentice_staff", [&"wizard_hat", &"apprentice_robe"]],
+		[&"rusty_dagger", [&"shadow_hood", &"leather_gloves", &"worn_boots"]],
+		[&"iron_sword", [&"iron_helm", &"chainmail", &"iron_gauntlets", &"iron_greaves", &"iron_kite_shield"]],
+		[&"starfall_blade", [&"crown_of_stars", &"mithril_plate", &"aegis_of_dawn", &"starmetal_amulet"]],
+	]
+	var heroes: Array = []
+	for i in outfits.size():
+		var m := HumanoidModel.new()
+		world.add_child(m)
+		m.set_appearance()
+		var w: ItemData = ItemDB.get_item(outfits[i][0])
+		m.set_weapon(w.weapon_type, outfits[i][1].any(func(id: StringName) -> bool: return ItemDB.get_item(id).equip_slot == ItemData.EquipSlot.OFF_HAND))
+		m.set_outfit(PackedStringArray(outfits[i][1].map(func(id: StringName) -> String: return String(id))), w.id)
+		var pos := c + Vector3((i - 2.5) * 1.15, 0, 0)
+		pos.y = world.get_ground_height(pos)
+		m.global_position = pos
+		heroes.append(m)
+	var gy2 := world.get_ground_height(c)
+	cam.global_position = Vector3(c.x, gy2 + 1.0, c.z) + Vector3(0, sin(deg_to_rad(10.0)), cos(deg_to_rad(10.0))) * 7.2
+	cam.look_at(Vector3(c.x, gy2 + 1.0, c.z))
+	await _wait(10)
+	await _shot("pixel_world_heroes")
+	for m in heroes:
+		m.queue_free()
+	var folk: Array = []
+	var roles := [&"villager", &"farmer", &"blacksmith", &"merchant", &"guard", &"noble"]
+	for i in roles.size():
+		var m := HumanoidModel.new()
+		world.add_child(m)
+		m.set_npc_look(roles[i], 17 + i * 23, Color(0.7, 0.25, 0.2))
+		var pos := c + Vector3((i - 2.5) * 1.15, 0, 0)
+		pos.y = world.get_ground_height(pos)
+		m.global_position = pos
+		folk.append(m)
+	await _wait(10)
+	await _shot("pixel_world_townsfolk")
+	# The normal game camera with a mixed group.
+	for m in folk:
+		m.queue_free()
+	world.camera_rig.set_process(true)
+	world.camera_rig.camera.current = true
+	await _teleport(world, c + Vector3(0, 0, 3))
+	for k in 6:
+		var id: StringName = [&"skeleton_warrior", &"bandit_thug", &"frost_wolf", &"tusker_grunt", &"cultist_acolyte", &"thornback_boar"][k]
+		var d := load("res://data/enemies/%s.tres" % id) as EnemyData
+		var pos := c + Vector3((k - 2.5) * 1.8, 0, -1.0)
+		pos.y = world.get_ground_height(pos) + 0.3
+		var scene: PackedScene = load(Monster.MONSTER_SCENE_PATH) if d is MonsterData else load("res://scenes/enemies/thornback_boar.tscn")
+		var m := world.spawner.spawn_enemy(scene, pos, "", d) as Enemy
+		if m is Monster:
+			(m as Monster).make_dormant(-1.0)
+	world.camera_rig._target_distance = 12.0
+	await _wait(60)
+	await _shot("pixel_world_game_camera")

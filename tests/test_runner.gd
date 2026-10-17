@@ -134,6 +134,8 @@ func _ready() -> void:
 	await _run_async(&"test_m19_coop")
 	_run(&"test_m20_tusker_data")
 	await _run_async(&"test_m20_tuskers_ingame")
+	_run(&"test_m21_pixel_world")
+	await _run_async(&"test_m22_dungeon_audit")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -7747,5 +7749,96 @@ func test_m20_tuskers_ingame() -> void:
 	check(crig != null and crig._parts.size() > rig._parts.size(), "the chief carries more (banner, crown, armour)")
 	_kill(chief, world)
 	await _frames(5)
+	world.queue_free()
+	await _frames(5)
+
+
+# --- Milestone 21: the pixel style is the standard ------------------------------
+
+func test_m21_pixel_world() -> void:
+	check(PixelAuto.enabled, "every model box is pixel painted by default")
+	var a := PixelAuto.mesh(Vector3(0.56, 0.6, 0.32), Color(0.25, 0.48, 0.85))
+	var b := PixelAuto.mesh(Vector3(0.56, 0.6, 0.32), Color(0.25, 0.48, 0.85))
+	check(a == b, "the same part is painted once and shared")
+	var mat := a.surface_get_material(0) as StandardMaterial3D
+	check(mat and mat.texture_filter == BaseMaterial3D.TEXTURE_FILTER_NEAREST and mat.albedo_texture != null, "sharp pixel texture")
+	var r := PixelAuto.ramp_for(Color(0.6, 0.3, 0.2))
+	check(r[0].v < r[1].v and r[1].v < r[2].v and r[2].v < r[3].v and r[3].v <= r[4].v, "five shades from dark to light")
+	check(PixelAuto.kind_for(Color(0.8, 0.8, 0.85), Vector3(0.1, 0.1, 1.0)) == &"metal", "grey steel shines like metal")
+	check(PixelAuto.kind_for(Color(0.45, 0.3, 0.15), Vector3(0.07, 0.07, 1.2)) == &"wood", "a brown shaft gets wood grain")
+	check(PixelAuto.kind_for(Color(0.45, 0.3, 0.15), Vector3(0.56, 0.6, 0.32)) == &"cloth", "a brown shirt stays cloth")
+	# 16 pixels per metre: a 0.5 m face is 8 pixels wide.
+	var img := PixelAuto.paint_face(Vector2i(8, 8), PixelArt.FRONT, r, &"cloth", 3)
+	check(img.get_width() == 8 and img.get_pixel(0, 0) != img.get_pixel(7, 7), "faces are lit from the top-left")
+	# Every look builds in the new style (humanoids, beasts, the boar).
+	var h := HumanoidModel.new()
+	add_child(h)
+	h.set_monster_look(&"bandit", Color(0.6, 0.22, 0.18), Color(0.8, 0.2, 0.1))
+	var painted := true
+	for part in h._parts:
+		painted = painted and (part as MeshInstance3D).mesh.surface_get_material(0) is StandardMaterial3D
+	check(painted and h._parts.size() > 10, "bandits are pixel painted (%d parts)" % h._parts.size())
+	h.queue_free()
+	var bm := BeastModel.new()
+	add_child(bm)
+	bm.build(&"wolf", Color(0.85, 0.88, 0.92), Color(0.3, 0.6, 1.0))
+	check(bm.parts.size() > 5 and bm.parts[0].mesh.surface_get_material(0) is StandardMaterial3D, "beasts are pixel painted")
+	bm.queue_free()
+	PixelAuto.flush()
+	check(PixelAuto.page_count() >= 1 and PixelAuto.cached_count() > 10, "%d painted parts on %d atlas pages" % [PixelAuto.cached_count(), PixelAuto.page_count()])
+
+
+# --- Milestone 22: Deeper Dungeons --------------------------------------------------
+
+## A dungeon PoiInfo at the player's feet (any rank and theme), for tests.
+func _test_dungeon_poi(world: World, rank: int, theme: int, n: int) -> PoiInfo:
+	var poi := PoiInfo.new()
+	poi.kind = PoiInfo.Kind.DUNGEON
+	poi.rank = rank
+	poi.theme = theme
+	poi.seed = 4242 + n * 977
+	poi.id = "test_dungeon_%d" % n
+	poi.center = Vector2i(int(world.player.global_position.x), int(world.player.global_position.z))
+	return poi
+
+
+func test_m22_dungeon_audit() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 80
+	var n := 0
+	for theme in 3:
+		for rank in [0, 3, 5]:
+			n += 1
+			var poi := _test_dungeon_poi(world, rank, theme, n)
+			var ok := world.enter_dungeon(poi)
+			check(ok and world.dungeon != null, "entered a %s %s dungeon" % [PoiInfo.RANKS[rank], PoiInfo.THEME_NAMES[theme]])
+			if not ok:
+				continue
+			var d := world.dungeon
+			await _frames(90)
+			var fell := 0
+			var in_wall := 0
+			for m in d.monsters:
+				if not is_instance_valid(m) or m.is_dead:
+					continue
+				if m.global_position.y < DungeonInstance.ORIGIN.y - 1.0 or m.global_position.y > DungeonInstance.ORIGIN.y + 4.0:
+					fell += 1
+				var l := d.to_local(m.global_position)
+				if not d.plan.cells.has(Vector2i(floori(l.x), floori(l.z))):
+					in_wall += 1
+			check(fell == 0, "no monster falls out of the floor (%d of %d)" % [fell, d.monsters.size()])
+			check(in_wall == 0, "no monster stands inside a wall (%d)" % in_wall)
+			var chests_ok := true
+			for c in d.get_children():
+				if c is LootChest or c is DungeonDoor:
+					chests_ok = chests_ok and d.plan.cells.has(Vector2i(floori(c.position.x), floori(c.position.z)))
+			check(chests_ok, "chests and doors stand on the floor")
+			check(absf(p.global_position.y - DungeonInstance.ORIGIN.y) < 2.0, "the hero stands on the floor")
+			world.exit_dungeon()
+			await _wait_ready(world)
+			check(world.dungeon == null, "left the dungeon")
 	world.queue_free()
 	await _frames(5)

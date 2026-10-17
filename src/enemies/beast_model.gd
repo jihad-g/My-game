@@ -207,11 +207,15 @@ func _build_crab() -> void:
 
 
 func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color, glow: bool = false) -> MeshInstance3D:
-	var b := BlockMesh.new()
-	b.box(Vector3.ZERO, size, color)
-	var mesh := b.commit()
-	if glow:
-		mesh.surface_set_material(0, Materials.vertex_color_emissive())
+	var mesh: Mesh
+	if PixelAuto.enabled:
+		mesh = PixelAuto.mesh(size, color, glow)
+	else:
+		var b := BlockMesh.new()
+		b.box(Vector3.ZERO, size, color)
+		mesh = b.commit()
+		if glow:
+			mesh.surface_set_material(0, Materials.vertex_color_emissive())
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.position = pos

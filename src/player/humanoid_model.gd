@@ -318,7 +318,7 @@ func _build() -> void:
 
 
 func _build_class_gear() -> void:
-	if _class_id in PIXEL_BODIES:
+	if _class_id in PIXEL_COMPLETE:
 		return
 	var a := _accent
 	match _class_id:
@@ -326,11 +326,7 @@ func _build_class_gear() -> void:
 			for item: ItemData in _outfit:
 				_build_outfit_piece(item.outfit_look, item.icon_color)
 		&"mon_skeleton", &"mon_skeleton_archer", &"mon_bone_king":
-			_part(_head, Vector3(-0.1, 0.26, 0.23), Vector3(0.1, 0.1, 0.02), a)  # glowing eyes
-			_part(_head, Vector3(0.1, 0.26, 0.23), Vector3(0.1, 0.1, 0.02), a)
-			_part(_head, Vector3(0, 0.08, 0.2), Vector3(0.3, 0.08, 0.06), Color(0.15, 0.12, 0.1))  # jaw gap
-			for k in 3:
-				_part(_torso, Vector3(0, 0.15 + k * 0.15, 0.17), Vector3(0.46, 0.04, 0.02), Color(0.2, 0.18, 0.16))  # ribs
+			# The pixel skeleton (src/art/pixel_skeleton.gd) has eyes, jaw and ribs; this adds hood, crown and cape.
 			if _class_id == &"mon_skeleton_archer":
 				_part(_head, Vector3(0, 0.36, -0.03), Vector3(0.52, 0.38, 0.5), Color(0.3, 0.25, 0.22))  # hood
 			if _class_id == &"mon_bone_king":
@@ -717,7 +713,9 @@ func play_spin(duration: float) -> void:
 
 
 ## Art pass pilot: looks drawn pixel by pixel (src/art/) replace the plain boxes.
-const PIXEL_BODIES := [&"mon_skeleton", &"mon_tusker", &"mon_tusker_brute", &"mon_tusker_chief"]
+const PIXEL_BODIES := [&"mon_skeleton", &"mon_skeleton_archer", &"mon_bone_king", &"mon_tusker", &"mon_tusker_brute", &"mon_tusker_chief"]
+## Pixel bodies that carry their whole look (no extra class gear on top).
+const PIXEL_COMPLETE := [&"mon_skeleton", &"mon_tusker", &"mon_tusker_brute", &"mon_tusker_chief"]
 
 
 func _use_pixel_body() -> void:
@@ -725,7 +723,7 @@ func _use_pixel_body() -> void:
 		p.free()
 	_parts.clear()
 	match _class_id:
-		&"mon_skeleton":
+		&"mon_skeleton", &"mon_skeleton_archer", &"mon_bone_king":
 			PixelSkeleton.build(self)
 		&"mon_tusker", &"mon_tusker_brute", &"mon_tusker_chief":
 			PixelTusker.build(self, StringName(String(_class_id).trim_prefix("mon_")))
@@ -749,10 +747,13 @@ func _pivot(parent: Node3D, pos: Vector3) -> Node3D:
 
 
 func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> MeshInstance3D:
-	var b := BlockMesh.new()
-	b.box(Vector3.ZERO, size, color)
 	var mi := MeshInstance3D.new()
-	mi.mesh = b.commit()
+	if PixelAuto.enabled:
+		mi.mesh = PixelAuto.mesh(size, color)
+	else:
+		var b := BlockMesh.new()
+		b.box(Vector3.ZERO, size, color)
+		mi.mesh = b.commit()
 	mi.position = pos
 	parent.add_child(mi)
 	_parts.append(mi)

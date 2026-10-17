@@ -71,10 +71,13 @@ func _ready() -> void:
 
 
 func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color, basis: Basis = Basis.IDENTITY) -> MeshInstance3D:
-	var b := BlockMesh.new()
-	b.box(Vector3.ZERO, size, color)
 	var mi := MeshInstance3D.new()
-	mi.mesh = b.commit()
+	if PixelAuto.enabled:
+		mi.mesh = PixelAuto.mesh(size, color)
+	else:
+		var b := BlockMesh.new()
+		b.box(Vector3.ZERO, size, color)
+		mi.mesh = b.commit()
 	mi.position = pos
 	mi.basis = basis
 	parent.add_child(mi)
