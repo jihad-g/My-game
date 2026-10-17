@@ -23,10 +23,20 @@ static var enabled := true
 static var _pages: Array = []  # [{img, glow, tex, gtex, mat, x, y, shelf}]
 static var _cache: Dictionary = {}
 static var _dirty: Array = []
+## Town people are built on worker threads (SettlementSite): one painter at a time.
+static var _mutex := Mutex.new()
 
 
 ## A box mesh `size` (metres, centred) painted from `color`. `glow` parts shine.
+## Thread-safe; the atlas upload always happens on the main thread.
 static func mesh(size: Vector3, color: Color, glow := false) -> Mesh:
+	_mutex.lock()
+	var m := _mesh_locked(size, color, glow)
+	_mutex.unlock()
+	return m
+
+
+static func _mesh_locked(size: Vector3, color: Color, glow: bool) -> Mesh:
 	var px := Vector3i(_px(size.x), _px(size.y), _px(size.z))
 	color.a = 1.0
 	var key := "%d,%d,%d,%s,%d|%.3f,%.3f,%.3f" % [px.x, px.y, px.z, color.to_html(false), int(glow), size.x, size.y, size.z]
@@ -162,9 +172,7 @@ static func _place(faces: Array, glow: bool) -> Array:
 	if not _dirty.has(int(page.id)):
 		_dirty.append(int(page.id))
 		if _dirty.size() == 1:
-			var loop := Engine.get_main_loop()
-			if loop:
-				(loop as SceneTree).process_frame.connect(flush, CONNECT_ONE_SHOT)
+			flush.call_deferred()  # thread-safe: runs on the main thread
 	return [page, rects]
 
 
@@ -217,11 +225,13 @@ static func _new_page() -> Dictionary:
 
 ## Uploads the pages that changed (once per frame; also called by tests).
 static func flush() -> void:
+	_mutex.lock()
 	for id: int in _dirty:
 		var page: Dictionary = _pages[id]
 		(page.tex as ImageTexture).update(page.img)
 		(page.gtex as ImageTexture).update(page.glow)
 	_dirty.clear()
+	_mutex.unlock()
 
 
 static func page_count() -> int:

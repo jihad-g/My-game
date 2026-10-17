@@ -1167,6 +1167,10 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 23 — Elemental Armour (v0.31.0).** Eight 4-piece sets, one per element (plus Brassworks for
+all), with elemental resistance/damage stats; they come from B+ dungeons and the Elemental Armoury codex, and
+give Delver's Marks a use.
+
 **Done: Milestones 21 and 22 (v0.30.0).** The pixel style is the standard for every model (automatic painting
 from each part's colour, hand-drawn skeletons and Tuskers). Dungeons were audited (no structural faults), a loot
 bug was fixed, and they pay better: Delver's Caches, first-clear bonuses, trap-room chests, quality and legendary gear.

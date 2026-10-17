@@ -777,7 +777,8 @@ func receive_hit(info: DamageInfo) -> void:
 	if character.skill_level(Skill.DEFENSE) >= 75 and health.get_ratio() < 0.25:
 		reduction = minf(reduction + 0.2, 0.85)
 	if info.damage_type != &"starvation" and info.damage_type != &"true":
-		info.amount *= (1.0 - reduction) * abilities.incoming_mult() * Settings.damage_taken_mult()
+		info.amount *= (1.0 - reduction) * abilities.incoming_mult() * Settings.damage_taken_mult() \
+			* character.element_taken_mult(info.damage_type)
 		var inc := status.incoming(info.damage_type)
 		info.amount *= float(inc[0])
 		if inc[1] != "":

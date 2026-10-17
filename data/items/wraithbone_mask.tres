@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"wraithbone_mask"
+display_name = "Wraithbone Mask"
+description = "A bone mask and a coat that trails ice-cold spirit light. Part of the Wraithbone Shroud (frost)."
+category = 4
+rarity = 4
+max_stack = 1
+base_value = 520
+icon_color = Color(0.2, 0.22, 0.28, 1)
+icon_glyph = "WM"
+equip_slot = 3
+required_level = 30
+stat_bonuses = {
+&"armor": 6,
+&"frost_resist": 8
+}
+set_id = &"wraithbone"
+armor_weight = 2
+outfit_look = &"wraithbone_mask"

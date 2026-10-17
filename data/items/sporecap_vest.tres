@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"sporecap_vest"
+display_name = "Sporecap Vest"
+description = "A giant glowing mushroom cap and a forager's pack. Part of the Sporecap Wanderer (poison)."
+category = 4
+rarity = 4
+max_stack = 1
+base_value = 780
+icon_color = Color(0.45, 0.32, 0.22, 1)
+icon_glyph = "SV"
+equip_slot = 4
+required_level = 30
+stat_bonuses = {
+&"armor": 6,
+&"poison_resist": 12,
+&"spell_power": 6
+}
+set_id = &"sporecap"
+armor_weight = 1
+outfit_look = &"sporecap_vest"

@@ -2,6 +2,33 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.31.0] — Milestone 23: Elemental Armour
+
+### Added
+- **8 elemental armour sets**, 4 pieces each (head, chest, hands, feet), level 30, all drawn in the pixel style
+  with glowing parts:
+  - **Sunflare Regalia** (fire, heavy): teal plate, a halo of burning sun-crystals, golden wing feathers;
+  - **Amethyst Arcanist** (arcane, light): violet robe and cape, a crown of glowing crystals, gold face plate;
+  - **Wraithbone Shroud** (frost, medium): bone mask and antlers, spirit-light tendrils from the shoulders;
+  - **Sporecap Wanderer** (poison, light): a giant glowing mushroom cap, goggles, a forager's pack;
+  - **Dawnbloom Vestments** (holy, light): a leaf crown around a holy flame, a cape of autumn leaves;
+  - **Stoneheart Bulwark** (physical, heavy): living stone with burning eyes and stone spirals;
+  - **Stormcopper Harness** (lightning, heavy): green-patinaed copper, storm lamps, a spark antenna;
+  - **Brassworks Outfit** (every element, medium): top hat with goggle lenses, a coat with brass gears and a boiler pack.
+- **Elemental stats**: `<element>_resist` (less damage of that element, all resistances together max 75% off),
+  `all_resist`, and `<element>_damage` (more damage of that element). Each piece resists its element (6-12%);
+  2 pieces: +15% element damage; 4 pieces: +15% more resistance and a set bonus (health, spell power, crit,
+  speed, mana regen, armour, attack speed or crafting).
+- **Where to get them**: B-rank and higher dungeon boss chests (15-50%) and Delver's Caches, or craft them after
+  reading the **Elemental Armoury** codex (boss chests and caches from C rank). Recipes cost Delver's Marks plus
+  element materials (sunstone, crystals, frost lotus, mushrooms, moonpetal, stone, copper...).
+- Hero parts can glow now (`HumanoidModel._part(..., glow)`).
+- Screenshot mode `--only=elements`; tests `test_m23_elemental_data` and `test_m23_elemental_ingame`.
+
+### Fixed
+- A crash: the pixel painter could be called at the same time from the worker threads that build towns. It is
+  now locked, and the texture upload always happens on the main thread.
+
 ## [0.30.0] — Milestones 21 and 22: Pixel World and Deeper Dungeons
 
 ### Added

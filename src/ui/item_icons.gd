@@ -75,6 +75,9 @@ static func draw(item: ItemData) -> Image:
 static func shape_of(item: ItemData) -> StringName:
 	var s := String(item.id)
 	var rules := [
+		# Milestone 23 elemental armour names that would match a material first.
+		["_fists", &"gloves"], ["_mask", &"helmet"], ["_coat", &"robe"], ["_mantle", &"robe"], ["_sandals", &"boots"],
+		["_tophat", &"hat"], ["sporecap_vest", &"armor"],
 		["seeds", &"seeds"], ["mushroom", &"mushroom"], ["glowcap", &"mushroom"], ["dreamcap", &"mushroom"],
 		["scroll_", &"scroll"], ["tome_", &"book"], ["grimoire", &"book"], ["codex", &"book"], ["manual", &"book"],
 		["journal", &"book"], ["notes", &"book"], ["folio", &"book"], ["embers_tome", &"book"],

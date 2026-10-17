@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"stoneheart_plate"
+display_name = "Stoneheart Plate"
+description = "Living stone with burning eyes and curling spirals. Part of the Stoneheart Bulwark (physical)."
+category = 4
+rarity = 4
+max_stack = 1
+base_value = 780
+icon_color = Color(0.52, 0.5, 0.48, 1)
+icon_glyph = "SP"
+equip_slot = 4
+required_level = 30
+stat_bonuses = {
+&"armor": 16,
+&"physical_resist": 12,
+&"max_health": 20
+}
+set_id = &"stoneheart"
+armor_weight = 3
+outfit_look = &"stoneheart_plate"

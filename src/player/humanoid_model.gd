@@ -431,6 +431,10 @@ const OUTFIT_LOOKS := [
 	&"boots", &"fur_boots", &"greaves",
 	&"buckler", &"kite", &"aegis", &"wand", &"tome",
 	&"pendant",
+	# Milestone 23: elemental armour.
+	&"sunflare_helm", &"sunflare_plate", &"amethyst_crown", &"amethyst_robe", &"wraithbone_mask", &"wraithbone_coat",
+	&"sporecap_hat", &"sporecap_vest", &"dawnbloom_crown", &"dawnbloom_mantle", &"stoneheart_helm", &"stoneheart_plate",
+	&"stormcopper_helm", &"stormcopper_plate", &"brass_tophat", &"brass_coat",
 ]
 
 
@@ -546,6 +550,144 @@ func _build_outfit_piece(look: StringName, c: Color) -> void:
 			for shin in [_shin_l, _shin_r]:
 				_part(shin, Vector3(0, -0.28, 0.03), Vector3(0.27, 0.22, 0.33), dark)
 				_part(shin, Vector3(0, -0.1, 0.0), Vector3(0.25, 0.24, 0.26), c)  # shin plate
+		# --- Elemental armour (Milestone 23) ---
+		&"sunflare_helm":
+			_part(_head, Vector3(0, 0.27, 0), Vector3(0.54, 0.52, 0.52), c)
+			_part(_head, Vector3(0, 0.28, 0.265), Vector3(0.34, 0.06, 0.02), Color(0.6, 0.95, 0.9), true)  # eye slit
+			_part(_head, Vector3(0, 0.55, 0), Vector3(0.4, 0.06, 0.4), Color(0.95, 0.72, 0.3))  # gold rim
+			for k in 7:
+				var a := (k / 6.0 - 0.5) * PI * 1.15
+				_part(_head, Vector3(sin(a) * 0.36, 0.42 + cos(a) * 0.32, -0.08), Vector3(0.08, 0.2, 0.08), Color(1.0, 0.6, 0.18), true)
+		&"sunflare_plate":
+			_part(_torso, Vector3(0, 0.32, 0), Vector3(0.6, 0.6, 0.36), c)
+			_part(_torso, Vector3(0, 0.36, 0.185), Vector3(0.44, 0.4, 0.02), light)
+			_part(_torso, Vector3(0, 0.38, 0.2), Vector3(0.14, 0.14, 0.03), Color(1.0, 0.62, 0.2), true)  # sun core
+			_part(_torso, Vector3(0, 0.03, 0.0), Vector3(0.62, 0.08, 0.38), Color(0.95, 0.72, 0.3))
+			for s: float in [-1.0, 1.0]:
+				_part(_torso, Vector3(s * 0.4, 0.6, 0), Vector3(0.26, 0.14, 0.3), c)
+				for k in 4:  # golden wing feathers
+					_part(_torso, Vector3(s * (0.22 + k * 0.1), 0.42 - k * 0.07, -0.22), Vector3(0.09, 0.56 - k * 0.08, 0.03), Color(0.98, 0.78, 0.35))
+			_sleeves(c)
+		&"amethyst_crown":
+			_part(_head, Vector3(0, 0.33, -0.03), Vector3(0.54, 0.46, 0.5), c.darkened(0.35))  # hood
+			_part(_head, Vector3(0, 0.26, 0.255), Vector3(0.24, 0.24, 0.03), Color(0.95, 0.72, 0.3))  # gold face plate
+			_part(_head, Vector3(0, 0.26, 0.275), Vector3(0.1, 0.1, 0.02), Color(0.85, 0.6, 1.0), true)
+			for k in 6:
+				var x := (k - 2.5) * 0.09
+				_part(_head, Vector3(x, 0.66 + (0.08 if k % 2 == 0 else 0.0), -0.04), Vector3(0.08, 0.3 + (0.12 if k % 2 == 0 else 0.0), 0.08), Color(0.75, 0.5, 1.0), true)
+		&"amethyst_robe":
+			_part(_torso, Vector3(0, 0.31, 0), Vector3(0.6, 0.62, 0.36), c)
+			_part(_torso, Vector3(0, -0.14, 0), Vector3(0.62, 0.4, 0.38), c * 0.9)
+			_part(_torso, Vector3(0, 0.3, 0.185), Vector3(0.1, 0.56, 0.01), Color(0.95, 0.72, 0.3))  # gold trim
+			_part(_torso, Vector3(0, 0.18, -0.21), Vector3(0.62, 0.86, 0.05), c.darkened(0.2))  # cape
+			for s: float in [-1.0, 1.0]:
+				for k in 3:
+					_part(_torso, Vector3(s * (0.36 + k * 0.05), 0.66 + k * 0.1, -0.02), Vector3(0.09, 0.22, 0.09), Color(0.75, 0.5, 1.0), true)
+			_sleeves(c)
+		&"wraithbone_mask":
+			_part(_head, Vector3(0, 0.34, -0.06), Vector3(0.54, 0.44, 0.46), c)  # dark hood
+			_part(_head, Vector3(0, 0.24, 0.24), Vector3(0.4, 0.42, 0.04), Color(0.92, 0.88, 0.74))  # bone mask
+			_part(_head, Vector3(0, 0.28, 0.265), Vector3(0.12, 0.08, 0.01), Color(0.35, 0.95, 0.95), true)  # spirit eye
+			for s: float in [-1.0, 1.0]:
+				for k in 3:
+					_part(_head, Vector3(s * (0.24 + k * 0.08), 0.52 + k * 0.08, 0), Vector3(0.08, 0.14, 0.08), Color(0.9, 0.86, 0.72))
+		&"wraithbone_coat":
+			_part(_torso, Vector3(0, 0.3, 0), Vector3(0.6, 0.6, 0.36), c)
+			_part(_torso, Vector3(0, 0.2, -0.2), Vector3(0.6, 0.8, 0.05), c.darkened(0.2))
+			_sleeves(c)
+			for s: float in [-1.0, 1.0]:
+				_part(_torso, Vector3(s * 0.38, 0.6, 0), Vector3(0.24, 0.12, 0.3), Color(0.9, 0.86, 0.72))  # bone pauldrons
+				_part(_torso, Vector3(s * 0.42, 0.7, 0), Vector3(0.14, 0.1, 0.2), Color(0.9, 0.86, 0.72))
+				for k in 7:  # spirit tendrils
+					var a := k * 0.8
+					_part(_torso, Vector3(s * (0.5 + sin(a) * 0.08), 0.62 - k * 0.12, -0.12 + cos(a) * 0.06), Vector3(0.05, 0.12, 0.05), Color(0.35, 0.95, 0.95), true)
+		&"sporecap_hat":
+			_part(_head, Vector3(0, 0.5, 0), Vector3(0.36, 0.1, 0.36), Color(0.85, 0.8, 0.65))  # stem
+			var cap := Color(0.2, 0.58, 0.58)
+			_part(_head, Vector3(0, 0.6, 0), Vector3(0.86, 0.14, 0.84), cap)  # cap
+			_part(_head, Vector3(0, 0.71, 0), Vector3(0.6, 0.1, 0.6), cap)
+			_part(_head, Vector3(0, 0.78, 0), Vector3(0.3, 0.06, 0.3), cap)
+			for k in 6:
+				var a := k * TAU / 6.0 + 0.4
+				_part(_head, Vector3(cos(a) * 0.3, 0.68, sin(a) * 0.3), Vector3(0.08, 0.04, 0.08), Color(1.0, 0.7, 0.3), true)
+			for s: float in [-1.0, 1.0]:
+				_part(_head, Vector3(s * 0.1, 0.33, 0.235), Vector3(0.12, 0.1, 0.02), Color(0.55, 0.95, 0.9), true)  # goggles
+		&"sporecap_vest":
+			_part(_torso, Vector3(0, 0.3, 0), Vector3(0.6, 0.56, 0.36), c)
+			_part(_torso, Vector3(0.12, 0.3, 0.185), Vector3(0.08, 0.56, 0.01), dark)
+			_part(_torso, Vector3(0, 0.28, -0.27), Vector3(0.46, 0.5, 0.2), Color(0.3, 0.5, 0.55))  # pack
+			_part(_torso, Vector3(0, 0.6, -0.3), Vector3(0.36, 0.14, 0.16), Color(0.45, 0.62, 0.66))
+			for k in 3:
+				_part(_torso, Vector3(-0.16 + k * 0.16, 0.06, 0.2), Vector3(0.09, 0.1, 0.06), Color(1.0, 0.7, 0.3), true)  # spore pouches
+		&"dawnbloom_crown":
+			for k in 9:
+				var a := k * TAU / 9.0
+				var leaf := Color(0.35, 0.65, 0.3) if k % 3 != 0 else Color(0.8, 0.35, 0.2)
+				_part(_head, Vector3(cos(a) * 0.27, 0.54, sin(a) * 0.27), Vector3(0.1, 0.16, 0.1), leaf)
+			_part(_head, Vector3(0, 0.62, 0.2), Vector3(0.08, 0.22, 0.06), Color(1.0, 0.82, 0.3), true)  # holy flame
+			_part(_head, Vector3(0, 0.76, 0.2), Vector3(0.05, 0.1, 0.04), Color(1.0, 0.95, 0.7), true)
+		&"dawnbloom_mantle":
+			_part(_torso, Vector3(0, 0.3, 0), Vector3(0.6, 0.6, 0.36), c)
+			_part(_torso, Vector3(0, 0.3, 0.185), Vector3(0.1, 0.56, 0.01), Color(0.95, 0.75, 0.3))  # gold sash
+			_part(_torso, Vector3(0, 0.62, 0), Vector3(0.7, 0.12, 0.42), Color(0.35, 0.65, 0.3))  # leaf mantle
+			for k in 5:
+				var leaf := Color(0.8, 0.35, 0.2) if k % 2 == 0 else Color(0.35, 0.6, 0.3)
+				_part(_torso, Vector3((k - 2) * 0.13, 0.2, -0.21), Vector3(0.13, 0.8 - absf(k - 2) * 0.1, 0.04), leaf)  # leaf cape
+			_sleeves(c)
+		&"stoneheart_helm":
+			_part(_head, Vector3(0, 0.27, 0), Vector3(0.58, 0.56, 0.56), c)
+			for s: float in [-1.0, 1.0]:
+				_part(_head, Vector3(s * 0.12, 0.28, 0.285), Vector3(0.1, 0.05, 0.01), Color(1.0, 0.6, 0.15), true)  # burning eyes
+				for k in 6:  # stone spiral
+					var a := k * 0.95
+					var r := 0.18 - k * 0.022
+					_part(_head, Vector3(s * (0.42 + cos(a) * r), 0.3 + sin(a) * r, -0.05), Vector3(0.08, 0.08, 0.08), c.darkened(0.15))
+			for k in 4:
+				_part(_head, Vector3(0, 0.6 + k * 0.07, -0.04 - k * 0.02), Vector3(0.46 - k * 0.09, 0.07, 0.2), c.lightened(0.05))
+		&"stoneheart_plate":
+			_part(_torso, Vector3(0, 0.32, 0), Vector3(0.62, 0.62, 0.38), c)
+			_part(_torso, Vector3(0, 0.36, 0.2), Vector3(0.44, 0.4, 0.03), light)
+			_part(_torso, Vector3(0, 0.36, 0.22), Vector3(0.1, 0.1, 0.02), Color(1.0, 0.6, 0.15), true)  # heart ember
+			for s: float in [-1.0, 1.0]:
+				_part(_torso, Vector3(s * 0.42, 0.6, 0), Vector3(0.3, 0.26, 0.4), dark)
+				for k in 6:
+					var a := k * 0.95
+					var r := 0.2 - k * 0.025
+					_part(_torso, Vector3(s * (0.66 + cos(a) * r), 0.62 + sin(a) * r, -0.05), Vector3(0.08, 0.08, 0.08), c)
+			_sleeves(c)
+		&"stormcopper_helm":
+			var verdi := Color(0.45, 0.78, 0.62)
+			_part(_head, Vector3(0, 0.28, 0), Vector3(0.58, 0.56, 0.56), c)
+			_part(_head, Vector3(0, 0.3, 0.285), Vector3(0.32, 0.32, 0.02), Color(0.08, 0.07, 0.08))  # dark face
+			_part(_head, Vector3(0, 0.06, 0.25), Vector3(0.6, 0.1, 0.1), verdi)  # grill
+			for s: float in [-1.0, 1.0]:
+				_part(_head, Vector3(s * 0.3, 0.3, 0.1), Vector3(0.03, 0.1, 0.1), Color(1.0, 0.85, 0.45), true)  # lamps
+			_part(_head, Vector3(0, 0.6, 0), Vector3(0.4, 0.08, 0.4), verdi)
+			_part(_head, Vector3(0, 0.74, 0), Vector3(0.05, 0.22, 0.05), Color(0.55, 0.38, 0.3))  # antenna
+			_part(_head, Vector3(0, 0.88, 0), Vector3(0.12, 0.12, 0.12), Color(0.75, 0.95, 1.0), true)  # storm spark
+		&"stormcopper_plate":
+			var verdi2 := Color(0.45, 0.78, 0.62)
+			_part(_torso, Vector3(0, 0.32, 0), Vector3(0.62, 0.6, 0.38), c)
+			_part(_torso, Vector3(0, 0.34, 0.2), Vector3(0.26, 0.26, 0.02), verdi2)
+			for s: float in [-1.0, 1.0]:
+				_part(_torso, Vector3(s * 0.42, 0.6, 0), Vector3(0.3, 0.3, 0.36), c)
+				_part(_torso, Vector3(s * 0.58, 0.6, 0), Vector3(0.03, 0.16, 0.2), Color(1.0, 0.85, 0.45), true)
+			_sleeves(c)
+		&"brass_tophat":
+			_part(_head, Vector3(0, 0.49, 0), Vector3(0.64, 0.04, 0.62), c)  # brim
+			_part(_head, Vector3(0, 0.66, 0), Vector3(0.42, 0.32, 0.4), c)
+			_part(_head, Vector3(0, 0.55, 0), Vector3(0.44, 0.06, 0.42), Color(0.95, 0.72, 0.3))  # brass band
+			for s: float in [-1.0, 1.0]:
+				_part(_head, Vector3(s * 0.1, 0.6, 0.215), Vector3(0.11, 0.1, 0.03), Color(0.55, 0.95, 0.9), true)  # goggle lenses
+			_part(_head, Vector3(0.22, 0.66, 0), Vector3(0.03, 0.16, 0.16), Color(0.85, 0.65, 0.3))  # gear
+		&"brass_coat":
+			_part(_torso, Vector3(0, 0.3, 0), Vector3(0.6, 0.6, 0.36), c)
+			_part(_torso, Vector3(0, -0.12, 0), Vector3(0.62, 0.34, 0.38), c * 0.9)  # coat tails
+			_part(_torso, Vector3(0, 0.36, 0.19), Vector3(0.16, 0.16, 0.02), Color(0.95, 0.72, 0.3))  # gear
+			_part(_torso, Vector3(0, 0.36, 0.205), Vector3(0.06, 0.06, 0.01), Color(0.3, 0.2, 0.12))
+			_part(_torso, Vector3(0, 0.3, -0.26), Vector3(0.36, 0.42, 0.16), Color(0.55, 0.55, 0.58))  # boiler pack
+			_part(_torso, Vector3(0.12, 0.62, -0.26), Vector3(0.06, 0.24, 0.06), Color(0.85, 0.65, 0.3))  # pipe
+			_sleeves(c)
 		# --- Amulet ---
 		&"pendant":
 			_part(_torso, Vector3(0, 0.5, 0.18), Vector3(0.08, 0.08, 0.03), c)
@@ -557,7 +699,8 @@ func _build_outfit_piece(look: StringName, c: Color) -> void:
 func _build_hair() -> void:
 	var looks := outfit_looks()
 	var covered := false
-	for l in [&"hood_padded", &"fur_cap", &"helm_plume", &"horned_helm", &"hood_mask", &"great_helm"]:
+	for l in [&"hood_padded", &"fur_cap", &"helm_plume", &"horned_helm", &"hood_mask", &"great_helm",
+			&"sunflare_helm", &"amethyst_crown", &"wraithbone_mask", &"stoneheart_helm", &"stormcopper_helm"]:
 		covered = covered or l in looks
 	var style := CharacterLook.hair_style(_body)
 	if not covered and style != &"bald":
@@ -746,14 +889,17 @@ func _pivot(parent: Node3D, pos: Vector3) -> Node3D:
 	return n
 
 
-func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> MeshInstance3D:
+## `glow` parts shine (crystals, lamps, spirit light).
+func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color, glow: bool = false) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	if PixelAuto.enabled:
-		mi.mesh = PixelAuto.mesh(size, color)
+		mi.mesh = PixelAuto.mesh(size, color, glow)
 	else:
 		var b := BlockMesh.new()
 		b.box(Vector3.ZERO, size, color)
 		mi.mesh = b.commit()
+		if glow:
+			mi.mesh.surface_set_material(0, Materials.vertex_color_emissive())
 	mi.position = pos
 	parent.add_child(mi)
 	_parts.append(mi)

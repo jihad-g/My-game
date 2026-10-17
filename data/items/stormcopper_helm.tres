@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"stormcopper_helm"
+display_name = "Stormcopper Helm"
+description = "Green-patinaed copper with storm lamps that crackle. Part of the Stormcopper Harness (lightning)."
+category = 4
+rarity = 4
+max_stack = 1
+base_value = 520
+icon_color = Color(0.85, 0.5, 0.38, 1)
+icon_glyph = "SH"
+equip_slot = 3
+required_level = 30
+stat_bonuses = {
+&"armor": 9,
+&"lightning_resist": 8
+}
+set_id = &"stormcopper"
+armor_weight = 3
+outfit_look = &"stormcopper_helm"

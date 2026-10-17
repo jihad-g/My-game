@@ -105,6 +105,17 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 23 — Elemental Armour  ✅ (v0.31.0)
+
+- [x] 8 elemental sets × 4 pieces with their own pixel looks (glowing crystals, lamps, flames, spirit light)
+- [x] Elemental resistance and damage stats, set bonuses, 75% resistance cap
+- [x] Drops from B+ dungeon bosses and Delver's Caches; Elemental Armoury codex teaches all 32 recipes (Delver's Marks)
+- [x] Fixed: crash when towns were built on worker threads while the pixel painter ran
+- [x] Tests `test_m23_*` run and pass; `m5`, `m6`, `m7`, `m10`, `m14`, `m15`, `m19`, `m20`, `m21`, `m22`, `m12_balance`, `m17b`, `m18b` re-run and pass
+- [ ] NOT IMPLEMENTED: elemental weapons to match the sets; monsters with elemental weakness shown in the UI
+- [ ] NOT IMPLEMENTED: hand-drawn item icons for the 32 pieces (they use the drawn-in-code icons by shape)
+- [ ] Known limitation: element damage counts for hits whose type is that element (spells, fire arrows...); plain weapon hits stay physical
+
 ## Milestones 21 + 22 — Pixel World and Deeper Dungeons  ✅ (v0.30.0)
 
 - [x] Every model box pixel painted (`PixelAuto`): characters, monsters, animals, outfits, villagers, weapons

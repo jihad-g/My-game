@@ -3,7 +3,7 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.30.0** (Milestones 21 + 22: Pixel World and Deeper Dungeons). The Windows build is `releases/Shardlands-v0.30.0-windows.zip`.
+- Current version: **v0.31.0** (Milestone 23: Elemental Armour). The Windows build is `releases/Shardlands-v0.31.0-windows.zip`.
 - The owner wants the art to look like Blockbench-style pixel art (16 px per metre, hand-placed pixels). `src/art/pixel_art.gd` does this; skeletons and the Tuskers use it. Next art steps: weapons/shields, other monsters, player classes, villagers. Use our own designs in that style, not pixel copies of other artists' models.
 - The owner asked to do the 10 next steps one by one: 1 M18d (done), 2 M19 co-op combat (done), 3 monster pathfinding, 4 weather + seasons, 5 waystones/horses/boats, 6 multi-storey building, 7 map fog of war + dungeon keys, 8 monster animations + capes/hair, 9 performance + testing pass, 10 release polish.
 - Read next: `docs/TODO.md` (done and NOT IMPLEMENTED), `docs/CHANGELOG.md`, `docs/M18_PLAN.md` (current milestone) and `docs/ART_BIBLE.md` (art rules).
@@ -75,6 +75,12 @@
   - `set_locomotion_speed`, `set_motion` (leans, turn shuffle), `add_step_offset` (block-step glide);
   - Settings `movement_feel` (Snappy/Weighty) and `fixed_camera`; camera lead; dodge v2 (`can_dodge_cancel`);
   - tests `test_m18a_*` (run and pass since v0.23.1).
+
+- **M23 Elemental Armour:** sets in `GearSets` (`ELEMENTAL`, `ELEMENTS`), items `data/items/<set>_*.tres`, recipes,
+  codex `elemental_codex`; stats `<element>_resist`, `all_resist`, `<element>_damage` used by
+  `CharacterStats.element_taken_mult` (Player.receive_hit) and `element_damage_mult` (Enemy.receive_hit);
+  `LootTables` "elemental" chance; looks in `HumanoidModel._build_outfit_piece`; `_part(..., glow)`.
+  `PixelAuto.mesh` is mutex-locked (towns build people on worker threads).
 
 - **M21 Pixel World:** `PixelAuto.mesh(size, color, glow)` paints every `_part` box (HumanoidModel, BeastModel,
   BoarModel) on shared atlas pages; `PixelAuto.enabled` switches back to flat boxes; `kind_for` picks metal/wood/cloth.

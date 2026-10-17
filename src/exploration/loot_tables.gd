@@ -25,6 +25,23 @@ const GEAR := [
 	[&"sunforged_blade", &"shadowfang", &"titans_greataxe", &"staff_of_the_archmage", &"starfall_blade", &"starfall_bow",
 		&"shardbreaker", &"mithril_plate", &"crown_of_stars", &"aegis_of_dawn"],
 ]
+## Milestone 23: every elemental armour piece (a table's "elemental" chance rolls one).
+static var _elemental: Array = []
+
+
+static func elemental_pieces() -> Array:
+	if not _elemental.is_empty():
+		return _elemental
+	var out := []
+	for id in ItemDB.all_ids():
+		var it := ItemDB.get_item(id)
+		if it and it.set_id in GearSets.ELEMENTAL:
+			out.append(id)
+	out.sort()
+	_elemental = out
+	return out
+
+
 ## Gear band per rank E..S (S rank reaches the legendary band).
 const GEAR_BAND := [0, 1, 2, 3, 3, 4]
 const TABLES := {
@@ -64,14 +81,14 @@ const TABLES := {
 		[&"coal", 2, 4, 0.4, 0], [&"crystal_shard", 1, 2, 0.3, 1], [&"iron_arrow", 6, 12, 0.3, 1], [&"fire_arrow", 4, 8, 0.15, 2], [&"mithril_ore", 1, 3, 0.4, 2],
 		[&"elixir_of_might", 1, 1, 0.15, 2], [&"void_shard", 1, 1, 0.1, 4]]},
 	# Milestone 22: a Delver's Cache appears when every monster on a floor is beaten.
-	&"dungeon_cache": {"coins": 60, "gear": 0.7, "tome": [0.1, 0.12, 0.15, 0.18, 0.2, 0.25],
+	&"dungeon_cache": {"coins": 60, "gear": 0.7, "tome": [0.1, 0.12, 0.15, 0.18, 0.2, 0.25], "elemental": [0.0, 0.0, 0.06, 0.1, 0.15, 0.2],
 		"quality": [[0.05, 0.15, 0.25, 0.3, 0.35, 0.4], [0.0, 0.02, 0.05, 0.08, 0.12, 0.18]], "items": [
-		[&"delvers_mark", 1, 2, 1.0, 0], [&"healing_draught", 1, 2, 0.6, 0], [&"mana_tonic", 1, 2, 0.4, 0],
+		[&"delvers_mark", 1, 2, 1.0, 0], [&"elemental_codex", 1, 1, 0.06, 2], [&"healing_draught", 1, 2, 0.6, 0], [&"mana_tonic", 1, 2, 0.4, 0],
 		[&"gold_nugget", 1, 2, 0.4, 0], [&"gemstone", 1, 1, 0.25, 1], [&"crystal_shard", 1, 2, 0.4, 1],
 		[&"mithril_ingot", 1, 2, 0.35, 2], [&"elixir_of_might", 1, 1, 0.2, 1], [&"void_shard", 1, 1, 0.15, 3]]},
-	&"dungeon_boss": {"coins": 200, "gear": 1.0, "scroll": [0.0, 0.02, 0.05, 0.12, 0.35, 0.6], "tome": [0.2, 0.25, 0.3, 0.35, 0.45, 0.55],
+	&"dungeon_boss": {"coins": 200, "gear": 1.0, "elemental": [0.0, 0.0, 0.15, 0.3, 0.4, 0.5], "scroll": [0.0, 0.02, 0.05, 0.12, 0.35, 0.6], "tome": [0.2, 0.25, 0.3, 0.35, 0.45, 0.55],
 		"quality": [[0.1, 0.2, 0.3, 0.4, 0.45, 0.5], [0.0, 0.03, 0.08, 0.12, 0.2, 0.3]], "items": [
-		[&"delvers_mark", 2, 4, 1.0, 0],
+		[&"delvers_mark", 2, 4, 1.0, 0], [&"elemental_codex", 1, 1, 0.2, 2],
 		[&"tome_fire_ring", 1, 1, 0.12, 1], [&"tome_lightning_dash", 1, 1, 0.1, 2], [&"tome_drain_life", 1, 1, 0.1, 2],
 		[&"healing_draught", 2, 3, 0.8, 0], [&"mithril_ingot", 2, 4, 0.6, 2], [&"elixir_of_starlight", 1, 1, 0.3, 3],
 		[&"stoneskin_elixir", 1, 1, 0.4, 1], [&"elixir_of_might", 1, 1, 0.4, 1],
@@ -125,6 +142,11 @@ static func roll(table: StringName, rank: int, rng: RandomNumberGenerator, first
 		# Low ranks find the simpler tomes; every rank step unlocks one more.
 		var top := mini(TOMES.size(), 3 + rank)
 		_add(out, TOMES[rng.randi() % top], 1)
+	var ec: Array = t.get("elemental", [])
+	if not ec.is_empty() and rng.randf() < float(ec[clampi(rank, 0, 5)]):
+		var pieces := elemental_pieces()
+		if not pieces.is_empty():
+			_add(out, pieces[rng.randi() % pieces.size()], 1)
 	var sc: Array = t.get("scroll", [])
 	if (t.get("scroll_guaranteed", false) and first_open) or (not sc.is_empty() and rng.randf() < float(sc[clampi(rank, 0, 5)])):
 		_add(out, SCROLLS[rng.randi() % SCROLLS.size()], 1)

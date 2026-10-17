@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"stoneheart_helm"
+display_name = "Stoneheart Helm"
+description = "Living stone with burning eyes and curling spirals. Part of the Stoneheart Bulwark (physical)."
+category = 4
+rarity = 4
+max_stack = 1
+base_value = 520
+icon_color = Color(0.52, 0.5, 0.48, 1)
+icon_glyph = "SH"
+equip_slot = 3
+required_level = 30
+stat_bonuses = {
+&"armor": 9,
+&"physical_resist": 8
+}
+set_id = &"stoneheart"
+armor_weight = 3
+outfit_look = &"stoneheart_helm"

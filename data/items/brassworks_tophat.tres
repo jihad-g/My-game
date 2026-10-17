@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"brassworks_tophat"
+display_name = "Brassworks Top Hat"
+description = "A tinker's hat with goggles, and a coat full of brass gears. Part of the Brassworks Outfit (every element)."
+category = 4
+rarity = 4
+max_stack = 1
+base_value = 520
+icon_color = Color(0.42, 0.28, 0.18, 1)
+icon_glyph = "BT"
+equip_slot = 3
+required_level = 30
+stat_bonuses = {
+&"armor": 6,
+&"all_resist": 4
+}
+set_id = &"brassworks"
+armor_weight = 2
+outfit_look = &"brass_tophat"

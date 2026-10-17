@@ -22,6 +22,10 @@ func _ready() -> void:
 		await _pixel_pilot_showcase()
 		get_tree().quit()
 		return
+	if "--only=elements" in OS.get_cmdline_user_args():
+		await _elements_showcase()
+		get_tree().quit()
+		return
 	if "--only=pixelworld" in OS.get_cmdline_user_args():
 		await _pixel_world_showcase()
 		get_tree().quit()
@@ -2114,3 +2118,58 @@ func _pixel_world_showcase() -> void:
 	world.camera_rig._target_distance = 12.0
 	await _wait(60)
 	await _shot("pixel_world_game_camera")
+
+
+## Milestone 23: the eight elemental armour sets, worn in full.
+func _elements_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 10.5
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	var c := _dry_center(world, p.global_position, 26.0)
+	await _teleport(world, c + Vector3(0, 0, 16))
+	_clear_monsters(world)
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var cam := Camera3D.new()
+	cam.fov = 38.0
+	world.add_child(cam)
+	cam.current = true
+	var weapons := [&"sunforged_blade", &"staff_of_the_archmage", &"shadowfang", &"iron_pike", &"apprentice_staff", &"iron_warhammer", &"mithril_waraxe", &"recurve_bow"]
+	var groups := [GearSets.ELEMENTAL.slice(0, 4), GearSets.ELEMENTAL.slice(4, 8)]
+	for gi in 2:
+		var models: Array = []
+		for i in 4:
+			var set_id: StringName = groups[gi][i]
+			var ids := PackedStringArray()
+			for id in LootTables.elemental_pieces():
+				if ItemDB.get_item(id).set_id == set_id:
+					ids.append(String(id))
+			var m := HumanoidModel.new()
+			world.add_child(m)
+			m.set_appearance()
+			var w: ItemData = ItemDB.get_item(weapons[gi * 4 + i])
+			m.set_weapon(w.weapon_type, false)
+			m.set_outfit(ids, w.id)
+			var pos := c + Vector3((i - 1.5) * 1.35, 0, 0)
+			pos.y = world.get_ground_height(pos)
+			m.global_position = pos
+			models.append(m)
+		var gy := world.get_ground_height(c)
+		var target := Vector3(c.x, gy + 1.1, c.z)
+		cam.global_position = target + Vector3(0, sin(deg_to_rad(8.0)), cos(deg_to_rad(8.0))) * 6.4
+		cam.look_at(target)
+		await _wait(12)
+		await _shot("elements_%d" % (gi + 1))
+		for m in models:
+			m.queue_free()
+		await _wait(3)

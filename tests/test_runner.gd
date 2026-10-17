@@ -138,6 +138,8 @@ func _ready() -> void:
 	await _run_async(&"test_m22_dungeon_audit")
 	_run(&"test_m22_loot")
 	await _run_async(&"test_m22_rewards")
+	_run(&"test_m23_elemental_data")
+	await _run_async(&"test_m23_elemental_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5182,7 +5184,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.30"), "version 0.30 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.31"), "version 0.31 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -7956,5 +7958,100 @@ func test_m22_rewards() -> void:
 	check(d.cleared and p.coins < coins1 + 450, "no first-clear purse the second time")
 	world.exit_dungeon()
 	await _wait_ready(world)
+	world.queue_free()
+	await _frames(5)
+
+
+# --- Milestone 23: elemental armour -------------------------------------------------
+
+func test_m23_elemental_data() -> void:
+	var pieces := LootTables.elemental_pieces()
+	check(pieces.size() == 32 and GearSets.ELEMENTAL.size() == 8, "8 elemental sets, %d pieces" % pieces.size())
+	for set_id in GearSets.ELEMENTAL:
+		check(GearSets.has_set(set_id) and GearSets.full_size(set_id) == 4, "%s is a 4-piece set" % GearSets.display_name(set_id))
+		var slots := []
+		for id in pieces:
+			var it := ItemDB.get_item(id)
+			if it.set_id == set_id:
+				slots.append(it.equip_slot)
+				var rec := RecipeBook.get_recipe(id)
+				check(rec != null and rec.ingredients.has(&"delvers_mark"), "%s is crafted with Delver's Marks" % it.display_name)
+				var keys := it.stat_bonuses.keys()
+				check(keys.any(func(k: StringName) -> bool: return String(k).ends_with("_resist")) and ItemData.STAT_NAMES.has(keys[1]),
+					"%s resists its element" % it.display_name)
+		slots.sort()
+		check(slots == [ItemData.EquipSlot.HEAD, ItemData.EquipSlot.CHEST, ItemData.EquipSlot.HANDS, ItemData.EquipSlot.FEET], "%s covers head, chest, hands and feet" % set_id)
+	var codex := ItemDB.get_item(&"elemental_codex")
+	check(codex != null and codex.teaches_recipes.size() == 32, "the Elemental Armoury teaches all 32 patterns")
+	# Every look draws something.
+	var h := HumanoidModel.new()
+	add_child(h)
+	h.set_appearance()
+	var bare := h._parts.size()
+	for id in pieces:
+		h.set_outfit(PackedStringArray([String(id)]))
+		check(h._parts.size() > bare, "%s is drawn on the body" % id)
+	h.queue_free()
+	# Loot: high-rank bosses drop elemental pieces and the codex.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2323
+	var got := 0
+	var books := 0
+	for i in 200:
+		var r := LootTables.roll(&"dungeon_boss", 4, rng)
+		for id in r.items:
+			if ItemDB.get_item(id).set_id in GearSets.ELEMENTAL:
+				got += 1
+		books += int(r.items.get(&"elemental_codex", 0))
+	check(got > 40 and books > 10, "A-rank bosses: %d elemental pieces and %d codices in 200 chests" % [got, books])
+	var low := 0
+	for i in 200:
+		for id in LootTables.roll(&"dungeon_boss", 0, rng).items:
+			if ItemDB.get_item(id).set_id in GearSets.ELEMENTAL:
+				low += 1
+	check(low == 0, "E-rank bosses never give elemental armour")
+
+
+func test_m23_elemental_ingame() -> void:
+	var world: World = await _boot_class(&"wizard")
+	var p := world.player
+	_clear_enemies(world)
+	var ch := p.character
+	check(is_equal_approx(ch.element_taken_mult(&"fire"), 1.0), "no armour: full fire damage")
+	for id in [&"sunflare_helm", &"sunflare_plate", &"sunflare_gauntlets", &"sunflare_greaves"]:
+		p.equipment.equip(ItemDB.get_item(id))
+	await _frames(2)
+	var mult := ch.element_taken_mult(&"fire")
+	check(absf(mult - 0.53) < 0.01, "full Sunflare: fire hurts %d%% (32%% pieces + 15%% set)" % roundi(mult * 100))
+	check(is_equal_approx(ch.element_taken_mult(&"frost"), 1.0), "frost is not resisted")
+	check(is_equal_approx(ch.element_damage_mult(&"fire"), 1.15) and is_equal_approx(ch.element_damage_mult(&"frost"), 1.0), "+15% fire damage")
+	# Taking a fire hit.
+	p.health.reset_full()
+	var hp0 := p.health.current
+	p.receive_hit(DamageInfo.create(40.0, null, &"fire"))
+	var fire_loss := hp0 - p.health.current
+	p.health.reset_full()
+	p.receive_hit(DamageInfo.create(40.0, null, &"frost"))
+	var frost_loss := hp0 - p.health.current
+	check(fire_loss < frost_loss * 0.6, "fire hits for %.1f, frost for %.1f" % [fire_loss, frost_loss])
+	# Dealing fire damage.
+	var pos := p.global_position + Vector3(3, 0, 0)
+	pos.y = world.get_ground_height(pos) + 0.3
+	var m := world.spawner.spawn_enemy(load(Monster.MONSTER_SCENE_PATH), pos, "", load("res://data/enemies/bandit_thug.tres")) as Monster
+	await _frames(5)
+	m.health.max_health = 1000.0
+	m.health.reset_full()
+	m.receive_hit(DamageInfo.create(20.0, p, &"fire"))
+	var dealt := 1000.0 - m.health.current
+	check(dealt > 21.0, "fire spells hit harder in Sunflare (%.1f from 20)" % dealt)
+	# The codex teaches the patterns.
+	p.inventory.add_item(&"elemental_codex", 1)
+	var idx := -1
+	for i in p.inventory.capacity:
+		var sl = p.inventory.get_slot(i)
+		if sl != null and sl.id == &"elemental_codex":
+			idx = i
+	p.read_recipe_book(idx)
+	check(p.recipes.knows(&"stormcopper_plate") and p.recipes.knows(&"dawnbloom_crown"), "reading the codex teaches the armour recipes")
 	world.queue_free()
 	await _frames(5)

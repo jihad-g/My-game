@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"amethyst_boots"
+display_name = "Amethyst Boots"
+description = "Violet robes grown with humming arcane crystals. Part of the Amethyst Arcanist (arcane)."
+category = 4
+rarity = 4
+max_stack = 1
+base_value = 380
+icon_color = Color(0.45, 0.28, 0.66, 1)
+icon_glyph = "AB"
+equip_slot = 6
+required_level = 30
+stat_bonuses = {
+&"armor": 2,
+&"arcane_resist": 6
+}
+set_id = &"amethyst"
+armor_weight = 1
+outfit_look = &"boots"

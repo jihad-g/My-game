@@ -59,6 +59,12 @@ const STAT_NAMES := {
 	&"block": "Block %", &"strength": "Strength", &"mana_control": "Mana Control",
 	&"defense": "Defense", &"crafting": "Crafting", &"dexterity": "Dexterity",
 	&"physical_damage": "Physical damage %", &"backstab": "Backstab damage %", &"parry": "Parry window (ms)",
+	# Milestone 23: elemental armour.
+	&"fire_resist": "Fire resistance %", &"frost_resist": "Frost resistance %", &"lightning_resist": "Lightning resistance %",
+	&"poison_resist": "Poison resistance %", &"arcane_resist": "Arcane resistance %", &"holy_resist": "Holy resistance %",
+	&"physical_resist": "Physical resistance %", &"all_resist": "All resistances %",
+	&"fire_damage": "Fire damage %", &"frost_damage": "Frost damage %", &"lightning_damage": "Lightning damage %",
+	&"poison_damage": "Poison damage %", &"arcane_damage": "Arcane damage %", &"holy_damage": "Holy damage %",
 }
 
 ## Description of potion/shrine buffs (see PlayerAbilities outgoing/incoming_mult).

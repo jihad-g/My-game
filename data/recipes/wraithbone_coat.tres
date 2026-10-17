@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"wraithbone_coat"
+result_item = &"wraithbone_coat"
+result_count = 1
+ingredients = {
+&"royal_bone": 2,
+&"frost_lotus": 2,
+&"wisp_essence": 2,
+&"delvers_mark": 3
+}
+station = 4
+tier = 4
+source = 2
+source_hint = "Elemental Armoury codex (dungeon bosses and Delver's Caches)"
+xp = 120

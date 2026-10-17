@@ -5,7 +5,11 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.30.0 — Pixel World and Deeper Dungeons**. Every character, monster, animal and weapon is now pixel
+> Status: **v0.31.0 — Elemental Armour**. Eight new armour sets (fire, arcane, frost, poison, holy, stone,
+> lightning and brass) with glowing pixel looks, elemental resistances and damage bonuses. Find them in B-rank
+> and higher dungeons, or craft them with Delver's Marks after reading the Elemental Armoury codex.
+>
+> Before that, **v0.30.0 — Pixel World and Deeper Dungeons**. Every character, monster, animal and weapon is now pixel
 > painted (16 pixels per metre). Dungeons pay better: a Delver's Cache for every cleared floor, a big first-clear
 > bonus, chests among the spikes, Fine and Masterwork gear, and legendary gear from S-rank bosses. Loot is no longer
 > lost when you take the stairs.

@@ -28,7 +28,60 @@ const SETS := {
 		"feel": "Wizard",
 		"bonuses": {2: {&"spell_power": 5}, 4: {&"mana_regen": 15, &"mana_control": 2}},
 	},
+	# Milestone 23: elemental armour (found in dungeons or made from the Elemental Armoury codex).
+	&"sunflare": {
+		"name": "Sunflare Regalia",
+		"feel": "Fire",
+		"element": &"fire",
+		"bonuses": {2: {&"fire_damage": 15}, 4: {&"fire_resist": 15, &"max_health": 30}},
+	},
+	&"amethyst": {
+		"name": "Amethyst Arcanist",
+		"feel": "Arcane",
+		"element": &"arcane",
+		"bonuses": {2: {&"arcane_damage": 15}, 4: {&"arcane_resist": 15, &"spell_power": 10}},
+	},
+	&"wraithbone": {
+		"name": "Wraithbone Shroud",
+		"feel": "Frost",
+		"element": &"frost",
+		"bonuses": {2: {&"frost_damage": 15}, 4: {&"frost_resist": 15, &"crit_chance": 5}},
+	},
+	&"sporecap": {
+		"name": "Sporecap Wanderer",
+		"feel": "Poison",
+		"element": &"poison",
+		"bonuses": {2: {&"poison_damage": 15}, 4: {&"poison_resist": 15, &"move_speed": 6}},
+	},
+	&"dawnbloom": {
+		"name": "Dawnbloom Vestments",
+		"feel": "Holy",
+		"element": &"holy",
+		"bonuses": {2: {&"holy_damage": 15}, 4: {&"holy_resist": 15, &"mana_regen": 20}},
+	},
+	&"stoneheart": {
+		"name": "Stoneheart Bulwark",
+		"feel": "Physical",
+		"element": &"physical",
+		"bonuses": {2: {&"physical_damage": 15}, 4: {&"physical_resist": 15, &"armor": 15}},
+	},
+	&"stormcopper": {
+		"name": "Stormcopper Harness",
+		"feel": "Lightning",
+		"element": &"lightning",
+		"bonuses": {2: {&"lightning_damage": 15}, 4: {&"lightning_resist": 15, &"attack_speed": 8}},
+	},
+	&"brassworks": {
+		"name": "Brassworks Outfit",
+		"feel": "Every element",
+		"element": &"all",
+		"bonuses": {2: {&"attack_speed": 8}, 4: {&"all_resist": 8, &"crafting": 3}},
+	},
 }
+## Elements with their own resistance and damage stats (Milestone 23).
+const ELEMENTS: Array[StringName] = [&"fire", &"frost", &"lightning", &"poison", &"arcane", &"holy", &"physical"]
+## The elemental sets in order (loot rolls and tests).
+const ELEMENTAL := [&"sunflare", &"amethyst", &"wraithbone", &"sporecap", &"dawnbloom", &"stoneheart", &"stormcopper", &"brassworks"]
 
 
 static func has_set(id: StringName) -> bool:

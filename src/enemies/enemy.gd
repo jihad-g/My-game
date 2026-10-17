@@ -313,6 +313,9 @@ func receive_hit(info: DamageInfo) -> float:
 		return 0.0
 	if net_puppet:
 		return _puppet_hit(info)
+	# Milestone 23: elemental armour boosts the wearer's damage of its element.
+	if info.source is Player and is_instance_valid(info.source):
+		info.amount *= (info.source as Player).character.element_damage_mult(info.damage_type)
 	if exposed and data:
 		info.amount *= data.exposed_damage_multiplier
 		if info.tag == "":

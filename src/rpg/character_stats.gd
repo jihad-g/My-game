@@ -228,6 +228,21 @@ func _eq(stat: StringName) -> float:
 	return equipment.total(stat) if equipment else 0.0
 
 
+## Milestone 23: share of `damage_type` damage that still hurts (armour resistances, max 75% off).
+func element_taken_mult(damage_type: StringName) -> float:
+	if not damage_type in GearSets.ELEMENTS:
+		return 1.0
+	var r := _eq(StringName("%s_resist" % damage_type)) + _eq(&"all_resist")
+	return 1.0 - clampf(r / 100.0, 0.0, 0.75)
+
+
+## Milestone 23: bonus for dealing `damage_type` damage (physical uses physical_damage elsewhere).
+func element_damage_mult(damage_type: StringName) -> float:
+	if damage_type == &"physical" or not damage_type in GearSets.ELEMENTS:
+		return 1.0
+	return 1.0 + _eq(StringName("%s_damage" % damage_type)) / 100.0
+
+
 ## Damage multiplier for a physical hit with the given weapon type.
 func weapon_mult(weapon_type: StringName) -> float:
 	if class_data == null:

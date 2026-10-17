@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"dawnbloom_crown"
+display_name = "Dawnbloom Crown"
+description = "A crown of leaves around a holy flame, and a cape of autumn leaves. Part of the Dawnbloom Vestments (holy)."
+category = 4
+rarity = 4
+max_stack = 1
+base_value = 520
+icon_color = Color(0.3, 0.55, 0.28, 1)
+icon_glyph = "DC"
+equip_slot = 3
+required_level = 30
+stat_bonuses = {
+&"armor": 3,
+&"holy_resist": 8,
+&"spell_power": 4
+}
+set_id = &"dawnbloom"
+armor_weight = 1
+outfit_look = &"dawnbloom_crown"
