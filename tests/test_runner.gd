@@ -140,6 +140,8 @@ func _ready() -> void:
 	await _run_async(&"test_m22_rewards")
 	_run(&"test_m23_elemental_data")
 	await _run_async(&"test_m23_elemental_ingame")
+	_run(&"test_m24_self_check")
+	await _run_async(&"test_m24_creative")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5184,7 +5186,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.31"), "version 0.31 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.32"), "version 0.32 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -8055,3 +8057,175 @@ func test_m23_elemental_ingame() -> void:
 	check(p.recipes.knows(&"stormcopper_plate") and p.recipes.knows(&"dawnbloom_crown"), "reading the codex teaches the armour recipes")
 	world.queue_free()
 	await _frames(5)
+
+
+# --- Milestone 24: Creative mode for testing and debugging ------------------------------
+
+func test_m24_self_check() -> void:
+	var c := SelfCheck.run()
+	check(int(c.counts.get("items", 0)) > 200 and int(c.counts.get("monsters", 0)) >= 30, "the check reads %d items, %d monsters" % [
+		c.counts.get("items", 0), c.counts.get("monsters", 0)])
+	for e in c.errors:
+		print("    self check: " + e)
+	for w in c.warnings:
+		print("    note: " + w)
+	check(c.ok(), "the game data has no broken links (%d problems)" % c.errors.size())
+	check(c.report().begins_with("Checked "), "the report starts with the counts")
+
+
+func test_m24_creative() -> void:
+	var world: World = await _boot_class(&"barbarian")
+	var p := world.player
+	_clear_enemies(world)
+	var panel := world.hud.creative
+	check(panel._tabs.get_tab_count() == 6, "six tabs: Player, Items, Monsters, World, Dungeons, Debug")
+	panel.set_creative(true)
+	check(p.creative, "creative mode on")
+	# Player tab.
+	var rec := p.recipes.known.size()
+	panel._learn_recipes()
+	check(p.recipes.known.size() == RecipeBook.all().size() and p.recipes.known.size() > rec, "learn every recipe")
+	var c0 := p.coins
+	panel._coins()
+	check(p.coins == c0 + 1000, "+1000 coins")
+	# Free crafting: no materials, no station.
+	var r := RecipeBook.get_recipe(&"sunflare_helm")
+	check(r != null and Crafting.check(p, r, {&"hand": true}) == "", "creative crafts anything anywhere")
+	var before := p.inventory.count_of(&"sunflare_helm")
+	Crafting.craft(p, r, {&"hand": true})
+	var made := 0
+	for q in 3:
+		made += p.inventory.count_of(ItemQuality.with_quality(&"sunflare_helm", q))
+	check(made > before, "and it costs nothing")
+	# Free building.
+	var wall := BuildingManager.get_piece_data(&"stone_wall")
+	if wall == null:
+		wall = BuildingManager.get_piece_data(&"wood_wall")
+	var held := {}
+	for it in wall.cost:
+		held[it] = p.inventory.count_of(it)
+	var piece := _place_near(world, wall.id, 2, true)
+	var same := true
+	for it in wall.cost:
+		same = same and p.inventory.count_of(it) == held[it]
+	check(piece != null and same, "building is free in creative mode (a %s, nothing taken from your bags)" % wall.display_name)
+	# Items tab.
+	panel._search.text = "sunflare"
+	panel._fill_items()
+	check(panel._item_ids.size() == 4, "search finds the 4 Sunflare pieces (%d)" % panel._item_ids.size())
+	panel._items.select(0)
+	panel._amount.value = 2
+	panel._quality.select(2)
+	var id := ItemQuality.with_quality(panel._item_ids[0], 2)
+	var n0 := p.inventory.count_of(id)
+	panel._give_selected()
+	check(p.inventory.count_of(id) == n0 + 2, "give 2 Masterwork %s" % ItemDB.get_item(id).display_name)
+	panel._search.text = ""
+	panel._fill_items()
+	check(panel._item_ids.size() > 200, "the full list has every item (%d)" % panel._item_ids.size())
+	for i in panel._set_pick.item_count:
+		if panel._set_pick.get_item_metadata(i) == &"stoneheart":
+			panel._set_pick.select(i)
+	panel._give_set(true)
+	await _frames(2)
+	check(int(p.equipment.set_counts().get(&"stoneheart", 0)) == 4, "wear the whole Stoneheart set at once")
+	# Monsters tab: every monster spawns.
+	var bad: Array = []
+	world.spawner.max_active = 200
+	for mid in panel._monster_ids:
+		panel._spawn(mid, &"normal", 1)
+		await _frames(1)
+		if panel._near_enemies().filter(func(e: Enemy) -> bool: return e.data and e.data.id == mid).is_empty():
+			bad.append(mid)
+		panel._clear()
+		await _frames(1)
+	check(bad.is_empty(), "every one of the %d monsters can be spawned %s" % [panel._monster_ids.size(), bad])
+	panel._spawn(&"tusker_grunt", &"elite", 3)
+	await _frames(3)
+	var near := panel._near_enemies()
+	check(near.size() == 3 and near.all(func(e: Enemy) -> bool: return (e as Monster).is_elite()), "3 elite Tusker grunts")
+	panel._freeze.button_pressed = true
+	check(Enemy.creative_freeze, "freeze enemies")
+	var pos0 := near[0].global_position
+	await _frames(30)
+	check(near[0].global_position.distance_to(pos0) < 0.05, "frozen enemies stand still")
+	panel._freeze.button_pressed = false
+	var xp0 := p.character.total_xp
+	panel._kill_near()
+	await _frames(2)
+	check(panel._near_enemies().is_empty() and p.character.total_xp > xp0, "kill enemies near you: they die and give XP")
+	# World tab.
+	panel._time(12.0)
+	check(absf(world.day_night.hour - 12.0) < 0.05, "set the time to noon")
+	panel._time(0.0)
+	check(world.day_night.hour < 0.05 or world.day_night.hour > 23.95, "and to midnight")
+	panel._weather(2)
+	check(world.weather.kind == 2, "force rain")
+	panel._weather(-1)
+	check(world.weather.forced_kind == -1, "weather back to natural")
+	panel._temp(-10.0)
+	check(is_equal_approx(world.debug_temperature_offset, -10.0), "colder air")
+	panel._temp(0.0, true)
+	var start := p.global_position
+	panel._go_ahead()
+	check(not world.is_ready, "teleport starts loading")
+	await _wait_ready_after_teleport(world)
+	await _frames(5)
+	var moved := Vector2(p.global_position.x - start.x, p.global_position.z - start.z).length()
+	check(world.is_ready and absf(moved - 500.0) < 2.0, "teleported 500 m ahead (%.0f m)" % moved)
+	var gy := world.get_ground_height(p.global_position)
+	check(world.is_deep_water(p.global_position) or absf(p.global_position.y - gy) < 1.5,
+		"and landed on the ground (y %.1f, ground %.1f)" % [p.global_position.y, gy])
+	# Dungeons tab.
+	panel._theme.select(2)
+	panel._rank.select(3)
+	panel._enter_test_dungeon()
+	check(world.dungeon != null and world.dungeon.poi.rank == 3 and world.dungeon.poi.theme == 2, "enter a rank B Thornwild Grotto")
+	if world.dungeon:
+		await _frames(5)
+		var floors := world.dungeon.plan.floor_count
+		panel._kill_floor()
+		await _frames(5)
+		check(world.dungeon.alive_count() == 0, "kill the whole floor")
+		panel._go_stairs()
+		await _frames(2)
+		check(world.dungeon.plan.room_at(world.dungeon.to_local(p.global_position)) == world.dungeon.plan.end_room, "jump to the last room")
+		if floors > 1:
+			panel._next_floor()
+			await _frames(5)
+			check(world.dungeon.floor_index == 1, "skip to floor 2")
+		panel._leave_dungeon()
+		await _wait_ready_after_teleport(world)
+		await _frames(5)
+		check(world.dungeon == null and world.is_ready, "leave the dungeon")
+	world.exploration.state["dungeon:creative_test"] = 1.0
+	panel._reset_dungeons()
+	check(not world.exploration.state.has("dungeon:creative_test"), "reset dungeon cooldowns")
+	# Debug tab.
+	panel._self_check()
+	check(panel._report.text.begins_with("Checked "), "check the game from the panel")
+	check(FileAccess.file_exists(SelfCheck.REPORT_PATH), "the report is saved")
+	panel._perf()
+	check("FPS" in panel._report.text and "Pixel art" in panel._report.text, "performance snapshot")
+	panel._log_errors()
+	check(panel._report.text != "", "log errors shows something")
+	panel._toggle_overlay()
+	world.hud._update_debug()
+	check(world.hud._debug.visible and "CREATIVE" in world.hud._debug.text, "the stats overlay shows creative mode")
+	world.hud.toggle_debug_overlay()
+	# Typing in the item search doesn't walk the hero.
+	panel.toggle()
+	panel._tabs.current_tab = 1
+	await _frames(2)
+	panel._search.grab_focus()
+	check(world.hud.is_typing(), "typing in the search box blocks walking")
+	panel.toggle()
+	check(not world.hud.is_typing(), "closing the panel gives the keys back")
+	# A Creative world turns creative mode on and is saved as such.
+	GameState.creative_world = true
+	check(bool(GameState.to_dict().get("creative", false)), "creative worlds are saved as creative")
+	GameState.from_dict({"world_seed": str(GameState.world_seed)})
+	check(not GameState.creative_world, "old saves are normal worlds")
+	panel.set_creative(false)
+	Enemy.creative_freeze = false
+	Player.creative_used = false

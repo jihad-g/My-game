@@ -111,6 +111,8 @@ func transform_for(data: BuildPieceData, cell: Vector2i, slot: String, rot: int)
 
 ## "" if the piece can be placed there, otherwise why not.
 func check_place(data: BuildPieceData, cell: Vector2i, slot: String, player: Player, pay: bool = true) -> String:
+	if player and player.creative:
+		pay = false  # Creative mode (Milestone 24): building is free
 	if pieces.has(key(cell, slot, world.layer)):
 		return "Something is already built here"
 	var center := Vector3(cell.x + 0.5, 0, cell.y + 0.5)
@@ -119,7 +121,7 @@ func check_place(data: BuildPieceData, cell: Vector2i, slot: String, player: Pla
 		var flat := Vector2(center.x - player.global_position.x, center.z - player.global_position.z)
 		if flat.length() > 9.0:
 			return "Too far away"
-		if player.character.level < data.required_level:
+		if player.character.level < data.required_level and not player.creative:
 			return "Requires level %d" % data.required_level
 		# Don't wall yourself in: solid pieces can't overlap the player.
 		if data.blocks_movement and slot != "roof" and slot != "floor" and flat.length() < 0.7:
@@ -185,6 +187,8 @@ func _roof_supported(cell: Vector2i) -> bool:
 func place(data: BuildPieceData, cell: Vector2i, slot: String, rot: int, player: Player, pay: bool = true) -> BuildPiece:
 	if check_place(data, cell, slot, player, pay) != "":
 		return null
+	if player and player.creative:
+		pay = false
 	if pay and player:
 		for item in data.cost:
 			player.inventory.remove_item(item, int(data.cost[item]))

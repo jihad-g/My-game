@@ -1478,6 +1478,9 @@ func _physics_process(delta: float) -> void:
 	if net_puppet:
 		super._physics_process(delta)  # a guest's copy only follows the host
 		return
+	if creative_freeze and not is_dead:
+		velocity = Vector3.ZERO
+		return  # Creative mode: frozen in place, no thinking, no attacks
 	if ai == AI.DORMANT and not is_dead:
 		_apply_gravity(delta)
 		move_and_slide()

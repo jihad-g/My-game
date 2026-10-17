@@ -939,7 +939,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		guide.toggle()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed(&"toggle_debug"):
-		_debug.visible = not _debug.visible
+		toggle_debug_overlay()
 
 
 func _toggle_inventory() -> void:
@@ -1135,6 +1135,20 @@ func _update_status_chips() -> void:
 		(chip.get_child(0) as Label).text = "%s%s %ds" % [StatusEffects.display_name(id), " x%d" % st if st > 1 else "", ceili(float(e.time))]
 
 
+## True while a text box has the keyboard (chat, Creative mode's item search):
+## WASD types letters instead of walking.
+func is_typing() -> bool:
+	if mp_hud.is_typing():
+		return true
+	var f := get_viewport().gui_get_focus_owner()
+	return f is LineEdit and (f as LineEdit).editable and f.is_visible_in_tree()
+
+
+## The F3 stats overlay (also a button in Creative mode's Debug tab).
+func toggle_debug_overlay() -> void:
+	_debug.visible = not _debug.visible
+
+
 func _update_debug() -> void:
 	var p := player.global_position
 	var lines := PackedStringArray()
@@ -1164,6 +1178,17 @@ func _update_debug() -> void:
 			world.current_biome.id if world.current_biome else "-"])
 		lines.append("Climate T %.2f M %.2f (base %.1f°C ±%.1f)" % [world.generator.temperature01(p.x, p.z),
 			world.generator.moisture01(p.x, p.z), climate.x, climate.y])
+		# Milestone 24: more for testing.
+		lines.append("Frame %.1f ms · memory %.0f MB · nodes %d · pixel pages %d (%d meshes)" % [
+			Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0,
+			Performance.get_monitor(Performance.OBJECT_NODE_COUNT), PixelAuto.page_count(), PixelAuto.cached_count()])
+		lines.append("%s, day %d · weather %s%s%s" % [world.day_night.time_string(), world.day_night.day,
+			world.weather.kind_name() if world.weather else "-", " · CREATIVE" if player.creative else "",
+			" · enemies frozen" if Enemy.creative_freeze else ""])
+		if world.dungeon:
+			var d := world.dungeon
+			lines.append("Dungeon %s rank %s · floor %d/%d · %d monsters left" % [d.poi.title(), d.poi.rank_letter(),
+				d.floor_index + 1, d.plan.floor_count, d.alive_count()])
 	_debug.text = "\n".join(lines)
 
 

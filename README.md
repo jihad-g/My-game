@@ -5,7 +5,11 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.31.0 — Elemental Armour**. Eight new armour sets (fire, arcane, frost, poison, holy, stone,
+> Status: **v0.32.0 — Creative Mode**. Tick **Creative world** on the main menu (or press ` in any world) for a
+> full test and debug toolbox: every item, every monster, time, weather, teleport, test dungeons of any rank, free
+> building and crafting, and **Check the game**, which scans all the game data for broken links.
+>
+> Before that, **v0.31.0 — Elemental Armour**. Eight new armour sets (fire, arcane, frost, poison, holy, stone,
 > lightning and brass) with glowing pixel looks, elemental resistances and damage bonuses. Find them in B-rank
 > and higher dungeons, or craft them with Delver's Marks after reading the Elemental Armoury codex.
 >

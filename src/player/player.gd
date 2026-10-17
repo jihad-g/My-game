@@ -461,8 +461,8 @@ func set_lantern(on: bool) -> void:
 
 func _get_move_input() -> Vector3:
 	var raw := Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_back")
-	if World.instance and World.instance.hud and World.instance.hud.mp_hud.is_typing():
-		raw = Vector2.ZERO  # typing in the chat
+	if World.instance and World.instance.hud and World.instance.hud.is_typing():
+		raw = Vector2.ZERO  # typing in the chat or a search box
 	if raw == Vector2.ZERO or camera_rig == null:
 		return Vector3(raw.x, 0, raw.y)
 	var dir := camera_rig.get_right_flat() * raw.x - camera_rig.get_forward_flat() * raw.y

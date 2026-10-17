@@ -306,6 +306,9 @@ func _on_area_ready() -> void:
 		_first_ready = false
 		if not Net.dedicated:
 			quests.begin_story()
+		if GameState.creative_world and not Net.is_online():
+			player.set_creative(true)  # Creative world (Milestone 24)
+			Events.toast.emit("Creative world - press ` for the Creative tools", Color(0.55, 1.0, 0.75))
 		if _new_world:
 			Events.toast.emit("A new world awaits. Seed %d" % GameState.world_seed, Color(0.8, 1.0, 0.7))
 			if SaveManager.is_persistent():
@@ -423,6 +426,33 @@ func travel_to_layer(target_layer: int, at: Vector3) -> void:
 	blueprints.refresh_layer()
 	events.refresh_craters()
 	layer_changed.emit(layer)
+
+
+## Creative mode (Milestone 24): moves the player to `to` (x, z; the height is
+## found once the ground there has loaded). Surface only; leaves a dungeon first.
+func teleport_to(to: Vector3) -> bool:
+	if not is_ready or Net.is_online():
+		return false
+	if dungeon:
+		exit_dungeon(to, true)
+		return true
+	if layer != TerrainGenerator.Layer.SURFACE:
+		return false
+	is_ready = false
+	player.frozen = true
+	player.set_lock_target(null)
+	spawner.despawn_all()
+	for e in get_tree().get_nodes_in_group(&"enemies"):
+		if e is Enemy and e.visible:
+			NodePool.release_or_free(e)
+	pickup_pool.release_all()
+	to.y = get_ground_height(to) + 0.3
+	player.global_position = to
+	player.velocity = Vector3.ZERO
+	camera_rig.snap_to_target()
+	chunk_manager.force_refresh()
+	hud.set_loading(true, "Travelling...")
+	return true
 
 
 # --- Dungeons (Milestone 6) --------------------------------------------------------------

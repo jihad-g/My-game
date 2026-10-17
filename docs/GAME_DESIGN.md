@@ -1167,6 +1167,10 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 24 — Creative Mode (v0.32.0).** A Creative world option and a six-tab Creative panel (player,
+items, monsters, world, dungeons, debug) so every system can be tested by hand, plus a data self-check that found
+and fixed a broken coin drop.
+
 **Done: Milestone 23 — Elemental Armour (v0.31.0).** Eight 4-piece sets, one per element (plus Brassworks for
 all), with elemental resistance/damage stats; they come from B+ dungeons and the Elemental Armoury codex, and
 give Delver's Marks a use.

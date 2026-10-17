@@ -20,6 +20,8 @@ var regions := RegionStore.new()
 var discovered_biomes: Dictionary = {}
 ## Place key (String, e.g. "cave:x,z") -> world_time of first discovery.
 var discovered_places: Dictionary = {}
+## Milestone 24: a Creative world starts every session with Creative mode on.
+var creative_world := false
 
 
 func _ready() -> void:
@@ -114,6 +116,7 @@ func to_dict() -> Dictionary:
 		"world_time": world_time,
 		"discovered_biomes": discovered_biomes.duplicate(),
 		"discovered_places": discovered_places.duplicate(),
+		"creative": creative_world,
 	}
 	if regions.directory == "":
 		d.merge(regions.to_inline())
@@ -131,6 +134,7 @@ func from_dict(data: Dictionary) -> void:
 	regions.import_inline(data.get("removed_props", {}), data.get("enemy_deaths", {}))
 	discovered_biomes = (data.get("discovered_biomes", {}) as Dictionary).duplicate()
 	discovered_places = (data.get("discovered_places", {}) as Dictionary).duplicate()
+	creative_world = bool(data.get("creative", false))
 
 
 ## Points the region store at a world folder ("" = memory only).
@@ -146,3 +150,4 @@ func reset(new_seed: int) -> void:
 	regions = RegionStore.new()
 	discovered_biomes.clear()
 	discovered_places.clear()
+	creative_world = false

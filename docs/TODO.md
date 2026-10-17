@@ -105,6 +105,22 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 24 — Creative Mode for testing and debugging  ✅ (v0.32.0)
+
+- [x] Creative world option on the main menu (saved with the world)
+- [x] Creative panel in 6 tabs: Player, Items, Monsters, World, Dungeons, Debug
+- [x] Every item (search, category, amount, quality), kits, give/wear any gear set
+- [x] Spawn any monster (normal, elite, dummy, 1-20), freeze enemies, kill with loot, raids of each faction, world events
+- [x] Time, weather, air temperature, teleport (town, dungeon, POI kinds, biome, 500 m, centre)
+- [x] Test dungeons of any theme and rank, kill floor, jump to last room, next floor, leave, reset cooldowns
+- [x] Free building and crafting in Creative mode
+- [x] Debug: stats overlay, "Check the game" data scan with a saved report, log errors, performance snapshot
+- [x] Fixed: `copper_coin` drop pointed at a missing item (now pays coins); typing in a search box walked the hero
+- [x] Tests `test_m24_*` run and pass (42 checks); older groups re-run and pass
+- [ ] NOT IMPLEMENTED: Creative mode in co-op (single player only, on purpose for now)
+- [ ] NOT IMPLEMENTED: fly / no-clip, place any building piece without unlocking it, collision shape view
+- [ ] NOT IMPLEMENTED: Creative changes are not undone when you turn it off (levels, items and recipes stay) - use a Creative world
+
 ## Milestone 23 — Elemental Armour  ✅ (v0.31.0)
 
 - [x] 8 elemental sets × 4 pieces with their own pixel looks (glowing crystals, lamps, flames, spirit light)

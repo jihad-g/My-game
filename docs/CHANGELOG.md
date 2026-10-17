@@ -2,6 +2,37 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.32.0] — Milestone 24: Creative Mode for testing and debugging
+
+### Added
+- **Creative world**: a new checkbox on the main menu ("Creative world"). A Creative world starts every session with
+  Creative mode on and shows `[Creative]` in the world list. Saved in the world (`game_state.creative`).
+- **The Creative panel (` key) has six tabs now**:
+  - **Player**: Creative mode, fast move, level 10 / 30 / 64 / 100, learn every spell, learn every recipe, heal,
+    reset cooldowns, +1000 coins.
+  - **Items**: every item in the game with its icon, a search box, a category filter, amount and quality
+    (Normal, Fine, Masterwork); kits (all weapon types, 20 of every material, 5 of every food and potion);
+    give or wear any gear set at once.
+  - **Monsters**: spawn any of the 31 monsters (normal, elite or training dummy, 1-20 at a time); freeze every
+    enemy; clear enemies or kill them with loot; start a raid by bandits, Tuskers or the undead; start or stop each
+    rare world event.
+  - **World**: time of day, +1 day, any weather (or natural), air temperature, teleport to the nearest town,
+    dungeon, ruins, wizard tower, temple, hidden grove, any biome, 500 m ahead or the world centre; save now.
+  - **Dungeons**: enter a test dungeon of any theme and rank where you stand, kill the whole floor (with loot),
+    jump to the last room, next floor, leave, reset dungeon cooldowns.
+  - **Debug**: the stats overlay (F3), **Check the game** (scans all items, recipes, monsters, spawns, loot tables
+    and gear sets for broken links and saves a report to `user://logs/self_check.txt`), errors and warnings from
+    this session's log, and a performance snapshot (FPS, frame time, draw calls, memory, nodes, pixel art pages).
+- In Creative mode **building and crafting are free**: no materials, no station, no skill or level needed.
+- The F3 overlay shows frame time, memory, nodes, pixel art pages, time and weather, Creative state, and dungeon floor.
+- `SelfCheck` (`src/core/self_check.gd`), `World.teleport_to()`, `Enemy.creative_freeze`, `HUD.is_typing()`.
+- Tests `test_m24_self_check` and `test_m24_creative`; screenshot mode `--only=creative`.
+
+### Fixed
+- **Bandit Recruits and Cultist Acolytes dropped a "copper_coin" item that doesn't exist** (found by the new
+  self-check). The drop now pays 3 coins per coin straight into your purse.
+- Typing in a text box (the item search) no longer walks your hero (only the chat box was handled before).
+
 ## [0.31.0] — Milestone 23: Elemental Armour
 
 ### Added

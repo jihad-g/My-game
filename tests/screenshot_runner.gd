@@ -22,6 +22,10 @@ func _ready() -> void:
 		await _pixel_pilot_showcase()
 		get_tree().quit()
 		return
+	if "--only=creative" in OS.get_cmdline_user_args():
+		await _creative_showcase()
+		get_tree().quit()
+		return
 	if "--only=elements" in OS.get_cmdline_user_args():
 		await _elements_showcase()
 		get_tree().quit()
@@ -2173,3 +2177,32 @@ func _elements_showcase() -> void:
 		for m in models:
 			m.queue_free()
 		await _wait(3)
+
+
+## Milestone 24: the Creative panel's tabs.
+func _creative_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 11.0
+	world.day_night.advance_hours(0.0)
+	_clear_monsters(world)
+	var panel := world.hud.creative
+	panel.set_creative(true)
+	panel.toggle()
+	panel._search.text = "sun"
+	panel._fill_items()
+	for tab in [0, 1, 2, 3, 4, 5]:
+		panel._tabs.current_tab = tab
+		if tab == 2:
+			panel._monsters.select(panel._monster_ids.find(&"tusker_chief"))
+		if tab == 5:
+			panel._self_check()
+		await _wait(8)
+		await _shot("creative_%d" % (tab + 1))
+	p.creative = false

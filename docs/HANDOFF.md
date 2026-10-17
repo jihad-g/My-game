@@ -3,12 +3,14 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.31.0** (Milestone 23: Elemental Armour). The Windows build is `releases/Shardlands-v0.31.0-windows.zip`.
+- Current version: **v0.32.0** (Milestone 24: Creative Mode for testing and debugging). The Windows build is `releases/Shardlands-v0.32.0-windows.zip`.
 - The owner wants the art to look like Blockbench-style pixel art (16 px per metre, hand-placed pixels). `src/art/pixel_art.gd` does this; skeletons and the Tuskers use it. Next art steps: weapons/shields, other monsters, player classes, villagers. Use our own designs in that style, not pixel copies of other artists' models.
 - The owner asked to do the 10 next steps one by one: 1 M18d (done), 2 M19 co-op combat (done), 3 monster pathfinding, 4 weather + seasons, 5 waystones/horses/boats, 6 multi-storey building, 7 map fog of war + dungeon keys, 8 monster animations + capes/hair, 9 performance + testing pass, 10 release polish.
 - Read next: `docs/TODO.md` (done and NOT IMPLEMENTED), `docs/CHANGELOG.md`, `docs/M18_PLAN.md` (current milestone) and `docs/ART_BIBLE.md` (art rules).
 - Keys changed in v0.24.0: **Space = jump**, **Left Alt = dodge roll**.
-- **Creative mode** for testing in the game: the ` key (under Esc).
+- **Creative mode** for testing in the game: the ` key (under Esc), or tick "Creative world" when creating a world.
+  Six tabs (Player, Items, Monsters, World, Dungeons, Debug). Debug → "Check the game" runs `SelfCheck`
+  (`src/core/self_check.gd`): run it after adding items, recipes, monsters or loot to catch broken ids.
 
 ## How to work with the owner
 - Act as a technical co-founder. Write complete, working code, and every milestone must run.
@@ -108,7 +110,7 @@
   - `src/fx/fx.gd` (`FX`): pooled soft particles, element looks (`impact`, `cast_glow`, `ultimate`), `lightning`,
     `sky_beam`, `ground_mark`, `light_flash`; `VFX.burst`/`bolt`, `Projectile`, `AbilityZone` use it;
   - `PlayerAbilities._cast_fx`; `Enemy._set_ice_shell`;
-  - Creative mode: `src/ui/creative_panel.gd`, `Player.creative`, `Player.creative_used` (blocks achievements);
+  - Creative mode: `src/ui/creative_panel.gd`, `Player.creative`, `Player.creative_used` (blocks achievements); Milestone 24 added `GameState.creative_world`, `World.teleport_to()`, `Enemy.creative_freeze`, free crafting (`Crafting.check`) and building (`BuildingManager.check_place`) when `player.creative`.
   - tests `test_m18a_*`, `test_m18b_*` and `test_m18c_*` were run with the owner's permission and pass (v0.23.1).
 
 - **v0.24.0:** `Player._try_jump` (coyote time, buffer), `HumanoidModel.play_jump`, `AnimLibrary.jump`;

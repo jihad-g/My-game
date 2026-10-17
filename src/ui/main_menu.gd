@@ -13,6 +13,8 @@ static var _cmdline_handled := false
 
 var _name_edit := LineEdit.new()
 var _seed_edit := LineEdit.new()
+## Milestone 24: start the new world in Creative mode (for testing).
+var _creative_check := CheckBox.new()
 var _list := VBoxContainer.new()
 var _status := Label.new()
 var _confirm := ConfirmationDialog.new()
@@ -145,6 +147,9 @@ func _build() -> void:
 	picker.selected_class = _selected_class
 	picker.changed.connect(func() -> void: _selected_class = picker.selected_class)
 	nv.add_child(picker)
+	_creative_check.text = "Creative world (for testing: can't be hurt, free building and crafting)"
+	_creative_check.focus_mode = Control.FOCUS_NONE
+	nv.add_child(_creative_check)
 	var create := Button.new()
 	create.text = "Create & play"
 	create.pressed.connect(_on_create)
@@ -153,6 +158,7 @@ func _build() -> void:
 	quick.text = "Quick play (temporary, not saved)"
 	quick.pressed.connect(func() -> void:
 		SaveManager.start_transient(_read_seed(), _selected_class, picker.look)
+		GameState.creative_world = _creative_check.button_pressed
 		_start_game())
 	nv.add_child(quick)
 	nv.add_child(_small("Same seed = same world, on any machine."))
@@ -302,6 +308,9 @@ func _on_create() -> void:
 	if world_name == "":
 		world_name = "World %d" % (SaveManager.list_worlds().size() + 1)
 	SaveManager.create_world(world_name, _read_seed(), _selected_class, picker.look)
+	GameState.creative_world = _creative_check.button_pressed
+	if GameState.creative_world:
+		SaveManager.current_meta["creative"] = true
 	_start_game()
 
 
@@ -322,7 +331,7 @@ func _refresh_list() -> void:
 		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		h.add_child(info)
 		var n := Label.new()
-		n.text = str(meta.get("name", meta.id))
+		n.text = str(meta.get("name", meta.id)) + ("  [Creative]" if bool(meta.get("creative", false)) else "")
 		n.add_theme_font_size_override(&"font_size", 18)
 		info.add_child(n)
 		var played := int(float(meta.get("play_time", 0)) / 60.0)

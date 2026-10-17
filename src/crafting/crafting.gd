@@ -14,6 +14,8 @@ static func stations_near(tree: SceneTree, pos: Vector3, radius: float = 4.0) ->
 
 ## "" if the player can craft `recipe` now, otherwise the reason.
 static func check(player: Player, recipe: RecipeData, stations: Dictionary, times: int = 1) -> String:
+	if player.creative:
+		return ""  # Creative mode (Milestone 24): every recipe, anywhere, for free
 	if not player.recipes.knows(recipe.id):
 		return "Unknown recipe" + (" (%s)" % recipe.source_hint if recipe.source_hint != "" else "")
 	var crafting := player.character.skill_level(Skill.CRAFTING)
@@ -46,7 +48,7 @@ static func craft(player: Player, recipe: RecipeData, stations: Dictionary, time
 	for i in times:
 		if check(player, recipe, stations, 1) != "":
 			break
-		var cost := recipe.cost_at(player.character.skill_level(Skill.CRAFTING))
+		var cost := {} if player.creative else recipe.cost_at(player.character.skill_level(Skill.CRAFTING))
 		for item in cost:
 			player.inventory.remove_item(item, int(cost[item]))
 		var count := recipe.result_count

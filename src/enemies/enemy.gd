@@ -13,6 +13,8 @@ signal enemy_died(enemy: Enemy)
 @export var max_step_height: float = 0.6
 
 ## Spawn-slot key used for persistence of kills ("" for debug spawns).
+## Creative mode (Milestone 24): every enemy stands still while this is on.
+static var creative_freeze := false
 var spawn_key: String = ""
 var home_position := Vector3.ZERO
 var is_dead: bool = false
@@ -221,6 +223,10 @@ func _physics_process(delta: float) -> void:
 				VFX.burst(get_parent(), global_position + Vector3(0, 0.6, 0), 0.9, Color(0.85, 0.82, 0.78, 0.5))
 		if _death_time > 2.5:
 			NodePool.release_or_free(self)
+		return
+	# Creative mode (Milestone 24): "Freeze enemies" holds every enemy in place.
+	if creative_freeze:
+		velocity = Vector3.ZERO
 		return
 	# Hit-stop (Milestone 18b): hold still for a moment.
 	if _freeze_left > 0.0:
@@ -563,8 +569,27 @@ func _drop_loot() -> void:
 	for entry in data.loot:
 		if entry is LootEntry:
 			var n: int = entry.roll(_rng)
-			if n > 0:
+			if n <= 0:
+				continue
+			if entry.item_id == COIN_DROP:
+				_drop_coins(n * COIN_DROP_VALUE)
+			else:
 				World.instance.spawn_pickup(entry.item_id, n, global_position + Vector3(0, 1.0, 0))
+
+
+## Milestone 24 fix: a "copper_coin" loot entry pays coins straight into the
+## purse (there is no coin item; the drop used to make a broken pickup).
+const COIN_DROP := &"copper_coin"
+const COIN_DROP_VALUE := 3
+
+
+func _drop_coins(amount: int) -> void:
+	var p := World.instance.player
+	if p == null or Net.is_client() or p.global_position.distance_to(global_position) > 60.0:
+		return
+	p.coins += amount
+	Events.coins_changed.emit(p.coins)
+	Events.damage_dealt.emit(global_position + Vector3(0, 2.2, 0), 0.0, false, true, "+%d coins" % amount)
 
 
 func _on_target_changed(t: Node) -> void:
