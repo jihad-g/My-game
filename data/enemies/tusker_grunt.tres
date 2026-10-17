@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/tusker_mace.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"tusker_tusk"
+min_count = 1
+max_count = 2
+chance = 0.6
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"leather"
+min_count = 1
+max_count = 2
+chance = 0.35
+
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"gold_nugget"
+min_count = 1
+max_count = 1
+chance = 0.05
+
+[resource]
+script = ExtResource("1_md")
+id = &"tusker_grunt"
+display_name = "Tusker Grunt"
+category = 2
+level = 6
+max_health = 95.0
+walk_speed = 2.3
+run_speed = 4.3
+turn_speed = 9.0
+aggro_range = 14.0
+leash_range = 34.0
+max_poise = 35.0
+damage_multipliers = {}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2")]
+xp_reward = 28
+respawn_time = 600.0
+style = 0
+look = &"tusker"
+model_scale = 1.0
+tint = Color(0.75, 0.45, 0.35, 1)
+accent = Color(0.95, 0.72, 0.3, 1)
+melee = ExtResource("2_melee")
+dodge_chance = 0.15
+pack_alert = 16.0
+raider = true
+siege_mult = 1.5

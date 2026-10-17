@@ -5,7 +5,11 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.28.0 — Milestone 19: Together in Danger**. Real co-op combat: monsters, bosses, raids and events
+> Status: **v0.29.0 — Milestone 20: The Tuskers**. Monsters can now be drawn pixel by pixel (16 pixels per
+> metre, see-through and glowing pixels). Skeletons are redrawn, and a new boar-folk faction, the Tuskers (grunts,
+> brutes and their chief with a skull banner), roams the wilds and raids towns and bases.
+>
+> Before that, **v0.28.0 — Milestone 19: Together in Danger**. Real co-op combat: monsters, bosses, raids and events
 > run while friends play together, everyone fights the same monsters, kills share XP, and healing, war cries and
 > cleanses reach friends nearby.
 >

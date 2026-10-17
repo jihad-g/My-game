@@ -132,6 +132,8 @@ func _ready() -> void:
 	await _run_async(&"test_m18d_streaming")
 	_run(&"test_m19_rules")
 	await _run_async(&"test_m19_coop")
+	_run(&"test_m20_tusker_data")
+	await _run_async(&"test_m20_tuskers_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5176,7 +5178,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.28"), "version 0.28 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.29"), "version 0.29 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -7627,3 +7629,123 @@ func test_m19_coop() -> void:
 	Net.leave()
 	world.queue_free()
 	await get_tree().process_frame
+
+
+# --- Milestone 20: the Tuskers (pixel-art boar-folk warband) ---------------------
+
+func test_m20_tusker_data() -> void:
+	for id in [&"tusker_grunt", &"tusker_brute", &"tusker_chief"]:
+		var d := load("res://data/enemies/%s.tres" % id) as MonsterData
+		check(d != null and d.id == id and d.melee != null and d.raider, "%s loads with an attack" % id)
+		check(d and StringName("mon_" + String(d.look)) in HumanoidModel.PIXEL_BODIES, "%s is drawn pixel by pixel" % id)
+		var tusk := false
+		for l in d.loot:
+			tusk = tusk or (l as LootEntry).item_id == &"tusker_tusk"
+		check(tusk, "%s drops tusks" % id)
+	var chief := load("res://data/enemies/tusker_chief.tres") as MonsterData
+	check(chief.style == MonsterData.Style.BOSS and chief.summon and chief.summon.id == &"tusker_grunt" and chief.boss_title != "",
+		"the chief is a boss who calls grunts")
+	check(ItemDB.get_item(&"tusker_tusk") != null and ItemDB.get_item(&"war_banner_scrap") != null, "the new loot items exist")
+	var forest := []
+	for r in WildSpawns.rules_for(&"whispering_forest"):
+		forest.append((r as EnemySpawnRule).enemy_data.id)
+	var desert := []
+	for r in WildSpawns.rules_for(&"sunscorch_desert"):
+		desert.append((r as EnemySpawnRule).enemy_data.id)
+	check(forest.has(&"tusker_grunt") and forest.has(&"tusker_brute") and desert.has(&"tusker_brute"), "Tusker war parties roam the wilds")
+	check(not WildSpawns.all_ids().has(&"tusker_chief"), "the chief only comes with a raid")
+	for id in RaidManager.TUSKERS:
+		check(ResourceLoader.exists("res://data/enemies/%s.tres" % id), "raid pool: %s" % id)
+	check(RaidManager.FACTION_NAMES.has(&"tuskers") and RaidManager.TUSKER_CHANCE > 0.0, "Tuskers are a raid faction")
+	check(LoreBook.PAGES.has(&"tuskers") and LoreBook.FINDABLE.has(&"tuskers") and LoreBook.BOSS_PAGES.get(&"tusker_chief") == &"tuskers",
+		"the Tuskers have a lore page")
+	# The pixel art: one atlas, exact pixels, holes and glow are possible.
+	var built := PixelTusker.make(&"tusker_chief")
+	var mat := built["material"] as StandardMaterial3D
+	check(built["parts"].size() > 25 and mat.texture_filter == BaseMaterial3D.TEXTURE_FILTER_NEAREST
+		and mat.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR, "the chief is %d pixel-painted parts" % built["parts"].size())
+	var atlas := built["atlas"] as Image
+	var clear := 0
+	for y in atlas.get_height():
+		for x in atlas.get_width():
+			clear += 1 if atlas.get_pixel(x, y).a < 0.5 else 0
+	check(atlas.get_width() == 128 and clear > 0, "the atlas has see-through pixels (ragged cloth)")
+
+
+func test_m20_tuskers_ingame() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 60
+	# A grunt in the world: pixel body on the normal rig, it fights and dies.
+	var pos := p.global_position + Vector3(4, 0, 0)
+	pos.y = world.get_ground_height(pos) + 0.3
+	var g := world.spawner.spawn_enemy(load(Monster.MONSTER_SCENE_PATH), pos, "", load("res://data/enemies/tusker_grunt.tres")) as Monster
+	check(g != null, "a Tusker Grunt spawns")
+	await _frames(10)
+	var rig: HumanoidModel = null
+	for ch in g.get_children():
+		if ch is MonsterModel:
+			rig = (ch as MonsterModel).rig as HumanoidModel
+	check(rig != null and rig._parts.size() > 20 and rig._leg_l != null and rig._fore_r != null, "its pixel parts hang on the normal skeleton")
+	var tex_ok := true
+	for part in rig._parts:
+		var m := (part as MeshInstance3D).mesh
+		tex_ok = tex_ok and m.surface_get_material(0) is StandardMaterial3D
+	check(tex_ok, "every part uses the pixel atlas")
+	var xp0 := p.character.xp
+	_kill(g, world)
+	await _frames(10)
+	check(g.is_dead and (p.character.xp > xp0 or p.character.level > 1), "killing a grunt gives XP")
+	# A Tusker raid on a base, with a brute in the first wave from tier 1.
+	var b := _build_base(world)
+	var base := world.raids.find_player_base()
+	check(not base.is_empty(), "a base to raid (%d pieces)" % b.pieces.size())
+	var toasts := []
+	var on_toast := func(t: String, _c: Color) -> void: toasts.append(t)
+	Events.toast.connect(on_toast)
+	world.raids.start_base_raid(base, &"tuskers")
+	check(toasts.size() > 0 and String(toasts[-1]).contains("Tusker"), "the warning names the Tuskers")
+	world.raids.raid.tier = 2
+	world.raids.raid.t = 0.1
+	await _frames(20)
+	var raiders := world.raids.alive_raiders()
+	var all_tuskers := raiders.size() >= 3
+	var brute := false
+	for m in raiders:
+		all_tuskers = all_tuskers and String(m.mdata.id).begins_with("tusker_")
+		brute = brute or m.mdata.id == &"tusker_brute"
+	check(all_tuskers and brute, "wave 1 is %d Tuskers led by a brute" % raiders.size())
+	world.raids._finish(true)
+	Events.toast.disconnect(on_toast)
+	await _frames(5)
+	# Town raids remember who is coming, also across a save.
+	var far: SettlementInfo = null
+	for o in world.generator.settlements.near(p.global_position, 3000.0):
+		if o.distance_to(p.global_position) > 400.0:
+			far = o
+			break
+	if far:
+		world.raids.announce_town_raid(far, 2.0, &"tuskers")
+		check(world.raids.pending_town.faction == &"tuskers", "a rider warns that the Tuskers march on %s" % far.name)
+		var rm := RaidManager.new()
+		rm.world = world
+		rm.from_save(world.raids.to_save())
+		check(rm.pending_town.get("faction") == &"tuskers", "the coming raid's faction is saved")
+		rm.free()
+		world.raids.pending_town = {}
+	# The chief: a boss with a banner, who calls grunts.
+	var cpos := p.global_position + Vector3(-5, 0, 3)
+	cpos.y = world.get_ground_height(cpos) + 0.3
+	var chief := world.spawner.spawn_enemy(load(Monster.MONSTER_SCENE_PATH), cpos, "", load("res://data/enemies/tusker_chief.tres")) as Monster
+	await _frames(10)
+	var crig: HumanoidModel = null
+	for ch in chief.get_children():
+		if ch is MonsterModel:
+			crig = (ch as MonsterModel).rig as HumanoidModel
+	check(crig != null and crig._parts.size() > rig._parts.size(), "the chief carries more (banner, crown, armour)")
+	_kill(chief, world)
+	await _frames(5)
+	world.queue_free()
+	await _frames(5)

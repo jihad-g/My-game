@@ -1915,8 +1915,7 @@ func _pixel_pilot_showcase() -> void:
 	await _shot("pixel_pilot_game_camera")
 
 
-## Art pass: the Tusker warband (src/art/pixel_tusker.gd) as real monsters.
-## Not in the game's spawn lists yet: the showcase makes their MonsterData.
+## Milestone 20: the Tusker warband (src/art/pixel_tusker.gd, data/enemies/tusker_*).
 func _tusker_showcase() -> void:
 	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
 	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
@@ -1935,11 +1934,10 @@ func _tusker_showcase() -> void:
 	await _teleport(world, c + Vector3(0, 0, 14))
 	_clear_monsters(world)
 	var foes: Array[Monster] = []
-	var line := [[&"tusker", 1.0, -2.1, 0.3], [&"tusker_brute", 1.3, -0.9, -0.2], [&"tusker_chief", 1.15, 0.6, -0.5],
-		[&"tusker_brute", 1.1, 1.9, -0.1], [&"tusker", 0.8, 2.9, 0.3]]
+	var line := [[&"tusker_grunt", 1.0, -2.1, 0.3], [&"tusker_brute", 1.3, -0.9, -0.2], [&"tusker_chief", 1.25, 0.6, -0.5],
+		[&"tusker_brute", 1.1, 1.9, -0.1], [&"tusker_grunt", 0.8, 2.9, 0.3]]
 	for spec in line:
-		var d := (load("res://data/enemies/skeleton_minion.tres") as MonsterData).duplicate() as MonsterData
-		d.look = spec[0]
+		var d := (load("res://data/enemies/%s.tres" % spec[0]) as MonsterData).duplicate() as MonsterData
 		d.model_scale = spec[1]
 		var pos := c + Vector3(spec[2], 0, spec[3])
 		pos.y = world.get_ground_height(pos) + 0.3

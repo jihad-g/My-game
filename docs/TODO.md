@@ -105,6 +105,19 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 20 — The Tuskers: pixel-art monsters  ✅ (v0.29.0)
+
+- [x] Pixel-art model system (`PixelArt`): exact pixel faces, one atlas, see-through and glowing pixels, rotated parts
+- [x] Skeleton Minion and Skeleton Warrior redrawn pixel by pixel on the normal rig
+- [x] Tusker faction: Grunt, Brute, Chief (boss) with pixel models, attacks, loot, lore page
+- [x] Tusker war parties in meadows, forests and desert; Tusker base and town raids led by brutes and the chief
+- [x] Tests `test_m20_*` run and pass; `m7`, `m14`, `m15`, `m16`, `m17c`, `m18a_model`, `m18b` re-run and pass
+- [ ] NOT IMPLEMENTED: Tusker war camps (a place in the world with tents, a chief and a chest)
+- [ ] NOT IMPLEMENTED: pixel art for weapons and shields held by skeletons (still the old flat boxes)
+- [ ] NOT IMPLEMENTED: pixel art for the other monsters, the player classes, outfits and villagers (next art steps)
+- [ ] NOT IMPLEMENTED: hand-made item icons for Tusker Tusk and War Banner Scrap (they use the drawn-in-code fallback icons)
+- [ ] Known limitation: Skeleton Archers and the Bone King keep the old look (only the "skeleton" look is redrawn)
+
 ## Milestone 19 — Together in Danger: real co-op combat  ✅ (v0.28.0)
 
 - [x] Monsters, bosses, raids and rare events run in co-op; the host simulates them, guests see puppets (NetCombat)

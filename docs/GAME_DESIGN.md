@@ -329,6 +329,8 @@ Each system has a short "how it works" note. Key numbers come from the code and 
   warning with a countdown (Alarm Bell adds 45 s, or ring it to start now), then 2–4 waves from one side.
   Cutthroats, archers, hexers, brutes (smash walls) and bombers (fire bombs). Strong raids are led by
   Grimtusk. Win → spoils and XP; leave → survivors loot your chests. Blood moons bring an undead raid.
+- **Tusker raids** (M20): about a third of raids are the Tuskers instead of bandits: grunts and brutes (brutes
+  smash walls), led in strong raids by their chief, Rokka Ironhide.
 - **Town raids**: a rider warns that a nearby town will be attacked. If you defend it, villagers hide,
   guards fight (they get knocked down, never killed), and you get reputation, coins and XP. If not, the
   outcome is rolled: guards hold, or the town is plundered for 2 days (prices +25%).
@@ -479,12 +481,15 @@ the fighters use their other weapons at ×0.9 (staff ×0.5); the Wizard keeps da
 | Bandit Hexer | Bandit | caster, weakens, heals | 7 | 60 | 35 | — | Raids |
 | Bandit Bomber | Bandit | ranged fire bombs, siege | 7 | 55 | 35 | — | Raids |
 | Bandit Brute | Bandit | melee, siege ×3 | 8 | 170 | 45 | — | Raids |
+| Tusker Grunt | Bandit (Tusker) | melee, gold block mace | 6 | 95 | 28 | — | Meadows, forests; Tusker raids |
+| Tusker Brute | Bandit (Tusker) | melee hook staff, heavy crush, siege ×3 | 9 | 210 | 55 | — | Forests, desert; Tusker raids |
 | Treasure Goblin | Monster | runs away | 6 | 140 | 80 | — | Treasure Goblin event |
 | **Temple Guardian** | Boss | boss | 11 | 750 | 350 | fire ×0.6 / poison immune | Temples (dormant until you reach the altar) |
 | **Bone King** | Boss | boss | 12 | 900 | 400 | fire ×1.2 / poison immune | Crypt dungeon arena |
 | **Elder Thornmaw** | Boss | boss beast | 13 | 1000 | 450 | fire ×1.3 | Thornwild Grotto dungeon arena |
 | **Arcane Colossus** | Boss | boss | 14 | 1100 | 500 | physical ×0.85 / poison immune | Arcane Sanctum dungeon arena |
 | **Grimtusk the Warlord** (`bandit_warlord`) | Boss | boss | 14 | 1100 | 550 | — | Leads strong base raids |
+| **Rokka Ironhide, Tusker Chief** (`tusker_chief`) | Boss | boss, calls grunts | 13 | 900 | 420 | — | Leads strong Tusker raids |
 | **Starborn Colossus** | Boss | world boss | 18 | 1700 | 900 | lightning ×0.8 / poison immune | Sometimes guards a meteor crater |
 
 Levels and health above are the base (rank E) values; ranks and distance scale them up.
@@ -725,7 +730,9 @@ There are **no texture, model or animation files**. Everything is built by code 
 | Starting looks | Barbarian: horned helm + padded vest + axe. Knight: plumed squire's helm + vest + buckler + sword. Wizard: wizard's hat + purple robe + staff (orb coloured by the staff). Assassin: shadow hood + gloves + boots + dagger |
 | Villager / merchant / farmer / blacksmith | Random skin, hair and shirt colours; farmer straw hat, blacksmith apron, merchant cap and apron |
 | Guard / ruler / trader | Guard helm and tabard; ruler gold crown and cape; trader hood, backpack and bedroll |
-| Skeleton Warrior / Archer | Pale bones, glowing eyes, ribs, jaw gap; sword + shield, or bow with a hood |
+| Skeleton Warrior / Minion | **Pixel art (M20)**: skull with glowing eyes and teeth, see-through ribcage, spine, iron-buckled belt, torn crimson skirt, leather boots |
+| Skeleton Archer | Pale bones, glowing eyes, ribs, jaw gap; bow with a hood (old look) |
+| Tuskers | **Pixel art (M20)**: square boar head, tusks, red war paint, black topknot, crossed straps, gold buckle and shoulder pads, torn red loincloth; brute is bigger with a hook staff; the chief wears dark armour and a gold crown and carries a skull war banner |
 | Bone King | Big skeleton with a dark red cape and an axe |
 | Grotto Cultist / Tower Warden | Hood, robe skirt, glowing sash; staff |
 | Bandits | Human with a weapon per role (sword, bow, axe, staff, bombs); brute is bigger and darker; Grimtusk has helm, horns, fur mantle and war cape |
@@ -1158,7 +1165,12 @@ Old saves keep their land exactly. Milestone 18 is complete.
 
 **Done: Milestone 19 — "Together in Danger" (v0.28.0).** Real co-op combat: the host runs every monster, guests
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
-friends within 12 m. Next: item 3 of the owner's list, monster pathfinding.
+friends within 12 m.
+
+**Done: Milestone 20 — "The Tuskers" (v0.29.0).** The owner asked for Blockbench-style pixel art. Monsters can now
+be drawn pixel by pixel (16 px per metre, see-through and glowing pixels) on the normal rig. Skeletons are redrawn,
+and a new boar-folk faction, the Tuskers (grunts, brutes, and Rokka Ironhide their chief), roams the wilds and
+raids bases and towns. Next: more pixel art (weapons, other monsters, classes), or item 3, monster pathfinding.
 
 **Done (v0.24.0): jump and the Vibrant art style**, asked for by the owner during M18. Space jumps, the dodge is
 on Left Alt, and the Vibrant style gives richer colours, glow and soft shade.

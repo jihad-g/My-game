@@ -3,6 +3,8 @@ extends RefCounted
 ## Milestone 18b: packs of 5-10 weak "fodder" enemies (Skeleton Minions, Bandit
 ## Recruits, Cultist Acolytes) for hack-and-slash fights against crowds.
 ##
+## Milestone 20: Tusker war parties roam the meadows, forests and desert.
+##
 ## Milestone 15 ("Living Wilds"): wild creatures for every surface biome, on top
 ## of the rules stored in the biome resources (the Thornback Boar). Each entry:
 ## [enemy data id, chance per chunk, group min, group max, salt].
@@ -15,10 +17,11 @@ const MONSTER_SCENE := "res://scenes/enemies/monster.tscn"
 const TABLE := {
 	&"verdant_meadow": [
 		[&"bandit_recruit", 0.02, 5, 9, 304], [&"deer", 0.05, 1, 2, 301], [&"rabbit", 0.08, 1, 2, 302], [&"bandit_thug", 0.02, 2, 3, 303],
+		[&"tusker_grunt", 0.015, 2, 3, 305],
 	],
 	&"whispering_forest": [
 		[&"bandit_recruit", 0.02, 5, 8, 315], [&"deer", 0.06, 1, 3, 311], [&"rabbit", 0.05, 1, 2, 312], [&"thorn_crawler", 0.04, 1, 2, 313],
-		[&"bandit_archer", 0.015, 1, 2, 314],
+		[&"bandit_archer", 0.015, 1, 2, 314], [&"tusker_grunt", 0.025, 2, 4, 316], [&"tusker_brute", 0.01, 1, 1, 317],
 	],
 	&"emerald_jungle": [
 		[&"cultist_acolyte", 0.025, 5, 9, 324], [&"thorn_crawler", 0.07, 1, 2, 321], [&"grotto_cultist", 0.025, 1, 1, 322], [&"deer", 0.03, 1, 2, 323],
@@ -31,6 +34,7 @@ const TABLE := {
 	],
 	&"sunscorch_desert": [
 		[&"bandit_recruit", 0.02, 5, 9, 354], [&"sand_scorpion", 0.09, 1, 1, 351], [&"bandit_archer", 0.025, 1, 2, 352], [&"bandit_thug", 0.025, 2, 2, 353],
+		[&"tusker_brute", 0.012, 1, 1, 355],
 	],
 	&"snowy_tundra": [
 		[&"frost_wolf", 0.06, 2, 4, 361], [&"rabbit", 0.04, 1, 2, 362],

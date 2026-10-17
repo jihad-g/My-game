@@ -45,6 +45,10 @@ const PAGES := {
 	&"bandits": ["The Brotherhood",
 		"The bandit brotherhood started as farmers who lost everything in the Shattering's long winter. " +
 		"Today they are led by warlords like Grimtusk, who want the shards to rule the land by fear."],
+	&"tuskers": ["The Tuskers",
+		"The boar-folk say they were here before the first village. They live in war bands, paint red lines " +
+		"under their eyes and trade in gold, not coin. When a chief raises the skull banner, every Tusker within " +
+		"a day's walk comes to fight. Even Grimtusk took his name from them, to sound more frightening."],
 	&"tundra_clans": ["The Tundra Clans",
 		"After the Shattering came a winter that lasted ten years. The northern clans survived it in tents of " +
 		"fur, fighting wolves for every meal. Their children still learn to swing an axe before they can read."],
@@ -55,10 +59,10 @@ const PAGES := {
 }
 
 ## Pages that can be found in chests (bosses' pages come from facing them).
-const FINDABLE := [&"ancients", &"guardians", &"towers", &"great_shards", &"starborn", &"bandits", &"tundra_clans", &"kingdoms"]
+const FINDABLE := [&"ancients", &"guardians", &"towers", &"great_shards", &"starborn", &"bandits", &"tuskers", &"tundra_clans", &"kingdoms"]
 ## Boss enemy id -> page read the first time you face it.
 const BOSS_PAGES := {&"bone_king": &"bone_king", &"arcane_colossus": &"arcane_colossus", &"elder_thornmaw": &"elder_thornmaw",
-	&"starborn_colossus": &"starborn", &"bandit_warlord": &"bandits", &"temple_guardian": &"guardians", &"tower_warden": &"towers"}
+	&"starborn_colossus": &"starborn", &"bandit_warlord": &"bandits", &"tusker_chief": &"tuskers", &"temple_guardian": &"guardians", &"tower_warden": &"towers"}
 
 const FOUNDERS := ["Queen Maren", "King Osric", "Queen Ysolde", "King Bran", "Queen Liora", "King Taddeus", "Lady Corvina", "Lord Hale"]
 const SYMBOLS := ["a silver stag", "a burning star", "two crossed axes", "a white tower", "a crowned wolf", "a golden wheat sheaf", "a blue wave", "an iron key"]

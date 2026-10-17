@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"tusker_tusk"
+display_name = "Tusker Tusk"
+description = "A curved tusk from a Tusker warrior. Smiths and hunters pay well for it."
+category = 0
+rarity = 1
+max_stack = 99
+base_value = 9
+icon_color = Color(0.95, 0.9, 0.78, 1)
+icon_glyph = "Tk"

@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/chief_swipe.tres" id="2_melee"]
+[ext_resource type="Resource" path="res://data/attacks/chief_crush.tres" id="3_heavy"]
+[ext_resource type="Resource" path="res://data/enemies/tusker_grunt.tres" id="4_summon"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"tusker_tusk"
+min_count = 4
+max_count = 6
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"gold_nugget"
+min_count = 2
+max_count = 4
+chance = 0.9
+
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"war_banner_scrap"
+min_count = 1
+max_count = 1
+chance = 1.0
+
+[resource]
+script = ExtResource("1_md")
+id = &"tusker_chief"
+display_name = "Tusker Chief"
+category = 7
+level = 13
+max_health = 900.0
+walk_speed = 2.3
+run_speed = 4.6
+turn_speed = 9.0
+aggro_range = 14.0
+leash_range = 34.0
+max_poise = 220.0
+damage_multipliers = {}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2")]
+xp_reward = 420
+respawn_time = 600.0
+style = 3
+look = &"tusker_chief"
+model_scale = 1.25
+tint = Color(0.75, 0.45, 0.35, 1)
+accent = Color(0.95, 0.72, 0.3, 1)
+melee = ExtResource("2_melee")
+heavy = ExtResource("3_heavy")
+summon = ExtResource("4_summon")
+heavy_cooldown = 5.0
+boss_title = "Rokka Ironhide, Tusker Chief"
+boss_moves = [&"roar", &"cleave", &"charge", &"summon"]
+slam_damage = 26.0
+slam_radius = 4.5
+summon_count = 2
+phases = [{"at": 0.5, "moves": [&"roar", &"charge", &"cleave", &"summon", &"slam"], "text": "Rokka raises the war banner: Tuskers, to me!", "hazard": &""}]
+pack_alert = 24.0
+siege_mult = 3.0
+raider = true
+can_be_elite = false

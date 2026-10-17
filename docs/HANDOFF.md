@@ -3,7 +3,8 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.28.0** (Milestone 19: real co-op combat). The Windows build is `releases/Shardlands-v0.28.0-windows.zip`.
+- Current version: **v0.29.0** (Milestone 20: The Tuskers, pixel-art monsters). The Windows build is `releases/Shardlands-v0.29.0-windows.zip`.
+- The owner wants the art to look like Blockbench-style pixel art (16 px per metre, hand-placed pixels). `src/art/pixel_art.gd` does this; skeletons and the Tuskers use it. Next art steps: weapons/shields, other monsters, player classes, villagers. Use our own designs in that style, not pixel copies of other artists' models.
 - The owner asked to do the 10 next steps one by one: 1 M18d (done), 2 M19 co-op combat (done), 3 monster pathfinding, 4 weather + seasons, 5 waystones/horses/boats, 6 multi-storey building, 7 map fog of war + dungeon keys, 8 monster animations + capes/hair, 9 performance + testing pass, 10 release polish.
 - Read next: `docs/TODO.md` (done and NOT IMPLEMENTED), `docs/CHANGELOG.md`, `docs/M18_PLAN.md` (current milestone) and `docs/ART_BIBLE.md` (art rules).
 - Keys changed in v0.24.0: **Space = jump**, **Left Alt = dodge roll**.
@@ -39,7 +40,7 @@
 - Docs: `godot --headless --path . res://tools/balance_report.tscn -- --out=docs/BALANCE.md` and `godot --headless --path . -s tools/gen_rpg_tables.gd`
 - Art (Python, `art/tools/`): `texgen.py` and `texgen_extra.py` (block textures), `build_atlas.py`, `icongen.py` (item icons), `export_game.py` (copies them into the game).
 
-## What is done (milestones 1–18d + art passes)
+## What is done (milestones 1–20 + art passes)
 - **M1–M13:** world generation and streaming, survival, 4 classes and skills, crafting and building, villages and kingdoms with NPCs, shops and reputation, POIs and E–S dungeons, bosses, status effects, raids, blueprints, art and audio, co-op multiplayer (host plus guests), balance, tutorial, settings, save recovery, beta release.
 - **M14 Outfits:** one shared body for every class; the look comes from gear; gear sets; a souls-like character creation screen.
 - **M15 Living Wilds:** wild creatures in every biome, treasure spots, item quality, respec.
@@ -74,6 +75,14 @@
   - `set_locomotion_speed`, `set_motion` (leans, turn shuffle), `add_step_offset` (block-step glide);
   - Settings `movement_feel` (Snappy/Weighty) and `fixed_camera`; camera lead; dodge v2 (`can_dodge_cancel`);
   - tests `test_m18a_*` (run and pass since v0.23.1).
+
+- **M20 The Tuskers:**
+  - `PixelArt` (`src/art/pixel_art.gd`): boxes with exact pixel faces in one atlas, `paint()` with shading + ASCII
+    stamps ("." keep, "_" hole, digits = ramp, letters from a key, `[Color, true]` = glow), rotated parts;
+  - `PixelSkeleton`, `PixelTusker` build parts on `HumanoidModel` pivots (`HumanoidModel.PIXEL_BODIES`, `_add_mesh`);
+  - Tusker data `data/enemies/tusker_*.tres`, attacks `tusker_*`/`chief_*`, items `tusker_tusk`, `war_banner_scrap`;
+  - `WildSpawns` war parties; `RaidManager.TUSKERS`, `pick_faction()`, `FACTION_NAMES`; lore page `tuskers`;
+  - tests `test_m20_*`; screenshots `--only=tuskers`, `--only=pixelpilot`, `--only=pixelstyle`.
 
 - **M18b:**
   - finishers (`AttackData.finisher`, `knockdown`, `hitstop`) at the end of every melee moveset in `data/movesets/`;
@@ -129,7 +138,7 @@
   `PlayerAbilities.share_support()` / `receive_support()`. Tests `test_m19_*` (guest script `--combat`).
 - Testing rule now: the owner allows running only the test groups for what changed (ask if unsure).
 
-## Next step: item 3 - monster pathfinding (A* on the block grid)
+## Next step: the owner chooses - more pixel art (weapons and shields, other monsters, classes), or item 3 - monster pathfinding (A* on the block grid)
 
 ## After that
 - **M19 "Together in Danger":** real co-op combat, plus abilities that help friends.

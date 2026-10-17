@@ -42,6 +42,12 @@ const PLUNDER_DAYS := 2
 const PLUNDER_PRICE := 1.25
 ## Raid strength rolls per faction: tier -> pool of monster ids.
 const BANDITS := [&"bandit_thug", &"bandit_thug", &"bandit_archer", &"bandit_bomber", &"bandit_brute", &"bandit_hexer"]
+## Milestone 20: the Tusker warband (boar-folk) raids towns and bases too.
+const TUSKERS := [&"tusker_grunt", &"tusker_grunt", &"tusker_grunt", &"tusker_brute", &"tusker_grunt", &"tusker_brute"]
+## Chance that a raid (base raid outside blood moons, or town raid) is Tuskers instead of bandits.
+const TUSKER_CHANCE := 0.35
+## How each faction is named in messages.
+const FACTION_NAMES := {&"bandits": "bandits", &"tuskers": "the Tuskers", &"undead": "the restless dead"}
 const UNDEAD := [&"skeleton_warrior", &"skeleton_warrior", &"skeleton_archer", &"thorn_crawler", &"grotto_cultist", &"arcane_sentinel"]
 
 var world: World
@@ -78,7 +84,7 @@ func _on_hour(h: int) -> void:
 		if night and day >= BASE_MIN_DAY and day - last_base_raid_day >= BASE_COOLDOWN_DAYS or (blood and h == 22):
 			var base := find_player_base()
 			if not base.is_empty() and (blood and h == 22 or _rng.randf() < BASE_CHANCE):
-				start_base_raid(base, &"undead" if blood else &"bandits")
+				start_base_raid(base, &"undead" if blood else pick_faction())
 				return
 	if h == 10 and pending_town.is_empty() and day >= BASE_MIN_DAY:
 		_roll_town_raid(day)
@@ -108,6 +114,11 @@ func has_bell(center: Vector3, radius: float) -> bool:
 	return false
 
 
+## Bandits or Tuskers (uses the raid random numbers, so it is the same on a reload).
+func pick_faction() -> StringName:
+	return &"tuskers" if _rng.randf() < TUSKER_CHANCE else &"bandits"
+
+
 ## Raid strength from the player's level (0..5).
 func tier_for_level(level: int) -> int:
 	return clampi((level - 1) / 6, 0, 5)
@@ -129,14 +140,16 @@ func _roll_town_raid(day: int) -> void:
 
 
 ## Announces an attack on a settlement in `hours` game hours (also used by tests).
-func announce_town_raid(s: SettlementInfo, hours: float) -> void:
+func announce_town_raid(s: SettlementInfo, hours: float, faction: StringName = &"") -> void:
 	var secs := hours / 24.0 * world.day_night.day_length
-	pending_town = {"id": s.id, "at": GameState.world_time + secs,
+	if faction == &"":
+		faction = pick_faction()
+	pending_town = {"id": s.id, "at": GameState.world_time + secs, "faction": faction,
 		"tier": tier_for_level(world.player.character.level) + (1 if s.is_kingdom() else 0)}
 	var p := world.player.global_position
 	GameState.discovered_places["heard:%s" % s.id] = GameState.world_time
-	var text := "A rider brings word: bandits will attack %s in %d hours! It lies %s to the %s." % [
-		s.short_title(), roundi(hours), Gossip.distance_text(s.distance_to(p)), Gossip.direction(p, s.world_center())]
+	var text := "A rider brings word: %s will attack %s in %d hours! It lies %s to the %s." % [
+		FACTION_NAMES.get(faction, "bandits"), s.short_title(), roundi(hours), Gossip.distance_text(s.distance_to(p)), Gossip.direction(p, s.world_center())]
 	Events.toast.emit(text, Color(1, 0.55, 0.35))
 	Events.raid_warning.emit("town:" + s.id, s.world_center(), secs)
 
@@ -149,13 +162,18 @@ func start_base_raid(base: Dictionary, faction: StringName) -> void:
 	var warning := BASE_WARNING + (BELL_BONUS if has_bell(center, float(base.radius)) else 0.0)
 	_begin({"kind": "base", "target": "base", "name": "your base", "center": center, "radius": float(base.radius),
 		"faction": faction, "tier": tier, "warning": warning})
-	var who := "The dead rise under the blood moon and march" if faction == &"undead" else "A bandit warband is coming"
+	var who := "A bandit warband is coming"
+	match faction:
+		&"undead":
+			who = "The dead rise under the blood moon and march"
+		&"tuskers":
+			who = "Tusker war drums! A boar-folk warband is coming"
 	Events.toast.emit("RAID WARNING: %s on your base from the %s! (%ds)" % [who, _dir_name(raid.dir), roundi(warning)], Color(1, 0.45, 0.3))
 
 
-func start_town_raid(s: SettlementInfo, tier: int) -> void:
+func start_town_raid(s: SettlementInfo, tier: int, faction: StringName = &"bandits") -> void:
 	_begin({"kind": "town", "target": s.id, "name": s.short_title(), "center": s.world_center(), "radius": s.radius,
-		"faction": &"bandits", "tier": clampi(tier, 0, 5), "warning": 8.0})
+		"faction": faction, "tier": clampi(tier, 0, 5), "warning": 8.0})
 	raided[s.id] = world.day_night.day
 	var site := _site(s.id)
 	if site:
@@ -279,7 +297,12 @@ func _spawn_wave() -> void:
 	var w: int = raid.wave
 	var tier: int = raid.tier
 	var count := mini(3 + tier + w - 1, 9)
-	var pool: Array = BANDITS if raid.faction == &"bandits" else UNDEAD
+	var pool: Array = UNDEAD
+	match raid.faction:
+		&"bandits":
+			pool = BANDITS
+		&"tuskers":
+			pool = TUSKERS
 	var top := mini(pool.size(), 3 + tier)
 	var ids: Array[StringName] = []
 	for k in count:
@@ -290,6 +313,11 @@ func _spawn_wave() -> void:
 			ids[0] = &"bandit_brute" if tier >= 2 else &"bandit_bomber"
 		if w == int(raid.waves) and (tier >= 4 or (tier >= 2 and _rng.randf() < 0.5)):
 			ids.append(&"bandit_warlord")
+	elif raid.faction == &"tuskers":
+		if tier >= 1 and not ids.has(&"tusker_brute"):
+			ids[0] = &"tusker_brute"
+		if w == int(raid.waves) and (tier >= 4 or (tier >= 2 and _rng.randf() < 0.5)):
+			ids.append(&"tusker_chief")
 	var blood := world.events != null and world.events.is_active(&"blood_moon")
 	var center: Vector3 = raid.center
 	var a0: float = raid.dir
@@ -392,13 +420,14 @@ func plunder_base(center: Vector3, radius: float, n: int) -> PackedStringArray:
 func _resolve_pending_town() -> void:
 	var info := world.generator.settlements.find(String(pending_town.id))
 	var tier := int(pending_town.tier)
+	var faction := StringName(pending_town.get("faction", &"bandits"))
 	pending_town = {}
 	if info == null:
 		return
 	var near := world.dungeon == null and world.layer == TerrainGenerator.Layer.SURFACE \
 		and info.distance_to(world.player.global_position) < info.radius + 90.0
 	if near and raid.is_empty() and not world.player.is_dead:
-		start_town_raid(info, tier)
+		start_town_raid(info, tier, faction)
 		return
 	raided[info.id] = world.day_night.day
 	var hold := 0.85 if info.is_kingdom() else 0.5
@@ -407,7 +436,7 @@ func _resolve_pending_town() -> void:
 		Events.toast.emit("Word reaches you: the guards of %s drove off the raiders." % info.short_title(), Color(0.8, 0.9, 1.0))
 	else:
 		plundered[info.id] = world.day_night.day + PLUNDER_DAYS
-		Events.toast.emit("Word reaches you: %s was plundered by bandits." % info.short_title(), Color(1, 0.55, 0.45))
+		Events.toast.emit("Word reaches you: %s was plundered by %s." % [info.short_title(), FACTION_NAMES.get(faction, "bandits")], Color(1, 0.55, 0.45))
 
 
 func _site(id: String) -> SettlementSite:
@@ -446,7 +475,8 @@ func status_text() -> String:
 func to_save() -> Dictionary:
 	var pend := {}
 	if not pending_town.is_empty():
-		pend = {"id": pending_town.id, "in": float(pending_town.at) - GameState.world_time, "tier": pending_town.tier}
+		pend = {"id": pending_town.id, "in": float(pending_town.at) - GameState.world_time, "tier": pending_town.tier,
+			"faction": String(pending_town.get("faction", &"bandits"))}
 	return {"last_base": last_base_raid_day, "plundered": plundered.duplicate(), "defended": defended.duplicate(),
 		"raided": raided.duplicate(), "pending": pend}
 
@@ -465,4 +495,5 @@ func from_save(d: Dictionary) -> void:
 	var pend: Dictionary = d.get("pending", {})
 	pending_town = {}
 	if not pend.is_empty():
-		pending_town = {"id": String(pend.id), "at": GameState.world_time + float(pend.get("in", 0.0)), "tier": int(pend.get("tier", 0))}
+		pending_town = {"id": String(pend.id), "at": GameState.world_time + float(pend.get("in", 0.0)), "tier": int(pend.get("tier", 0)),
+			"faction": StringName(pend.get("faction", "bandits"))}

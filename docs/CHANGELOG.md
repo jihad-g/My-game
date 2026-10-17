@@ -2,6 +2,30 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.29.0] — Milestone 20: The Tuskers - pixel-art monsters
+
+### Added
+- **Pixel-art models** (`src/art/pixel_art.gd`): a model is made of boxes whose six faces are exact pixel
+  pictures, 16 pixels per metre, in one sharp (nearest-filtered) texture. Pixels can be see-through (gaps between
+  ribs, torn cloth) or glow (eyes). The parts hang on the normal `HumanoidModel` rig, so every animation works.
+  `HumanoidModel.PIXEL_BODIES` lists the looks drawn this way.
+- **Skeletons redrawn** pixel by pixel (Skeleton Minion and Skeleton Warrior): skull with glowing eyes and teeth,
+  see-through ribcage, spine, iron-buckled belt, torn crimson skirt, leather boots, two-bone forearms, fingers.
+- **The Tuskers**, a new enemy faction of boar-folk (`src/art/pixel_tusker.gd`, `data/enemies/tusker_*.tres`):
+  - **Tusker Grunt** (level 6, gold block mace) and **Tusker Brute** (level 9, hook staff, heavy crush, smashes
+    walls) roam meadows, forests and the desert in war parties;
+  - **Rokka Ironhide, Tusker Chief** (level 13 boss): dark armour, gold crown, a skull war banner; roars, charges,
+    cleaves and calls grunts; leads strong Tusker raids.
+- **Tusker raids**: about a third of base raids (outside blood moons) and town raids are Tuskers instead of
+  bandits. The warning, the rider's message and the plunder news name who is coming; the faction is saved.
+- New loot: **Tusker Tusk** (material) and **War Banner Scrap** (from the chief, sells well).
+- Lore page **The Tuskers** (found in chests, or read when you first face the chief).
+- Screenshot modes `--only=tuskers`, `--only=pixelpilot` and `--only=pixelstyle` (the owner's reference styles).
+- Tests `test_m20_tusker_data` and `test_m20_tuskers_ingame`.
+
+### Changed
+- `RaidManager.start_town_raid` and `announce_town_raid` take a faction; `pick_faction()` rolls bandits or Tuskers.
+
 ## [0.28.0] — Milestone 19: Together in Danger - real co-op combat
 
 ### Added

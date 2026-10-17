@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"tusker_mace"
+display_name = "Gold Mace Swing"
+damage = 12
+windup = 0.42
+active = 0.1
+recovery = 0.42
+cancel_ratio = 0.0
+reach = 2.1
+arc_degrees = 100
+knockback = 4
+poise_damage = 16
+lunge_speed = 2.0
+move_multiplier = 0.0
+animation = &"slash_r"
+camera_shake = 0.0
