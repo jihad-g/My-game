@@ -119,6 +119,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Tests `test_m24_*` run and pass (42 checks); older groups re-run and pass
 - [ ] NOT IMPLEMENTED: Creative mode in co-op (single player only, on purpose for now)
 - [ ] NOT IMPLEMENTED: fly / no-clip, place any building piece without unlocking it, collision shape view
+- [ ] Known issue (older than M24, also fails on v0.31.0): `test_m9_streaming` "prefetch generated chunks ahead" - the prefetch queue fills but `prefetched` stays 0. Check in the performance pass (item 9).
 - [ ] NOT IMPLEMENTED: Creative changes are not undone when you turn it off (levels, items and recipes stay) - use a Creative world
 
 ## Milestone 23 — Elemental Armour  ✅ (v0.31.0)
