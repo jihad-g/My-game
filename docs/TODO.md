@@ -105,6 +105,18 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 25 — Monster pathfinding  ✅ (v0.33.0)
+
+- [x] A* on the 1 m grid: terrain heights (climb 1 m, drop 4 m), walls and edges, houses, trees, rocks, deep water, doors
+- [x] Dungeon floors use the dungeon plan
+- [x] Path smoothing with body-width checks, re-planning, stuck recovery, per-frame search budget
+- [x] Unreachable targets: go to the closest spot; raiders plan through player walls and smash them
+- [x] Creative mode: show paths, switch pathfinding, stats
+- [x] Tests `test_m25_*` run and pass
+- [ ] NOT IMPLEMENTED: big monsters (colossi) use the same 1-cell clearance as people; flying monsters fly straight
+- [ ] NOT IMPLEMENTED: the Thornback Boar (old animal script) and villagers still walk straight
+- [ ] NOT IMPLEMENTED: paths longer than ~56 m are cut at the closest point (monsters re-plan as they walk)
+
 ## Milestone 24 — Creative Mode for testing and debugging  ✅ (v0.32.0)
 
 - [x] Creative world option on the main menu (saved with the world)

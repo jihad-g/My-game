@@ -400,6 +400,7 @@ func set_open(open: bool) -> void:
 	if _leaf:
 		var tw := create_tween()
 		tw.tween_property(_leaf, "rotation:y", -PI * 0.5 if open else 0.0, 0.25)
+	NavGrid.invalidate_at(global_position)  # monsters can (or can't) walk through now
 	# An open door lets things through.
 	for c in get_children():
 		if c is CollisionShape3D:

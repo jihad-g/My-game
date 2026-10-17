@@ -810,12 +810,32 @@ func _build_debug() -> void:
 	var v := _tab("Debug")
 	_row(v, "Show", [["Stats overlay on / off (F3)", _toggle_overlay], ["Performance snapshot", _perf]])
 	_row(v, "Check", [["Check the game (data links)", _self_check], ["Errors in the log", _log_errors]])
+	_row(v, "Monsters", [["Show monster paths on / off", _toggle_paths], ["Pathfinding on / off", _toggle_nav],
+		["Pathfinding stats", _nav_stats]])
 	_report.editable = false
 	_report.custom_minimum_size = Vector2(0, 300)
 	_report.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_report.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	_report.placeholder_text = "Results show here."
 	v.add_child(_report)
+
+
+## Milestone 25: draws each monster's path (green: reaches you, orange: can't).
+func _toggle_paths() -> void:
+	NavGrid.debug_draw = not NavGrid.debug_draw
+	_say("monster paths %s" % ("shown" if NavGrid.debug_draw else "hidden"))
+
+
+func _toggle_nav() -> void:
+	NavGrid.enabled = not NavGrid.enabled
+	_say("pathfinding %s" % ("on" if NavGrid.enabled else "off (old straight-line steering)"))
+
+
+func _nav_stats() -> void:
+	var st := NavGrid.stats
+	_report.text = "Pathfinding: %d searches (%d reached, %d partial), %.2f ms average, %d cells searched on average, %d tiles built." % [
+		st.searches, st.reached, st.partial, float(st.ms) / maxf(1.0, st.searches), int(st.nodes) / maxi(1, int(st.searches)), st.tiles_built]
+	_say("pathfinding stats")
 
 
 func _toggle_overlay() -> void:

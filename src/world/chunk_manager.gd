@@ -224,6 +224,12 @@ func get_debug_stats() -> Dictionary:
 	return out
 
 
+## Cached generated data of a chunk (null if not generated or evicted).
+## Monster pathfinding reads the column heights from here.
+func cached_data(coord: Vector2i, lod: int, p_layer: int) -> ChunkData:
+	return _cache.get(Vector4i(coord.x, coord.y, lod, p_layer))
+
+
 ## Forces an immediate refresh (e.g. after teleporting the focus).
 func force_refresh() -> void:
 	_center = Vector2i(0x7FFFFFFF, 0)

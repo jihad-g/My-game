@@ -3,9 +3,10 @@
 ## The project
 - **Shardlands** is a voxel open-world survival RPG built with **Godot 4.4.1** in GDScript.
 - Repository: `jihad-g/My-game`. Branch: `claude/survival-rpg-foundation-tu1eqk`. All work is on this branch.
-- Current version: **v0.32.0** (Milestone 24: Creative Mode for testing and debugging). The Windows build is `releases/Shardlands-v0.32.0-windows.zip`.
+- Current version: **v0.33.0** (Milestone 25: monster pathfinding, `src/enemies/nav_grid.gd`, `Monster._move_to()`). The Windows build is `releases/Shardlands-v0.33.0-windows.zip`.
+- Tests that boot a world must end with `world.queue_free()` and `await _frames(5)`, or the old hero stays in the "player" group and confuses later tests.
 - The owner wants the art to look like Blockbench-style pixel art (16 px per metre, hand-placed pixels). `src/art/pixel_art.gd` does this; skeletons and the Tuskers use it. Next art steps: weapons/shields, other monsters, player classes, villagers. Use our own designs in that style, not pixel copies of other artists' models.
-- The owner asked to do the 10 next steps one by one: 1 M18d (done), 2 M19 co-op combat (done), 3 monster pathfinding, 4 weather + seasons, 5 waystones/horses/boats, 6 multi-storey building, 7 map fog of war + dungeon keys, 8 monster animations + capes/hair, 9 performance + testing pass, 10 release polish.
+- The owner asked to do the 10 next steps one by one: 1 M18d (done), 2 M19 co-op combat (done), 3 monster pathfinding (done, M25), 4 weather + seasons, 5 waystones/horses/boats, 6 multi-storey building, 7 map fog of war + dungeon keys, 8 monster animations + capes/hair, 9 performance + testing pass, 10 release polish.
 - Read next: `docs/TODO.md` (done and NOT IMPLEMENTED), `docs/CHANGELOG.md`, `docs/M18_PLAN.md` (current milestone) and `docs/ART_BIBLE.md` (art rules).
 - Keys changed in v0.24.0: **Space = jump**, **Left Alt = dodge roll**.
 - **Creative mode** for testing in the game: the ` key (under Esc), or tick "Creative world" when creating a world.

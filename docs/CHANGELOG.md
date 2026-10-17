@@ -2,6 +2,28 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.33.0] — Milestone 25: Monster pathfinding
+
+### Added
+- **Monsters find their way** (`src/enemies/nav_grid.gd`): A* on the 1 m building grid. Monsters walk around
+  walls, houses, village and ruin walls, trees, rocks, cliffs (they climb 1 m at most, drop 4 m) and deep water,
+  through open doors and along dungeon corridors, instead of walking straight into things.
+  - The grid is made on demand in 16 x 16 m tiles (heights from the loaded terrain data, obstacles from physics)
+    and kept for 3 seconds; placing, breaking, opening or closing a building piece refreshes it at once.
+  - Paths are smoothed (straight runs are one step, checked for the monster's body width, so they don't scrape
+    wall corners) and re-planned about once a second, when the target moves, or when the monster gets stuck.
+  - A target that can't be reached (on a roof, walled in): the monster goes to the closest spot and waits.
+  - **Raiders** plan through player buildings at a high cost: they walk to the wall in the way and smash it.
+  - At most 4 searches per frame for all monsters together; a search is about 1-7 ms.
+  - Flying monsters still fly straight.
+- Creative mode → Debug: **Show monster paths** (green line: it can reach you, orange: it can't),
+  **Pathfinding on / off** (compare with the old steering) and **Pathfinding stats**.
+- Tests `test_m25_nav_grid`, `test_m25_nav_monsters`, `test_m25_nav_dungeon`.
+
+### Fixed
+- New Creative / pathfinding tests now free their test world (an old hero left behind confused later tests).
+- `test_m7_town_raid` waits until an announced far-away raid resolves instead of exactly 3 frames (timing).
+
 ## [0.32.0] — Milestone 24: Creative Mode for testing and debugging
 
 ### Added

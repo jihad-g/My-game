@@ -214,6 +214,7 @@ func _spawn(data: BuildPieceData, cell: Vector2i, slot: String, rot: int, layer:
 	world.layer = saved_layer
 	piece.visible = layer == world.layer
 	pieces[key(cell, slot, layer)] = piece
+	NavGrid.invalidate_at(piece.global_position)  # monsters path around it now
 	Events.building_changed.emit()
 	return piece
 
@@ -255,6 +256,8 @@ func remove(piece: BuildPiece, player: Player) -> bool:
 	pieces.erase(key(piece.cell, piece.slot, piece.layer))
 	if Net.is_server():
 		Net.server.broadcast_build("remove", NetServer.piece_entry(piece))
+	piece.collision_layer = 0  # gone for monster pathfinding at once
+	NavGrid.invalidate_at(piece.global_position)
 	piece.queue_free()
 	Events.building_changed.emit()
 	return true
@@ -289,6 +292,8 @@ func destroy(piece: BuildPiece) -> void:
 	if Net.is_server():
 		Net.server.broadcast_build("remove", NetServer.piece_entry(piece))
 	Events.toast.emit("Your %s was destroyed!" % piece.data.display_name, Color(1, 0.5, 0.4))
+	piece.collision_layer = 0  # gone for monster pathfinding at once
+	NavGrid.invalidate_at(piece.global_position)
 	piece.queue_free()
 	Events.building_changed.emit()
 

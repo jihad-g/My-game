@@ -142,6 +142,9 @@ func _ready() -> void:
 	await _run_async(&"test_m23_elemental_ingame")
 	_run(&"test_m24_self_check")
 	await _run_async(&"test_m24_creative")
+	await _run_async(&"test_m25_nav_grid")
+	await _run_async(&"test_m25_nav_monsters")
+	await _run_async(&"test_m25_nav_dungeon")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -3424,7 +3427,10 @@ func test_m7_town_raid() -> void:
 		world.raids.announce_town_raid(far, 1.0)
 		check(world.raids.pending_town.id == far.id and world.raids.status_text().contains("attacked"), "a rider warns of the attack on %s" % far.name)
 		world.raids.pending_town.at = GameState.world_time
-		await _frames(3)
+		for k in 60:
+			await _frames(1)
+			if world.raids.pending_town.is_empty():
+				break
 		check(world.raids.pending_town.is_empty() and world.raids.raided.has(far.id), "without you the town's guards decide the outcome")
 	# Save / load
 	var saved := world.raids.to_save()
@@ -5186,7 +5192,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.32"), "version 0.32 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.33"), "version 0.33 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -8229,3 +8235,253 @@ func test_m24_creative() -> void:
 	panel.set_creative(false)
 	Enemy.creative_freeze = false
 	Player.creative_used = false
+	world.queue_free()
+	await _frames(5)
+
+
+# --- Milestone 25: monster pathfinding ----------------------------------------------------
+
+## A dry spot near the player where the ground is level (within 1 block) for `r` metres.
+func _flat_area(world: World, r: int) -> Vector3:
+	var p0 := world.player.global_position
+	for ring in range(0, 30):
+		for k in maxi(1, ring * 6):
+			var a := TAU * k / maxi(1, ring * 6)
+			var c := p0 + Vector3(cos(a), 0, sin(a)) * ring * 12.0
+			var g := floori(world.generator.get_height_at(c) / TerrainGenerator.BLOCK_HEIGHT)
+			var ok := g * TerrainGenerator.BLOCK_HEIGHT > TerrainGenerator.WATER_Y + 0.5
+			for dz in range(-r, r + 1, 2):
+				for dx in range(-r, r + 1, 2):
+					if not ok:
+						break
+					var h := floori(world.generator.get_height_at(c + Vector3(dx, 0, dz)) / TerrainGenerator.BLOCK_HEIGHT)
+					ok = absi(h - g) <= 1
+			if ok:
+				return Vector3(floori(c.x) + 0.5, 0, floori(c.z) + 0.5)
+	return p0
+
+
+## Walls along the north edges of cells (x0-half .. x0+half, z).
+func _wall_line(world: World, id: StringName, x0: int, z: int, half: int) -> Array:
+	var data := BuildingManager.get_piece_data(id)
+	var out := []
+	for x in range(x0 - half, x0 + half + 1):
+		out.append(world.building._spawn(data, Vector2i(x, z), "edge_n", 0, world.layer))
+	return out
+
+
+## Every waypoint step crosses no wall (checked on the grid).
+func _path_len(from: Vector3, pts: PackedVector3Array) -> float:
+	var d := 0.0
+	var prev := from
+	for p in pts:
+		d += Vector2(p.x - prev.x, p.z - prev.z).length()
+		prev = p
+	return d
+
+
+func _segment_crosses_z(a: Vector3, b: Vector3, z: float, x_min: float, x_max: float) -> bool:
+	if (a.z - z) * (b.z - z) > 0.0 or is_equal_approx(a.z, b.z):
+		return false
+	var t := (z - a.z) / (b.z - a.z)
+	var x := lerpf(a.x, b.x, t)
+	return x > x_min and x < x_max
+
+
+func test_m25_nav_grid() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 0
+	var c := _flat_area(world, 12)
+	await _teleport_to(world, c)
+	_clear_enemies(world)
+	NavGrid.clear()
+	var x0 := floori(c.x)
+	var z0 := floori(c.z)
+	var walls := _wall_line(world, &"stone_wall", x0, z0, 5)
+	await _frames(3)
+	var from := Vector3(x0 + 0.5, 0, z0 + 4.5)
+	var to := Vector3(x0 + 0.5, 0, z0 - 4.5)
+	from.y = world.get_ground_height(from)
+	to.y = world.get_ground_height(to)
+	var r := NavGrid.find_path(world, from, to)
+	var pts: PackedVector3Array = r.points
+	var crosses := false
+	var prev := from
+	for q in pts:
+		crosses = crosses or _segment_crosses_z(prev, q, z0, x0 - 5.0, x0 + 6.0)
+		prev = q
+	check(r.reached and pts.size() >= 2, "a path around an 11 m wall (%d waypoints)" % pts.size())
+	check(not crosses, "the path never goes through the wall")
+	var length := _path_len(from, pts)
+	check(length > 12.0 and length < 30.0, "it goes round the end (%.1f m instead of 9 m)" % length)
+	# No wall: one straight waypoint.
+	var open := NavGrid.find_path(world, Vector3(x0 + 0.5, from.y, z0 + 4.5), Vector3(x0 + 0.5, from.y, z0 + 8.5))
+	check(open.reached and (open.points as PackedVector3Array).size() == 1, "open ground: straight to the goal")
+	# A closed box around the goal: walkers can't get in, raiders break in.
+	var box := []
+	box.append_array(_wall_line(world, &"wood_wall", x0, z0 - 7, 1))
+	box.append_array(_wall_line(world, &"wood_wall", x0, z0 - 4, 1))
+	var data := BuildingManager.get_piece_data(&"wood_wall")
+	for z in range(z0 - 7, z0 - 4):
+		box.append(world.building._spawn(data, Vector2i(x0 - 1, z), "edge_w", 0, world.layer))
+		box.append(world.building._spawn(data, Vector2i(x0 + 2, z), "edge_w", 0, world.layer))
+	await _frames(3)
+	var inside := Vector3(x0 + 0.5, to.y, z0 - 5.5)
+	var shut := NavGrid.find_path(world, from, inside)
+	check(not shut.reached, "a walled-in goal can't be reached (the path stops at the closest spot)")
+	var last: Vector3 = (shut.points as PackedVector3Array)[-1]
+	check(Vector2(last.x - inside.x, last.z - inside.z).length() < 3.5, "and the closest spot is next to the box")
+	var raid := NavGrid.find_path(world, from, inside, true)
+	check(raid.reached and raid.breach, "raiders plan through the walls (they will break them)")
+	# A door: shut it blocks, open it lets walkers in.
+	var door_data := BuildingManager.get_piece_data(&"wood_door")
+	var old: BuildPiece = box[1]
+	world.building.destroy(old)
+	await _frames(2)
+	var door := world.building._spawn(door_data, Vector2i(x0, z0 - 7), "edge_n", 0, world.layer)
+	await _frames(3)
+	check(not NavGrid.find_path(world, from, inside).reached, "a closed door keeps them out")
+	door.set_open(true)
+	await _frames(3)
+	var through := NavGrid.find_path(world, from, inside)
+	check(through.reached, "an open door lets them in")
+	door.set_open(false)
+	# Speed: 40 searches of 25-35 m over real terrain.
+	NavGrid.clear()
+	var t0 := Time.get_ticks_usec()
+	var reached := 0
+	for i in 40:
+		var a := TAU * i / 40.0
+		var goal := c + Vector3(cos(a), 0, sin(a)) * (25.0 + (i % 3) * 5.0)
+		goal.y = world.get_ground_height(goal)
+		if NavGrid.find_path(world, c + Vector3(0, world.get_ground_height(c), 0), goal).reached:
+			reached += 1
+	var ms := (Time.get_ticks_usec() - t0) / 1000.0 / 40.0
+	print("    40 searches: %.2f ms each (first time, tiles built), %d reached" % [ms, reached])
+	t0 = Time.get_ticks_usec()
+	for i in 40:
+		var a := TAU * i / 40.0
+		var goal := c + Vector3(cos(a), 0, sin(a)) * (25.0 + (i % 3) * 5.0)
+		goal.y = world.get_ground_height(goal)
+		NavGrid.find_path(world, c + Vector3(0, world.get_ground_height(c), 0), goal)
+	var ms2 := (Time.get_ticks_usec() - t0) / 1000.0 / 40.0
+	print("    again with tiles cached: %.2f ms each" % ms2)
+	check(reached >= 30, "most open-ground goals 25-35 m away are reached (%d of 40)" % reached)
+	check(ms2 < 12.0, "a search takes %.2f ms" % ms2)
+	for w in walls + box:
+		if is_instance_valid(w):
+			world.building.destroy(w)
+	if is_instance_valid(door):
+		world.building.destroy(door)
+	world.queue_free()
+	await _frames(5)
+
+
+## A skeleton behind a wall walks round it to the hero; without pathfinding it gets stuck.
+func test_m25_nav_monsters() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 40
+	world.spawner.set_process(false)  # no wild spawns reusing our test monsters
+	var c := _flat_area(world, 12)
+	await _teleport_to(world, c)
+	_clear_enemies(world)
+	NavGrid.clear()
+	var x0 := floori(c.x)
+	var z0 := floori(c.z)
+	# A wall with wings: a U opening away from the hero, so the straight line is a trap.
+	var walls := _wall_line(world, &"stone_wall", x0, z0, 4)
+	var data := BuildingManager.get_piece_data(&"stone_wall")
+	for z in range(z0, z0 + 3):
+		walls.append(world.building._spawn(data, Vector2i(x0 - 4, z), "edge_w", 0, world.layer))
+		walls.append(world.building._spawn(data, Vector2i(x0 + 5, z), "edge_w", 0, world.layer))
+	p.global_position = Vector3(x0 + 0.5, world.get_ground_height(Vector3(x0 + 0.5, 0, z0 - 5.5)) + 0.3, z0 - 5.5)
+	await _frames(3)
+	var results := {}
+	for mode in [true, false]:
+		NavGrid.enabled = mode
+		NavGrid.clear()
+		var start := Vector3(x0 + 0.5, 0, z0 + 1.5)
+		start.y = world.get_ground_height(start) + 0.3
+		var m := world.spawner.spawn_enemy(load(Monster.MONSTER_SCENE_PATH), start, "", load("res://data/enemies/skeleton_warrior.tres")) as Monster
+		m.target = p
+		m._alert(p)
+		var best := INF
+		for f in 60 * 14:
+			await get_tree().physics_frame
+			if not is_instance_valid(m) or m.is_dead:
+				break
+			m.target = p
+			best = minf(best, m.global_position.distance_to(p.global_position))
+			if best < 2.6:
+				break
+		results[mode] = best
+		NodePool.release_or_free(m)
+		await _frames(2)
+	NavGrid.enabled = true
+	print("    closest approach: with pathfinding %.1f m, without %.1f m" % [results[true], results[false]])
+	check(float(results[true]) < 3.0, "with pathfinding the skeleton walks out of the U and reaches the hero (%.1f m)" % results[true])
+	check(float(results[false]) > float(results[true]), "it does better than the old straight-line steering (%.1f m)" % results[false])
+	# A pack of 12 chasing at once stays cheap.
+	var pack: Array = []
+	for i in 12:
+		var a := TAU * i / 12.0
+		var q := c + Vector3(cos(a), 0, sin(a)) * 14.0
+		q.y = world.get_ground_height(q) + 0.3
+		var m := world.spawner.spawn_enemy(load(Monster.MONSTER_SCENE_PATH), q, "", load("res://data/enemies/skeleton_minion.tres")) as Monster
+		if m:
+			m._alert(p)
+			pack.append(m)
+	var s0: int = NavGrid.stats.searches
+	var t0 := Time.get_ticks_msec()
+	for f in 120:
+		await get_tree().physics_frame
+	var per_frame := float(NavGrid.stats.searches - s0) / 120.0
+	print("    12 chasers: %.2f searches per frame, %d ms for 120 frames" % [per_frame, Time.get_ticks_msec() - t0])
+	check(per_frame <= NavGrid.SEARCHES_PER_FRAME, "searches stay within the per-frame budget (%.2f)" % per_frame)
+	for m in pack:
+		NodePool.release_or_free(m)
+	for w in walls:
+		if is_instance_valid(w):
+			world.building.destroy(w)
+	world.queue_free()
+	await _frames(5)
+
+
+func test_m25_nav_dungeon() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	var poi := _test_dungeon_poi(world, 2, 0, 77)
+	check(world.enter_dungeon(poi), "enter a dungeon")
+	await _frames(5)
+	var d := world.dungeon
+	var a := d.to_global(d.plan.room_center(d.plan.start_room))
+	var b := d.to_global(d.plan.room_center(d.plan.end_room))
+	var r := NavGrid.find_path(world, a, b)
+	check(r.reached, "a path from the first room to the last room (%d waypoints)" % (r.points as PackedVector3Array).size())
+	var inside := true
+	var prev := a
+	for q in (r.points as PackedVector3Array):
+		for k in 9:
+			var m := prev.lerp(q, k / 8.0)
+			var l := d.to_local(m)
+			inside = inside and d.plan.cells.has(Vector2i(floori(l.x), floori(l.z)))
+		prev = q
+	check(inside, "the whole path stays on the dungeon floor")
+	world.exit_dungeon(Vector3.INF, false)
+	await _wait_ready_after_teleport(world)
+	world.queue_free()
+	await _frames(5)
+
+
+func _teleport_to(world: World, c: Vector3) -> void:
+	world.teleport_to(c)
+	await _wait_ready_after_teleport(world)
+	await _frames(10)

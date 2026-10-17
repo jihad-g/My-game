@@ -96,6 +96,13 @@ var _stuck_t := 0.0
 var _detour_t := 0.0
 var _detour_angle := 0.0
 var _hop_cd := 0.0
+## Milestone 25: the path being followed (NavGrid A*).
+var nav_path := PackedVector3Array()
+var nav_reached := true
+var _nav_i := 0
+var _nav_goal := Vector3.INF
+var _nav_t := 0.0
+var _nav_debug: MeshInstance3D
 ## Milestone 15: buried until woken (sand scorpions).
 var _burrowed := false
 var _sand_t := 0.0
@@ -205,6 +212,15 @@ func _on_spawned() -> void:
 	_move_i = 0
 	_iframes = 0.0
 	_blocker = null
+	nav_path = PackedVector3Array()
+	nav_reached = true
+	_nav_i = 0
+	_nav_goal = Vector3.INF
+	_nav_t = 0.0
+	_following = false
+	if _nav_debug:
+		_nav_debug.queue_free()
+		_nav_debug = null
 	for meta in [&"elite", &"raid", &"event"]:
 		if has_meta(meta):
 			remove_meta(meta)
@@ -436,7 +452,7 @@ func _think(delta: float) -> void:
 				if to.length() < 0.6 or ai_time <= 0.0:
 					_set_ai(AI.IDLE, _rng.randf_range(2.0, 5.0))
 				else:
-					_move_dir(to, data.walk_speed)
+					_move_to(_wander_target, data.walk_speed)
 		AI.MARCH:
 			_march(tgt, dist)
 		AI.ALERT:
@@ -519,7 +535,7 @@ func _think(delta: float) -> void:
 					Events.boss_ended.emit(self)
 				_set_ai(AI.IDLE, 2.0)
 			else:
-				_move_dir(home, data.walk_speed * 1.6)
+				_move_to(home_position, data.walk_speed * 1.6)
 		AI.DODGE:
 			_desired_velocity = _dodge_dir * 8.5
 			if ai_time <= 0.0:
@@ -629,7 +645,7 @@ func _march(tgt: Node3D, dist: float) -> void:
 		else:
 			_set_ai(AI.IDLE, 2.0)
 		return
-	_move_dir(to, data.run_speed * 0.85)
+	_move_to(objective, data.run_speed * 0.85)
 
 
 func _nearest_piece(r: float) -> Node3D:
@@ -691,8 +707,8 @@ func _combat(tgt: Node3D, to_t: Vector3, dist: float) -> void:
 			elif dist < mdata.preferred_min:
 				_move_dir(-to_t, data.walk_speed * speed_mult)
 				face_toward(to_t)
-			elif dist > mdata.preferred_max:
-				_move_dir(to_t, data.run_speed * speed_mult)
+			elif dist > mdata.preferred_max or not _line_of_sight(tgt):
+				_move_to(tgt.global_position, data.run_speed * speed_mult)
 			else:
 				# Strafe around the target (flanking) so ranged foes don't stand still.
 				var side := to_t.cross(Vector3.UP).normalized() * (1.0 if int(Time.get_ticks_msec() / 1500 + _slot_angle * 10.0) % 2 == 0 else -1.0)
@@ -716,7 +732,7 @@ func _combat(tgt: Node3D, to_t: Vector3, dist: float) -> void:
 					_move_dir(to_spot, data.walk_speed * 1.1)
 				face_toward(to_t)
 			elif dist > reach * 0.8:
-				_move_dir(to_t, data.run_speed * speed_mult)
+				_move_to(tgt.global_position, data.run_speed * speed_mult)
 
 
 func _moves() -> Array:
@@ -1308,7 +1324,10 @@ func _move_dir(dir: Vector3, speed: float) -> void:
 	if _stuck_t > 0.25 and is_on_floor() and is_on_wall() and _hop_cd <= 0.0 and not mdata.flying:
 		velocity.y = 7.5
 		_hop_cd = 0.9
-	if _stuck_t > 1.2 and _detour_t <= 0.0:
+	if _stuck_t > 1.2 and _detour_t <= 0.0 and _following:
+		_nav_t = 0.0  # on a path: plan again from here instead of a random detour
+		_stuck_t = 0.0
+	elif _stuck_t > 1.2 and _detour_t <= 0.0:
 		_detour_t = 1.6
 		_detour_angle = (1.0 if _rng.randf() < 0.5 else -1.0) * _rng.randf_range(1.2, 1.9)
 		_stuck_t = 0.0
@@ -1320,6 +1339,99 @@ func _move_dir(dir: Vector3, speed: float) -> void:
 	face_toward(d)
 	var push := CombatDirector.separation(self) if ai != AI.CHARGE else Vector3.ZERO
 	_desired_velocity = (d + push * 0.8).normalized() * speed
+
+
+# --- Pathfinding (Milestone 25) -------------------------------------------------------
+
+var _following := false
+
+
+## Walks to `goal` along an A* path (NavGrid): around walls, houses, trees,
+## cliffs and water, through doorways and dungeon corridors. Plans again every
+## second or so, when the goal moves, or when stuck. Close goals in the open,
+## flying monsters and the old mode (NavGrid.enabled off) go straight.
+func _move_to(goal: Vector3, speed: float) -> void:
+	var to := goal - global_position
+	to.y = 0.0
+	var w := World.instance
+	if mdata.flying or not NavGrid.enabled or w == null or not w.is_ready or to.length() < 1.5:
+		_following = false
+		_move_dir(to, speed)
+		return
+	var dt := get_physics_process_delta_time()
+	_nav_t -= dt
+	var moved := Vector2(goal.x - _nav_goal.x, goal.z - _nav_goal.z).length() if _nav_goal != Vector3.INF else INF
+	var need := _nav_t <= 0.0 or moved > maxf(1.5, to.length() * 0.25) or _nav_i >= nav_path.size()
+	if need and NavGrid.take_search():
+		var r := NavGrid.find_path(w, global_position, goal, _is_raider())
+		nav_path = r.points
+		nav_reached = r.reached
+		_nav_i = 0
+		_nav_goal = goal
+		_nav_t = (0.6 if to.length() < 8.0 else 1.2) + _rng.randf() * 0.4
+		_update_nav_debug()
+	if nav_path.is_empty():
+		_following = false
+		_move_dir(to, speed)
+		return
+	# Next waypoint: skip the ones we have reached.
+	while _nav_i < nav_path.size() - 1:
+		var d := nav_path[_nav_i] - global_position
+		d.y = 0.0
+		if d.length() > 0.4:
+			break
+		_nav_i += 1
+	var wp := nav_path[mini(_nav_i, nav_path.size() - 1)]
+	if _nav_i >= nav_path.size() - 1 and nav_reached:
+		wp = goal  # last leg: the live goal, not where it was
+	var dir := wp - global_position
+	dir.y = 0.0
+	if _nav_i >= nav_path.size() - 1 and not nav_reached and dir.length() < 0.8:
+		# The goal can't be reached (on a roof, behind walls): wait at the closest spot.
+		_following = false
+		_desired_velocity = Vector3.ZERO
+		face_toward(to)
+		if _is_raider() and _alive(_blocker) and _blocker is BuildPiece and target != _blocker:
+			target = _blocker
+			_blocker = null
+		return
+	_following = true
+	_move_dir(dir, speed)
+	# Raiders whose path goes through a building hit it when they reach it.
+	if _is_raider() and _stuck_t > 0.4 and _alive(_blocker) and _blocker is BuildPiece and target != _blocker:
+		target = _blocker
+		_blocker = null
+		_set_ai(AI.CHASE)
+
+
+## Creative mode's "Show monster paths": a line along the current path.
+func _update_nav_debug() -> void:
+	if not NavGrid.debug_draw:
+		if _nav_debug:
+			_nav_debug.queue_free()
+			_nav_debug = null
+		return
+	if _nav_debug == null:
+		_nav_debug = MeshInstance3D.new()
+		_nav_debug.top_level = true
+		_nav_debug.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.vertex_color_use_as_albedo = true
+		mat.no_depth_test = true
+		_nav_debug.material_override = mat
+		add_child(_nav_debug)
+	var im := ImmediateMesh.new()
+	im.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
+	var col := Color(0.3, 1.0, 0.5) if nav_reached else Color(1.0, 0.45, 0.3)
+	im.surface_set_color(col)
+	im.surface_add_vertex(global_position + Vector3(0, 0.3, 0))
+	for p in nav_path:
+		im.surface_set_color(col)
+		im.surface_add_vertex(p + Vector3(0, 0.3, 0))
+	im.surface_end()
+	_nav_debug.mesh = im
+	_nav_debug.global_transform = Transform3D.IDENTITY
 
 
 func _choose_heading(dir: Vector3) -> float:
