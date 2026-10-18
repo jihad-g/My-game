@@ -297,6 +297,8 @@ func _set_ai(new_ai: AI, time: float = 0.0) -> void:
 		CombatDirector.release(self)
 	if ai == AI.BEAM and new_ai != AI.BEAM:
 		_end_beam()
+	if (ai == AI.DORMANT) != (new_ai == AI.DORMANT):
+		(model as MonsterModel).set_awake(new_ai != AI.DORMANT)  # Milestone 33: door mimics
 	ai = new_ai
 	ai_time = time
 	_hit_done = false

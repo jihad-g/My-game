@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"dragon_bone"
+display_name = "Dragon Bone"
+description = "A huge, ancient bone from a bone dragon, still faintly warm with soul fire."
+category = 0
+rarity = 3
+max_stack = 20
+base_value = 60
+icon_color = Color(0.95, 0.92, 0.82, 1)
+icon_glyph = "DB"

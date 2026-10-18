@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"mimic_tooth"
+display_name = "Mimic Tooth"
+description = "A long wooden tooth from a door mimic. It still tries to bite."
+category = 0
+rarity = 2
+max_stack = 40
+base_value = 16
+icon_color = Color(0.92, 0.88, 0.75, 1)
+icon_glyph = "Mt"

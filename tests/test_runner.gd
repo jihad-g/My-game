@@ -159,6 +159,8 @@ func _ready() -> void:
 	await _run_async(&"test_m32_anim_models")
 	await _run_async(&"test_m32_anim_parts")
 	await _run_async(&"test_m32_hit_frame_ingame")
+	_run(&"test_m33_mobs_data")
+	await _run_async(&"test_m33_mobs_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5208,7 +5210,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.40"), "version 0.40 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.41"), "version 0.41 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -9546,5 +9548,102 @@ func test_m32_hit_frame_ingame() -> void:
 		check(at_hit.size() == 3 and not at_hit[0] and not at_hit[1] and absf(at_hit[2]) <= 0.04,
 			"the glow and the shaking end on the hit frame, right on the strike (%s)" % str(at_hit))
 		NodePool.release_or_free(brute)
+	world.queue_free()
+	await _frames(5)
+
+
+# --- Milestone 33: more mobs -----------------------------------------------------------------
+
+const M33_MOBS := [&"bone_dragon", &"shadow_serpent", &"door_mimic", &"ghost_cat", &"diver_zombie", &"turkey",
+	&"top_hat_bear", &"cupcake_critter", &"berry_jelly"]
+
+
+func test_m33_mobs_data() -> void:
+	var sources := SelfCheck.monster_sources()
+	var holder := Node3D.new()
+	add_child(holder)
+	for id in M33_MOBS:
+		var d := load("res://data/enemies/%s.tres" % id) as MonsterData
+		check(d != null and d.id == id, "%s loads" % id)
+		if d == null:
+			continue
+		var drops_ok := not d.loot.is_empty()
+		for e in d.loot:
+			drops_ok = drops_ok and (ItemDB.has_item(e.item_id) or e.item_id == Enemy.COIN_DROP)
+		var mm := MonsterModel.new()
+		holder.add_child(mm)
+		mm.build(d)
+		var meshes := mm._meshes().size()
+		check(drops_ok and d.melee != null and meshes >= 8 and sources.has(id),
+			"%s: drops (%d), an attack, a body (%d parts) and a place in the world (%s)" % [d.display_name, d.loot.size(), meshes, sources.get(id, "none")])
+	holder.queue_free()
+	var bd := load("res://data/enemies/bone_dragon.tres") as MonsterData
+	check(bd.style == MonsterData.Style.BOSS and bd.boss_title != "" and bd.summon != null, "the Bone Dragon is a boss that calls skeletons")
+	check((load("res://data/enemies/turkey.tres") as MonsterData).timid, "turkeys run away")
+	var meadow := []
+	for r in WildSpawns.rules_for(&"verdant_meadow"):
+		meadow.append(r.enemy_data.id)
+	check(&"turkey" in meadow and &"cupcake_critter" in meadow and &"berry_jelly" in meadow, "turkeys, cupcakes and jellies live in meadows")
+	var beach := []
+	for r in WildSpawns.rules_for(&"sandy_beach"):
+		beach.append(r.enemy_data.id)
+	check(&"diver_zombie" in beach, "diver zombies walk the beaches")
+	for id in [&"dragon_bone", &"serpent_scale", &"mimic_tooth", &"ectoplasm", &"pearl", &"turkey_feather", &"sugar"]:
+		check(ItemDB.has_item(id), "new drop %s exists" % id)
+	var sc := SelfCheck.run()
+	check(sc.ok(), "self check is clean (%s)" % ", ".join(sc.errors))
+	var unplaced := []
+	for w in sc.warnings:
+		if "never appears" in w:
+			unplaced.append(w)
+	check(unplaced.is_empty(), "every monster appears somewhere (%s)" % ", ".join(unplaced))
+
+
+func test_m33_mobs_ingame() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 80
+	# A rank B crypt keeps a Bone Dragon by the stairs of its first floor.
+	var poi := _test_dungeon_poi(world, 3, PoiInfo.DungeonTheme.CRYPT, 33)
+	check(world.enter_dungeon(poi), "entered a rank B crypt")
+	await _frames(10)
+	var d := world.dungeon
+	check(d.has_dragon() and d.dragon != null and d.dragon.is_boss() and d.dragon.ai == Monster.AI.DORMANT,
+		"a Bone Dragon sleeps by the stairs")
+	# Door mimics: about a third of the normal rooms from rank C (here: place one if none rolled).
+	var mimic_rooms := d.mimics.size()
+	if d.mimics.is_empty():
+		for i in d.plan.rooms.size():
+			if d.plan.rooms[i].type == DungeonPlan.Room.NORMAL:
+				d._spawn_mimic(i)
+				break
+	var found: Monster = d.mimics[0] if not d.mimics.is_empty() else null
+	print("    %d mimics rolled on this floor" % mimic_rooms)
+	check(found != null, "a door mimic hides in a dungeon room")
+	if found:
+		var rig := (found.model as MonsterModel).rig as BeastModel
+		check(found.ai == Monster.AI.DORMANT and rig and not rig._awake, "it looks like a plain door while it sleeps")
+		p.global_position = found.global_position + Vector3(1.5, 0.3, 1.5)
+		await _frames(20)
+		check(found.ai != Monster.AI.DORMANT and rig._awake, "walk up to it and it wakes, eyes open")
+	world.exit_dungeon()
+	await _wait_ready_after_teleport(world)
+	# Creative: hide a sleeping mimic ahead.
+	world.hud.creative._hide_mimic()
+	var hidden := false
+	for e in get_tree().get_nodes_in_group(&"enemies"):
+		if e is Monster and e.mdata.id == &"door_mimic" and e.ai == Monster.AI.DORMANT:
+			hidden = true
+	check(hidden, "Creative hides a sleeping door mimic")
+	_clear_enemies(world)
+	# The turkey runs from you.
+	var t := _spawn_monster(world, &"turkey", Vector3(4, 0, 0))
+	if t:
+		var d0 := t.global_position.distance_to(p.global_position)
+		t.receive_hit(DamageInfo.create(1.0, p, &"physical"))
+		await _frames(60)
+		check(t.global_position.distance_to(p.global_position) > d0 + 1.0, "a hit turkey runs away (%.1f -> %.1f m)" % [d0, t.global_position.distance_to(p.global_position)])
 	world.queue_free()
 	await _frames(5)

@@ -1,0 +1,49 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/animal_kick.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"raw_meat"
+min_count = 1
+max_count = 2
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"turkey_feather"
+min_count = 1
+max_count = 3
+chance = 0.9
+
+[resource]
+script = ExtResource("1_md")
+id = &"turkey"
+display_name = "Turkey"
+category = 0
+level = 1
+max_health = 32.0
+walk_speed = 1.6
+run_speed = 6.5
+turn_speed = 9.0
+aggro_range = 9.0
+leash_range = 36.0
+max_poise = 14.0
+damage_multipliers = {}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 5
+respawn_time = 480.0
+look = &"turkey"
+model_scale = 1.0
+tint = Color(0.42, 0.28, 0.18, 1)
+accent = Color(0.75, 0.35, 0.15, 1)
+melee = ExtResource("2_melee")
+style = 0
+flee_below = 1.0
+pack_alert = 0.0
+can_be_elite = false
+timid = true

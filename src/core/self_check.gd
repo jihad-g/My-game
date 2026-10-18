@@ -104,8 +104,33 @@ func _recipes() -> void:
 	counts["recipes"] = all.size()
 
 
+## Milestone 33: monsters that other systems place (POI guards, dungeon bosses and
+## specials, raids, rare events). With WildSpawns and the dungeon themes this is
+## where every monster appears; a monster in none of them is never met.
+const PLACED_MONSTERS := [&"arcane_colossus", &"bone_king", &"elder_thornmaw", &"starborn_colossus", &"temple_guardian",
+	&"tower_warden", &"treasure_goblin", &"bandit_bomber", &"bandit_brute", &"bandit_hexer", &"bandit_warlord",
+	&"tusker_chief", &"bone_dragon", &"door_mimic", &"grotto_cultist", &"skeleton_archer", &"skeleton_warrior"]
+
+
+## Every monster id that appears somewhere in the world.
+static func monster_sources() -> Dictionary:
+	var out := {}
+	for biome in WildSpawns.TABLE:
+		for e in WildSpawns.TABLE[biome]:
+			out[e[0]] = "wild:%s" % biome
+	for theme in PoiLayout.THEME_MONSTERS:
+		for id in theme:
+			out[id] = "dungeon"
+	for id in PoiLayout.THEME_EXTRAS:
+		out[id] = "dungeon"
+	for id in PLACED_MONSTERS:
+		out[id] = out.get(id, "placed")
+	return out
+
+
 ## Every monster file: loads, has attacks, drops real items, summons real monsters.
 func _monsters() -> void:
+	var sources := monster_sources()
 	var n := 0
 	for file in ResourceLoader.list_directory(ENEMY_DIR):
 		if not file.ends_with(".tres"):
@@ -133,6 +158,11 @@ func _monsters() -> void:
 			_warn("Monster %s has no melee attack" % d.id)
 		if md.style == MonsterData.Style.BOSS and md.boss_title == "":
 			_warn("Boss %s has no title" % d.id)
+		# Milestone 33: a body to show and a place to meet it.
+		if not (md.look in MonsterModel.BEASTS or md.look in MonsterModel.HUMANOID_LOOKS):
+			_err("Monster %s has the look '%s', which has no model" % [d.id, md.look])
+		if not sources.has(d.id):
+			_warn("Monster %s never appears in the world (no spawn rule, dungeon or POI)" % d.id)
 	counts["monsters"] = n
 
 

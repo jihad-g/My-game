@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"dragon_bite"
+display_name = "Bone Bite"
+damage = 30
+windup = 0.55
+active = 0.12
+recovery = 0.7
+cancel_ratio = 0.0
+reach = 3.6
+arc_degrees = 90
+knockback = 6
+poise_damage = 30
+lunge_speed = 0.0
+move_multiplier = 0.0
+animation = &"bite"
+camera_shake = 0.2

@@ -1,0 +1,75 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/dragon_bite.tres" id="2_melee"]
+[ext_resource type="Resource" path="res://data/attacks/dragon_tail.tres" id="3_heavy"]
+[ext_resource type="Resource" path="res://data/enemies/skeleton_minion.tres" id="4_summon"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"dragon_bone"
+min_count = 2
+max_count = 4
+chance = 1.0
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"ancient_bone"
+min_count = 2
+max_count = 4
+chance = 0.8
+
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"gemstone"
+min_count = 1
+max_count = 2
+chance = 0.5
+
+[sub_resource type="Resource" id="Loot_3"]
+script = ExtResource("9_loot")
+item_id = &"copper_coin"
+min_count = 30
+max_count = 55
+chance = 1.0
+
+[resource]
+script = ExtResource("1_md")
+id = &"bone_dragon"
+display_name = "Bone Dragon"
+category = 7
+level = 14
+max_health = 1400.0
+walk_speed = 2.2
+run_speed = 5.0
+turn_speed = 9.0
+aggro_range = 20.0
+leash_range = 36.0
+max_poise = 320.0
+damage_multipliers = {
+&"fire": 1.1,
+&"poison": 0.0,
+&"holy": 1.5
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2"), SubResource("Loot_3")]
+xp_reward = 600
+respawn_time = 480.0
+look = &"bone_dragon"
+model_scale = 1.7
+tint = Color(0.92, 0.9, 0.82, 1)
+accent = Color(0.45, 0.85, 1.0, 1)
+melee = ExtResource("2_melee")
+heavy = ExtResource("3_heavy")
+summon = ExtResource("4_summon")
+heavy_cooldown = 5.0
+style = 3
+boss_title = "The Bone Dragon"
+boss_moves = [&"cleave", &"roar", &"slam", &"summon", &"charge"]
+slam_damage = 34.0
+slam_radius = 5.0
+summon_count = 3
+phases = [{"at": 0.5, "moves": [&"cleave", &"nova", &"summon", &"slam", &"charge"], "text": "The Bone Dragon's soul fire flares!", "hazard": &"falling_rocks"}]
+can_be_elite = false

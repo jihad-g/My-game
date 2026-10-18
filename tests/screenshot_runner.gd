@@ -26,6 +26,10 @@ func _ready() -> void:
 		await _new_folk_showcase()
 		get_tree().quit()
 		return
+	if "--only=mobs" in OS.get_cmdline_user_args():
+		await _mobs_showcase()
+		get_tree().quit()
+		return
 	if "--only=anims" in OS.get_cmdline_user_args():
 		await _anims_showcase()
 		get_tree().quit()
@@ -2311,6 +2315,71 @@ func _rich_world_showcase() -> void:
 
 
 ## Milestone 30: a two-storey house with stairs, a balcony and a ladder.
+## Milestone 33: the new creatures side by side (the mimic once asleep, once awake).
+func _mobs_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 10.5
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	world.weather.settle()
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var flat := _dry_center(world, p.global_position, 16.0)
+	for k in 24:
+		var q := _dry_center(world, p.global_position + Vector3(cos(k * 1.7), 0, sin(k * 1.7)) * (120.0 + k * 40.0), 16.0)
+		if world.generator.pois.near(q, 40.0).is_empty() and world.generator.settlements.near(q, 120.0).is_empty():
+			flat = q
+			break
+	await _teleport(world, flat + Vector3(-16, 0, -8))
+	_clear_monsters(world)
+	var y := world.get_ground_height(flat)
+	var lineup := [[&"bone_dragon", Vector3(-4.5, 0, -3.5)], [&"shadow_serpent", Vector3(1.5, 0, -4.0)], [&"top_hat_bear", Vector3(5.5, 0, -4.0)],
+		[&"door_mimic", Vector3(-6.5, 0, 1.5)], [&"door_mimic", Vector3(-4.0, 0, 1.5)], [&"ghost_cat", Vector3(-0.5, 0, 1.5)],
+		[&"diver_zombie", Vector3(2.5, 0, 1.0)], [&"turkey", Vector3(5.5, 0, 1.5)],
+		[&"cupcake_critter", Vector3(-2.5, 0, 5.0)], [&"berry_jelly", Vector3(0.5, 0, 5.0)], [&"cupcake_critter", Vector3(3.0, 0, 5.2)]]
+	var asleep := true
+	for e in lineup:
+		var data := load("res://data/enemies/%s.tres" % e[0]) as MonsterData
+		var mm := MonsterModel.new()
+		world.add_child(mm)
+		mm.build(data)
+		mm.global_position = Vector3(flat.x, y, flat.z) + e[1]
+		mm.rotation.y = 0.35
+		var sleeping: bool = e[0] == &"door_mimic" and asleep
+		if e[0] == &"door_mimic":
+			mm.set_awake(not asleep)
+			if not asleep:
+				mm.play_attack(&"bite", 3.0, 0.2, 0.5)
+			asleep = false
+		var l := Label3D.new()
+		l.text = data.display_name + (" (asleep)" if sleeping else "")
+		l.font_size = 56
+		l.outline_size = 12
+		l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		world.add_child(l)
+		l.global_position = mm.global_position + Vector3(0, 0.25 + 2.2 * minf(data.model_scale, 1.4), 0)
+	var cam := Camera3D.new()
+	cam.fov = 46.0
+	world.add_child(cam)
+	cam.current = true
+	var centre := Vector3(flat.x, y + 0.8, flat.z + 0.5)
+	cam.global_position = centre + Vector3(0, 10, 13.5)
+	cam.look_at(centre)
+	await _wait(70)
+	await _shot("mobs_1_lineup")
+	world.queue_free()
+	await _wait(5)
+
+
 ## Milestone 32: a contact sheet of monster animations - idle, wind-up, strike, hurt, death.
 func _anims_showcase() -> void:
 	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")

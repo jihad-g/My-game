@@ -468,6 +468,13 @@ func _build_monsters() -> void:
 		Enemy.creative_freeze = on
 		_say("enemies frozen" if on else "enemies move again"))
 	_row(v, "Enemies", [["Clear enemies near you", _clear], ["Kill enemies near you (with loot)", _kill_near]])
+	# Milestone 33: the new creatures (all of them are also in the list above).
+	_row(v, "New (M33)", [["Hide a sleeping door mimic", _hide_mimic], ["Bone Dragon", func() -> void: _spawn(&"bone_dragon", &"normal", 1)],
+		["Shadow Serpent", func() -> void: _spawn(&"shadow_serpent", &"normal", 1)], ["Ghost Cat", func() -> void: _spawn(&"ghost_cat", &"normal", 1)],
+		["Top-Hat Bear", func() -> void: _spawn(&"top_hat_bear", &"normal", 1)], ["Turkeys", func() -> void: _spawn(&"turkey", &"normal", 3)],
+		["Cupcakes and jellies", func() -> void:
+			_spawn(&"cupcake_critter", &"normal", 2)
+			_spawn(&"berry_jelly", &"normal", 2)]])
 	# Milestone 32: watch the animations of the nearest monster (freeze enemies first to keep it still).
 	_row(v, "Animate", [["Attack", func() -> void: _animate(&"attack")], ["Big attack", func() -> void: _animate(&"big")],
 		["Hurt", func() -> void: _animate(&"hurt")], ["Death", func() -> void: _animate(&"death")],
@@ -479,6 +486,21 @@ func _build_monsters() -> void:
 		ev.append([String(id).capitalize(), func() -> void: _event(id)])
 	ev.append(["Stop events", _stop_events])
 	_row(v, "Events", ev)
+
+
+## Milestone 33: a door mimic 6 m ahead, asleep until you walk up to it.
+func _hide_mimic() -> void:
+	var before := get_tree().get_nodes_in_group(&"enemies").size()
+	_spawn(&"door_mimic", &"normal", 1)
+	var all := get_tree().get_nodes_in_group(&"enemies")
+	for i in range(all.size() - 1, -1, -1):
+		var m := all[i] as Monster
+		if m and m.mdata.id == &"door_mimic" and m.ai != Monster.AI.DORMANT and not m.is_dead:
+			m.face_toward(player.global_position - m.global_position)
+			m.make_dormant(DungeonInstance.MIMIC_WAKE)
+			_say("a door mimic is hiding ahead - walk up to it")
+			return
+	_say("couldn't place the mimic (%d enemies)" % before)
 
 
 func _spawn_selected() -> void:

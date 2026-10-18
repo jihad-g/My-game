@@ -1167,6 +1167,10 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 33 — More mobs (v0.41.0).** Nine creatures with their own BeastModel/HumanoidModel bodies,
+drops and spawn rules (WildSpawns, DungeonInstance mimics and the crypt Bone Dragon). SelfCheck now checks that
+every monster has a model and appears somewhere (`SelfCheck.monster_sources()`).
+
 **Done: Milestone 32 — Monster animations (v0.40.0).** BeastModel splits motion into a procedural layer (walk
 cycle, breathing, tails, wings, ears) and offsets that attacks, hurts and hit frames tween on top
 (`_lean`, `_lunge`, `_head_off`, `_jaw_open`...). MonsterModel marks the strike time of every attack and

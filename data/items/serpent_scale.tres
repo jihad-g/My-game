@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"serpent_scale"
+display_name = "Serpent Scale"
+description = "A smooth dark scale from a shadow serpent. It shimmers purple in the light."
+category = 0
+rarity = 2
+max_stack = 40
+base_value = 14
+icon_color = Color(0.32, 0.2, 0.42, 1)
+icon_glyph = "Sc"

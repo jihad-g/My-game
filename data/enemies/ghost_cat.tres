@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/ghost_swipe.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"ectoplasm"
+min_count = 1
+max_count = 2
+chance = 0.85
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"moonpetal"
+min_count = 1
+max_count = 1
+chance = 0.12
+
+[resource]
+script = ExtResource("1_md")
+id = &"ghost_cat"
+display_name = "Ghost Cat"
+category = 4
+level = 6
+max_health = 60.0
+walk_speed = 2.0
+run_speed = 5.5
+turn_speed = 9.0
+aggro_range = 9.0
+leash_range = 36.0
+max_poise = 14.0
+damage_multipliers = {
+&"physical": 0.7,
+&"holy": 1.6
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 24
+respawn_time = 480.0
+look = &"ghost_cat"
+model_scale = 1.0
+tint = Color(0.72, 0.92, 1.0, 1)
+accent = Color(0.5, 1.0, 0.95, 1)
+melee = ExtResource("2_melee")
+style = 0
+melee_status = [&"chilled", 2.0, {}]
+dodge_chance = 0.3

@@ -12,7 +12,14 @@ signal struck
 
 const BEASTS := [&"wisp", &"crawler", &"thornmaw", &"wolf", &"scorpion", &"crab", &"deer", &"rabbit",
 	# Milestone 27
-	&"fox", &"stag", &"hedgehog", &"cat", &"bee", &"phoenix", &"candle_skull", &"spider", &"pumpkin", &"acorn"]
+	&"fox", &"stag", &"hedgehog", &"cat", &"bee", &"phoenix", &"candle_skull", &"spider", &"pumpkin", &"acorn",
+	# Milestone 33
+	&"bone_dragon", &"shadow_serpent", &"door_mimic", &"ghost_cat", &"turkey", &"top_hat_bear", &"cupcake", &"berry_jelly"]
+
+## Looks HumanoidModel.set_monster_look() knows (golems are its default).
+const HUMANOID_LOOKS := [&"skeleton", &"skeleton_archer", &"bone_king", &"cultist", &"warden", &"bandit", &"bandit_archer",
+	&"bandit_brute", &"bandit_hexer", &"bandit_bomber", &"warlord", &"goblin", &"diver_zombie", &"golem", &"arcane_colossus",
+	&"temple_guardian", &"starborn", &"tusker", &"tusker_brute", &"tusker_chief"]
 
 var rig: Node3D
 var _look: StringName = &""
@@ -101,6 +108,13 @@ func hit_frame() -> void:
 func _physics_process(delta: float) -> void:
 	if strike_left > -10.0:
 		strike_left -= delta
+
+
+## Milestone 33: door mimics sleep as plain doors until something comes close.
+func set_awake(on: bool) -> void:
+	net_event.emit(&"set_awake", [on])
+	if rig and rig.has_method("set_awake"):
+		rig.set_awake(on)
 
 
 func is_trembling() -> bool:

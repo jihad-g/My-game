@@ -5,7 +5,10 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.40.0 — Monster animations**. Creatures crouch and rear back before they strike, shake and glow before
+> Status: **v0.41.0 — More mobs**. A Bone Dragon guards deep crypts, door mimics hide in dungeon rooms, and shadow
+> serpents, ghost cats, diver zombies, turkeys, a top-hat bear and cute cupcake and jelly critters roam the land.
+>
+> Before that, **v0.40.0 — Monster animations**. Creatures crouch and rear back before they strike, shake and glow before
 > big attacks, and the damage lands exactly on the strike. They flinch when hurt, topple or flip over when they
 > die, and their ears, tails and wings move on their own.
 >

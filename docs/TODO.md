@@ -105,6 +105,17 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 33 — More mobs  ✅ (v0.41.0)
+
+- [x] Bone Dragon (crypt boss), Shadow Serpent, Door Mimic, Ghost Cat, Diver Zombie, Turkey, Top-Hat Bear, Cupcake Critter, Berry Jelly
+- [x] Drops (7 new materials), spawn rules (biomes, dungeon rooms, crypt floors), Self Check look + spawn coverage
+- [x] All of them use the M32 animation system (wind-up, hit frame, hurt, death; mimic sleeps as a door)
+- [x] Creative "New (M33)" row; tests `test_m33_*` run and pass
+- [ ] NOT IMPLEMENTED: night-only spawns (ghost cats and diver zombies also appear by day)
+- [ ] NOT IMPLEMENTED: uses for the new materials (planned for Milestone 35: icons and item uses)
+- [ ] NOT IMPLEMENTED: diver zombies coming out of the sea; serpents swimming
+- [ ] NOT IMPLEMENTED: a lore page and quest for the Bone Dragon
+
 ## Milestone 32 — Monster animations  ✅ (v0.40.0)
 
 - [x] Walk, attack, hurt and death for every monster type (humanoids already had them; beasts got new ones)
@@ -177,8 +188,8 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Prismheart Blade, Sporecrown Staff, Starlance with their own weapon shapes
 - [x] Recipes (tailoring, arcane altar) and dungeon loot
 - [x] Tests `test_m27_*` run and pass
-- [ ] NOT IMPLEMENTED: the other mobs on the sheets (bone dragon, shadow serpent, door mimic, ghost cat, diver zombie, cute food
-      critters, top-hat bear, turkey) - pick the next ones
+- [x] Done in Milestone 33: the other mobs on the sheets (bone dragon, shadow serpent, door mimic, ghost cat, diver zombie, cute food
+      critters, top-hat bear, turkey)
 - [ ] NOT IMPLEMENTED: hand-drawn inventory icons for the new items (code-drawn by shape for now)
 - [ ] NOT IMPLEMENTED: honey/silk crafting uses beyond the new recipes; the Ember Feather has no recipe yet
 

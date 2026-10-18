@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"mimic_chomp"
+display_name = "Chomp"
+damage = 20
+windup = 0.65
+active = 0.12
+recovery = 0.8
+cancel_ratio = 0.0
+reach = 2.4
+arc_degrees = 100
+knockback = 6
+poise_damage = 22
+lunge_speed = 4.0
+move_multiplier = 0.0
+animation = &"bite"
+camera_shake = 0.15

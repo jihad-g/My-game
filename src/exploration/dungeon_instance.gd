@@ -31,6 +31,12 @@ var _rng := RandomNumberGenerator.new()
 var _check := 0.0
 ## Milestone 31.
 const PLATE_SECONDS := 6.0
+## Milestone 33: a door mimic hides in this share of normal rooms (rank C and up),
+## and B+ crypts keep a Bone Dragon by the stairs of their second-to-last floor.
+const MIMIC_CHANCE := 0.3
+const MIMIC_WAKE := 3.2
+const DRAGON := &"bone_dragon"
+const MIMIC := &"door_mimic"
 const CORRIDOR_SIGHT := 3.0
 ## Explored rooms and corridors (index -> true).
 var explored: Dictionary = {}
@@ -140,6 +146,8 @@ func _build_rooms() -> void:
 			DungeonPlan.Room.START:
 				_door(DungeonDoor.Kind.EXIT, center + Vector3(0, 0, -2.0))
 			DungeonPlan.Room.NORMAL:
+				if poi.rank >= 2 and i != plan.keeper_room and _rng.randf() < MIMIC_CHANCE:
+					_spawn_mimic(i)
 				for k in 2 + poi.rank / 2 + _rng.randi_range(0, 1):
 					var pick: StringName = mons[0] if _rng.randf() < 0.6 else mons[1]
 					if _rng.randf() < 0.15:
@@ -161,8 +169,11 @@ func _build_rooms() -> void:
 					_monster(mons[0], plan.room_point(i, _rng), k == 0 and poi.rank >= 2)
 			DungeonPlan.Room.END:
 				_door(DungeonDoor.Kind.STAIRS, center)
-				for k in 2 + poi.rank / 2:
-					_monster(mons[k % 2], plan.room_point(i, _rng), k == 0)
+				if has_dragon():
+					_spawn_dragon(i)
+				else:
+					for k in 2 + poi.rank / 2:
+						_monster(mons[k % 2], plan.room_point(i, _rng), k == 0)
 			DungeonPlan.Room.BOSS:
 				_spawn_boss(i)
 			DungeonPlan.Room.SECRET:
@@ -245,6 +256,40 @@ func _monster(data_id: StringName, local: Vector3, elite: bool) -> Monster:
 		m.make_elite(EliteAffixes.roll(rng, count, data.style != MonsterData.Style.MELEE))
 	monsters.append(m)
 	return m
+
+
+# --- Milestone 33: door mimics and the bone dragon ---------------------------------------
+
+var dragon: Monster
+var mimics: Array[Monster] = []
+
+
+func has_dragon() -> bool:
+	return poi.theme == PoiInfo.DungeonTheme.CRYPT and poi.rank >= 3 and plan.floor_count >= 2 \
+		and floor_index == plan.floor_count - 2
+
+
+## A door mimic stands against a wall of the room, asleep until you come close.
+func _spawn_mimic(room: int) -> void:
+	var rr: Rect2i = plan.rooms[room].rect
+	var side := _rng.randi() % 4
+	var c := plan.room_center(room)
+	var spots := [Vector3(c.x, 0, rr.position.y + 0.5), Vector3(c.x, 0, rr.end.y - 0.5),
+		Vector3(rr.position.x + 0.5, 0, c.z + 1.5), Vector3(rr.end.x - 0.5, 0, c.z - 1.5)]
+	var m := _monster(MIMIC, spots[side], false)
+	if m == null:
+		return
+	# Face into the room, flat against the wall like a door.
+	m.face_toward(Vector3(c.x - spots[side].x, 0, c.z - spots[side].z))
+	m.make_dormant(MIMIC_WAKE)
+	mimics.append(m)
+
+
+func _spawn_dragon(room: int) -> void:
+	dragon = _monster(DRAGON, plan.room_center(room) + Vector3(0, 0, -3.0), false)
+	if dragon:
+		dragon.leash_mult = 3.0
+		dragon.make_dormant(8.0)
 
 
 # --- Milestone 31: the Keeper, locked gates and puzzles -----------------------------------

@@ -2,6 +2,33 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.41.0] — Milestone 33: More mobs
+
+### Added
+Nine new creatures, designed by us in the style of the owner's reference sheets (not copies):
+- **Bone Dragon** (boss): a skeletal dragon with soul fire in its ribs, torn wings and a bladed tail. It sleeps by
+  the stairs of the second-to-last floor of rank B, A and S crypts (behind the Keeper's gates), calls skeleton
+  minions, sweeps with its tail and roars. Drops **Dragon Bone**, ancient bones, gems and coins.
+- **Shadow Serpent**: a long dark snake that slithers in a wave, rears up and strikes with poison. Swamps and
+  jungles. Drops **Serpent Scale** and thorn venom.
+- **Door Mimic**: looks like an old dungeon door against the wall of a room (rank C and up, about one room in
+  three). Walk close and it wakes - eyes, teeth and a red tongue - and hops after you. Drops **Mimic Tooth**,
+  iron and coins.
+- **Ghost Cat**: a see-through glowing cat that floats above the ground; its swipe chills. Swamps and crystal
+  glades. Drops **Ectoplasm** (and sometimes moonpetal).
+- **Diver Zombie**: a drowned diver in a brass helmet with portholes and a lead belt. Beaches. Drops **Pearls**,
+  rope and copper.
+- **Turkey**: a timid bird with a fan tail that opens when it's upset; it runs away. Meadows and forests. Drops
+  raw meat and **Turkey Feathers**.
+- **Top-Hat Bear**: a big brown bear in a top hat, monocle and bow tie. Forests and taiga. It rears up for a
+  heavy maul. Drops hide, honeycomb, gold and coins.
+- **Cupcake Critter** and **Berry Jelly**: cute, weak food creatures that hop around meadows and glades. Drop
+  **Sugar** and berries.
+- Self Check: every monster's look must have a model, and every monster must appear somewhere in the world
+  (a spawn rule, a dungeon or a placed spot) - "never appears" shows as a warning.
+- Creative mode → Monsters → "New (M33)": spawn each new creature, or hide a sleeping door mimic ahead of you.
+- Tests `test_m33_mobs_data`, `test_m33_mobs_ingame`; screenshot mode `--only=mobs`.
+
 ## [0.40.0] — Milestone 32: Monster animations
 
 ### Added

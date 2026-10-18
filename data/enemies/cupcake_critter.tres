@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/sweet_bump.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"sugar"
+min_count = 1
+max_count = 2
+chance = 0.9
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"berries"
+min_count = 1
+max_count = 2
+chance = 0.4
+
+[resource]
+script = ExtResource("1_md")
+id = &"cupcake_critter"
+display_name = "Cupcake Critter"
+category = 1
+level = 2
+max_health = 28.0
+walk_speed = 1.6
+run_speed = 3.4
+turn_speed = 9.0
+aggro_range = 8.0
+leash_range = 36.0
+max_poise = 10.0
+damage_multipliers = {
+&"fire": 1.4
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1")]
+xp_reward = 8
+respawn_time = 480.0
+look = &"cupcake"
+model_scale = 0.9
+tint = Color(1.0, 0.62, 0.78, 1)
+accent = Color(0.95, 0.75, 0.85, 1)
+melee = ExtResource("2_melee")
+style = 0

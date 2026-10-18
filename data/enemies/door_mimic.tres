@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/enemies/monster_data.gd" id="1_md"]
+[ext_resource type="Script" path="res://src/enemies/loot_entry.gd" id="9_loot"]
+[ext_resource type="Resource" path="res://data/attacks/mimic_chomp.tres" id="2_melee"]
+
+[sub_resource type="Resource" id="Loot_0"]
+script = ExtResource("9_loot")
+item_id = &"mimic_tooth"
+min_count = 1
+max_count = 3
+chance = 0.9
+
+[sub_resource type="Resource" id="Loot_1"]
+script = ExtResource("9_loot")
+item_id = &"iron_ingot"
+min_count = 1
+max_count = 2
+chance = 0.5
+
+[sub_resource type="Resource" id="Loot_2"]
+script = ExtResource("9_loot")
+item_id = &"copper_coin"
+min_count = 7
+max_count = 17
+chance = 1.0
+
+[resource]
+script = ExtResource("1_md")
+id = &"door_mimic"
+display_name = "Door Mimic"
+category = 5
+level = 10
+max_health = 180.0
+walk_speed = 1.4
+run_speed = 3.6
+turn_speed = 9.0
+aggro_range = 6.0
+leash_range = 36.0
+max_poise = 40.0
+damage_multipliers = {
+&"fire": 1.5
+}
+exposed_damage_multiplier = 1.5
+attacks = []
+loot = [SubResource("Loot_0"), SubResource("Loot_1"), SubResource("Loot_2")]
+xp_reward = 60
+respawn_time = 480.0
+look = &"door_mimic"
+model_scale = 1.0
+tint = Color(0.48, 0.32, 0.18, 1)
+accent = Color(1.0, 0.85, 0.2, 1)
+melee = ExtResource("2_melee")
+style = 0
+pack_alert = 0.0

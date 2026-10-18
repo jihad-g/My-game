@@ -238,6 +238,14 @@ func set_monster_look(look: StringName, tint: Color, accent: Color) -> void:
 				_:
 					_weapon_type = &"sword"
 					_has_shield = true
+		&"diver_zombie":
+			# Milestone 33: a drowned diver - grey-green skin, a canvas suit, a brass helmet.
+			skin_color = Color(0.5, 0.62, 0.5)
+			hair_color = Color(0.25, 0.3, 0.25)
+			shirt_color = tint
+			pants_color = tint * 0.85
+			boot_color = Color(0.25, 0.22, 0.2)
+			_weapon_type = &"unarmed"
 		&"goblin":
 			skin_color = Color(0.45, 0.7, 0.3)
 			hair_color = Color(0.3, 0.45, 0.2)
@@ -382,6 +390,20 @@ func _build_class_gear() -> void:
 					_part(_head, Vector3(-0.3, 0.56, 0), Vector3(0.1, 0.26, 0.1), Color(0.95, 0.92, 0.82))
 					_part(_torso, Vector3(0, 0.62, -0.02), Vector3(0.74, 0.16, 0.42), Color(0.35, 0.25, 0.18))  # fur mantle
 					_part(_torso, Vector3(0, 0.25, -0.2), Vector3(0.66, 0.9, 0.06), a)  # war cape
+		&"mon_diver_zombie":
+			var brass := a
+			_part(_head, Vector3(0, 0.26, 0), Vector3(0.62, 0.6, 0.62), brass)  # round brass helmet
+			_part(_head, Vector3(0, 0.6, 0), Vector3(0.36, 0.1, 0.36), brass.darkened(0.15))
+			_part(_head, Vector3(0, 0.26, 0.31), Vector3(0.3, 0.3, 0.02), Color(0.35, 0.55, 0.5))  # front window
+			_part(_head, Vector3(0, 0.26, 0.32), Vector3(0.34, 0.04, 0.02), brass.darkened(0.3))  # window bars
+			_part(_head, Vector3(0, 0.26, 0.32), Vector3(0.04, 0.34, 0.02), brass.darkened(0.3))
+			for sx in [-0.32, 0.32]:
+				_part(_head, Vector3(sx, 0.26, 0), Vector3(0.02, 0.18, 0.18), Color(0.35, 0.55, 0.5))  # side portholes
+			_part(_head, Vector3(-0.1, 0.22, 0.33), Vector3(0.06, 0.06, 0.01), Color(0.7, 1.0, 0.6), true)  # one glowing eye
+			_part(_torso, Vector3(0, 0.6, 0), Vector3(0.72, 0.14, 0.46), brass.darkened(0.1))  # collar plate
+			_part(_torso, Vector3(0, -0.02, 0.0), Vector3(0.6, 0.12, 0.38), Color(0.3, 0.28, 0.3))  # lead weight belt
+			_part(_torso, Vector3(0.18, 0.4, -0.24), Vector3(0.1, 0.5, 0.1), Color(0.3, 0.3, 0.32))  # air hose
+			_part(_torso, Vector3(-0.2, 0.15, 0.2), Vector3(0.14, 0.14, 0.04), Color(0.4, 0.6, 0.3))  # seaweed
 		&"mon_goblin":
 			_part(_head, Vector3(0.3, 0.3, 0), Vector3(0.2, 0.08, 0.06), skin_color)  # pointy ears
 			_part(_head, Vector3(-0.3, 0.3, 0), Vector3(0.2, 0.08, 0.06), skin_color)

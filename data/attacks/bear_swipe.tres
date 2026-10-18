@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AttackData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/attack_data.gd" id="1_atk"]
+
+[resource]
+script = ExtResource("1_atk")
+id = &"bear_swipe"
+display_name = "Gentlemanly Swipe"
+damage = 22
+windup = 0.6
+active = 0.12
+recovery = 0.7
+cancel_ratio = 0.0
+reach = 2.6
+arc_degrees = 140
+knockback = 7
+poise_damage = 26
+lunge_speed = 0.0
+move_multiplier = 0.0
+animation = &"swing"
+camera_shake = 0.1
