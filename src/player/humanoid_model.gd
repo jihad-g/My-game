@@ -56,6 +56,20 @@ var _walk_phase := 0.0
 var _move_amount := 0.0
 var _blocking := false
 var _dodge_tween: Tween
+## The dodge roll (v0.42.1): a forward somersault around the hips, driven by
+## _write_pose. -1 = not rolling.
+var _roll_t := -1.0
+var _roll_len := 0.4
+var _roll_landed := false
+## Height of the roll's turning point above the feet (the middle of the tucked
+## body), so it tumbles like a ball instead of swinging round the feet into the ground.
+const ROLL_PIVOT := 0.95
+## Roll timeline (fractions of the roll): lean in, spin, back upright.
+const ROLL_LEAN_END := 0.12
+const ROLL_SPIN_END := 0.78
+## A small hop during the turn so the head and shoulders clear the ground.
+const ROLL_HOP := 0.15
+signal roll_landed
 var _flash_time := 0.0
 
 # Milestone 18a: the compact animation system (AnimClip, AnimLibrary).
@@ -272,6 +286,7 @@ func set_weapon(weapon_type: StringName, has_shield: bool) -> void:
 
 func _build() -> void:
 	_action = null
+	_roll_t = -1.0
 	if _dodge_tween:
 		_dodge_tween.kill()
 	if _root:
@@ -1160,11 +1175,39 @@ func play_dodge(duration: float) -> void:
 	if _dodge_tween:
 		_dodge_tween.kill()
 	_root.rotation.x = 0.0
-	_dodge_tween = create_tween()
-	_dodge_tween.tween_property(_root, "rotation:x", TAU, duration).set_trans(Tween.TRANS_SINE)
-	_dodge_tween.tween_callback(func() -> void: _root.rotation.x = 0.0)
+	_root.scale = Vector3.ONE
+	_roll_len = maxf(duration, 0.2)
+	_roll_t = 0.0
+	_roll_landed = false
 	_set_trail(false)
 	play_clip(AnimLibrary.dodge(duration))
+
+
+## The roll's forward turn (radians) at progress `p` (0..1): a quick lean in,
+## a full turn that is fastest while tucked, then upright for the stand-up.
+static func roll_angle(p: float) -> float:
+	p = clampf(p, 0.0, 1.0)
+	var lean := 0.35
+	if p < ROLL_LEAN_END:
+		var k := p / ROLL_LEAN_END
+		return lean * (1.0 - (1.0 - k) * (1.0 - k))
+	if p < ROLL_SPIN_END:
+		var k := (p - ROLL_LEAN_END) / (ROLL_SPIN_END - ROLL_LEAN_END)
+		return lerpf(lean, TAU, k * k * (3.0 - 2.0 * k))
+	return TAU
+
+
+## True while the dodge roll is turning the body (tests).
+func is_rolling() -> bool:
+	return _roll_t >= 0.0
+
+
+func _end_roll() -> void:
+	if _roll_t < 0.0:
+		return
+	_roll_t = -1.0
+	if _root:
+		_root.rotation.x = 0.0
 
 
 func flash() -> void:
@@ -1203,6 +1246,7 @@ func play_flinch(strength: float, side: float) -> void:
 
 func play_death() -> void:
 	anim_event.emit("death", [])
+	_end_roll()
 	cancel_attack()
 	_cancel_t = 0.0
 	_additive.clear()
@@ -1218,6 +1262,7 @@ func reset_pose() -> void:
 	_cancel_t = 0.0
 	_additive.clear()
 	_step_off = 0.0
+	_roll_t = -1.0
 	_root.rotation = Vector3.ZERO
 	_root.position = Vector3.ZERO
 	_root.scale = Vector3.ONE
@@ -1507,11 +1552,29 @@ func _write_pose(pose: Dictionary, delta: float) -> void:
 		_step_off = 0.0
 	var y := float(pose[&"lift"]) + _step_off + 0.55 * _swim_blend
 	var z := float(pose[&"step"])
-	if absf(y) > 0.0001 or absf(z) > 0.0001 or _root_driven:
+	var rolling := _roll_t >= 0.0
+	if rolling:
+		_roll_t += delta
+		var a := roll_angle(_roll_t / _roll_len)
+		_root.rotation.x = a
+		# Turn around the middle of the body: shift the root so that point stays
+		# put. It sinks a little in the second half so the feet find the ground,
+		# and a small hop early on lets the head and shoulders clear it.
+		var pk := clampf((_roll_t / _roll_len - ROLL_LEAN_END) / (ROLL_SPIN_END - ROLL_LEAN_END), 0.0, 1.0)
+		var h := ROLL_PIVOT - 0.4 * smoothstep(0.35, 0.9, pk)
+		y += h * (1.0 - cos(a)) + ROLL_HOP * sin(PI * minf(pk / 0.7, 1.0))
+		z -= h * sin(a)
+		if not _roll_landed and _roll_t >= _roll_len * ROLL_SPIN_END:
+			_roll_landed = true
+			play_land(0.45)
+			roll_landed.emit()
+		if _roll_t >= _roll_len:
+			_end_roll()
+	if absf(y) > 0.0001 or absf(z) > 0.0001 or _root_driven or rolling:
 		_root.position.y = y
 		_root.position.z = z
 		_root_driven = absf(y) > 0.0001 or absf(z) > 0.0001
-	var free_root := _dodge_tween == null or not _dodge_tween.is_running()
+	var free_root := (_dodge_tween == null or not _dodge_tween.is_running()) and _roll_t < 0.0
 	if free_root and (_swim_blend > 0.0 or _was_swimming):
 		_root.rotation.x = 1.15 * _swim_blend
 	_was_swimming = _swim_blend > 0.0

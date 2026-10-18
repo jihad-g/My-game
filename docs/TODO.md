@@ -692,7 +692,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 
 - [x] Save/load system (Milestone 2)
 - [~] Save backups and recovery (Milestone 13); cloud saves via Steam Auto-Cloud documented, not tested; save thumbnails NOT IMPLEMENTED
-- [~] Animations (procedural: knees/elbows, idle, run lean, jump, swim, cast, landing — Milestone 10; keyframe clips with layers and cross-fades — Milestone 18a); skeletal/authored animations NOT IMPLEMENTED (by design)
+- [~] Animations (procedural: knees/elbows, idle, run lean, jump, swim, cast, landing — Milestone 10; keyframe clips with layers and cross-fades — Milestone 18a; forward-roll dodge with tuck, hop and landing — v0.42.1); skeletal/authored animations NOT IMPLEMENTED (by design)
 - [x] VFX, sound & music (Milestone 10, all generated)
 - [x] UI polish: pixel-art item icons, panel transitions, settings screen (Milestone 10); key rebinding (Milestone 13)
 - [x] Main menu with seed entry / world selection (Milestone 2)

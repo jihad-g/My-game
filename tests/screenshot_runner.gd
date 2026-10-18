@@ -34,6 +34,10 @@ func _ready() -> void:
 		await _mobs_showcase()
 		get_tree().quit()
 		return
+	if "--only=roll" in OS.get_cmdline_user_args():
+		await _roll_showcase()
+		get_tree().quit()
+		return
 	if "--only=anims" in OS.get_cmdline_user_args():
 		await _anims_showcase()
 		get_tree().quit()
@@ -2555,6 +2559,79 @@ func _anims_showcase() -> void:
 	await _wait(3)
 	await _shot("anims_1_sheet")
 	Engine.time_scale = 1.0
+	world.queue_free()
+	await _wait(5)
+
+
+## v0.42.1: the dodge roll, seen from the side at seven moments.
+func _roll_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 11.0
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	world.weather.settle()
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	var flat := _dry_center(world, p.global_position, 16.0)
+	for k in 24:
+		var q := _dry_center(world, p.global_position + Vector3(cos(k * 1.7), 0, sin(k * 1.7)) * (120.0 + k * 40.0), 16.0)
+		if world.generator.pois.near(q, 40.0).is_empty() and world.generator.settlements.near(q, 120.0).is_empty():
+			flat = q
+			break
+	await _teleport(world, flat + Vector3(0, 0, -12))
+	_clear_monsters(world)
+	# A plain stone stage high above the trees, so nothing hides the poses.
+	var y := world.get_ground_height(flat) + 40.0
+	var stage := MeshInstance3D.new()
+	var pm := BoxMesh.new()
+	pm.size = Vector3(22, 0.4, 6)
+	stage.mesh = pm
+	var sm := StandardMaterial3D.new()
+	sm.albedo_color = Color(0.45, 0.42, 0.38)
+	stage.material_override = sm
+	world.add_child(stage)
+	stage.global_position = Vector3(flat.x, y - 0.2, flat.z)
+	const STEPS := [0.0, 0.08, 0.16, 0.22, 0.28, 0.34, 0.42]
+	for i in STEPS.size():
+		var m := HumanoidModel.new()
+		world.add_child(m)
+		m.global_position = Vector3(flat.x - 7.2 + i * 2.4, y, flat.z)
+		m.rotation.y = PI * 0.5  # rolling to the right of the picture
+		await _wait(2)
+		m.set_process(false)
+		m.play_dodge(0.42)
+		var t := 0.0
+		while t < float(STEPS[i]) - 0.0001:
+			m._process(1.0 / 60.0)
+			t += 1.0 / 60.0
+		if t == 0.0:
+			m._process(0.0001)
+		var l := Label3D.new()
+		l.text = "%.2f s" % float(STEPS[i])
+		l.font_size = 56
+		l.outline_size = 12
+		l.modulate = Color(1, 0.9, 0.55)
+		l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		world.add_child(l)
+		l.global_position = Vector3(flat.x - 7.2 + i * 2.4, y + 2.6, flat.z)
+	var cam := Camera3D.new()
+	cam.fov = 38.0
+	world.add_child(cam)
+	cam.current = true
+	var centre := Vector3(flat.x, y + 0.9, flat.z)
+	cam.global_position = centre + Vector3(0, 2.0, 21)
+	cam.look_at(centre)
+	await _wait(20)
+	await _shot("roll_1_side")
 	world.queue_free()
 	await _wait(5)
 

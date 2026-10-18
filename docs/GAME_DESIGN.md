@@ -107,8 +107,9 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 ### 3.1 Movement
 - WASD moves relative to the camera. Shift sprints (costs stamina and makes you hungry faster; can be a
   toggle in settings). You step up 1-block ledges automatically and slow down when wading.
-- **Dodge roll** (Space): a roll with invulnerability frames (0.04 s → 0.32 s, longer with Dexterity).
-  You roll through enemies.
+- **Dodge roll** (Left Alt): a roll with invulnerability frames (0.04 s → 0.32 s, longer with Dexterity).
+  You roll through enemies. The animation (v0.42.1) is a forward somersault: crouch, tuck into a ball and turn
+  over around the middle of the body with a small hop, land low on bent knees, stand up.
 - **Jumping off ledges** is automatic (fall pose, landing squash and dust). There is no jump key.
 - **Swimming** in deep water costs stamina; with no stamina you swim slowly. You never drown. Walk against a
   bank to climb out.

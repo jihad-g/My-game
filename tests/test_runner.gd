@@ -159,6 +159,7 @@ func _ready() -> void:
 	await _run_async(&"test_m32_anim_models")
 	await _run_async(&"test_m32_anim_parts")
 	await _run_async(&"test_m32_hit_frame_ingame")
+	await _run_async(&"test_roll_anim")
 	_run(&"test_m33_mobs_data")
 	await _run_async(&"test_m33_mobs_ingame")
 	_run(&"test_m34_textures")
@@ -9705,3 +9706,49 @@ func test_m34_textures_ingame() -> void:
 	check(float((Materials.water() as ShaderMaterial).get_shader_parameter(&"ripple_strength")) > 0.5, "and on again")
 	world.queue_free()
 	await _frames(5)
+
+
+## v0.42.1: the dodge roll turns around the hips (not the feet), stays above the
+## ground, lands with a squash and ends standing upright.
+func test_roll_anim() -> void:
+	check(is_equal_approx(HumanoidModel.roll_angle(0.0), 0.0) and is_equal_approx(HumanoidModel.roll_angle(1.0), TAU),
+		"the roll makes one full forward turn")
+	var last := -1.0
+	var smooth := true
+	for i in 101:
+		var a := HumanoidModel.roll_angle(i / 100.0)
+		smooth = smooth and a >= last - 0.0001 and a - maxf(last, 0.0) < 0.3
+		last = a
+	check(smooth, "the turn only goes forward and has no jumps")
+	var m := HumanoidModel.new()
+	add_child(m)
+	await _pframes(3)
+	m.set_process(false)  # stepped by hand at 60 fps below
+	var landed := [false]
+	m.roll_landed.connect(func() -> void: landed[0] = true)
+	m.play_dodge(0.42)
+	check(m.is_rolling(), "play_dodge starts the roll")
+	var min_hip := 9.0
+	var min_head := 9.0
+	var upside_down := false
+	var lowest := 9.0
+	var highest := -9.0
+	for i in 32:
+		m._process(1.0 / 60.0)
+		for part in m._parts:
+			if is_instance_valid(part) and part.visible:
+				var py := (part.global_transform * part.get_aabb().get_center()).y - m.global_position.y
+				highest = maxf(highest, py)
+				lowest = minf(lowest, py)
+		min_hip = minf(min_hip, m._torso.global_position.y - m.global_position.y)
+		min_head = minf(min_head, m._head.global_position.y - m.global_position.y)
+		upside_down = upside_down or (m._head.global_position.y < m._torso.global_position.y)
+	check(upside_down, "the body really turns over")
+	check(min_hip > 0.25, "the hips stay off the ground (lowest %.2f m)" % min_hip)
+	check(min_head > 0.0, "the neck never sinks into the ground (lowest %.2f m)" % min_head)
+	check(lowest > -0.06, "no body part sinks into the ground (lowest part centre %.2f m)" % lowest)
+	check(highest < 2.0, "and doesn't fly up high (highest part centre %.2f m)" % highest)
+	check(landed[0], "the roll lands with a squash (dust and knees)")
+	check(not m.is_rolling() and is_zero_approx(m._root.rotation.x), "the body ends upright")
+	m.queue_free()
+	await _pframes(2)

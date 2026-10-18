@@ -2,6 +2,23 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.42.1] — Better dodge roll
+
+### Changed
+- **The dodge roll looks like a real forward roll.** Before, the body spun round the feet, so the head went
+  under the ground halfway through. Now:
+  - a short crouch and lean into the roll,
+  - the body tucks into a ball (chin to chest, arms hugging the knees) and turns over around its middle,
+    with a small hop so the head and shoulders clear the ground,
+  - the turn is fastest in the middle and slows as you come round,
+  - you land low on bent knees with a squash, the arms swing out for balance, then you stand up,
+  - a puff of dust when you push off and when you land.
+- Timing, speed, stamina cost and invulnerability frames are unchanged.
+
+### Tests
+- `test_roll_anim`: one full forward turn with no jumps, the body turns over, nothing sinks into the ground,
+  it lands and ends upright. Screenshot mode `--only=roll` shows the roll at seven moments.
+
 ## [0.42.0] — Milestone 34: Textures
 
 ### Changed

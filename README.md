@@ -5,8 +5,9 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.42.0 — Textures**. New pixel art for sand, snow, ice and cave stone, stair treads, dirt and
-> cobblestone path tiles, and animated ripples on the water.
+> Status: **v0.42.1 — Better dodge roll**. The dodge roll is now a proper forward roll: crouch, tuck, turn over,
+> land on bent knees with a puff of dust. Before that, v0.42.0 — Textures: new pixel art for sand, snow, ice and
+> cave stone, stair treads, dirt and cobblestone path tiles, and animated ripples on the water.
 >
 > Before that, **v0.41.0 — More mobs**. A Bone Dragon guards deep crypts, door mimics hide in dungeon rooms, and shadow
 > serpents, ghost cats, diver zombies, turkeys, a top-hat bear and cute cupcake and jelly critters roam the land.

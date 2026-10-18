@@ -143,6 +143,9 @@ var _last_yaw := 0.0
 func _ready() -> void:
 	add_to_group(&"player")
 	model.footstep.connect(_on_footstep)
+	model.roll_landed.connect(func() -> void:
+		if is_on_floor():
+			VFX.dust(get_parent(), global_position, _dust_color(), 7))
 	combat.player = self
 	abilities.player = self
 	character.passive_source = abilities.passive_power
@@ -851,6 +854,7 @@ func _start_dodge(input: Vector3) -> void:
 	face_direction(_dodge_dir, true)
 	model.play_dodge(dodge_duration)
 	Audio.play(&"dodge", -7.0)
+	VFX.dust(get_parent(), global_position - _dodge_dir * 0.3, _dust_color(), 5)
 	# Roll through enemies.
 	collision_mask &= ~Layers.ENEMY
 

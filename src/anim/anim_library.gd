@@ -179,25 +179,41 @@ static func pose(id: StringName, p: Dictionary, duration: float) -> AnimClip:
 	return c
 
 
-## The dodge roll: the body tucks into a ball (the model's root does the spin).
+## The dodge roll: a short crouch, the body tucks into a ball while the model
+## turns over (HumanoidModel.roll_angle), then it lands low and stands up.
 static func dodge(duration: float) -> AnimClip:
 	var c := AnimClip.new(&"dodge", maxf(duration, 0.2))
 	var l := c.length
 	c.fade_in = 0.03
-	c.fade_out = 0.08
-	var tuck := l * 0.25
-	var open := l * 0.8
+	c.fade_out = 0.1
+	var tuck := l * 0.22   # fully tucked just as the fast part of the turn starts
+	var open := l * 0.66   # legs reach for the ground before the turn ends
+	var land := l * 0.8    # feet down, knees bent
 	for part in [&"leg_l", &"leg_r"]:
-		c.key(part, 0.0, -0.4).key(part, tuck, -1.3, AnimClip.EASE_OUT).hold(part, tuck, open, -1.3).key(part, l, -0.1)
+		c.key(part, 0.0, -0.5).key(part, tuck, -1.5, AnimClip.EASE_OUT).hold(part, tuck, open, -1.5) \
+			.key(part, land, -0.7, AnimClip.EASE_OUT).key(part, l, -0.05, AnimClip.IN_OUT)
 	for part in [&"shin_l", &"shin_r"]:
-		c.key(part, 0.0, 0.6).key(part, tuck, 1.7, AnimClip.EASE_OUT).hold(part, tuck, open, 1.7).key(part, l, 0.2)
-	c.key(&"arm_l", 0.0, Vector3(-0.8, 0.0, -0.2)).key(&"arm_l", tuck, Vector3(-1.4, 0.3, 0.0), AnimClip.EASE_OUT).key(&"arm_l", l, Vector3(-0.3, 0.0, -0.1))
-	c.key(&"arm_r", 0.0, Vector3(-0.8, 0.0, 0.2)).key(&"arm_r", tuck, Vector3(-1.4, -0.3, 0.0), AnimClip.EASE_OUT).key(&"arm_r", l, Vector3(-0.3, 0.0, 0.1))
-	c.key(&"fore_l", 0.0, -0.8).key(&"fore_l", tuck, -1.6, AnimClip.EASE_OUT).key(&"fore_l", l, -0.4)
-	c.key(&"fore_r", 0.0, -0.8).key(&"fore_r", tuck, -1.6, AnimClip.EASE_OUT).key(&"fore_r", l, -0.4)
-	c.key(&"torso", 0.0, Vector3(0.3, 0.0, 0.0)).key(&"torso", tuck, Vector3(0.7, 0.0, 0.0), AnimClip.EASE_OUT).key(&"torso", l, Vector3(0.15, 0.0, 0.0))
-	c.key(&"head", 0.0, Vector3(0.3, 0.0, 0.0)).key(&"head", tuck, Vector3(0.6, 0.0, 0.0)).key(&"head", l, Vector3.ZERO)
-	c.key(&"lift", 0.0, -0.1).key(&"lift", tuck, -0.3, AnimClip.EASE_OUT).hold(&"lift", tuck, open, -0.3).key(&"lift", l, 0.0)
+		c.key(part, 0.0, 0.7).key(part, tuck, 2.0, AnimClip.EASE_OUT).hold(part, tuck, open, 2.0) \
+			.key(part, land, 1.2, AnimClip.EASE_OUT).key(part, l, 0.1, AnimClip.IN_OUT)
+	# Arms reach forward, then hug the knees, then swing out for balance.
+	c.key(&"arm_l", 0.0, Vector3(-1.1, 0.0, -0.25)).key(&"arm_l", tuck, Vector3(-1.5, 0.35, 0.0), AnimClip.EASE_OUT) \
+		.hold(&"arm_l", tuck, open, Vector3(-1.5, 0.35, 0.0)).key(&"arm_l", land, Vector3(-0.9, 0.0, -0.45), AnimClip.EASE_OUT) \
+		.key(&"arm_l", l, Vector3(-0.25, 0.0, -0.1), AnimClip.IN_OUT)
+	c.key(&"arm_r", 0.0, Vector3(-1.1, 0.0, 0.25)).key(&"arm_r", tuck, Vector3(-1.5, -0.35, 0.0), AnimClip.EASE_OUT) \
+		.hold(&"arm_r", tuck, open, Vector3(-1.5, -0.35, 0.0)).key(&"arm_r", land, Vector3(-0.9, 0.0, 0.45), AnimClip.EASE_OUT) \
+		.key(&"arm_r", l, Vector3(-0.25, 0.0, 0.1), AnimClip.IN_OUT)
+	for part in [&"fore_l", &"fore_r"]:
+		c.key(part, 0.0, -0.6).key(part, tuck, -1.8, AnimClip.EASE_OUT).hold(part, tuck, open, -1.8) \
+			.key(part, land, -0.7).key(part, l, -0.35, AnimClip.IN_OUT)
+	# Chin to chest and a rounded back while turning; a little forward lean on landing.
+	c.key(&"torso", 0.0, Vector3(0.35, 0.0, 0.0)).key(&"torso", tuck, Vector3(0.65, 0.0, 0.0), AnimClip.EASE_OUT) \
+		.hold(&"torso", tuck, open, Vector3(0.65, 0.0, 0.0)).key(&"torso", land, Vector3(0.4, 0.0, 0.0), AnimClip.EASE_OUT) \
+		.key(&"torso", l, Vector3(0.05, 0.0, 0.0), AnimClip.IN_OUT)
+	c.key(&"head", 0.0, Vector3(0.25, 0.0, 0.0)).key(&"head", tuck, Vector3(0.55, 0.0, 0.0), AnimClip.EASE_OUT) \
+		.hold(&"head", tuck, open, Vector3(0.55, 0.0, 0.0)).key(&"head", land, Vector3(-0.1, 0.0, 0.0)) \
+		.key(&"head", l, Vector3.ZERO, AnimClip.IN_OUT)
+	c.key(&"lift", 0.0, -0.18).key(&"lift", tuck, -0.04, AnimClip.EASE_OUT).hold(&"lift", tuck, open, -0.04) \
+		.key(&"lift", land, -0.2, AnimClip.EASE_OUT).key(&"lift", l, 0.0, AnimClip.IN_OUT)
 	return c
 
 
