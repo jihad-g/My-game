@@ -503,6 +503,11 @@ func _maybe_prewarm() -> void:
 
 # --- Fade map (Milestone 18d) -------------------------------------------------------
 
+## The fade map must be written again (it was switched off, e.g. in a dungeon).
+func mark_fade_dirty() -> void:
+	_fade_dirty = true
+
+
 ## Writes the fade state of the chunks around the focus into the fade map while
 ## anything fades (and once more when it is done, or after the focus moved).
 func _update_fade_map() -> void:

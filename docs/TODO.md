@@ -105,6 +105,19 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 31 — Dungeons: fog of war, keys, puzzles  ✅ (v0.39.0)
+
+- [x] Fog of war over unexplored rooms and corridors; braziers light when a room is found
+- [x] Dungeon mini-map that fills in, with exit, stairs/boss, gates, puzzles, Keeper and player markers
+- [x] Locked gates on the last room (rank D+), the Keeper mini-boss drops the Dungeon Key
+- [x] Lever puzzles (order I-II-III) and pressure-plate puzzles (6 s) guarding caged chests
+- [x] Hidden rooms behind cracked walls (M6) stay hidden on the map until found
+- [x] Creative controls; tests `test_m31_*` run and pass
+- [ ] NOT IMPLEMENTED: explored rooms are not saved - leaving a floor and coming back starts it dark again (dungeons are rebuilt each visit)
+- [ ] NOT IMPLEMENTED: in co-op, guests see the host's fog (each player does not have their own)
+- [ ] NOT IMPLEMENTED: more puzzle kinds (moving blocks, light beams, riddles), traps that levers switch off
+- [ ] Known limitation: monsters can stand on the plate too, but only the player presses it
+
 ## Milestone 30 — Multi-storey building  ✅ (v0.38.0)
 
 - [x] Storeys 1-3: upper floors on walls, balconies (2 cells), upper walls/doors/windows/fences, furniture, roofs

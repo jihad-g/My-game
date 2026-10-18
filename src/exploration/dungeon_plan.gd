@@ -8,13 +8,19 @@ extends RefCounted
 ## (monsters), trap (spike floor), treasure (chest + guards), end (stairs down,
 ## or the boss arena on the last floor) and one secret room hidden behind a
 ## cracked wall.
+##
+## Milestone 31: rank D and up lock the last room behind gates - the key is
+## carried by the floor's Keeper, a mini-boss in another room (`keeper_room`).
+## A PUZZLE room holds a caged chest: levers to pull in order, or a pressure
+## plate that opens the cage for a few seconds.
 
 const SLOT := 16
 const CORRIDOR := 3
 ## Floors per rank E..S
 const FLOORS := [1, 1, 2, 2, 3, 3]
 
-enum Room { START, NORMAL, TRAP, TREASURE, END, BOSS, SECRET }
+enum Room { START, NORMAL, TRAP, TREASURE, END, BOSS, SECRET, PUZZLE }
+enum Puzzle { LEVERS, PLATE }
 
 var rank := 0
 var theme := 0
@@ -31,6 +37,10 @@ var corridors: Array = []
 var secret: Dictionary = {}
 var start_room := 0
 var end_room := 0
+## Milestone 31: the room of the Keeper (-1 = no locked room on this floor), and
+## the puzzle kind of each PUZZLE room (room index -> Puzzle).
+var keeper_room := -1
+var puzzles: Dictionary = {}
 
 var _rng := RandomNumberGenerator.new()
 
@@ -50,7 +60,8 @@ static func generate(poi: PoiInfo, p_floor: int) -> DungeonPlan:
 func _build() -> void:
 	var gw := 3 + rank / 2
 	var gh := 3 + (1 if rank >= 3 else 0)
-	var target := clampi(4 + rank + floor_index, 4, gw * gh - 1)
+	# Milestone 31: one more room from rank D, for the Keeper.
+	var target := clampi(4 + rank + floor_index + (1 if rank >= 1 else 0), 4, gw * gh - 1)
 	# Random tree growth from the start slot.
 	var start := Vector2i(0, gh / 2)
 	var used := {start: true}
@@ -118,6 +129,31 @@ func _build() -> void:
 	for t in (1 if rank >= 1 else 0) + (1 if rank >= 4 else 0):
 		if not others.is_empty():
 			rooms[others.pop_back()].type = Room.TRAP
+	# Milestone 31: puzzle rooms (one from rank D, two from rank B) and the Keeper.
+	for t in (1 if rank >= 1 else 0) + (1 if rank >= 3 else 0):
+		if not others.is_empty():
+			var pi: int = others.pop_back()
+			rooms[pi].type = Room.PUZZLE
+			puzzles[pi] = Puzzle.LEVERS if (_rng.randf() < 0.5) != (t == 1) else Puzzle.PLATE
+	if rank >= 1 and not others.is_empty():
+		# The Keeper waits in the normal room farthest from the start - one you
+		# can reach without going through the locked last room.
+		var open_slots := {start: true}
+		var q2: Array[Vector2i] = [start]
+		while not q2.is_empty():
+			var c2: Vector2i = q2.pop_front()
+			for e in edges:
+				var o: Vector2i = e[1] if e[0] == c2 else (e[0] if e[1] == c2 else Vector2i(-99, -99))
+				if o.x != -99 and o != end and not open_slots.has(o):
+					open_slots[o] = true
+					q2.append(o)
+		var far := -1
+		for i: int in others:
+			if not open_slots.has(rooms[i].slot):
+				continue
+			if far < 0 or int(dist.get(rooms[i].slot, 0)) > int(dist.get(rooms[far].slot, 0)):
+				far = i
+		keeper_room = far
 	for i in rooms.size():
 		_fill_rect(rooms[i].rect)
 	for e in edges:
@@ -209,6 +245,27 @@ func room_center(i: int) -> Vector3:
 func room_point(i: int, rng: RandomNumberGenerator, margin: float = 1.5) -> Vector3:
 	var r: Rect2i = rooms[i].rect
 	return Vector3(rng.randf_range(r.position.x + margin, r.end.x - margin), 0, rng.randf_range(r.position.y + margin, r.end.y - margin))
+
+
+## Corridors that open into a room.
+func corridors_into(room: int) -> Array:
+	var rr: Rect2i = rooms[room].rect
+	var out := []
+	for cr: Rect2i in corridors:
+		if Rect2i(rr.position - Vector2i(1, 1), rr.size + Vector2i(2, 2)).intersects(cr):
+			out.append(cr)
+	return out
+
+
+## Where a corridor meets a room: {pos: Vector3 (local, on the floor), size: Vector3, horizontal: bool}.
+func mouth(room: int, cr: Rect2i) -> Dictionary:
+	var rr: Rect2i = rooms[room].rect
+	var horizontal := cr.size.x > cr.size.y
+	if horizontal:
+		var x := rr.position.x if cr.position.x < rr.position.x else rr.end.x
+		return {"pos": Vector3(x, 0, cr.position.y + cr.size.y * 0.5), "size": Vector3(0.3, 3.5, cr.size.y), "horizontal": true}
+	var z := rr.position.y if cr.position.y < rr.position.y else rr.end.y
+	return {"pos": Vector3(cr.position.x + cr.size.x * 0.5, 0, z), "size": Vector3(cr.size.x, 3.5, 0.3), "horizontal": false}
 
 
 func room_at(local: Vector3) -> int:

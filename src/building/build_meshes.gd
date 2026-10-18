@@ -641,15 +641,15 @@ static func build_mushroom_ring(b: BlockMesh) -> void:
 
 static func build_dungeon_floor(b: BlockMesh) -> void:
 	b.texture = &"stone_tiles"
-	b.box(Vector3(0, -0.25, 0), Vector3(1.0, 0.5, 1.0), Color(0.3, 0.29, 0.32))
-	b.box(Vector3(0, 0.005, 0), Vector3(0.94, 0.01, 0.94), Color(0.34, 0.33, 0.36))
+	b.box(Vector3(0, -0.25, 0), Vector3(1.0, 0.5, 1.0), Color(0.42, 0.4, 0.44))
+	b.box(Vector3(0, 0.005, 0), Vector3(0.94, 0.01, 0.94), Color(0.5, 0.48, 0.52))
 
 
 static func build_dungeon_wall(b: BlockMesh) -> void:
 	b.texture = &"stone_bricks"
-	b.box(Vector3(0, 1.75, 0), Vector3(1.0, 3.5, 0.5), Color(0.25, 0.24, 0.28))
-	b.box(Vector3(0, 3.55, 0), Vector3(1.04, 0.14, 0.56), Color(0.32, 0.3, 0.34))
-	b.box(Vector3(0, 0.1, 0), Vector3(1.04, 0.2, 0.56), Color(0.2, 0.19, 0.22))
+	b.box(Vector3(0, 1.75, 0), Vector3(1.0, 3.5, 0.5), Color(0.4, 0.38, 0.43))
+	b.box(Vector3(0, 3.55, 0), Vector3(1.04, 0.14, 0.56), Color(0.48, 0.46, 0.5))
+	b.box(Vector3(0, 0.1, 0), Vector3(1.04, 0.2, 0.56), Color(0.32, 0.3, 0.34))
 
 
 # --- Milestone 7: defenses ---------------------------------------------------------------

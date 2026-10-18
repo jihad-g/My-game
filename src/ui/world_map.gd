@@ -167,8 +167,8 @@ func _render_dungeon() -> void:
 	var cellpx := maxi(1, ceili(_dscale))
 	for c: Vector2i in d.plan.cells:
 		var room := d.plan.room_at(Vector3(c.x + 0.5, 0, c.y + 0.5))
-		if room >= 0 and d.plan.rooms[room].type == DungeonPlan.Room.SECRET:
-			continue  # secret rooms stay secret
+		if not d.is_cell_known(c):
+			continue  # Milestone 31: fog of war (secret rooms stay secret until found)
 		var col: Color = colors.get(d.plan.rooms[room].type, Color(0.5, 0.48, 0.5)) if room >= 0 else Color(0.38, 0.36, 0.4)
 		var px := int(c.x * _dscale + _doff.x)
 		var py := int(c.y * _dscale + _doff.y)

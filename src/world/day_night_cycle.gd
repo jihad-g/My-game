@@ -18,6 +18,8 @@ signal hour_changed(hour: int)
 
 ## Underground there is no sun or sky: dark ambient, black fog.
 var underground: bool = false
+## Milestone 31: inside a dungeon (lit halls, brighter than natural caves).
+var in_dungeon: bool = false
 ## 0..24
 var hour: float = 8.0
 var day: int = 1
@@ -253,7 +255,9 @@ func _apply_underground() -> void:
 		env.fog_depth_curve = 1.4
 		env.adjustment_saturation = 1.05 + 0.08 * vibrant
 		env.adjustment_brightness = 1.0
-		env.fog_depth_begin = 16.0
-		env.fog_depth_end = 55.0
+		# The camera hangs 12-25 m above the hero, so the darkness starts past that
+		# (Milestone 31: at 16 m dungeons were mostly fogged out).
+		env.fog_depth_begin = 26.0
+		env.fog_depth_end = 70.0
 		env.ambient_light_color = Color(0.5, 0.5, 0.7)
-		env.ambient_light_energy = 0.55
+		env.ambient_light_energy = 1.5 if in_dungeon else 0.55

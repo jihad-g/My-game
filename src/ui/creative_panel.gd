@@ -818,6 +818,9 @@ func _build_dungeons() -> void:
 	v.add_child(h)
 	_row(v, "Inside", [["Next floor", _next_floor], ["Kill this floor (with loot)", _kill_floor],
 		["Go to the last room (stairs or boss)", _go_stairs], ["Leave the dungeon", _leave_dungeon]])
+	# Milestone 31: fog of war, keys and puzzles.
+	_row(v, "Map & keys", [["Reveal the map", _reveal_map], ["Give a Dungeon Key", _give_key],
+		["Go to the Keeper", _go_keeper], ["Open gates and cages", _open_locks]])
 	_row(v, "Reset", [["Reset dungeon cooldowns", _reset_dungeons]])
 	_dungeon_info.add_theme_font_size_override(&"font_size", 13)
 	v.add_child(_dungeon_info)
@@ -879,6 +882,42 @@ func _go_stairs() -> void:
 	player.velocity = Vector3.ZERO
 	world.camera_rig.snap_to_target()
 	_say("moved to the last room")
+
+
+func _reveal_map() -> void:
+	if world.dungeon == null:
+		_say("you aren't in a dungeon")
+		return
+	world.dungeon.reveal_all()
+	_say("the whole floor is on the map (%d rooms)" % world.dungeon.plan.rooms.size())
+
+
+func _give_key() -> void:
+	player.inventory.add_item(DungeonGate.KEY_ITEM, 1)
+	_say("added a Dungeon Key")
+
+
+func _go_keeper() -> void:
+	var d := world.dungeon
+	if d == null:
+		_say("you aren't in a dungeon")
+	elif d.keeper == null or not is_instance_valid(d.keeper) or d.keeper.is_dead:
+		_say("this floor has no Keeper (rank D and up), or it is dead")
+	else:
+		var c := d.to_global(d.plan.room_center(d.plan.keeper_room) + Vector3(2.5, 0, 2.5))
+		c.y = d.floor_y() + 0.3
+		player.global_position = c
+		player.velocity = Vector3.ZERO
+		world.camera_rig.snap_to_target()
+		_say("moved to the Keeper's room")
+
+
+func _open_locks() -> void:
+	if world.dungeon == null:
+		_say("you aren't in a dungeon")
+		return
+	var n := world.dungeon.open_all_locks()
+	_say("opened %d gates and cages" % n)
 
 
 func _leave_dungeon() -> void:

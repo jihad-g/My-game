@@ -1167,6 +1167,12 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 31 — Dungeons: fog of war, keys and puzzles (v0.39.0).** Each floor tracks the rooms and
+corridors you have seen (`DungeonInstance.explored`); dark lids cover the rest and the HUD mini-map
+(`src/ui/dungeon_map.gd`) draws only what you know. `DungeonPlan` now picks a Keeper room (reachable without the
+last room) and puzzle rooms; gates (`dungeon_gate.gd`), levers (`dungeon_lever.gd`), plates (`pressure_plate.gd`)
+and cages (`chest_cage.gd`) make the locks. Keys belong to one floor and crumble when you leave it.
+
 **Done: Milestone 30 — Multi-storey building (v0.38.0).** The building grid has storeys (`floor@1`, `edge_n@2`...)
 with support rules (`BuildingManager._storey_rules`), stairs and ladders lead up, foundations level slopes, and
 NavGrid searches over (cell, level) so monsters climb too.

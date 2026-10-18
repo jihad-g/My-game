@@ -495,6 +495,7 @@ func next_dungeon_floor() -> void:
 	var f := dungeon.floor_index + 1
 	var ret := dungeon.return_position
 	gather_dungeon_loot()
+	_crumble_dungeon_keys()
 	_load_dungeon_floor(poi, f, ret)
 	Events.toast.emit("Floor %d of %d" % [f + 1, dungeon.plan.floor_count], Color(1.0, 0.8, 0.5))
 
@@ -513,6 +514,10 @@ func _load_dungeon_floor(poi: PoiInfo, floor_index: int, ret: Vector3) -> void:
 		pickup_pool.release_all()
 		chunk_manager.process_mode = Node.PROCESS_MODE_DISABLED
 		chunk_manager.visible = false
+		# The chunk fade-in map stops updating while we're away: switch it off, or
+		# chunks caught half-faded would dither away the dungeon above them.
+		RenderingServer.global_shader_parameter_set(&"chunk_fade_rect", Vector4.ZERO)
+		chunk_manager.mark_fade_dirty()
 	dungeon = DungeonInstance.new()
 	dungeon.setup(poi, floor_index, ret)
 	add_child(dungeon)
@@ -550,11 +555,20 @@ func gather_dungeon_loot() -> int:
 
 ## Leaves the dungeon (portal, death). `to` defaults to the entrance. Loot on
 ## the floor is gathered unless you were carried out (`gather` false).
+## Milestone 31: a Dungeon Key only works on the floor it was found on.
+func _crumble_dungeon_keys() -> void:
+	var n := player.inventory.count_of(DungeonGate.KEY_ITEM)
+	if n > 0:
+		player.inventory.remove_item(DungeonGate.KEY_ITEM, n)
+		Events.toast.emit("The Dungeon Key crumbles to dust", Color(0.8, 0.75, 0.7))
+
+
 func exit_dungeon(to: Vector3 = Vector3.INF, gather: bool = true) -> void:
 	if dungeon == null:
 		return
 	if gather:
 		gather_dungeon_loot()
+	_crumble_dungeon_keys()
 	var poi := dungeon.poi
 	var cleared := dungeon.cleared
 	var dest := dungeon.return_position if to == Vector3.INF else to
@@ -578,6 +592,7 @@ func exit_dungeon(to: Vector3 = Vector3.INF, gather: bool = true) -> void:
 func _apply_layer_environment() -> void:
 	var underground := layer == TerrainGenerator.Layer.UNDERGROUND or dungeon != null
 	day_night.underground = underground
+	day_night.in_dungeon = dungeon != null
 	day_night.advance_hours(0.0)  # re-apply lighting now
 	player.set_lantern(underground)
 

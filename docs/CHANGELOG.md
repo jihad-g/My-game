@@ -2,6 +2,37 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.39.0] — Milestone 31: Dungeons - fog of war, keys and puzzles
+
+### Added
+- **Fog of war**: dungeon rooms and corridors you haven't seen are covered in darkness and their braziers are out.
+  Walk in (or look in from a doorway) and the darkness lifts and the fires light.
+- **Dungeon mini-map** in the top-right corner (only inside dungeons). It fills in as you explore and shows the
+  exit portal (green), the stairs down (blue) or the boss arena (red skull), locked gates (gold bars), puzzle rooms
+  (purple square, filled once solved), the Keeper (orange dot, once you have seen its room) and you (white arrow).
+  The big map (M) also shows only the explored part of the floor.
+- **Locked gates and the Keeper** (rank D and up): iron gates close every way into a floor's last room. A
+  **Keeper** - a tougher elite with "Keeper" in its name - waits in a room you can reach, and drops the
+  **Dungeon Key** when it dies. The key opens all the gates of that last room. Spare keys crumble to dust when you
+  leave the floor, so each floor needs its own Keeper.
+- **Puzzle rooms** (one from rank D, two from rank B) with a golden chest locked in an iron cage:
+  - **Levers**: three levers with rune numbers I, II, III. Pull them in order; a wrong lever resets them all.
+  - **Pressure plate**: stand on it and the cage rises for 6 seconds. Open the chest before it drops again.
+- **Hidden rooms behind breakable walls** (from Milestone 6) now also stay off the mini-map until the cracked wall
+  breaks.
+- Creative mode → Dungeons → "Map & keys": Reveal the map, Give a Dungeon Key, Go to the Keeper, Open gates and cages.
+- Tests `test_m31_dungeon_plan`, `test_m31_dungeon_ingame`; screenshot mode `--only=dungeon2`.
+
+### Changed
+- Rank D and higher dungeon floors have one more room (for the Keeper).
+
+### Fixed
+- Entering a dungeon while the land nearby was still fading in (for example right after fast travel) could leave
+  the dungeon's floor and walls invisible. The fade-in map is now switched off inside dungeons.
+- Dungeons and caves were much too dark: the darkness (distance fog) started 16 m from the camera, which is about
+  where the camera hangs above the hero. It now starts at 26 m. Dungeons also get more ambient light than natural
+  caves, lighter stone floors and walls, and brighter braziers, so explored rooms are easy to read.
+
 ## [0.38.0] — Milestone 30: Multi-storey building
 
 ### Added
@@ -31,6 +62,9 @@ All notable changes to this project. Format loosely follows *Keep a Changelog*.
 - Fewer spring blossoms on grass and leaves (M28 looked too busy).
 - The web blueprint designer (`web/blueprint-designer/`) knows the stairs, ladder and foundation pieces.
 - Path searches skip the upper storeys of 16 m tiles that have no upper floors, so storeys cost nothing in the open.
+
+### Fixed
+- The `--only=travel` screenshot mode had a script error and did nothing (M29).
 
 ### Fixed
 - The `--only=travel` screenshot mode had a script error and did nothing (M29).

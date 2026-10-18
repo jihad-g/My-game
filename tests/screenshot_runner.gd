@@ -26,6 +26,10 @@ func _ready() -> void:
 		await _new_folk_showcase()
 		get_tree().quit()
 		return
+	if "--only=dungeon2" in OS.get_cmdline_user_args():
+		await _dungeon2_showcase()
+		get_tree().quit()
+		return
 	if "--only=storeys" in OS.get_cmdline_user_args():
 		await _storeys_showcase()
 		get_tree().quit()
@@ -2303,6 +2307,81 @@ func _rich_world_showcase() -> void:
 
 
 ## Milestone 30: a two-storey house with stairs, a balcony and a ladder.
+## Milestone 31: fog of war, the mini-map, a lever puzzle and the locked gate.
+func _dungeon2_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	world.hud._help.visible = false
+	var poi := PoiInfo.new()
+	poi.kind = PoiInfo.Kind.DUNGEON
+	poi.rank = 3
+	poi.theme = PoiInfo.DungeonTheme.CRYPT
+	poi.id = "shot_dungeon"
+	poi.center = Vector2i(int(p.global_position.x), int(p.global_position.z))
+	# A seed whose floor has a lever puzzle and a Keeper.
+	for sd in range(1, 400):
+		poi.seed = sd
+		var pl := DungeonPlan.generate(poi, 0)
+		if pl.keeper_room >= 0 and DungeonPlan.Puzzle.LEVERS in pl.puzzles.values():
+			break
+	world.enter_dungeon(poi)
+	await _wait(40)
+	var d := world.dungeon
+	for m in d.monsters:
+		if is_instance_valid(m) and m != d.keeper:
+			m.set_physics_process(false)
+	world.hud.story.visible = false
+	world.camera_rig._target_distance = 24.0
+	world.camera_rig._target_pitch = 70.0
+	await _wait(60)
+	await _shot("dungeon2_1_fog")
+	# Walk through a few rooms: the map fills in.
+	var order: Array = []
+	for i in d.plan.rooms.size():
+		if i != d.plan.start_room and d.plan.rooms[i].type != DungeonPlan.Room.SECRET:
+			order.append(i)
+	order.sort_custom(func(a: int, b: int) -> bool:
+		return d.plan.room_center(a).distance_to(d.plan.room_center(d.plan.start_room)) < d.plan.room_center(b).distance_to(d.plan.room_center(d.plan.start_room)))
+	for i in order.slice(0, 3):
+		p.global_position = d.to_global(d.plan.room_center(i) + Vector3(0, 0.3, 0))
+		await _wait(20)
+	world.camera_rig._target_distance = 30.0
+	await _wait(40)
+	await _shot("dungeon2_2_map_fills")
+	# The lever puzzle: three levers with runes, the chest in its cage.
+	for room in d.puzzles:
+		if d.puzzles[room].kind == DungeonPlan.Puzzle.LEVERS:
+			p.global_position = d.to_global(d.plan.room_center(room) + Vector3(0, 0.3, 3.5))
+			p.face_direction(Vector3(0, 0, -1), true)
+			world.camera_rig._target_distance = 12.0
+			world.camera_rig._target_pitch = 62.0
+			await _wait(60)
+			await _shot("dungeon2_3_levers")
+			break
+	# The locked gate in front of the last room, the Keeper close by.
+	if not d.gates.is_empty():
+		var g: DungeonGate = d.gates[0]
+		var away := (g.position - d.plan.room_center(d.plan.end_room))
+		away.y = 0.0
+		p.global_position = d.to_global(g.position + away.normalized() * 3.0 + Vector3(0, 0.3, 0))
+		p.face_direction(-away.normalized(), true)
+		if d.keeper and is_instance_valid(d.keeper):
+			d.keeper.global_position = d.to_global(g.position + away.normalized() * 5.0 + Vector3(1.5, 0.3, 0))
+			d.keeper.set_physics_process(false)
+		world.camera_rig._target_distance = 12.0
+		world.camera_rig._target_pitch = 62.0
+		await _wait(60)
+		await _shot("dungeon2_4_gate")
+	world.queue_free()
+	await _wait(5)
+
+
 func _storeys_showcase() -> void:
 	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
 	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World

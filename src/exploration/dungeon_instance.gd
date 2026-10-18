@@ -4,6 +4,13 @@ extends Node3D
 ## it never touches terrain. Owns its monsters, traps, chests, the boss fight
 ## (gate closes behind you, boss bar, loot + exit portal when it dies) and the
 ## ways out: the exit portal in the start room and stairs to the next floor.
+##
+## Milestone 31: fog of war - every room and corridor is covered in darkness
+## (a black lid over it, its braziers out) until you step into it or near it;
+## `explored` feeds the HUD mini-map. Rank D and up: the last room is locked
+## behind gates, the key is carried by the Keeper (an elite in another room).
+## Puzzle rooms hold a caged chest: levers to pull in order, or a pressure plate
+## that opens the cage for PLATE_SECONDS.
 
 const ORIGIN := Vector3(0, 800, 0)
 const WALL_H := 3.5
@@ -22,6 +29,20 @@ var floor_cleared := false
 var _gate: StaticBody3D
 var _rng := RandomNumberGenerator.new()
 var _check := 0.0
+## Milestone 31.
+const PLATE_SECONDS := 6.0
+const CORRIDOR_SIGHT := 3.0
+## Explored rooms and corridors (index -> true).
+var explored: Dictionary = {}
+var explored_corridors: Dictionary = {}
+var keeper: Monster
+var gates: Array = []
+## Puzzle room -> {"kind", "cage", "levers", "next", "chest", "timer"}
+var puzzles: Dictionary = {}
+var _lids: Dictionary = {}  # "r<i>" / "c<i>" -> MeshInstance3D
+var _room_lights: Dictionary = {}  # room -> [OmniLight3D]
+## The secret passage stays dark (and off the map) until its cracked wall breaks.
+var secret_open := false
 
 
 func setup(p: PoiInfo, p_floor: int, ret: Vector3) -> void:
@@ -46,6 +67,9 @@ func _ready() -> void:
 	position = ORIGIN
 	_build_geometry()
 	_build_rooms()
+	_build_locks()
+	_build_fog()
+	reveal_room(plan.start_room)
 
 
 # --- Geometry --------------------------------------------------------------------------
@@ -111,7 +135,7 @@ func _build_rooms() -> void:
 		var rr: Rect2i = room.rect
 		# Braziers in two corners.
 		for corner in [Vector3(rr.position.x + 1.2, 0, rr.position.y + 1.2), Vector3(rr.end.x - 1.2, 0, rr.end.y - 1.2)]:
-			_brazier(corner)
+			_room_lights.get_or_add(i, []).append(_brazier(corner))
 		match room.type:
 			DungeonPlan.Room.START:
 				_door(DungeonDoor.Kind.EXIT, center + Vector3(0, 0, -2.0))
@@ -143,6 +167,12 @@ func _build_rooms() -> void:
 				_spawn_boss(i)
 			DungeonPlan.Room.SECRET:
 				_chest(&"secret", center, true)
+			DungeonPlan.Room.PUZZLE:
+				_build_puzzle(i)
+				for k in 1 + poi.rank / 3:
+					_monster(mons[0], plan.room_point(i, _rng), false)
+		if i == plan.keeper_room:
+			_spawn_keeper(i)
 	if not plan.secret.is_empty():
 		var cb := CrackedBlock.new()
 		cb.size = Vector3(3.2, WALL_H, 0.6)
@@ -150,22 +180,25 @@ func _build_rooms() -> void:
 		cb.position = plan.secret.block_pos
 		cb.rotation.y = plan.secret.block_rot
 		cb.broken.connect(func(_b: CrackedBlock) -> void:
+			secret_open = true
 			Events.toast.emit("A secret passage!", UITheme.GOLD)
 			if World.instance:
 				World.instance.player.character.grant_xp(40 + poi.rank * 10, Progression.Source.EXPLORATION))
 		add_child(cb)
 
 
-func _brazier(pos: Vector3) -> void:
+func _brazier(pos: Vector3) -> OmniLight3D:
 	var st := [{"mesh": &"brazier", "xform": Transform3D(Basis.IDENTITY, pos), "box_size": Vector3(0.7, 1.2, 0.7), "box_center": Vector3(0, 0.6, 0)},
 		{"mesh": &"brazier_fire", "xform": Transform3D(Basis.IDENTITY, pos), "glow": true}]
 	StaticGeometry.attach(self, StaticGeometry.merge(st, []))
 	var light := OmniLight3D.new()
 	light.position = pos + Vector3(0, 1.8, 0)
 	light.light_color = Color(1.0, 0.6, 0.3) if poi.theme != PoiInfo.DungeonTheme.ARCANE else Color(0.7, 0.55, 1.0)
-	light.light_energy = 1.8
-	light.omni_range = 9.0
+	light.light_energy = 3.2
+	light.omni_range = 12.0
+	light.visible = false  # lit when the room is explored (Milestone 31)
 	add_child(light)
+	return light
 
 
 func _door(kind: int, pos: Vector3) -> DungeonDoor:
@@ -214,6 +247,218 @@ func _monster(data_id: StringName, local: Vector3, elite: bool) -> Monster:
 	return m
 
 
+# --- Milestone 31: the Keeper, locked gates and puzzles -----------------------------------
+
+func _spawn_keeper(room: int) -> void:
+	var mons: Array = PoiLayout.THEME_MONSTERS[poi.theme]
+	keeper = _monster(mons[0], plan.room_center(room), false)
+	if keeper == null:
+		return
+	if keeper.affixes.is_empty() and keeper.mdata.can_be_elite:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash("keeper:%s:%d" % [poi.id, floor_index])
+		keeper.make_elite(EliteAffixes.roll(rng, 2 if poi.rank >= 3 else 1, keeper.mdata.style != MonsterData.Style.MELEE))
+	keeper.set_meta(&"keeper", true)
+	keeper.enemy_died.connect(_on_keeper_died, CONNECT_ONE_SHOT)
+
+
+func _on_keeper_died(e: Enemy) -> void:
+	e.remove_meta(&"keeper")
+	if World.instance:
+		World.instance.spawn_pickup(DungeonGate.KEY_ITEM, 1, e.global_position + Vector3(0, 0.8, 0))
+	Events.toast.emit("The Keeper dropped the Dungeon Key!", UITheme.GOLD)
+
+
+func _build_locks() -> void:
+	if plan.keeper_room < 0:
+		return
+	for cr: Rect2i in plan.corridors_into(plan.end_room):
+		var m := plan.mouth(plan.end_room, cr)
+		var g := DungeonGate.new()
+		g.size = m.size
+		g.horizontal = m.horizontal
+		g.position = m.pos
+		add_child(g)
+		gates.append(g)
+	for g in gates:
+		g.group = gates.filter(func(o: Node) -> bool: return o != g)
+
+
+func _build_puzzle(room: int) -> void:
+	var center := plan.room_center(room)
+	var rr: Rect2i = plan.rooms[room].rect
+	var chest := _chest(&"dungeon_chest", center, true)
+	var cage := ChestCage.new()
+	cage.chest = chest
+	cage.position = center
+	add_child(cage)
+	var kind: int = plan.puzzles.get(room, DungeonPlan.Puzzle.LEVERS)
+	var st := {"kind": kind, "cage": cage, "levers": [], "next": 1, "chest": chest, "timer": 0.0}
+	puzzles[room] = st
+	if kind == DungeonPlan.Puzzle.LEVERS:
+		# Three levers by the walls, their numbers shuffled around the room.
+		var spots := [Vector3(rr.position.x + 1.0, 0, center.z), Vector3(rr.end.x - 1.0, 0, center.z),
+			Vector3(center.x, 0, rr.position.y + 1.0), Vector3(center.x, 0, rr.end.y - 1.0)]
+		var nums := [1, 2, 3]
+		for k in range(nums.size() - 1, 0, -1):
+			var j := _rng.randi() % (k + 1)
+			var t = nums[k]
+			nums[k] = nums[j]
+			nums[j] = t
+		for k in 3:
+			var lv := DungeonLever.new()
+			lv.number = nums[k]
+			lv.position = spots[k]
+			lv.pulled.connect(_on_lever_pulled.bind(room))
+			add_child(lv)
+			st.levers.append(lv)
+	else:
+		var plate := PressurePlate.new()
+		plate.position = Vector3(rr.position.x + 1.5, 0.0, rr.position.y + 1.5)
+		plate.pressed.connect(_on_plate_pressed.bind(room))
+		add_child(plate)
+		st["plate"] = plate
+
+
+## Creative mode: opens every gate and puzzle cage on the floor. Returns how many.
+func open_all_locks() -> int:
+	var n := 0
+	for g in gates:
+		if is_instance_valid(g) and not g.is_open:
+			g.open()
+			n += 1
+	for room in puzzles:
+		var cage: ChestCage = puzzles[room].cage
+		if is_instance_valid(cage) and not cage.is_open:
+			cage.open()
+			puzzles[room].timer = 0.0
+			n += 1
+	return n
+
+
+func _on_lever_pulled(lever: DungeonLever, room: int) -> void:
+	var st: Dictionary = puzzles[room]
+	if lever.number == int(st.next):
+		st.next = int(st.next) + 1
+		if int(st.next) > 3:
+			st.cage.open()
+			Events.toast.emit("Click! The cage rises.", UITheme.GOLD)
+		return
+	Events.toast.emit("Wrong order - the levers reset (look at their runes)", Color(1, 0.7, 0.45))
+	st.next = 1
+	get_tree().create_timer(0.6).timeout.connect(func() -> void:
+		for lv: DungeonLever in st.levers:
+			if is_instance_valid(lv):
+				lv.set_down(false))
+
+
+func _on_plate_pressed(room: int) -> void:
+	var st: Dictionary = puzzles[room]
+	st.cage.open()
+	st.timer = PLATE_SECONDS
+	Events.toast.emit("The cage rises - hurry, it falls in %d seconds!" % int(PLATE_SECONDS), UITheme.GOLD)
+
+
+func _update_puzzles(dt: float) -> void:
+	for room in puzzles:
+		var st: Dictionary = puzzles[room]
+		if float(st.timer) <= 0.0:
+			continue
+		st.timer = float(st.timer) - dt
+		if float(st.timer) <= 0.0 and is_instance_valid(st.chest) and not st.chest.opened:
+			st.cage.close()
+
+
+# --- Milestone 31: fog of war ------------------------------------------------------------
+
+func _build_fog() -> void:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(0.02, 0.02, 0.03)
+	for i in plan.rooms.size():
+		var rr: Rect2i = plan.rooms[i].rect
+		_lids["r%d" % i] = _lid(Rect2(rr.position, rr.size).grow(0.3), mat)
+	for i in plan.corridors.size():
+		var cr: Rect2i = plan.corridors[i]
+		_lids["c%d" % i] = _lid(Rect2(cr.position, cr.size).grow(0.3), mat)
+
+
+func _lid(r: Rect2, mat: Material) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(r.size.x, 0.1, r.size.y)
+	mi.mesh = box
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.position = Vector3(r.position.x + r.size.x * 0.5, WALL_H + 0.08, r.position.y + r.size.y * 0.5)
+	add_child(mi)
+	return mi
+
+
+## Lifts the darkness off a room and lights its braziers.
+func reveal_room(i: int) -> void:
+	if i < 0 or explored.has(i):
+		return
+	explored[i] = true
+	var lid: MeshInstance3D = _lids.get("r%d" % i)
+	if lid and is_instance_valid(lid):
+		var tw := create_tween()
+		tw.tween_property(lid, "position:y", WALL_H + 8.0, 0.6)
+		tw.tween_callback(lid.queue_free)
+	for l in _room_lights.get(i, []):
+		l.visible = true
+	# The corridors leading out of it come into view too.
+	for ci in plan.corridors.size():
+		if Rect2i((plan.rooms[i].rect as Rect2i).position - Vector2i(1, 1), (plan.rooms[i].rect as Rect2i).size + Vector2i(2, 2)).intersects(plan.corridors[ci]):
+			reveal_corridor(ci)
+
+
+func reveal_corridor(ci: int, force := false) -> void:
+	if explored_corridors.has(ci) or (not force and not secret_open and is_secret_corridor(ci)):
+		return
+	explored_corridors[ci] = true
+	var lid: MeshInstance3D = _lids.get("c%d" % ci)
+	if lid and is_instance_valid(lid):
+		lid.queue_free()
+
+
+## True when the cell is in a room or corridor you have seen (the maps draw only these).
+func is_cell_known(c: Vector2i) -> bool:
+	var room := plan.room_at(Vector3(c.x + 0.5, 0, c.y + 0.5))
+	if room >= 0:
+		return explored.has(room)
+	for ci in explored_corridors:
+		if (plan.corridors[ci] as Rect2i).has_point(c):
+			return true
+	return false
+
+
+func is_secret_corridor(ci: int) -> bool:
+	return not plan.secret.is_empty() and plan.corridors[ci] == plan.secret.rect
+
+
+## Creative mode: the whole floor, secret room included.
+func reveal_all() -> void:
+	for i in plan.rooms.size():
+		reveal_room(i)
+	for ci in plan.corridors.size():
+		reveal_corridor(ci, true)
+
+
+func _update_fog(local: Vector3) -> void:
+	var idx := plan.room_at(local)
+	if idx >= 0:
+		reveal_room(idx)
+	var c := Vector2(local.x, local.z)
+	for ci in plan.corridors.size():
+		if not explored_corridors.has(ci) and Rect2(plan.corridors[ci].position, plan.corridors[ci].size).grow(CORRIDOR_SIGHT).has_point(c):
+			reveal_corridor(ci)
+	# Rooms you look into from a corridor mouth.
+	for i in plan.rooms.size():
+		if not explored.has(i) and Rect2((plan.rooms[i].rect as Rect2i).position, (plan.rooms[i].rect as Rect2i).size).grow(1.2).has_point(c):
+			reveal_room(i)
+
+
 func _spawn_boss(room: int) -> void:
 	var mons: Array = PoiLayout.THEME_MONSTERS[poi.theme]
 	boss = _monster(mons[2], plan.room_center(room) + Vector3(0, 0, -2.5), false)
@@ -231,6 +476,9 @@ func _process(delta: float) -> void:
 	if _check > 0.0:
 		return
 	_check = 0.25
+	_update_puzzles(0.25)
+	if World.instance.player:
+		_update_fog(to_local(World.instance.player.global_position))
 	if not floor_cleared and not plan.is_final and not monsters.is_empty() and alive_count() == 0:
 		_on_floor_cleared()
 	if boss == null or boss_started or cleared:
@@ -325,6 +573,11 @@ func _on_boss_died(_e: Enemy) -> void:
 
 
 func _exit_tree() -> void:
+	if keeper and is_instance_valid(keeper):
+		if keeper.has_meta(&"keeper"):
+			keeper.remove_meta(&"keeper")
+		if keeper.enemy_died.is_connected(_on_keeper_died):
+			keeper.enemy_died.disconnect(_on_keeper_died)
 	if boss and is_instance_valid(boss) and boss.enemy_died.is_connected(_on_boss_died):
 		boss.enemy_died.disconnect(_on_boss_died)
 	for m in monsters:

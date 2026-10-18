@@ -5,7 +5,11 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.38.0 — Multi-storey building**. Build up to four floors: upper floors on your walls, balconies,
+> Status: **v0.39.0 — Dungeons: fog of war, keys and puzzles**. Dungeon rooms stay dark until you find them, and a
+> mini-map fills in as you explore. From rank D the last room is locked: kill the floor's Keeper for the key.
+> Puzzle rooms hide caged chests behind levers (pull them in order) or a pressure plate (hurry!).
+>
+> Before that, **v0.38.0 — Multi-storey building**. Build up to four floors: upper floors on your walls, balconies,
 > stairs, ladders and stone foundations that level out slopes. Monsters follow you up the stairs and ladders.
 >
 > Before that, **v0.37.0 — Travel**. Waystones in every village and at every dungeon (unlock them, then travel for a few

@@ -54,6 +54,8 @@ var _requests := RequestsPanel.new()
 ## Milestone 29: waystone travel and the horse's saddle slot.
 var travel_panel := TravelPanel.new()
 var _mount_row: HBoxContainer
+## Milestone 31: the dungeon mini-map (only visible inside dungeons).
+var dungeon_map := DungeonMap.new()
 var _mount_bar: ProgressBar
 var _mount_label: Label
 var _reputation := ReputationPanel.new()
@@ -123,6 +125,7 @@ func _ready() -> void:
 	_build_target_frame()
 	_build_prompt_and_toasts()
 	_build_corner_info()
+	_root.add_child(dungeon_map)
 	_root.add_child(mp_hud)
 	_build_help()
 	_build_ability_bar()

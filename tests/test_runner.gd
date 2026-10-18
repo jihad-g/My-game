@@ -154,6 +154,8 @@ func _ready() -> void:
 	_run(&"test_m30_data")
 	await _run_async(&"test_m30_storeys")
 	await _run_async(&"test_m30_climbing")
+	_run(&"test_m31_dungeon_plan")
+	await _run_async(&"test_m31_dungeon_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5203,7 +5205,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.38"), "version 0.38 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.39"), "version 0.39 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -8475,6 +8477,17 @@ func test_m25_nav_dungeon() -> void:
 	var d := world.dungeon
 	var a := d.to_global(d.plan.room_center(d.plan.start_room))
 	var b := d.to_global(d.plan.room_center(d.plan.end_room))
+	if not d.gates.is_empty():
+		# Milestone 31: the last room is locked. Walk to it from the room on the
+		# other side of a gate: blocked while it is shut, open once unlocked.
+		var cr: Rect2i = d.plan.corridors_into(d.plan.end_room)[0]
+		for i in d.plan.rooms.size():
+			var rr: Rect2i = d.plan.rooms[i].rect
+			if i != d.plan.end_room and Rect2i(rr.position - Vector2i(1, 1), rr.size + Vector2i(2, 2)).intersects(cr):
+				a = d.to_global(d.plan.room_center(i))
+		check(not NavGrid.find_path(world, a, b).reached, "the locked gates close the way to the last room")
+		d.open_all_locks()
+		await _frames(2)
 	var r := NavGrid.find_path(world, a, b)
 	check(r.reached, "a path from the first room to the last room (%d waypoints)" % (r.points as PackedVector3Array).size())
 	var inside := true
@@ -9141,5 +9154,183 @@ func test_m30_climbing() -> void:
 				break
 		check(best < 2.0, "the skeleton climbs the ladder and reaches the hero (%.1f m)" % best)
 		NodePool.release_or_free(m)
+	world.queue_free()
+	await _frames(5)
+
+
+# --- Milestone 31: dungeon fog of war, keys, levers, plates -----------------------------------
+
+func test_m31_dungeon_plan() -> void:
+	check(ItemDB.has_item(DungeonGate.KEY_ITEM), "the Dungeon Key is an item")
+	var poi := PoiInfo.new()
+	poi.kind = PoiInfo.Kind.DUNGEON
+	poi.id = "m31_plan"
+	var keepers := [0, 0, 0, 0, 0, 0]
+	var puzzle_rooms := [0, 0, 0, 0, 0, 0]
+	var kinds := {}
+	var bad_keeper := 0
+	for rank in 6:
+		poi.rank = rank
+		for sd in 30:
+			poi.seed = 900 + sd
+			for f in DungeonPlan.FLOORS[rank]:
+				var pl := DungeonPlan.generate(poi, f)
+				var pz := 0
+				for i in pl.rooms.size():
+					if pl.rooms[i].type == DungeonPlan.Room.PUZZLE:
+						pz += 1
+						kinds[pl.puzzles.get(i, -1)] = true
+				puzzle_rooms[rank] += pz
+				if pl.keeper_room >= 0:
+					keepers[rank] += 1
+					var kt: int = pl.rooms[pl.keeper_room].type
+					if pl.keeper_room == pl.end_room or pl.keeper_room == pl.start_room or kt == DungeonPlan.Room.SECRET:
+						bad_keeper += 1
+					if pl.corridors_into(pl.end_room).is_empty():
+						bad_keeper += 1
+	check(keepers[0] == 0 and puzzle_rooms[0] == 0, "rank E dungeons have no locks or puzzles")
+	for rank in range(1, 6):
+		check(keepers[rank] > 0, "rank %s floors have a Keeper (%d)" % [PoiInfo.RANKS[rank], keepers[rank]])
+		check(puzzle_rooms[rank] > 0, "rank %s floors have puzzle rooms (%d)" % [PoiInfo.RANKS[rank], puzzle_rooms[rank]])
+	check(puzzle_rooms[4] > puzzle_rooms[1], "higher ranks have more puzzles (%d vs %d)" % [puzzle_rooms[4], puzzle_rooms[1]])
+	check(bad_keeper == 0, "the Keeper is never in the start, end or secret room, and the end room has a way in")
+	check(kinds.has(DungeonPlan.Puzzle.LEVERS) and kinds.has(DungeonPlan.Puzzle.PLATE), "both lever and plate puzzles appear")
+	# Same seed, same floor.
+	poi.rank = 3
+	poi.seed = 4321
+	var a := DungeonPlan.generate(poi, 0)
+	var b := DungeonPlan.generate(poi, 0)
+	check(a.keeper_room == b.keeper_room and a.puzzles == b.puzzles, "the plan is the same every time")
+
+
+## A rank-B dungeon poi whose first floor has a Keeper, a lever and a plate puzzle (or as close as we get).
+func _m31_poi(world: World) -> PoiInfo:
+	var poi := _test_dungeon_poi(world, 3, PoiInfo.DungeonTheme.CRYPT, 31)
+	var best := -1
+	var best_seed := poi.seed
+	for sd in range(1, 600):
+		poi.seed = sd
+		var pl := DungeonPlan.generate(poi, 0)
+		var score := (2 if pl.keeper_room >= 0 else 0) + (1 if DungeonPlan.Puzzle.LEVERS in pl.puzzles.values() else 0) \
+			+ (1 if DungeonPlan.Puzzle.PLATE in pl.puzzles.values() else 0) + (1 if not pl.secret.is_empty() else 0)
+		if score > best:
+			best = score
+			best_seed = sd
+		if score == 5:
+			break
+	poi.seed = best_seed
+	return poi
+
+
+func test_m31_dungeon_ingame() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 80
+	var poi := _m31_poi(world)
+	check(world.enter_dungeon(poi), "entered a rank B crypt")
+	await _frames(20)
+	var d := world.dungeon
+	for m in d.monsters:
+		if is_instance_valid(m):
+			m.set_physics_process(false)
+	# Fog of war: only the start room is known.
+	check(d.explored.size() == 1 and d.explored.has(d.plan.start_room), "only the start room is explored (%d)" % d.explored.size())
+	await _pframes(3)
+	check(world.hud.dungeon_map.visible and world.hud.dungeon_map.shown_rooms() == 1, "the mini-map shows one room")
+	var far := -1
+	for i in d.plan.rooms.size():
+		if i != d.plan.start_room and d.plan.rooms[i].type == DungeonPlan.Room.NORMAL:
+			far = i
+			break
+	check(far >= 0 and d._lids.has("r%d" % far) and not d._room_lights[far][0].visible, "an unexplored room is dark and its braziers are out")
+	if far >= 0:
+		p.global_position = d.to_global(d.plan.room_center(far) + Vector3(0, 0.3, 0))
+		await _pframes(20)
+		check(d.explored.has(far) and d._room_lights[far][0].visible, "walking in lights the room and maps it")
+		check(world.hud.dungeon_map.shown_rooms() >= 2, "the mini-map fills in (%d rooms)" % world.hud.dungeon_map.shown_rooms())
+		var unknown := 0
+		for c: Vector2i in d.plan.cells:
+			unknown += 0 if d.is_cell_known(c) else 1
+		check(d.is_cell_known(Vector2i(floori(d.plan.room_center(far).x), floori(d.plan.room_center(far).z))) and unknown > 0,
+			"the big map knows the explored cells and not the rest (%d unknown)" % unknown)
+	# The secret passage stays off the map until its wall breaks.
+	if not d.plan.secret.is_empty():
+		var sci := d.plan.corridors.find(d.plan.secret.rect)
+		var neighbour := -1
+		for i in d.plan.rooms.size():
+			var rr: Rect2i = d.plan.rooms[i].rect
+			if i != d.plan.secret.room and Rect2i(rr.position - Vector2i(1, 1), rr.size + Vector2i(2, 2)).intersects(d.plan.secret.rect):
+				neighbour = i
+		d.reveal_room(neighbour)
+		check(sci >= 0 and not d.explored_corridors.has(sci) and not d.explored.has(d.plan.secret.room), "the secret passage stays hidden on the map")
+	# The Keeper and the locked gates.
+	check(d.keeper != null and d.keeper.has_meta(&"keeper") and "Keeper" in d.keeper.display_name(), "a Keeper guards the key (%s)" % (d.keeper.display_name() if d.keeper else "none"))
+	check(not d.gates.is_empty(), "gates lock the last room (%d)" % d.gates.size())
+	if not d.gates.is_empty():
+		var g: DungeonGate = d.gates[0]
+		check(not g.is_open and "Keeper" in g.get_interact_text(), "the gate is locked")
+		g.interact(p)
+		check(not g.is_open, "no key, no entry")
+	if d.keeper:
+		var kpos := d.keeper.global_position
+		_kill(d.keeper, world)
+		await _frames(3)
+		var dropped := p.inventory.count_of(DungeonGate.KEY_ITEM) > 0
+		for n in world.find_children("*", "", true, false):
+			if n is Pickup and n.visible and n.item_id == DungeonGate.KEY_ITEM and n.global_position.distance_to(kpos) < 4.0:
+				dropped = true
+		check(dropped, "the Keeper drops the Dungeon Key")
+	if not d.gates.is_empty():
+		p.inventory.remove_item(DungeonGate.KEY_ITEM, p.inventory.count_of(DungeonGate.KEY_ITEM))
+		p.inventory.add_item(DungeonGate.KEY_ITEM, 1)
+		d.gates[0].interact(p)
+		var all_open := true
+		for g in d.gates:
+			all_open = all_open and g.is_open
+		check(all_open and p.inventory.count_of(DungeonGate.KEY_ITEM) == 0, "the key opens every gate of the last room and is used up")
+	# Puzzles.
+	for room in d.puzzles:
+		var st: Dictionary = d.puzzles[room]
+		var chest: LootChest = st.chest
+		check(not st.cage.is_open and chest.locked_reason != "", "the puzzle chest sits in a closed cage")
+		if st.kind == DungeonPlan.Puzzle.LEVERS:
+			var by_num := {}
+			for lv: DungeonLever in st.levers:
+				by_num[lv.number] = lv
+			by_num[2].interact(p)
+			check(int(st.next) == 1 and not st.cage.is_open, "the wrong lever resets the puzzle")
+			await get_tree().create_timer(0.8).timeout
+			check(not by_num[2].is_down, "the levers spring back up")
+			for k in [1, 2, 3]:
+				by_num[k].interact(p)
+			check(st.cage.is_open and chest.locked_reason == "", "levers I, II, III in order open the cage")
+		else:
+			var plate: PressurePlate = st.plate
+			p.global_position = plate.global_position + Vector3(0, 0.1, 0)
+			await _pframes(20)
+			check(st.cage.is_open and plate.is_down, "standing on the plate lifts the cage")
+			p.global_position = d.to_global(d.plan.room_center(room) + Vector3(0, 0.3, 3.0))
+			d._update_puzzles(DungeonInstance.PLATE_SECONDS + 1.0)
+			check(not st.cage.is_open and chest.locked_reason != "", "too slow: the cage drops again")
+			plate.is_down = false
+			p.global_position = plate.global_position + Vector3(0, 0.1, 0)
+			await _pframes(20)
+			chest.interact(p)
+			d._update_puzzles(DungeonInstance.PLATE_SECONDS + 1.0)
+			check(chest.opened and st.cage.is_open, "open the chest in time and the cage stays up")
+	check(not d.puzzles.is_empty(), "the floor has puzzle rooms (%d)" % d.puzzles.size())
+	# Creative: reveal the map, open everything.
+	d.reveal_all()
+	check(d.explored.size() == d.plan.rooms.size() and d.explored_corridors.size() == d.plan.corridors.size(), "Creative reveals the whole floor")
+	check(d.open_all_locks() >= 0, "Creative opens every lock")
+	# Keys don't leave the floor.
+	p.inventory.add_item(DungeonGate.KEY_ITEM, 2)
+	world.exit_dungeon()
+	await _wait_ready_after_teleport(world)
+	check(p.inventory.count_of(DungeonGate.KEY_ITEM) == 0, "leaving the floor turns spare keys to dust")
+	await _pframes(3)
+	check(not world.hud.dungeon_map.visible, "no mini-map on the surface")
 	world.queue_free()
 	await _frames(5)

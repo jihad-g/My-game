@@ -176,6 +176,8 @@ func is_boss() -> bool:
 
 func display_name() -> String:
 	var base := mdata.boss_title if is_boss() and mdata.boss_title != "" else super.display_name()
+	if has_meta(&"keeper"):
+		base = "Keeper " + base  # Milestone 31: carries the floor's key
 	if affixes.is_empty():
 		return base
 	var pre := PackedStringArray()
