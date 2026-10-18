@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"silk_cloth"
+result_item = &"silk_cloth"
+result_count = 1
+ingredients = {
+&"spider_silk": 3
+}
+station = 3
+tier = 1
+source = 1
+discovered_by = &"spider_silk"
+xp = 6

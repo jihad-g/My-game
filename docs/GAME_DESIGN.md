@@ -212,6 +212,11 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 - **Crafting never fails.** Low Crafting skill makes recipes cost more materials; higher skill makes them
   cheaper. Crafting skill also unlocks recipe tiers (10 / 25 / 45 / 70 / 90).
 - Cooking at higher skill can give a bonus item. Crafting is instant (no queue, no fuel).
+- **Milestone 35 recipes:** Ember Feather + 12 arrows -> 12 Fire Arrows; honey food at the campfire (Honey Bread,
+  Honey Roast, Honey Cake); silk at the tailoring table (Silk Cloth, Silk Bandage, Silkweave Robe and Hood);
+  gear from monster drops (Dragonbone Greatsword, Serpentscale Boots, Mimic Tooth Amulet, Pearl Ring),
+  Fletched Arrows from turkey feathers and Mana Tonic from ectoplasm.
+- Every item has a pixel icon drawn by `art/tools/icongen.py` (our own designs, 80 shapes, tinted per item).
 
 ### 3.10 Inventory and equipment
 - Bag of 24 slots with stacks, hotbar 1–8, move/merge/use/drop. Storage chests have 16 slots.

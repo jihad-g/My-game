@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"silkweave_hood"
+display_name = "Silkweave Hood"
+description = "A soft silk hood set with a pearl."
+category = 4
+rarity = 3
+max_stack = 1
+base_value = 300
+icon_color = Color(0.82, 0.86, 0.98, 1)
+icon_glyph = "SH"
+equip_slot = 3
+required_level = 20
+stat_bonuses = {
+&"armor": 2,
+&"spell_power": 8,
+&"max_mana": 20
+}
+armor_weight = 1
+outfit_look = &"hood_padded"

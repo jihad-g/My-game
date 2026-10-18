@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"silkweave_robe"
+display_name = "Silkweave Robe"
+description = "A shimmering robe of silk cloth, stitched with ghostly thread."
+category = 4
+rarity = 3
+max_stack = 1
+base_value = 420
+icon_color = Color(0.82, 0.86, 0.98, 1)
+icon_glyph = "SR"
+equip_slot = 4
+required_level = 22
+stat_bonuses = {
+&"armor": 4,
+&"spell_power": 14,
+&"max_mana": 30,
+&"mana_regen": 8
+}
+armor_weight = 1
+outfit_look = &"robe"

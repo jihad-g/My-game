@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"honey_roast"
+display_name = "Honey Roast"
+description = "Roast meat with a sticky honey glaze. Very filling."
+category = 1
+rarity = 2
+max_stack = 10
+base_value = 30
+icon_color = Color(0.75, 0.42, 0.2, 1)
+icon_glyph = "HR"
+hunger_restore = 65.0
+health_restore = 25.0
+temperature_offset = 5.0
+temperature_duration = 180.0

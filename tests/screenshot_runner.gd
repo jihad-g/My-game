@@ -34,6 +34,10 @@ func _ready() -> void:
 		await _mobs_showcase()
 		get_tree().quit()
 		return
+	if "--only=icons" in OS.get_cmdline_user_args():
+		await _icons_showcase()
+		get_tree().quit()
+		return
 	if "--only=roll" in OS.get_cmdline_user_args():
 		await _roll_showcase()
 		get_tree().quit()
@@ -2561,6 +2565,67 @@ func _anims_showcase() -> void:
 	Engine.time_scale = 1.0
 	world.queue_free()
 	await _wait(5)
+
+
+## Milestone 35: the new hand-drawn icons, as the game shows them.
+func _icons_showcase() -> void:
+	var groups := [
+		["New items (M35)", CreativePanel.M35_ITEMS],
+		["Monster drops and materials", [&"dragon_bone", &"serpent_scale", &"mimic_tooth", &"ectoplasm", &"pearl", &"turkey_feather",
+			&"sugar", &"honeycomb", &"spider_silk", &"ember_feather", &"hedgehog_quill", &"candle_wax", &"acorn", &"blossom_petal"]],
+		["Elemental and M27 gear", [&"sunflare_helm", &"sunflare_plate", &"amethyst_crown", &"amethyst_robe", &"wraithbone_mask",
+			&"wraithbone_coat", &"sporecap_hat", &"sporecap_vest", &"dawnbloom_crown", &"dawnbloom_mantle", &"stoneheart_helm",
+			&"stoneheart_plate", &"stormcopper_helm", &"stormcopper_plate", &"brassworks_tophat", &"brassworks_coat",
+			&"paladin_helm", &"paladin_plate", &"pilgrim_hood", &"pilgrim_robe", &"explorer_hood", &"explorer_pack",
+			&"gilded_greatsword", &"gilded_kite_shield", &"prismheart_blade", &"sporecrown_staff", &"starlance"]],
+		["Travel and dungeons", [&"dungeon_key", &"delvers_mark", &"riding_saddle", &"leather_saddle", &"rowboat", &"war_banner_scrap"]],
+	]
+	var bg := ColorRect.new()
+	bg.color = Color(0.09, 0.08, 0.12)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(bg)
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override(&"panel", UITheme.panel_style())
+	panel.position = Vector2(30, 24)
+	panel.size = Vector2(get_viewport().get_visible_rect().size) - Vector2(60, 48)
+	add_child(panel)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override(&"separation", 8)
+	panel.add_child(v)
+	for g in groups:
+		var title := Label.new()
+		title.text = g[0]
+		title.add_theme_color_override(&"font_color", UITheme.GOLD)
+		title.add_theme_font_size_override(&"font_size", 20)
+		v.add_child(title)
+		var grid := GridContainer.new()
+		grid.columns = 14
+		grid.add_theme_constant_override(&"h_separation", 6)
+		grid.add_theme_constant_override(&"v_separation", 4)
+		v.add_child(grid)
+		for id in g[1]:
+			if not ItemDB.has_item(id):
+				continue
+			var it: ItemData = ItemDB.get_item(id)
+			var cell := VBoxContainer.new()
+			cell.custom_minimum_size = Vector2(102, 0)
+			var tr := TextureRect.new()
+			tr.texture = ItemIcons.get_icon(it)
+			tr.custom_minimum_size = Vector2(56, 56)
+			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			cell.add_child(tr)
+			var l := Label.new()
+			l.text = it.display_name
+			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			l.add_theme_font_size_override(&"font_size", 11)
+			l.add_theme_color_override(&"font_color", it.rarity_color())
+			cell.add_child(l)
+			grid.add_child(cell)
+	await _wait(10)
+	await _shot("icons_1_sheet")
 
 
 ## v0.42.1: the dodge roll, seen from the side at seven moments.

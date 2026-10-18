@@ -267,6 +267,8 @@ func _build_items() -> void:
 	v.add_child(give)
 	_row(v, "Kits", [["Test kit (all weapon types, arrows, tome)", _give_kit], ["Materials (20 of each)", _give_materials],
 		["Food and potions (5 of each)", _give_consumables]])
+	_row(v, "New (M35)", [["Ingredients for the new recipes", _give_m35_materials], ["The new items (1 each)", _give_m35_items],
+		["Learn the new recipes", _learn_m35_recipes]])
 	var sets := HBoxContainer.new()
 	sets.add_theme_constant_override(&"separation", 6)
 	var sl := Label.new()
@@ -319,6 +321,40 @@ func _give_selected() -> void:
 	var n := int(_amount.value)
 	player.give_or_drop(id, n)
 	_say("gave %d %s" % [n, ItemDB.get_item(id).display_name])
+
+
+## Milestone 35: the new items and recipes (honey food, silk, gear from the M33 monster drops).
+const M35_ITEMS := [&"silk_cloth", &"honey_bread", &"honey_roast", &"honey_cake", &"silk_bandage", &"silkweave_robe",
+	&"silkweave_hood", &"dragonbone_greatsword", &"serpentscale_boots", &"mimic_tooth_amulet", &"pearl_ring", &"fletched_arrow"]
+const M35_RECIPES := [&"fire_arrow_from_feather", &"fletched_arrow", &"honey_bread", &"honey_roast", &"honey_cake", &"silk_cloth",
+	&"silk_bandage", &"silkweave_robe", &"silkweave_hood", &"dragonbone_greatsword", &"serpentscale_boots", &"mimic_tooth_amulet",
+	&"pearl_ring", &"mana_tonic_from_ectoplasm"]
+
+
+## Everything the M35 recipes need (enough for a few of each).
+func _give_m35_materials() -> void:
+	var need := {}
+	for rid in M35_RECIPES:
+		var r: RecipeData = RecipeBook.get_recipe(rid)
+		for ing in r.ingredients:
+			need[ing] = int(need.get(ing, 0)) + int(r.ingredients[ing]) * 3
+	for id in need:
+		player.give_or_drop(id, int(need[id]))
+	_say("gave the ingredients for the new recipes (%d kinds)" % need.size())
+
+
+func _give_m35_items() -> void:
+	for id in M35_ITEMS:
+		player.give_or_drop(id, 10 if ItemDB.get_item(id).max_stack > 1 else 1)
+	_say("gave %d new items" % M35_ITEMS.size())
+
+
+func _learn_m35_recipes() -> void:
+	var n := 0
+	for id in M35_RECIPES:
+		if player.recipes.learn(id):
+			n += 1
+	_say("learned %d new recipes" % n)
 
 
 ## One of each weapon type (the strongest found), 99 arrows and the Tome of Embers.

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"honey_cake"
+result_item = &"honey_cake"
+result_count = 1
+ingredients = {
+&"wheat": 2,
+&"sugar": 2,
+&"honeycomb": 1,
+&"berries": 2
+}
+station = 5
+tier = 2
+source = 1
+discovered_by = &"sugar"
+xp = 12

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="RecipeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/crafting/recipe_data.gd" id="1_rec"]
+
+[resource]
+script = ExtResource("1_rec")
+id = &"mimic_tooth_amulet"
+result_item = &"mimic_tooth_amulet"
+result_count = 1
+ingredients = {
+&"mimic_tooth": 2,
+&"silk_cloth": 1
+}
+station = 1
+tier = 3
+source = 1
+discovered_by = &"mimic_tooth"
+xp = 30

@@ -105,6 +105,21 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 35 — Icons and item uses  ✅ (v0.43.0)
+
+- [x] Every item (297) has a pixel icon in the atlas: new drawings for feathers, scales, teeth, ectoplasm, pearls,
+      sugar, honeycomb, cake, cloth, spools, keys, saddles, boats, top hats and masks; all M23 and M27 gear and the
+      M33 materials now have their own icons
+- [x] Ember Feather recipe: 1 Ember Feather + 12 Wooden Arrows -> 12 Fire Arrows (workbench)
+- [x] Honey food at the campfire: Honey Bread, Honey Roast, Honey Cake (uses Sugar from cupcake critters)
+- [x] Silk at the tailoring table: Silk Cloth, Silk Bandage, Silkweave Robe (+ Ectoplasm), Silkweave Hood (+ Pearl)
+- [x] Uses for the M33 drops: Dragonbone Greatsword, Serpentscale Boots, Mimic Tooth Amulet, Pearl Ring,
+      Fletched Arrows (Turkey Feathers), Mana Tonic from Ectoplasm
+- [x] Creative "New (M35)" row (ingredients, items, learn recipes); tests `test_m35_*` run and pass
+- [ ] NOT IMPLEMENTED: the icons are drawn by our icon generator (art/tools/icongen.py), not painted one by one in an editor
+- [ ] NOT IMPLEMENTED: new gear has no look of its own on the character (it uses the robe, hood, boots and pendant looks)
+- [ ] NOT IMPLEMENTED: honey and silk items in shops and loot tables (crafting only)
+
 ## Milestone 34 — Textures  ✅ (v0.42.0)
 
 - [x] Sand, snow (+ snow edge), ice and cave stone restyled like the M26 grass
@@ -122,7 +137,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] All of them use the M32 animation system (wind-up, hit frame, hurt, death; mimic sleeps as a door)
 - [x] Creative "New (M33)" row; tests `test_m33_*` run and pass
 - [ ] NOT IMPLEMENTED: night-only spawns (ghost cats and diver zombies also appear by day)
-- [ ] NOT IMPLEMENTED: uses for the new materials (planned for Milestone 35: icons and item uses)
+- [x] Done in Milestone 35: uses for the new materials (gear, arrows, food, tonic)
 - [ ] NOT IMPLEMENTED: diver zombies coming out of the sea; serpents swimming
 - [ ] NOT IMPLEMENTED: a lore page and quest for the Bone Dragon
 
@@ -200,8 +215,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Tests `test_m27_*` run and pass
 - [x] Done in Milestone 33: the other mobs on the sheets (bone dragon, shadow serpent, door mimic, ghost cat, diver zombie, cute food
       critters, top-hat bear, turkey)
-- [ ] NOT IMPLEMENTED: hand-drawn inventory icons for the new items (code-drawn by shape for now)
-- [ ] NOT IMPLEMENTED: honey/silk crafting uses beyond the new recipes; the Ember Feather has no recipe yet
+- [x] Done in Milestone 35: pixel icons for the new items; honey and silk recipes; the Ember Feather recipe
 
 ## Milestone 26 — Rich World  ✅ (v0.34.0)
 
@@ -249,7 +263,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Fixed: crash when towns were built on worker threads while the pixel painter ran
 - [x] Tests `test_m23_*` run and pass; `m5`, `m6`, `m7`, `m10`, `m14`, `m15`, `m19`, `m20`, `m21`, `m22`, `m12_balance`, `m17b`, `m18b` re-run and pass
 - [ ] NOT IMPLEMENTED: elemental weapons to match the sets; monsters with elemental weakness shown in the UI
-- [ ] NOT IMPLEMENTED: hand-drawn item icons for the 32 pieces (they use the drawn-in-code icons by shape)
+- [x] Done in Milestone 35: pixel icons for the 32 pieces
 - [ ] Known limitation: element damage counts for hits whose type is that element (spells, fire arrows...); plain weapon hits stay physical
 
 ## Milestones 21 + 22 — Pixel World and Deeper Dungeons  ✅ (v0.30.0)
@@ -279,7 +293,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: Tusker war camps (a place in the world with tents, a chief and a chest)
 - [ ] NOT IMPLEMENTED: pixel art for weapons and shields held by skeletons (still the old flat boxes)
 - [ ] NOT IMPLEMENTED: pixel art for the other monsters, the player classes, outfits and villagers (next art steps)
-- [ ] NOT IMPLEMENTED: hand-made item icons for Tusker Tusk and War Banner Scrap (they use the drawn-in-code fallback icons)
+- [x] Done in Milestone 35: icons for Tusker Tusk and War Banner Scrap
 - [ ] Known limitation: Skeleton Archers and the Bone King keep the old look (only the "skeleton" look is redrawn)
 
 ## Milestone 19 — Together in Danger: real co-op combat  ✅ (v0.28.0)

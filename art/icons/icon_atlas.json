@@ -1,8 +1,23 @@
 {
  "icon_size": 32,
  "columns": 16,
- "count": 215,
+ "count": 297,
  "shapes": [
+  "feather",
+  "scale",
+  "tooth",
+  "goo",
+  "pearl",
+  "sugar",
+  "honeycomb",
+  "cake",
+  "cloth",
+  "spool",
+  "key",
+  "saddle",
+  "boat",
+  "tophat",
+  "mask",
   "sword",
   "greatsword",
   "dagger",
@@ -70,13 +85,30 @@
   "crate"
  ],
  "items": {
-  "aegis_of_dawn": {
+  "acorn": {
    "cell": [
     0,
     0
    ],
    "px": [
     0,
+    0,
+    32,
+    32
+   ],
+   "shape": "fruit",
+   "file": "items/acorn.png",
+   "category": "FOOD",
+   "rarity": 0,
+   "color": "#A8703D"
+  },
+  "aegis_of_dawn": {
+   "cell": [
+    1,
+    0
+   ],
+   "px": [
+    32,
     0,
     32,
     32
@@ -89,11 +121,11 @@
   },
   "alchemists_grimoire": {
    "cell": [
-    1,
+    2,
     0
    ],
    "px": [
-    32,
+    64,
     0,
     32,
     32
@@ -104,13 +136,81 @@
    "rarity": 3,
    "color": "#66B272"
   },
-  "ancient_bone": {
+  "amethyst_boots": {
    "cell": [
-    2,
+    3,
     0
    ],
    "px": [
-    64,
+    96,
+    0,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/amethyst_boots.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#7247A8"
+  },
+  "amethyst_crown": {
+   "cell": [
+    4,
+    0
+   ],
+   "px": [
+    128,
+    0,
+    32,
+    32
+   ],
+   "shape": "crown",
+   "file": "items/amethyst_crown.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#7247A8"
+  },
+  "amethyst_gloves": {
+   "cell": [
+    5,
+    0
+   ],
+   "px": [
+    160,
+    0,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/amethyst_gloves.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#7247A8"
+  },
+  "amethyst_robe": {
+   "cell": [
+    6,
+    0
+   ],
+   "px": [
+    192,
+    0,
+    32,
+    32
+   ],
+   "shape": "robe",
+   "file": "items/amethyst_robe.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#7247A8"
+  },
+  "ancient_bone": {
+   "cell": [
+    7,
+    0
+   ],
+   "px": [
+    224,
     0,
     32,
     32
@@ -123,11 +223,11 @@
   },
   "antidote": {
    "cell": [
-    3,
+    8,
     0
    ],
    "px": [
-    96,
+    256,
     0,
     32,
     32
@@ -140,11 +240,11 @@
   },
   "apprentice_robe": {
    "cell": [
-    4,
+    9,
     0
    ],
    "px": [
-    128,
+    288,
     0,
     32,
     32
@@ -157,11 +257,11 @@
   },
   "apprentice_shoes": {
    "cell": [
-    5,
+    10,
     0
    ],
    "px": [
-    160,
+    320,
     0,
     32,
     32
@@ -174,11 +274,11 @@
   },
   "apprentice_staff": {
    "cell": [
-    6,
+    11,
     0
    ],
    "px": [
-    192,
+    352,
     0,
     32,
     32
@@ -191,11 +291,11 @@
   },
   "apprentice_wand": {
    "cell": [
-    7,
+    12,
     0
    ],
    "px": [
-    224,
+    384,
     0,
     32,
     32
@@ -208,11 +308,11 @@
   },
   "apprentice_wraps": {
    "cell": [
-    8,
+    13,
     0
    ],
    "px": [
-    256,
+    416,
     0,
     32,
     32
@@ -225,11 +325,11 @@
   },
   "arcane_codex": {
    "cell": [
-    9,
+    14,
     0
    ],
    "px": [
-    288,
+    448,
     0,
     32,
     32
@@ -242,11 +342,11 @@
   },
   "arcane_dust": {
    "cell": [
-    10,
+    15,
     0
    ],
    "px": [
-    320,
+    480,
     0,
     32,
     32
@@ -259,12 +359,12 @@
   },
   "ash_spear": {
    "cell": [
-    11,
-    0
+    0,
+    1
    ],
    "px": [
-    352,
     0,
+    32,
     32,
     32
    ],
@@ -276,12 +376,12 @@
   },
   "bandage": {
    "cell": [
-    12,
-    0
+    1,
+    1
    ],
    "px": [
-    384,
-    0,
+    32,
+    32,
     32,
     32
    ],
@@ -293,12 +393,12 @@
   },
   "bandit_insignia": {
    "cell": [
-    13,
-    0
+    2,
+    1
    ],
    "px": [
-    416,
-    0,
+    64,
+    32,
     32,
     32
    ],
@@ -310,12 +410,12 @@
   },
   "berries": {
    "cell": [
-    14,
-    0
+    3,
+    1
    ],
    "px": [
-    448,
-    0,
+    96,
+    32,
     32,
     32
    ],
@@ -325,14 +425,31 @@
    "rarity": 0,
    "color": "#D83359"
   },
-  "boar_hide": {
+  "blossom_petal": {
    "cell": [
-    15,
-    0
+    4,
+    1
    ],
    "px": [
-    480,
-    0,
+    128,
+    32,
+    32,
+    32
+   ],
+   "shape": "lump",
+   "file": "items/blossom_petal.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#FFA8CC"
+  },
+  "boar_hide": {
+   "cell": [
+    5,
+    1
+   ],
+   "px": [
+    160,
+    32,
     32,
     32
    ],
@@ -344,11 +461,11 @@
   },
   "boar_tusk": {
    "cell": [
-    0,
+    6,
     1
    ],
    "px": [
-    0,
+    192,
     32,
     32,
     32
@@ -359,13 +476,81 @@
    "rarity": 2,
    "color": "#F2EACC"
   },
-  "bread": {
+  "brassworks_boots": {
    "cell": [
-    1,
+    7,
     1
    ],
    "px": [
+    224,
     32,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/brassworks_boots.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#6B472D"
+  },
+  "brassworks_coat": {
+   "cell": [
+    8,
+    1
+   ],
+   "px": [
+    256,
+    32,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/brassworks_coat.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#6B472D"
+  },
+  "brassworks_gloves": {
+   "cell": [
+    9,
+    1
+   ],
+   "px": [
+    288,
+    32,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/brassworks_gloves.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#6B472D"
+  },
+  "brassworks_tophat": {
+   "cell": [
+    10,
+    1
+   ],
+   "px": [
+    320,
+    32,
+    32,
+    32
+   ],
+   "shape": "tophat",
+   "file": "items/brassworks_tophat.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#6B472D"
+  },
+  "bread": {
+   "cell": [
+    11,
+    1
+   ],
+   "px": [
+    352,
     32,
     32,
     32
@@ -378,11 +563,11 @@
   },
   "cactus_fruit": {
    "cell": [
-    2,
+    12,
     1
    ],
    "px": [
-    64,
+    384,
     32,
     32,
     32
@@ -395,11 +580,11 @@
   },
   "campfire_kit": {
    "cell": [
-    3,
+    13,
     1
    ],
    "px": [
-    96,
+    416,
     32,
     32,
     32
@@ -410,13 +595,30 @@
    "rarity": 1,
    "color": "#FF8C33"
   },
-  "carrot": {
+  "candle_wax": {
    "cell": [
-    4,
+    14,
     1
    ],
    "px": [
-    128,
+    448,
+    32,
+    32,
+    32
+   ],
+   "shape": "lump",
+   "file": "items/candle_wax.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#D8BFF2"
+  },
+  "carrot": {
+   "cell": [
+    15,
+    1
+   ],
+   "px": [
+    480,
     32,
     32,
     32
@@ -429,12 +631,12 @@
   },
   "carrot_seeds": {
    "cell": [
-    5,
-    1
+    0,
+    2
    ],
    "px": [
-    160,
-    32,
+    0,
+    64,
     32,
     32
    ],
@@ -446,12 +648,12 @@
   },
   "chainmail": {
    "cell": [
-    6,
-    1
+    1,
+    2
    ],
    "px": [
-    192,
     32,
+    64,
     32,
     32
    ],
@@ -463,12 +665,12 @@
   },
   "clay": {
    "cell": [
-    7,
-    1
+    2,
+    2
    ],
    "px": [
-    224,
-    32,
+    64,
+    64,
     32,
     32
    ],
@@ -480,12 +682,12 @@
   },
   "coal": {
    "cell": [
-    8,
-    1
+    3,
+    2
    ],
    "px": [
-    256,
-    32,
+    96,
+    64,
     32,
     32
    ],
@@ -497,12 +699,12 @@
   },
   "coconut": {
    "cell": [
-    9,
-    1
+    4,
+    2
    ],
    "px": [
-    288,
-    32,
+    128,
+    64,
     32,
     32
    ],
@@ -514,12 +716,12 @@
   },
   "cooked_meat": {
    "cell": [
-    10,
-    1
+    5,
+    2
    ],
    "px": [
-    320,
-    32,
+    160,
+    64,
     32,
     32
    ],
@@ -531,12 +733,12 @@
   },
   "cooks_journal": {
    "cell": [
-    11,
-    1
+    6,
+    2
    ],
    "px": [
-    352,
-    32,
+    192,
+    64,
     32,
     32
    ],
@@ -548,12 +750,12 @@
   },
   "cooling_draught": {
    "cell": [
-    12,
-    1
+    7,
+    2
    ],
    "px": [
-    384,
-    32,
+    224,
+    64,
     32,
     32
    ],
@@ -565,12 +767,12 @@
   },
   "cooling_salad": {
    "cell": [
-    13,
-    1
+    8,
+    2
    ],
    "px": [
-    416,
-    32,
+    256,
+    64,
     32,
     32
    ],
@@ -582,12 +784,12 @@
   },
   "copper_arrow": {
    "cell": [
-    14,
-    1
+    9,
+    2
    ],
    "px": [
-    448,
-    32,
+    288,
+    64,
     32,
     32
    ],
@@ -599,12 +801,12 @@
   },
   "copper_dagger": {
    "cell": [
-    15,
-    1
+    10,
+    2
    ],
    "px": [
-    480,
-    32,
+    320,
+    64,
     32,
     32
    ],
@@ -616,11 +818,11 @@
   },
   "copper_hatchet": {
    "cell": [
-    0,
+    11,
     2
    ],
    "px": [
-    0,
+    352,
     64,
     32,
     32
@@ -633,11 +835,11 @@
   },
   "copper_ingot": {
    "cell": [
-    1,
+    12,
     2
    ],
    "px": [
-    32,
+    384,
     64,
     32,
     32
@@ -650,11 +852,11 @@
   },
   "copper_ore": {
    "cell": [
-    2,
+    13,
     2
    ],
    "px": [
-    64,
+    416,
     64,
     32,
     32
@@ -667,11 +869,11 @@
   },
   "copper_pickaxe": {
    "cell": [
-    3,
+    14,
     2
    ],
    "px": [
-    96,
+    448,
     64,
     32,
     32
@@ -684,11 +886,11 @@
   },
   "copper_ring": {
    "cell": [
-    4,
+    15,
     2
    ],
    "px": [
-    128,
+    480,
     64,
     32,
     32
@@ -701,12 +903,12 @@
   },
   "copper_staff": {
    "cell": [
-    5,
-    2
+    0,
+    3
    ],
    "px": [
-    160,
-    64,
+    0,
+    96,
     32,
     32
    ],
@@ -718,12 +920,12 @@
   },
   "copper_sword": {
    "cell": [
-    6,
-    2
+    1,
+    3
    ],
    "px": [
-    192,
-    64,
+    32,
+    96,
     32,
     32
    ],
@@ -735,12 +937,12 @@
   },
   "copper_waraxe": {
    "cell": [
-    7,
-    2
+    2,
+    3
    ],
    "px": [
-    224,
     64,
+    96,
     32,
     32
    ],
@@ -752,12 +954,12 @@
   },
   "crown_of_stars": {
    "cell": [
-    8,
-    2
+    3,
+    3
    ],
    "px": [
-    256,
-    64,
+    96,
+    96,
     32,
     32
    ],
@@ -769,12 +971,12 @@
   },
   "crystal_ring": {
    "cell": [
-    9,
-    2
+    4,
+    3
    ],
    "px": [
-    288,
-    64,
+    128,
+    96,
     32,
     32
    ],
@@ -786,12 +988,12 @@
   },
   "crystal_shard": {
    "cell": [
-    10,
-    2
+    5,
+    3
    ],
    "px": [
-    320,
-    64,
+    160,
+    96,
     32,
     32
    ],
@@ -803,12 +1005,12 @@
   },
   "crystal_staff": {
    "cell": [
-    11,
-    2
+    6,
+    3
    ],
    "px": [
-    352,
-    64,
+    192,
+    96,
     32,
     32
    ],
@@ -818,14 +1020,133 @@
    "rarity": 2,
    "color": "#B27FFF"
   },
-  "draught_of_forgetting": {
+  "dawnbloom_crown": {
+   "cell": [
+    7,
+    3
+   ],
+   "px": [
+    224,
+    96,
+    32,
+    32
+   ],
+   "shape": "crown",
+   "file": "items/dawnbloom_crown.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#4C8C47"
+  },
+  "dawnbloom_gloves": {
+   "cell": [
+    8,
+    3
+   ],
+   "px": [
+    256,
+    96,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/dawnbloom_gloves.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#4C8C47"
+  },
+  "dawnbloom_mantle": {
+   "cell": [
+    9,
+    3
+   ],
+   "px": [
+    288,
+    96,
+    32,
+    32
+   ],
+   "shape": "robe",
+   "file": "items/dawnbloom_mantle.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#4C8C47"
+  },
+  "dawnbloom_sandals": {
+   "cell": [
+    10,
+    3
+   ],
+   "px": [
+    320,
+    96,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/dawnbloom_sandals.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#4C8C47"
+  },
+  "delvers_mark": {
+   "cell": [
+    11,
+    3
+   ],
+   "px": [
+    352,
+    96,
+    32,
+    32
+   ],
+   "shape": "badge",
+   "file": "items/delvers_mark.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#D8994C"
+  },
+  "dragon_bone": {
    "cell": [
     12,
-    2
+    3
    ],
    "px": [
     384,
-    64,
+    96,
+    32,
+    32
+   ],
+   "shape": "bone",
+   "file": "items/dragon_bone.png",
+   "category": "MATERIAL",
+   "rarity": 3,
+   "color": "#F2EAD1"
+  },
+  "dragonbone_greatsword": {
+   "cell": [
+    13,
+    3
+   ],
+   "px": [
+    416,
+    96,
+    32,
+    32
+   ],
+   "shape": "greatsword",
+   "file": "items/dragonbone_greatsword.png",
+   "category": "WEAPON",
+   "rarity": 4,
+   "color": "#E5E0CC"
+  },
+  "draught_of_forgetting": {
+   "cell": [
+    14,
+    3
+   ],
+   "px": [
+    448,
+    96,
     32,
     32
    ],
@@ -837,12 +1158,12 @@
   },
   "dreamcap": {
    "cell": [
-    13,
-    2
+    15,
+    3
    ],
    "px": [
-    416,
-    64,
+    480,
+    96,
     32,
     32
    ],
@@ -852,14 +1173,65 @@
    "rarity": 3,
    "color": "#668CFF"
   },
-  "elixir_of_might": {
+  "dungeon_key": {
    "cell": [
-    14,
-    2
+    0,
+    4
    ],
    "px": [
-    448,
+    0,
+    128,
+    32,
+    32
+   ],
+   "shape": "key",
+   "file": "items/dungeon_key.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#D8A533"
+  },
+  "ectoplasm": {
+   "cell": [
+    1,
+    4
+   ],
+   "px": [
+    32,
+    128,
+    32,
+    32
+   ],
+   "shape": "goo",
+   "file": "items/ectoplasm.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#99F2F2"
+  },
+  "elemental_codex": {
+   "cell": [
+    2,
+    4
+   ],
+   "px": [
     64,
+    128,
+    32,
+    32
+   ],
+   "shape": "book",
+   "file": "items/elemental_codex.png",
+   "category": "MISC",
+   "rarity": 4,
+   "color": "#BF8CF2"
+  },
+  "elixir_of_might": {
+   "cell": [
+    3,
+    4
+   ],
+   "px": [
+    96,
+    128,
     32,
     32
    ],
@@ -871,12 +1243,12 @@
   },
   "elixir_of_starlight": {
    "cell": [
-    15,
-    2
+    4,
+    4
    ],
    "px": [
-    480,
-    64,
+    128,
+    128,
     32,
     32
    ],
@@ -886,14 +1258,31 @@
    "rarity": 4,
    "color": "#E5D8FF"
   },
-  "emberroot": {
+  "ember_feather": {
    "cell": [
-    0,
-    3
+    5,
+    4
    ],
    "px": [
-    0,
-    96,
+    160,
+    128,
+    32,
+    32
+   ],
+   "shape": "feather",
+   "file": "items/ember_feather.png",
+   "category": "MATERIAL",
+   "rarity": 3,
+   "color": "#FF8C26"
+  },
+  "emberroot": {
+   "cell": [
+    6,
+    4
+   ],
+   "px": [
+    192,
+    128,
     32,
     32
    ],
@@ -905,12 +1294,12 @@
   },
   "embers_tome": {
    "cell": [
-    1,
-    3
+    7,
+    4
    ],
    "px": [
-    32,
-    96,
+    224,
+    128,
     32,
     32
    ],
@@ -920,14 +1309,82 @@
    "rarity": 3,
    "color": "#D85933"
   },
-  "fallen_king_greatsword": {
+  "explorer_boots": {
    "cell": [
-    2,
-    3
+    8,
+    4
    ],
    "px": [
-    64,
-    96,
+    256,
+    128,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/explorer_boots.png",
+   "category": "ARMOR",
+   "rarity": 2,
+   "color": "#66442D"
+  },
+  "explorer_gloves": {
+   "cell": [
+    9,
+    4
+   ],
+   "px": [
+    288,
+    128,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/explorer_gloves.png",
+   "category": "ARMOR",
+   "rarity": 2,
+   "color": "#8C5B38"
+  },
+  "explorer_hood": {
+   "cell": [
+    10,
+    4
+   ],
+   "px": [
+    320,
+    128,
+    32,
+    32
+   ],
+   "shape": "hood",
+   "file": "items/explorer_hood.png",
+   "category": "ARMOR",
+   "rarity": 2,
+   "color": "#8C5B38"
+  },
+  "explorer_pack": {
+   "cell": [
+    11,
+    4
+   ],
+   "px": [
+    352,
+    128,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/explorer_pack.png",
+   "category": "ARMOR",
+   "rarity": 2,
+   "color": "#8C5B38"
+  },
+  "fallen_king_greatsword": {
+   "cell": [
+    12,
+    4
+   ],
+   "px": [
+    384,
+    128,
     32,
     32
    ],
@@ -939,12 +1396,12 @@
   },
   "fire_arrow": {
    "cell": [
-    3,
-    3
+    13,
+    4
    ],
    "px": [
-    96,
-    96,
+    416,
+    128,
     32,
     32
    ],
@@ -954,14 +1411,31 @@
    "rarity": 2,
    "color": "#FF7F33"
   },
-  "flint": {
+  "fletched_arrow": {
    "cell": [
-    4,
-    3
+    14,
+    4
    ],
    "px": [
+    448,
     128,
-    96,
+    32,
+    32
+   ],
+   "shape": "arrow",
+   "file": "items/fletched_arrow.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#C69966"
+  },
+  "flint": {
+   "cell": [
+    15,
+    4
+   ],
+   "px": [
+    480,
+    128,
     32,
     32
    ],
@@ -973,12 +1447,12 @@
   },
   "flint_knife": {
    "cell": [
-    5,
-    3
+    0,
+    5
    ],
    "px": [
+    0,
     160,
-    96,
     32,
     32
    ],
@@ -990,12 +1464,12 @@
   },
   "frost_lotus": {
    "cell": [
-    6,
-    3
+    1,
+    5
    ],
    "px": [
-    192,
-    96,
+    32,
+    160,
     32,
     32
    ],
@@ -1007,12 +1481,12 @@
   },
   "frostberries": {
    "cell": [
-    7,
-    3
+    2,
+    5
    ],
    "px": [
-    224,
-    96,
+    64,
+    160,
     32,
     32
    ],
@@ -1024,12 +1498,12 @@
   },
   "frostbite_warhammer": {
    "cell": [
-    8,
-    3
+    3,
+    5
    ],
    "px": [
-    256,
     96,
+    160,
     32,
     32
    ],
@@ -1041,12 +1515,12 @@
   },
   "fur_boots": {
    "cell": [
-    9,
-    3
+    4,
+    5
    ],
    "px": [
-    288,
-    96,
+    128,
+    160,
     32,
     32
    ],
@@ -1058,12 +1532,12 @@
   },
   "fur_cap": {
    "cell": [
-    10,
-    3
+    5,
+    5
    ],
    "px": [
-    320,
-    96,
+    160,
+    160,
     32,
     32
    ],
@@ -1075,12 +1549,12 @@
   },
   "gemstone": {
    "cell": [
-    11,
-    3
+    6,
+    5
    ],
    "px": [
-    352,
-    96,
+    192,
+    160,
     32,
     32
    ],
@@ -1090,14 +1564,65 @@
    "rarity": 4,
    "color": "#66E5D8"
   },
-  "glowcap": {
+  "gilded_greatsword": {
    "cell": [
-    12,
-    3
+    7,
+    5
    ],
    "px": [
-    384,
-    96,
+    224,
+    160,
+    32,
+    32
+   ],
+   "shape": "greatsword",
+   "file": "items/gilded_greatsword.png",
+   "category": "WEAPON",
+   "rarity": 4,
+   "color": "#F2BC4C"
+  },
+  "gilded_halberd": {
+   "cell": [
+    8,
+    5
+   ],
+   "px": [
+    256,
+    160,
+    32,
+    32
+   ],
+   "shape": "spear",
+   "file": "items/gilded_halberd.png",
+   "category": "WEAPON",
+   "rarity": 4,
+   "color": "#F2BC4C"
+  },
+  "gilded_kite_shield": {
+   "cell": [
+    9,
+    5
+   ],
+   "px": [
+    288,
+    160,
+    32,
+    32
+   ],
+   "shape": "shield",
+   "file": "items/gilded_kite_shield.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#F2BC4C"
+  },
+  "glowcap": {
+   "cell": [
+    10,
+    5
+   ],
+   "px": [
+    320,
+    160,
     32,
     32
    ],
@@ -1109,12 +1634,12 @@
   },
   "gold_nugget": {
    "cell": [
-    13,
-    3
+    11,
+    5
    ],
    "px": [
-    416,
-    96,
+    352,
+    160,
     32,
     32
    ],
@@ -1126,12 +1651,12 @@
   },
   "great_shard": {
    "cell": [
-    14,
-    3
+    12,
+    5
    ],
    "px": [
-    448,
-    96,
+    384,
+    160,
     32,
     32
    ],
@@ -1143,12 +1668,12 @@
   },
   "healing_draught": {
    "cell": [
-    15,
-    3
+    13,
+    5
    ],
    "px": [
-    480,
-    96,
+    416,
+    160,
     32,
     32
    ],
@@ -1160,12 +1685,12 @@
   },
   "hearty_stew": {
    "cell": [
-    0,
-    4
+    14,
+    5
    ],
    "px": [
-    0,
-    128,
+    448,
+    160,
     32,
     32
    ],
@@ -1175,14 +1700,99 @@
    "rarity": 2,
    "color": "#9E6638"
   },
-  "horned_helm": {
+  "hedgehog_quill": {
+   "cell": [
+    15,
+    5
+   ],
+   "px": [
+    480,
+    160,
+    32,
+    32
+   ],
+   "shape": "feather",
+   "file": "items/hedgehog_quill.png",
+   "category": "MATERIAL",
+   "rarity": 0,
+   "color": "#BFAD99"
+  },
+  "honey_bread": {
+   "cell": [
+    0,
+    6
+   ],
+   "px": [
+    0,
+    192,
+    32,
+    32
+   ],
+   "shape": "bread",
+   "file": "items/honey_bread.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#EAB24C"
+  },
+  "honey_cake": {
    "cell": [
     1,
-    4
+    6
    ],
    "px": [
     32,
+    192,
+    32,
+    32
+   ],
+   "shape": "cake",
+   "file": "items/honey_cake.png",
+   "category": "FOOD",
+   "rarity": 2,
+   "color": "#F9D17F"
+  },
+  "honey_roast": {
+   "cell": [
+    2,
+    6
+   ],
+   "px": [
+    64,
+    192,
+    32,
+    32
+   ],
+   "shape": "meat_cooked",
+   "file": "items/honey_roast.png",
+   "category": "FOOD",
+   "rarity": 2,
+   "color": "#BF6B33"
+  },
+  "honeycomb": {
+   "cell": [
+    3,
+    6
+   ],
+   "px": [
+    96,
+    192,
+    32,
+    32
+   ],
+   "shape": "honeycomb",
+   "file": "items/honeycomb.png",
+   "category": "FOOD",
+   "rarity": 1,
+   "color": "#FFC633"
+  },
+  "horned_helm": {
+   "cell": [
+    4,
+    6
+   ],
+   "px": [
     128,
+    192,
     32,
     32
    ],
@@ -1194,12 +1804,12 @@
   },
   "iron_arrow": {
    "cell": [
-    2,
-    4
+    5,
+    6
    ],
    "px": [
-    64,
-    128,
+    160,
+    192,
     32,
     32
    ],
@@ -1211,12 +1821,12 @@
   },
   "iron_dirk": {
    "cell": [
-    3,
-    4
+    6,
+    6
    ],
    "px": [
-    96,
-    128,
+    192,
+    192,
     32,
     32
    ],
@@ -1228,12 +1838,12 @@
   },
   "iron_gauntlets": {
    "cell": [
-    4,
-    4
+    7,
+    6
    ],
    "px": [
-    128,
-    128,
+    224,
+    192,
     32,
     32
    ],
@@ -1245,12 +1855,12 @@
   },
   "iron_greatsword": {
    "cell": [
-    5,
-    4
+    8,
+    6
    ],
    "px": [
-    160,
-    128,
+    256,
+    192,
     32,
     32
    ],
@@ -1262,12 +1872,12 @@
   },
   "iron_greaves": {
    "cell": [
-    6,
-    4
+    9,
+    6
    ],
    "px": [
+    288,
     192,
-    128,
     32,
     32
    ],
@@ -1279,12 +1889,12 @@
   },
   "iron_hatchet": {
    "cell": [
-    7,
-    4
+    10,
+    6
    ],
    "px": [
-    224,
-    128,
+    320,
+    192,
     32,
     32
    ],
@@ -1296,12 +1906,12 @@
   },
   "iron_helm": {
    "cell": [
-    8,
-    4
+    11,
+    6
    ],
    "px": [
-    256,
-    128,
+    352,
+    192,
     32,
     32
    ],
@@ -1313,12 +1923,12 @@
   },
   "iron_ingot": {
    "cell": [
-    9,
-    4
+    12,
+    6
    ],
    "px": [
-    288,
-    128,
+    384,
+    192,
     32,
     32
    ],
@@ -1330,12 +1940,12 @@
   },
   "iron_kite_shield": {
    "cell": [
-    10,
-    4
+    13,
+    6
    ],
    "px": [
-    320,
-    128,
+    416,
+    192,
     32,
     32
    ],
@@ -1347,12 +1957,12 @@
   },
   "iron_ore": {
    "cell": [
-    11,
-    4
+    14,
+    6
    ],
    "px": [
-    352,
-    128,
+    448,
+    192,
     32,
     32
    ],
@@ -1364,12 +1974,12 @@
   },
   "iron_pickaxe": {
    "cell": [
-    12,
-    4
+    15,
+    6
    ],
    "px": [
-    384,
-    128,
+    480,
+    192,
     32,
     32
    ],
@@ -1381,12 +1991,12 @@
   },
   "iron_pike": {
    "cell": [
-    13,
-    4
+    0,
+    7
    ],
    "px": [
-    416,
-    128,
+    0,
+    224,
     32,
     32
    ],
@@ -1398,12 +2008,12 @@
   },
   "iron_staff": {
    "cell": [
-    14,
-    4
+    1,
+    7
    ],
    "px": [
-    448,
-    128,
+    32,
+    224,
     32,
     32
    ],
@@ -1415,12 +2025,12 @@
   },
   "iron_sword": {
    "cell": [
-    15,
-    4
+    2,
+    7
    ],
    "px": [
-    480,
-    128,
+    64,
+    224,
     32,
     32
    ],
@@ -1432,12 +2042,12 @@
   },
   "iron_waraxe": {
    "cell": [
-    0,
-    5
+    3,
+    7
    ],
    "px": [
-    0,
-    160,
+    96,
+    224,
     32,
     32
    ],
@@ -1449,12 +2059,12 @@
   },
   "iron_warhammer": {
    "cell": [
-    1,
-    5
+    4,
+    7
    ],
    "px": [
-    32,
-    160,
+    128,
+    224,
     32,
     32
    ],
@@ -1466,12 +2076,12 @@
   },
   "leather": {
    "cell": [
-    2,
-    5
+    5,
+    7
    ],
    "px": [
-    64,
     160,
+    224,
     32,
     32
    ],
@@ -1483,12 +2093,12 @@
   },
   "leather_gloves": {
    "cell": [
-    3,
-    5
+    6,
+    7
    ],
    "px": [
-    96,
-    160,
+    192,
+    224,
     32,
     32
    ],
@@ -1500,12 +2110,12 @@
   },
   "leather_jerkin": {
    "cell": [
-    4,
-    5
+    7,
+    7
    ],
    "px": [
-    128,
-    160,
+    224,
+    224,
     32,
     32
    ],
@@ -1515,14 +2125,31 @@
    "rarity": 1,
    "color": "#7F5638"
   },
-  "leatherworker_notes": {
+  "leather_saddle": {
    "cell": [
-    5,
-    5
+    8,
+    7
    ],
    "px": [
-    160,
-    160,
+    256,
+    224,
+    32,
+    32
+   ],
+   "shape": "saddle",
+   "file": "items/leather_saddle.png",
+   "category": "MISC",
+   "rarity": 1,
+   "color": "#7F4C28"
+  },
+  "leatherworker_notes": {
+   "cell": [
+    9,
+    7
+   ],
+   "px": [
+    288,
+    224,
     32,
     32
    ],
@@ -1534,12 +2161,12 @@
   },
   "mana_tonic": {
    "cell": [
-    6,
-    5
+    10,
+    7
    ],
    "px": [
-    192,
-    160,
+    320,
+    224,
     32,
     32
    ],
@@ -1551,12 +2178,12 @@
   },
   "master_weaponsmith_folio": {
    "cell": [
-    7,
-    5
+    11,
+    7
    ],
    "px": [
+    352,
     224,
-    160,
     32,
     32
    ],
@@ -1566,14 +2193,48 @@
    "rarity": 3,
    "color": "#7299B2"
   },
-  "mithril_arrow": {
+  "mimic_tooth": {
    "cell": [
-    8,
-    5
+    12,
+    7
    ],
    "px": [
-    256,
-    160,
+    384,
+    224,
+    32,
+    32
+   ],
+   "shape": "tooth",
+   "file": "items/mimic_tooth.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#EAE0BF"
+  },
+  "mimic_tooth_amulet": {
+   "cell": [
+    13,
+    7
+   ],
+   "px": [
+    416,
+    224,
+    32,
+    32
+   ],
+   "shape": "amulet",
+   "file": "items/mimic_tooth_amulet.png",
+   "category": "ARMOR",
+   "rarity": 3,
+   "color": "#EAE0BF"
+  },
+  "mithril_arrow": {
+   "cell": [
+    14,
+    7
+   ],
+   "px": [
+    448,
+    224,
     32,
     32
    ],
@@ -1585,12 +2246,12 @@
   },
   "mithril_dirk": {
    "cell": [
-    9,
-    5
+    15,
+    7
    ],
    "px": [
-    288,
-    160,
+    480,
+    224,
     32,
     32
    ],
@@ -1602,12 +2263,12 @@
   },
   "mithril_gauntlets": {
    "cell": [
-    10,
-    5
+    0,
+    8
    ],
    "px": [
-    320,
-    160,
+    0,
+    256,
     32,
     32
    ],
@@ -1619,12 +2280,12 @@
   },
   "mithril_greaves": {
    "cell": [
-    11,
-    5
+    1,
+    8
    ],
    "px": [
-    352,
-    160,
+    32,
+    256,
     32,
     32
    ],
@@ -1636,12 +2297,12 @@
   },
   "mithril_halberd": {
    "cell": [
-    12,
-    5
+    2,
+    8
    ],
    "px": [
-    384,
-    160,
+    64,
+    256,
     32,
     32
    ],
@@ -1653,12 +2314,12 @@
   },
   "mithril_hatchet": {
    "cell": [
-    13,
-    5
+    3,
+    8
    ],
    "px": [
-    416,
-    160,
+    96,
+    256,
     32,
     32
    ],
@@ -1670,12 +2331,12 @@
   },
   "mithril_ingot": {
    "cell": [
-    14,
-    5
+    4,
+    8
    ],
    "px": [
-    448,
-    160,
+    128,
+    256,
     32,
     32
    ],
@@ -1687,12 +2348,12 @@
   },
   "mithril_longbow": {
    "cell": [
-    15,
-    5
+    5,
+    8
    ],
    "px": [
-    480,
     160,
+    256,
     32,
     32
    ],
@@ -1704,12 +2365,12 @@
   },
   "mithril_ore": {
    "cell": [
-    0,
-    6
+    6,
+    8
    ],
    "px": [
-    0,
     192,
+    256,
     32,
     32
    ],
@@ -1721,12 +2382,12 @@
   },
   "mithril_pickaxe": {
    "cell": [
-    1,
-    6
+    7,
+    8
    ],
    "px": [
-    32,
-    192,
+    224,
+    256,
     32,
     32
    ],
@@ -1738,12 +2399,12 @@
   },
   "mithril_plate": {
    "cell": [
-    2,
-    6
+    8,
+    8
    ],
    "px": [
-    64,
-    192,
+    256,
+    256,
     32,
     32
    ],
@@ -1755,12 +2416,12 @@
   },
   "mithril_staff": {
    "cell": [
-    3,
-    6
+    9,
+    8
    ],
    "px": [
-    96,
-    192,
+    288,
+    256,
     32,
     32
    ],
@@ -1772,12 +2433,12 @@
   },
   "mithril_sword": {
    "cell": [
-    4,
-    6
+    10,
+    8
    ],
    "px": [
-    128,
-    192,
+    320,
+    256,
     32,
     32
    ],
@@ -1789,12 +2450,12 @@
   },
   "mithril_waraxe": {
    "cell": [
-    5,
-    6
+    11,
+    8
    ],
    "px": [
-    160,
-    192,
+    352,
+    256,
     32,
     32
    ],
@@ -1806,12 +2467,12 @@
   },
   "moonpetal": {
    "cell": [
-    6,
-    6
+    12,
+    8
    ],
    "px": [
-    192,
-    192,
+    384,
+    256,
     32,
     32
    ],
@@ -1823,12 +2484,12 @@
   },
   "moonpetal_pendant": {
    "cell": [
-    7,
-    6
+    13,
+    8
    ],
    "px": [
-    224,
-    192,
+    416,
+    256,
     32,
     32
    ],
@@ -1840,12 +2501,12 @@
   },
   "mushroom": {
    "cell": [
-    8,
-    6
+    14,
+    8
    ],
    "px": [
+    448,
     256,
-    192,
     32,
     32
    ],
@@ -1857,12 +2518,12 @@
   },
   "padded_hood": {
    "cell": [
-    9,
-    6
+    15,
+    8
    ],
    "px": [
-    288,
-    192,
+    480,
+    256,
     32,
     32
    ],
@@ -1874,12 +2535,12 @@
   },
   "padded_vest": {
    "cell": [
-    10,
-    6
+    0,
+    9
    ],
    "px": [
-    320,
-    192,
+    0,
+    288,
     32,
     32
    ],
@@ -1889,14 +2550,150 @@
    "rarity": 0,
    "color": "#8C7F66"
   },
-  "plank": {
+  "paladin_gauntlets": {
    "cell": [
-    11,
-    6
+    1,
+    9
    ],
    "px": [
-    352,
+    32,
+    288,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/paladin_gauntlets.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#F2BC4C"
+  },
+  "paladin_greaves": {
+   "cell": [
+    2,
+    9
+   ],
+   "px": [
+    64,
+    288,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/paladin_greaves.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#F2BC4C"
+  },
+  "paladin_helm": {
+   "cell": [
+    3,
+    9
+   ],
+   "px": [
+    96,
+    288,
+    32,
+    32
+   ],
+   "shape": "helmet",
+   "file": "items/paladin_helm.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#F2BC4C"
+  },
+  "paladin_plate": {
+   "cell": [
+    4,
+    9
+   ],
+   "px": [
+    128,
+    288,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/paladin_plate.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#F2BC4C"
+  },
+  "pearl": {
+   "cell": [
+    5,
+    9
+   ],
+   "px": [
+    160,
+    288,
+    32,
+    32
+   ],
+   "shape": "pearl",
+   "file": "items/pearl.png",
+   "category": "MATERIAL",
+   "rarity": 3,
+   "color": "#F2EDF9"
+  },
+  "pearl_ring": {
+   "cell": [
+    6,
+    9
+   ],
+   "px": [
     192,
+    288,
+    32,
+    32
+   ],
+   "shape": "ring",
+   "file": "items/pearl_ring.png",
+   "category": "ARMOR",
+   "rarity": 3,
+   "color": "#F2F2FF"
+  },
+  "pilgrim_hood": {
+   "cell": [
+    7,
+    9
+   ],
+   "px": [
+    224,
+    288,
+    32,
+    32
+   ],
+   "shape": "hood",
+   "file": "items/pilgrim_hood.png",
+   "category": "ARMOR",
+   "rarity": 3,
+   "color": "#DBD6CC"
+  },
+  "pilgrim_robe": {
+   "cell": [
+    8,
+    9
+   ],
+   "px": [
+    256,
+    288,
+    32,
+    32
+   ],
+   "shape": "robe",
+   "file": "items/pilgrim_robe.png",
+   "category": "ARMOR",
+   "rarity": 3,
+   "color": "#DBD6CC"
+  },
+  "plank": {
+   "cell": [
+    9,
+    9
+   ],
+   "px": [
+    288,
+    288,
     32,
     32
    ],
@@ -1908,12 +2705,12 @@
   },
   "plant_fiber": {
    "cell": [
-    12,
-    6
+    10,
+    9
    ],
    "px": [
-    384,
-    192,
+    320,
+    288,
     32,
     32
    ],
@@ -1923,31 +2720,48 @@
    "rarity": 0,
    "color": "#9EB25B"
   },
-  "pumpkin": {
+  "prismheart_blade": {
    "cell": [
-    13,
-    6
+    11,
+    9
    ],
    "px": [
-    416,
-    192,
+    352,
+    288,
+    32,
+    32
+   ],
+   "shape": "sword",
+   "file": "items/prismheart_blade.png",
+   "category": "WEAPON",
+   "rarity": 5,
+   "color": "#EAF2FF"
+  },
+  "pumpkin": {
+   "cell": [
+    12,
+    9
+   ],
+   "px": [
+    384,
+    288,
     32,
     32
    ],
    "shape": "pumpkin",
    "file": "items/pumpkin.png",
-   "category": "MATERIAL",
+   "category": "FOOD",
    "rarity": 1,
-   "color": "#F28C1E"
+   "color": "#F27F1E"
   },
   "pumpkin_seeds": {
    "cell": [
-    14,
-    6
+    13,
+    9
    ],
    "px": [
-    448,
-    192,
+    416,
+    288,
     32,
     32
    ],
@@ -1959,12 +2773,12 @@
   },
   "purifying_draught": {
    "cell": [
-    15,
-    6
+    14,
+    9
    ],
    "px": [
-    480,
-    192,
+    448,
+    288,
     32,
     32
    ],
@@ -1976,12 +2790,12 @@
   },
   "raider_boots": {
    "cell": [
-    0,
-    7
+    15,
+    9
    ],
    "px": [
-    0,
-    224,
+    480,
+    288,
     32,
     32
    ],
@@ -1993,12 +2807,12 @@
   },
   "raider_bracers": {
    "cell": [
-    1,
-    7
+    0,
+    10
    ],
    "px": [
-    32,
-    224,
+    0,
+    320,
     32,
     32
    ],
@@ -2010,12 +2824,12 @@
   },
   "raider_harness": {
    "cell": [
-    2,
-    7
+    1,
+    10
    ],
    "px": [
-    64,
-    224,
+    32,
+    320,
     32,
     32
    ],
@@ -2027,12 +2841,12 @@
   },
   "raw_meat": {
    "cell": [
-    3,
-    7
+    2,
+    10
    ],
    "px": [
-    96,
-    224,
+    64,
+    320,
     32,
     32
    ],
@@ -2044,12 +2858,12 @@
   },
   "recurve_bow": {
    "cell": [
-    4,
-    7
+    3,
+    10
    ],
    "px": [
-    128,
-    224,
+    96,
+    320,
     32,
     32
    ],
@@ -2059,14 +2873,31 @@
    "rarity": 2,
    "color": "#7F512D"
   },
+  "riding_saddle": {
+   "cell": [
+    4,
+    10
+   ],
+   "px": [
+    128,
+    320,
+    32,
+    32
+   ],
+   "shape": "saddle",
+   "file": "items/riding_saddle.png",
+   "category": "MISC",
+   "rarity": 2,
+   "color": "#9E5B33"
+  },
   "ring_of_embers": {
    "cell": [
     5,
-    7
+    10
    ],
    "px": [
     160,
-    224,
+    320,
     32,
     32
    ],
@@ -2079,11 +2910,11 @@
   "ring_of_swiftness": {
    "cell": [
     6,
-    7
+    10
    ],
    "px": [
     192,
-    224,
+    320,
     32,
     32
    ],
@@ -2096,11 +2927,11 @@
   "rope": {
    "cell": [
     7,
-    7
+    10
    ],
    "px": [
     224,
-    224,
+    320,
     32,
     32
    ],
@@ -2113,11 +2944,11 @@
   "rough_handaxe": {
    "cell": [
     8,
-    7
+    10
    ],
    "px": [
     256,
-    224,
+    320,
     32,
     32
    ],
@@ -2127,14 +2958,31 @@
    "rarity": 0,
    "color": "#997F66"
   },
-  "royal_bone": {
+  "rowboat": {
    "cell": [
     9,
-    7
+    10
    ],
    "px": [
     288,
-    224,
+    320,
+    32,
+    32
+   ],
+   "shape": "boat",
+   "file": "items/rowboat.png",
+   "category": "PLACEABLE",
+   "rarity": 1,
+   "color": "#93663D"
+  },
+  "royal_bone": {
+   "cell": [
+    10,
+    10
+   ],
+   "px": [
+    320,
+    320,
     32,
     32
    ],
@@ -2146,12 +2994,12 @@
   },
   "royal_signet": {
    "cell": [
-    10,
-    7
+    11,
+    10
    ],
    "px": [
+    352,
     320,
-    224,
     32,
     32
    ],
@@ -2163,12 +3011,12 @@
   },
   "rusty_dagger": {
    "cell": [
-    11,
-    7
+    12,
+    10
    ],
    "px": [
-    352,
-    224,
+    384,
+    320,
     32,
     32
    ],
@@ -2180,12 +3028,12 @@
   },
   "scroll_aegis_of_dawn": {
    "cell": [
-    12,
-    7
+    13,
+    10
    ],
    "px": [
-    384,
-    224,
+    416,
+    320,
     32,
     32
    ],
@@ -2197,12 +3045,12 @@
   },
   "scroll_crown_of_stars": {
    "cell": [
-    13,
-    7
+    14,
+    10
    ],
    "px": [
-    416,
-    224,
+    448,
+    320,
     32,
     32
    ],
@@ -2214,12 +3062,12 @@
   },
   "scroll_mithril_plate": {
    "cell": [
-    14,
-    7
+    15,
+    10
    ],
    "px": [
-    448,
-    224,
+    480,
+    320,
     32,
     32
    ],
@@ -2231,12 +3079,12 @@
   },
   "scroll_shadowfang": {
    "cell": [
-    15,
-    7
+    0,
+    11
    ],
    "px": [
-    480,
-    224,
+    0,
+    352,
     32,
     32
    ],
@@ -2248,12 +3096,12 @@
   },
   "scroll_staff_of_the_archmage": {
    "cell": [
-    0,
-    8
+    1,
+    11
    ],
    "px": [
-    0,
-    256,
+    32,
+    352,
     32,
     32
    ],
@@ -2265,12 +3113,12 @@
   },
   "scroll_sunforged_blade": {
    "cell": [
-    1,
-    8
+    2,
+    11
    ],
    "px": [
-    32,
-    256,
+    64,
+    352,
     32,
     32
    ],
@@ -2282,12 +3130,12 @@
   },
   "scroll_titans_greataxe": {
    "cell": [
-    2,
-    8
+    3,
+    11
    ],
    "px": [
-    64,
-    256,
+    96,
+    352,
     32,
     32
    ],
@@ -2297,14 +3145,48 @@
    "rarity": 6,
    "color": "#FFB733"
   },
-  "shadow_boots": {
+  "serpent_scale": {
    "cell": [
-    3,
-    8
+    4,
+    11
    ],
    "px": [
-    96,
-    256,
+    128,
+    352,
+    32,
+    32
+   ],
+   "shape": "scale",
+   "file": "items/serpent_scale.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#51336B"
+  },
+  "serpentscale_boots": {
+   "cell": [
+    5,
+    11
+   ],
+   "px": [
+    160,
+    352,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/serpentscale_boots.png",
+   "category": "ARMOR",
+   "rarity": 3,
+   "color": "#4C4772"
+  },
+  "shadow_boots": {
+   "cell": [
+    6,
+    11
+   ],
+   "px": [
+    192,
+    352,
     32,
     32
    ],
@@ -2316,12 +3198,12 @@
   },
   "shadow_cloak": {
    "cell": [
-    4,
-    8
+    7,
+    11
    ],
    "px": [
-    128,
-    256,
+    224,
+    352,
     32,
     32
    ],
@@ -2333,12 +3215,12 @@
   },
   "shadow_garb": {
    "cell": [
-    5,
-    8
+    8,
+    11
    ],
    "px": [
-    160,
     256,
+    352,
     32,
     32
    ],
@@ -2350,12 +3232,12 @@
   },
   "shadow_hood": {
    "cell": [
-    6,
-    8
+    9,
+    11
    ],
    "px": [
-    192,
-    256,
+    288,
+    352,
     32,
     32
    ],
@@ -2367,12 +3249,12 @@
   },
   "shadow_wraps": {
    "cell": [
-    7,
-    8
+    10,
+    11
    ],
    "px": [
-    224,
-    256,
+    320,
+    352,
     32,
     32
    ],
@@ -2384,12 +3266,12 @@
   },
   "shadowfang": {
    "cell": [
-    8,
-    8
+    11,
+    11
    ],
    "px": [
-    256,
-    256,
+    352,
+    352,
     32,
     32
    ],
@@ -2401,12 +3283,12 @@
   },
   "shard_fragment": {
    "cell": [
-    9,
-    8
+    12,
+    11
    ],
    "px": [
-    288,
-    256,
+    384,
+    352,
     32,
     32
    ],
@@ -2418,12 +3300,12 @@
   },
   "shardbreaker": {
    "cell": [
-    10,
-    8
+    13,
+    11
    ],
    "px": [
-    320,
-    256,
+    416,
+    352,
     32,
     32
    ],
@@ -2435,12 +3317,12 @@
   },
   "shardheart_amulet": {
    "cell": [
-    11,
-    8
+    14,
+    11
    ],
    "px": [
+    448,
     352,
-    256,
     32,
     32
    ],
@@ -2450,14 +3332,82 @@
    "rarity": 5,
    "color": "#CCE5FF"
   },
-  "smithing_manual": {
+  "silk_bandage": {
    "cell": [
-    12,
-    8
+    15,
+    11
    ],
    "px": [
+    480,
+    352,
+    32,
+    32
+   ],
+   "shape": "bandage",
+   "file": "items/silk_bandage.png",
+   "category": "FOOD",
+   "rarity": 2,
+   "color": "#F4F2FF"
+  },
+  "silk_cloth": {
+   "cell": [
+    0,
+    12
+   ],
+   "px": [
+    0,
     384,
-    256,
+    32,
+    32
+   ],
+   "shape": "cloth",
+   "file": "items/silk_cloth.png",
+   "category": "MATERIAL",
+   "rarity": 2,
+   "color": "#EDEAF9"
+  },
+  "silkweave_hood": {
+   "cell": [
+    1,
+    12
+   ],
+   "px": [
+    32,
+    384,
+    32,
+    32
+   ],
+   "shape": "hood",
+   "file": "items/silkweave_hood.png",
+   "category": "ARMOR",
+   "rarity": 3,
+   "color": "#D1DBF9"
+  },
+  "silkweave_robe": {
+   "cell": [
+    2,
+    12
+   ],
+   "px": [
+    64,
+    384,
+    32,
+    32
+   ],
+   "shape": "robe",
+   "file": "items/silkweave_robe.png",
+   "category": "ARMOR",
+   "rarity": 3,
+   "color": "#D1DBF9"
+  },
+  "smithing_manual": {
+   "cell": [
+    3,
+    12
+   ],
+   "px": [
+    96,
+    384,
     32,
     32
    ],
@@ -2469,12 +3419,12 @@
   },
   "soft_leather_boots": {
    "cell": [
-    13,
-    8
+    4,
+    12
    ],
    "px": [
-    416,
-    256,
+    128,
+    384,
     32,
     32
    ],
@@ -2484,14 +3434,116 @@
    "rarity": 1,
    "color": "#664733"
   },
-  "squire_gauntlets": {
+  "spider_silk": {
    "cell": [
-    14,
-    8
+    5,
+    12
    ],
    "px": [
-    448,
+    160,
+    384,
+    32,
+    32
+   ],
+   "shape": "spool",
+   "file": "items/spider_silk.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#EAEAF2"
+  },
+  "sporecap_boots": {
+   "cell": [
+    6,
+    12
+   ],
+   "px": [
+    192,
+    384,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/sporecap_boots.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#725138"
+  },
+  "sporecap_gloves": {
+   "cell": [
+    7,
+    12
+   ],
+   "px": [
+    224,
+    384,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/sporecap_gloves.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#725138"
+  },
+  "sporecap_hat": {
+   "cell": [
+    8,
+    12
+   ],
+   "px": [
     256,
+    384,
+    32,
+    32
+   ],
+   "shape": "hat",
+   "file": "items/sporecap_hat.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#725138"
+  },
+  "sporecap_vest": {
+   "cell": [
+    9,
+    12
+   ],
+   "px": [
+    288,
+    384,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/sporecap_vest.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#725138"
+  },
+  "sporecrown_staff": {
+   "cell": [
+    10,
+    12
+   ],
+   "px": [
+    320,
+    384,
+    32,
+    32
+   ],
+   "shape": "staff",
+   "file": "items/sporecrown_staff.png",
+   "category": "WEAPON",
+   "rarity": 4,
+   "color": "#33B7A8"
+  },
+  "squire_gauntlets": {
+   "cell": [
+    11,
+    12
+   ],
+   "px": [
+    352,
+    384,
     32,
     32
    ],
@@ -2503,12 +3555,12 @@
   },
   "squire_greaves": {
    "cell": [
-    15,
-    8
+    12,
+    12
    ],
    "px": [
-    480,
-    256,
+    384,
+    384,
     32,
     32
    ],
@@ -2520,12 +3572,12 @@
   },
   "squire_helm": {
    "cell": [
-    0,
-    9
+    13,
+    12
    ],
    "px": [
-    0,
-    288,
+    416,
+    384,
     32,
     32
    ],
@@ -2537,12 +3589,12 @@
   },
   "squire_plate": {
    "cell": [
-    1,
-    9
+    14,
+    12
    ],
    "px": [
-    32,
-    288,
+    448,
+    384,
     32,
     32
    ],
@@ -2554,12 +3606,12 @@
   },
   "squire_sword": {
    "cell": [
-    2,
-    9
+    15,
+    12
    ],
    "px": [
-    64,
-    288,
+    480,
+    384,
     32,
     32
    ],
@@ -2571,12 +3623,12 @@
   },
   "staff_of_the_archmage": {
    "cell": [
-    3,
-    9
+    0,
+    13
    ],
    "px": [
-    96,
-    288,
+    0,
+    416,
     32,
     32
    ],
@@ -2588,12 +3640,12 @@
   },
   "star_core": {
    "cell": [
-    4,
-    9
+    1,
+    13
    ],
    "px": [
-    128,
-    288,
+    32,
+    416,
     32,
     32
    ],
@@ -2605,12 +3657,12 @@
   },
   "star_metal_ingot": {
    "cell": [
-    5,
-    9
+    2,
+    13
    ],
    "px": [
-    160,
-    288,
+    64,
+    416,
     32,
     32
    ],
@@ -2622,12 +3674,12 @@
   },
   "star_metal_ore": {
    "cell": [
-    6,
-    9
+    3,
+    13
    ],
    "px": [
-    192,
-    288,
+    96,
+    416,
     32,
     32
    ],
@@ -2639,12 +3691,12 @@
   },
   "starfall_blade": {
    "cell": [
-    7,
-    9
+    4,
+    13
    ],
    "px": [
-    224,
-    288,
+    128,
+    416,
     32,
     32
    ],
@@ -2656,12 +3708,12 @@
   },
   "starfall_bow": {
    "cell": [
-    8,
-    9
+    5,
+    13
    ],
    "px": [
-    256,
-    288,
+    160,
+    416,
     32,
     32
    ],
@@ -2671,14 +3723,31 @@
    "rarity": 6,
    "color": "#D1B7FF"
   },
-  "starlight_orchid": {
+  "starlance": {
    "cell": [
-    9,
-    9
+    6,
+    13
    ],
    "px": [
-    288,
-    288,
+    192,
+    416,
+    32,
+    32
+   ],
+   "shape": "sword",
+   "file": "items/starlance.png",
+   "category": "WEAPON",
+   "rarity": 4,
+   "color": "#B7D1F9"
+  },
+  "starlight_orchid": {
+   "cell": [
+    7,
+    13
+   ],
+   "px": [
+    224,
+    416,
     32,
     32
    ],
@@ -2690,12 +3759,12 @@
   },
   "starmetal_amulet": {
    "cell": [
-    10,
-    9
+    8,
+    13
    ],
    "px": [
-    320,
-    288,
+    256,
+    416,
     32,
     32
    ],
@@ -2707,12 +3776,12 @@
   },
   "stick": {
    "cell": [
-    11,
-    9
+    9,
+    13
    ],
    "px": [
-    352,
     288,
+    416,
     32,
     32
    ],
@@ -2724,12 +3793,12 @@
   },
   "stone": {
    "cell": [
-    12,
-    9
+    10,
+    13
    ],
    "px": [
-    384,
-    288,
+    320,
+    416,
     32,
     32
    ],
@@ -2741,12 +3810,12 @@
   },
   "stone_hatchet": {
    "cell": [
-    13,
-    9
+    11,
+    13
    ],
    "px": [
+    352,
     416,
-    288,
     32,
     32
    ],
@@ -2758,12 +3827,12 @@
   },
   "stone_maul": {
    "cell": [
-    14,
-    9
+    12,
+    13
    ],
    "px": [
-    448,
-    288,
+    384,
+    416,
     32,
     32
    ],
@@ -2775,12 +3844,12 @@
   },
   "stone_pickaxe": {
    "cell": [
-    15,
-    9
+    13,
+    13
    ],
    "px": [
-    480,
-    288,
+    416,
+    416,
     32,
     32
    ],
@@ -2790,14 +3859,82 @@
    "rarity": 0,
    "color": "#99999E"
   },
-  "stoneskin_elixir": {
+  "stoneheart_fists": {
+   "cell": [
+    14,
+    13
+   ],
+   "px": [
+    448,
+    416,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/stoneheart_fists.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#847F7A"
+  },
+  "stoneheart_greaves": {
+   "cell": [
+    15,
+    13
+   ],
+   "px": [
+    480,
+    416,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/stoneheart_greaves.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#847F7A"
+  },
+  "stoneheart_helm": {
    "cell": [
     0,
-    10
+    14
    ],
    "px": [
     0,
-    320,
+    448,
+    32,
+    32
+   ],
+   "shape": "helmet",
+   "file": "items/stoneheart_helm.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#847F7A"
+  },
+  "stoneheart_plate": {
+   "cell": [
+    1,
+    14
+   ],
+   "px": [
+    32,
+    448,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/stoneheart_plate.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#847F7A"
+  },
+  "stoneskin_elixir": {
+   "cell": [
+    2,
+    14
+   ],
+   "px": [
+    64,
+    448,
     32,
     32
    ],
@@ -2809,12 +3946,12 @@
   },
   "stormcaller_wand": {
    "cell": [
-    1,
-    10
+    3,
+    14
    ],
    "px": [
-    32,
-    320,
+    96,
+    448,
     32,
     32
    ],
@@ -2824,14 +3961,99 @@
    "rarity": 5,
    "color": "#BFCCFF"
   },
-  "sun_hat": {
+  "stormcopper_gauntlets": {
    "cell": [
-    2,
-    10
+    4,
+    14
    ],
    "px": [
-    64,
-    320,
+    128,
+    448,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/stormcopper_gauntlets.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#D87F60"
+  },
+  "stormcopper_greaves": {
+   "cell": [
+    5,
+    14
+   ],
+   "px": [
+    160,
+    448,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/stormcopper_greaves.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#D87F60"
+  },
+  "stormcopper_helm": {
+   "cell": [
+    6,
+    14
+   ],
+   "px": [
+    192,
+    448,
+    32,
+    32
+   ],
+   "shape": "helmet",
+   "file": "items/stormcopper_helm.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#D87F60"
+  },
+  "stormcopper_plate": {
+   "cell": [
+    7,
+    14
+   ],
+   "px": [
+    224,
+    448,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/stormcopper_plate.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#D87F60"
+  },
+  "sugar": {
+   "cell": [
+    8,
+    14
+   ],
+   "px": [
+    256,
+    448,
+    32,
+    32
+   ],
+   "shape": "sugar",
+   "file": "items/sugar.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#F9F4F2"
+  },
+  "sun_hat": {
+   "cell": [
+    9,
+    14
+   ],
+   "px": [
+    288,
+    448,
     32,
     32
    ],
@@ -2843,12 +4065,12 @@
   },
   "sunbloom": {
    "cell": [
-    3,
-    10
+    10,
+    14
    ],
    "px": [
-    96,
     320,
+    448,
     32,
     32
    ],
@@ -2858,14 +4080,82 @@
    "rarity": 2,
    "color": "#FFD84C"
   },
-  "sunforged_blade": {
+  "sunflare_gauntlets": {
    "cell": [
-    4,
-    10
+    11,
+    14
    ],
    "px": [
-    128,
-    320,
+    352,
+    448,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/sunflare_gauntlets.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#519E99"
+  },
+  "sunflare_greaves": {
+   "cell": [
+    12,
+    14
+   ],
+   "px": [
+    384,
+    448,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/sunflare_greaves.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#519E99"
+  },
+  "sunflare_helm": {
+   "cell": [
+    13,
+    14
+   ],
+   "px": [
+    416,
+    448,
+    32,
+    32
+   ],
+   "shape": "helmet",
+   "file": "items/sunflare_helm.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#519E99"
+  },
+  "sunflare_plate": {
+   "cell": [
+    14,
+    14
+   ],
+   "px": [
+    448,
+    448,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/sunflare_plate.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#519E99"
+  },
+  "sunforged_blade": {
+   "cell": [
+    15,
+    14
+   ],
+   "px": [
+    480,
+    448,
     32,
     32
    ],
@@ -2877,12 +4167,12 @@
   },
   "sunstone": {
    "cell": [
-    5,
-    10
+    0,
+    15
    ],
    "px": [
-    160,
-    320,
+    0,
+    480,
     32,
     32
    ],
@@ -2894,12 +4184,12 @@
   },
   "thorn_heart": {
    "cell": [
-    6,
-    10
+    1,
+    15
    ],
    "px": [
-    192,
-    320,
+    32,
+    480,
     32,
     32
    ],
@@ -2911,12 +4201,12 @@
   },
   "thorn_venom": {
    "cell": [
-    7,
-    10
+    2,
+    15
    ],
    "px": [
-    224,
-    320,
+    64,
+    480,
     32,
     32
    ],
@@ -2928,12 +4218,12 @@
   },
   "titans_greataxe": {
    "cell": [
-    8,
-    10
+    3,
+    15
    ],
    "px": [
-    256,
-    320,
+    96,
+    480,
     32,
     32
    ],
@@ -2945,12 +4235,12 @@
   },
   "tome_arcane_barrier": {
    "cell": [
-    9,
-    10
+    4,
+    15
    ],
    "px": [
-    288,
-    320,
+    128,
+    480,
     32,
     32
    ],
@@ -2962,12 +4252,12 @@
   },
   "tome_arcane_missiles": {
    "cell": [
-    10,
-    10
+    5,
+    15
    ],
    "px": [
-    320,
-    320,
+    160,
+    480,
     32,
     32
    ],
@@ -2979,12 +4269,12 @@
   },
   "tome_blink": {
    "cell": [
-    11,
-    10
+    6,
+    15
    ],
    "px": [
-    352,
-    320,
+    192,
+    480,
     32,
     32
    ],
@@ -2996,12 +4286,12 @@
   },
   "tome_blizzard": {
    "cell": [
-    12,
-    10
+    7,
+    15
    ],
    "px": [
-    384,
-    320,
+    224,
+    480,
     32,
     32
    ],
@@ -3013,12 +4303,12 @@
   },
   "tome_detect_treasure": {
    "cell": [
-    13,
-    10
+    8,
+    15
    ],
    "px": [
-    416,
-    320,
+    256,
+    480,
     32,
     32
    ],
@@ -3030,12 +4320,12 @@
   },
   "tome_drain_life": {
    "cell": [
-    14,
-    10
+    9,
+    15
    ],
    "px": [
-    448,
-    320,
+    288,
+    480,
     32,
     32
    ],
@@ -3047,12 +4337,12 @@
   },
   "tome_earth_spike": {
    "cell": [
-    15,
-    10
+    10,
+    15
    ],
    "px": [
-    480,
     320,
+    480,
     32,
     32
    ],
@@ -3064,12 +4354,12 @@
   },
   "tome_earth_wall": {
    "cell": [
-    0,
-    11
+    11,
+    15
    ],
    "px": [
-    0,
     352,
+    480,
     32,
     32
    ],
@@ -3081,12 +4371,12 @@
   },
   "tome_feather_fall": {
    "cell": [
-    1,
-    11
+    12,
+    15
    ],
    "px": [
-    32,
-    352,
+    384,
+    480,
     32,
     32
    ],
@@ -3098,12 +4388,12 @@
   },
   "tome_fire_ring": {
    "cell": [
-    2,
-    11
+    13,
+    15
    ],
    "px": [
-    64,
-    352,
+    416,
+    480,
     32,
     32
    ],
@@ -3115,12 +4405,12 @@
   },
   "tome_frost_path": {
    "cell": [
-    3,
-    11
+    14,
+    15
    ],
    "px": [
-    96,
-    352,
+    448,
+    480,
     32,
     32
    ],
@@ -3132,12 +4422,12 @@
   },
   "tome_gust": {
    "cell": [
-    4,
-    11
+    15,
+    15
    ],
    "px": [
-    128,
-    352,
+    480,
+    480,
     32,
     32
    ],
@@ -3149,12 +4439,12 @@
   },
   "tome_haste": {
    "cell": [
-    5,
-    11
+    0,
+    16
    ],
    "px": [
-    160,
-    352,
+    0,
+    512,
     32,
     32
    ],
@@ -3166,12 +4456,12 @@
   },
   "tome_healing_light": {
    "cell": [
-    6,
-    11
+    1,
+    16
    ],
    "px": [
-    192,
-    352,
+    32,
+    512,
     32,
     32
    ],
@@ -3183,12 +4473,12 @@
   },
   "tome_light": {
    "cell": [
-    7,
-    11
+    2,
+    16
    ],
    "px": [
-    224,
-    352,
+    64,
+    512,
     32,
     32
    ],
@@ -3200,12 +4490,12 @@
   },
   "tome_lightning_dash": {
    "cell": [
-    8,
-    11
+    3,
+    16
    ],
    "px": [
-    256,
-    352,
+    96,
+    512,
     32,
     32
    ],
@@ -3217,12 +4507,12 @@
   },
   "tome_meteor": {
    "cell": [
-    9,
-    11
+    4,
+    16
    ],
    "px": [
-    288,
-    352,
+    128,
+    512,
     32,
     32
    ],
@@ -3234,12 +4524,12 @@
   },
   "tome_poison_cloud": {
    "cell": [
-    10,
-    11
+    5,
+    16
    ],
    "px": [
-    320,
-    352,
+    160,
+    512,
     32,
     32
    ],
@@ -3251,12 +4541,12 @@
   },
   "tome_recall": {
    "cell": [
-    11,
-    11
+    6,
+    16
    ],
    "px": [
-    352,
-    352,
+    192,
+    512,
     32,
     32
    ],
@@ -3268,12 +4558,12 @@
   },
   "tome_rejuvenate": {
    "cell": [
-    12,
-    11
+    7,
+    16
    ],
    "px": [
-    384,
-    352,
+    224,
+    512,
     32,
     32
    ],
@@ -3285,12 +4575,12 @@
   },
   "tome_root_snare": {
    "cell": [
-    13,
-    11
+    8,
+    16
    ],
    "px": [
-    416,
-    352,
+    256,
+    512,
     32,
     32
    ],
@@ -3302,12 +4592,12 @@
   },
   "tome_shardfall": {
    "cell": [
-    14,
-    11
+    9,
+    16
    ],
    "px": [
-    448,
-    352,
+    288,
+    512,
     32,
     32
    ],
@@ -3319,12 +4609,12 @@
   },
   "tome_silence": {
    "cell": [
-    15,
-    11
+    10,
+    16
    ],
    "px": [
-    480,
-    352,
+    320,
+    512,
     32,
     32
    ],
@@ -3336,12 +4626,12 @@
   },
   "tome_spark_shield": {
    "cell": [
-    0,
-    12
+    11,
+    16
    ],
    "px": [
-    0,
-    384,
+    352,
+    512,
     32,
     32
    ],
@@ -3353,12 +4643,12 @@
   },
   "tome_stone_skin": {
    "cell": [
-    1,
-    12
+    12,
+    16
    ],
    "px": [
-    32,
     384,
+    512,
     32,
     32
    ],
@@ -3370,12 +4660,12 @@
   },
   "tome_storm_call": {
    "cell": [
-    2,
-    12
+    13,
+    16
    ],
    "px": [
-    64,
-    384,
+    416,
+    512,
     32,
     32
    ],
@@ -3387,12 +4677,12 @@
   },
   "tome_summon_spirit_wolf": {
    "cell": [
-    3,
-    12
+    14,
+    16
    ],
    "px": [
-    96,
-    384,
+    448,
+    512,
     32,
     32
    ],
@@ -3404,12 +4694,12 @@
   },
   "tome_tame_beast": {
    "cell": [
-    4,
-    12
+    15,
+    16
    ],
    "px": [
-    128,
-    384,
+    480,
+    512,
     32,
     32
    ],
@@ -3421,12 +4711,12 @@
   },
   "trolls_brew": {
    "cell": [
-    5,
-    12
+    0,
+    17
    ],
    "px": [
-    160,
-    384,
+    0,
+    544,
     32,
     32
    ],
@@ -3436,14 +4726,31 @@
    "rarity": 2,
    "color": "#59993F"
   },
-  "tusk_charm": {
+  "turkey_feather": {
    "cell": [
-    6,
-    12
+    1,
+    17
    ],
    "px": [
-    192,
-    384,
+    32,
+    544,
+    32,
+    32
+   ],
+   "shape": "feather",
+   "file": "items/turkey_feather.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#8C5933"
+  },
+  "tusk_charm": {
+   "cell": [
+    2,
+    17
+   ],
+   "px": [
+    64,
+    544,
     32,
     32
    ],
@@ -3453,14 +4760,31 @@
    "rarity": 2,
    "color": "#F2EACC"
   },
-  "vegetable_stew": {
+  "tusker_tusk": {
    "cell": [
-    7,
-    12
+    3,
+    17
    ],
    "px": [
-    224,
-    384,
+    96,
+    544,
+    32,
+    32
+   ],
+   "shape": "tusk",
+   "file": "items/tusker_tusk.png",
+   "category": "MATERIAL",
+   "rarity": 1,
+   "color": "#F2E5C6"
+  },
+  "vegetable_stew": {
+   "cell": [
+    4,
+    17
+   ],
+   "px": [
+    128,
+    544,
     32,
     32
    ],
@@ -3472,12 +4796,12 @@
   },
   "void_shard": {
    "cell": [
-    8,
-    12
+    5,
+    17
    ],
    "px": [
-    256,
-    384,
+    160,
+    544,
     32,
     32
    ],
@@ -3489,12 +4813,12 @@
   },
   "wanderer_boots": {
    "cell": [
-    9,
-    12
+    6,
+    17
    ],
    "px": [
-    288,
-    384,
+    192,
+    544,
     32,
     32
    ],
@@ -3504,14 +4828,31 @@
    "rarity": 2,
    "color": "#7F6042"
   },
-  "warlords_cleaver": {
+  "war_banner_scrap": {
    "cell": [
-    10,
-    12
+    7,
+    17
    ],
    "px": [
-    320,
-    384,
+    224,
+    544,
+    32,
+    32
+   ],
+   "shape": "badge",
+   "file": "items/war_banner_scrap.png",
+   "category": "MISC",
+   "rarity": 3,
+   "color": "#B23326"
+  },
+  "warlords_cleaver": {
+   "cell": [
+    8,
+    17
+   ],
+   "px": [
+    256,
+    544,
     32,
     32
    ],
@@ -3523,12 +4864,12 @@
   },
   "warming_draught": {
    "cell": [
-    11,
-    12
+    9,
+    17
    ],
    "px": [
-    352,
-    384,
+    288,
+    544,
     32,
     32
    ],
@@ -3540,12 +4881,12 @@
   },
   "weaponsmith_folio": {
    "cell": [
-    12,
-    12
+    10,
+    17
    ],
    "px": [
-    384,
-    384,
+    320,
+    544,
     32,
     32
    ],
@@ -3557,12 +4898,12 @@
   },
   "wheat": {
    "cell": [
-    13,
-    12
+    11,
+    17
    ],
    "px": [
-    416,
-    384,
+    352,
+    544,
     32,
     32
    ],
@@ -3574,12 +4915,12 @@
   },
   "wheat_seeds": {
    "cell": [
-    14,
-    12
+    12,
+    17
    ],
    "px": [
-    448,
     384,
+    544,
     32,
     32
    ],
@@ -3591,12 +4932,12 @@
   },
   "wild_hide": {
    "cell": [
-    15,
-    12
+    13,
+    17
    ],
    "px": [
-    480,
-    384,
+    416,
+    544,
     32,
     32
    ],
@@ -3608,12 +4949,12 @@
   },
   "wisp_essence": {
    "cell": [
-    0,
-    13
+    14,
+    17
    ],
    "px": [
-    0,
-    416,
+    448,
+    544,
     32,
     32
    ],
@@ -3625,12 +4966,12 @@
   },
   "wizard_hat": {
    "cell": [
-    1,
-    13
+    15,
+    17
    ],
    "px": [
-    32,
-    416,
+    480,
+    544,
     32,
     32
    ],
@@ -3642,12 +4983,12 @@
   },
   "wood": {
    "cell": [
-    2,
-    13
+    0,
+    18
    ],
    "px": [
-    64,
-    416,
+    0,
+    576,
     32,
     32
    ],
@@ -3659,12 +5000,12 @@
   },
   "wooden_arrow": {
    "cell": [
-    3,
-    13
+    1,
+    18
    ],
    "px": [
-    96,
-    416,
+    32,
+    576,
     32,
     32
    ],
@@ -3676,12 +5017,12 @@
   },
   "wooden_buckler": {
    "cell": [
-    4,
-    13
+    2,
+    18
    ],
    "px": [
-    128,
-    416,
+    64,
+    576,
     32,
     32
    ],
@@ -3693,12 +5034,12 @@
   },
   "wooden_shortbow": {
    "cell": [
-    5,
-    13
+    3,
+    18
    ],
    "px": [
-    160,
-    416,
+    96,
+    576,
     32,
     32
    ],
@@ -3710,12 +5051,12 @@
   },
   "worn_boots": {
    "cell": [
-    6,
-    13
+    4,
+    18
    ],
    "px": [
-    192,
-    416,
+    128,
+    576,
     32,
     32
    ],
@@ -3724,6 +5065,74 @@
    "category": "ARMOR",
    "rarity": 0,
    "color": "#724C33"
+  },
+  "wraithbone_boots": {
+   "cell": [
+    5,
+    18
+   ],
+   "px": [
+    160,
+    576,
+    32,
+    32
+   ],
+   "shape": "boots",
+   "file": "items/wraithbone_boots.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#333847"
+  },
+  "wraithbone_coat": {
+   "cell": [
+    6,
+    18
+   ],
+   "px": [
+    192,
+    576,
+    32,
+    32
+   ],
+   "shape": "armor",
+   "file": "items/wraithbone_coat.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#333847"
+  },
+  "wraithbone_mask": {
+   "cell": [
+    7,
+    18
+   ],
+   "px": [
+    224,
+    576,
+    32,
+    32
+   ],
+   "shape": "mask",
+   "file": "items/wraithbone_mask.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#333847"
+  },
+  "wraithbone_wraps": {
+   "cell": [
+    8,
+    18
+   ],
+   "px": [
+    256,
+    576,
+    32,
+    32
+   ],
+   "shape": "gloves",
+   "file": "items/wraithbone_wraps.png",
+   "category": "ARMOR",
+   "rarity": 4,
+   "color": "#333847"
   }
  }
 }

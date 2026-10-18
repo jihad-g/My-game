@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = &"serpentscale_boots"
+display_name = "Serpentscale Boots"
+description = "Boots of shadow serpent scales. Quick and silent."
+category = 4
+rarity = 3
+max_stack = 1
+base_value = 340
+icon_color = Color(0.3, 0.28, 0.45, 1)
+icon_glyph = "SB"
+equip_slot = 6
+required_level = 22
+stat_bonuses = {
+&"armor": 3,
+&"move_speed": 6,
+&"dexterity": 2
+}
+armor_weight = 1
+outfit_look = &"boots"

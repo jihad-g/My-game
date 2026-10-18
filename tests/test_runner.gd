@@ -164,6 +164,8 @@ func _ready() -> void:
 	await _run_async(&"test_m33_mobs_ingame")
 	_run(&"test_m34_textures")
 	await _run_async(&"test_m34_textures_ingame")
+	_run(&"test_m35_icons_data")
+	await _run_async(&"test_m35_crafting_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5213,7 +5215,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.42"), "version 0.42 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.43"), "version 0.43 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -9752,3 +9754,91 @@ func test_roll_anim() -> void:
 	check(not m.is_rolling() and is_zero_approx(m._root.rotation.x), "the body ends upright")
 	m.queue_free()
 	await _pframes(2)
+
+
+## Milestone 35: every item has a hand-drawn atlas icon; the new recipes and items link up.
+func test_m35_icons_data() -> void:
+	var missing: Array = []
+	for id in ItemDB.all_ids():
+		if "@" in String(id):
+			continue
+		if not ItemIconAtlas.CELLS.has(id):
+			missing.append(id)
+	check(missing.is_empty(), "every item has an atlas icon (%d missing: %s)" % [missing.size(), str(missing.slice(0, 6))])
+	for id in [&"amethyst_robe", &"sunflare_plate", &"wraithbone_mask", &"brassworks_tophat", &"explorer_pack",
+			&"ember_feather", &"dragon_bone", &"serpent_scale", &"mimic_tooth", &"ectoplasm", &"pearl", &"turkey_feather",
+			&"sugar", &"honeycomb", &"spider_silk", &"dungeon_key", &"rowboat", &"riding_saddle"]:
+		check(ItemIconAtlas.CELLS.has(id), "%s has its own icon" % id)
+	# Different shapes for the new materials (not one fallback picture).
+	var cells := {}
+	for id in [&"dragon_bone", &"serpent_scale", &"mimic_tooth", &"ectoplasm", &"pearl", &"turkey_feather", &"sugar", &"honeycomb"]:
+		cells[ItemIconAtlas.CELLS[id]] = true
+	check(cells.size() == 8, "the eight new materials each have their own cell")
+	for id in CreativePanel.M35_ITEMS:
+		check(ItemDB.has_item(id), "item %s exists" % id)
+	for rid in CreativePanel.M35_RECIPES:
+		var r: RecipeData = RecipeBook.get_recipe(rid)
+		check(r != null and ItemDB.has_item(r.result_item), "recipe %s exists" % rid)
+		if r == null:
+			continue
+		var ok := true
+		for ing in r.ingredients:
+			ok = ok and ItemDB.has_item(ing)
+		check(ok, "recipe %s uses real ingredients" % rid)
+	var feather := RecipeBook.get_recipe(&"fire_arrow_from_feather")
+	check(feather.result_item == &"fire_arrow" and feather.result_count == 12 and int(feather.ingredients[&"ember_feather"]) == 1
+		and feather.station_id() == &"workbench", "1 Ember Feather + 12 arrows -> 12 Fire Arrows at the workbench")
+	check(RecipeBook.get_recipe(&"silk_cloth").station_id() == RecipeBook.get_recipe(&"silkweave_robe").station_id(),
+		"silk is woven and sewn at the same station")
+	for rid in [&"honey_bread", &"honey_roast", &"honey_cake"]:
+		check(RecipeBook.get_recipe(rid).station_id() == &"campfire", "%s is cooked at a campfire" % rid)
+	check(ItemDB.get_item(&"honey_roast").hunger_restore > ItemDB.get_item(&"cooked_meat").hunger_restore,
+		"honey roast fills you more than plain meat")
+	check(ItemDB.get_item(&"fletched_arrow").is_arrow() and float(ItemDB.get_item(&"fletched_arrow").weapon_params.arrow_damage)
+		> float(ItemDB.get_item(&"wooden_arrow").weapon_params.arrow_damage), "fletched arrows hit harder than wooden ones")
+	check(ItemDB.get_item(&"dragonbone_greatsword").weapon_type == &"greatsword", "the Dragonbone Greatsword is a greatsword")
+	var sc := SelfCheck.run()
+	check(sc.ok(), "the game self-check is clean: " + sc.report().substr(0, 300))
+
+
+## Milestone 35: crafting the new things in game (crafting never fails).
+func test_m35_crafting_ingame() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	p.character.skills[Skill.CRAFTING] = 80
+	var stations := {&"hand": true, &"workbench": true, &"forge": true, &"tailoring": true, &"campfire": true, &"alchemy": true}
+	p.give_item(&"ember_feather", 1)
+	check(p.recipes.knows(&"fire_arrow_from_feather"), "picking up an Ember Feather teaches the fire arrow recipe")
+	p.give_item(&"honeycomb", 4)
+	p.give_item(&"spider_silk", 12)
+	check(p.recipes.knows(&"honey_bread") and p.recipes.knows(&"silk_cloth"), "honeycomb and spider silk teach their recipes")
+	for rid in CreativePanel.M35_RECIPES:
+		p.recipes.learn(rid)
+	var cost_x := func(r: RecipeData, n: int) -> void:
+		var c := r.cost_at(80)
+		for ing in c:
+			p.inventory.add_item(ing, int(c[ing]) * n)
+	for rid in CreativePanel.M35_RECIPES:
+		var r: RecipeData = RecipeBook.get_recipe(rid)
+		cost_x.call(r, 1)
+		var before := p.inventory.count_of(r.result_item)
+		var made := Crafting.craft(p, r, stations)
+		var after := 0
+		for i in p.inventory.capacity:
+			var sl = p.inventory.get_slot(i)
+			if sl != null and String(sl.id).get_slice("@", 0) == String(r.result_item):
+				after += int(sl.count)
+		check(made == 1 and after >= before + r.result_count, "crafted %s (%s)" % [rid, Crafting.check(p, r, stations)])
+	# Eat the honey cake.
+	p.hunger.current = 10.0
+	var h0: float = p.hunger.current
+	for i in p.inventory.capacity:
+		var sl = p.inventory.get_slot(i)
+		if sl != null and sl.id == &"honey_cake":
+			p.use_slot(i)
+			break
+	check(p.hunger.current > h0 + 30.0, "the honey cake fills you up")
+	world.queue_free()
+	await _frames(5)

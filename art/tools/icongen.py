@@ -77,6 +77,15 @@ def read_items():
 
 
 RULES = [
+    # Milestone 35: shapes for the M23/M27/M29/M31/M33 items and the new materials
+    ["_amulet", "amulet"], ["tome_", "book"], ["quill", "feather"], ["sporecap_boots", "boots"],
+    ["sporecap_gloves", "gloves"], ["sporecap_vest", "armor"], ["sporecap_hat", "hat"],
+    ["feather", "feather"], ["serpent_scale", "scale"], ["mimic_tooth", "tooth"], ["ectoplasm", "goo"],
+    ["pearl_ring", "ring"], ["pearl", "pearl"], ["sugar", "sugar"], ["honeycomb", "honeycomb"], ["honey_cake", "cake"],
+    ["honey_bread", "bread"], ["honey_roast", "meat_cooked"], ["silk_cloth", "cloth"], ["spider_silk", "spool"],
+    ["dungeon_key", "key"], ["saddle", "saddle"], ["rowboat", "boat"], ["dragon_bone", "bone"],
+    ["tophat", "tophat"], ["top_hat", "tophat"], ["mask", "mask"], ["sandals", "boots"], ["mantle", "robe"],
+    ["coat", "armor"], ["fists", "gloves"], ["war_banner", "badge"], ["mark", "badge"], ["wax", "lump"],
     ["seeds", "seeds"], ["mushroom", "mushroom"], ["glowcap", "mushroom"], ["dreamcap", "mushroom"],
     ["scroll_", "scroll"], ["tome_", "book"], ["grimoire", "book"], ["codex", "book"], ["manual", "book"],
     ["journal", "book"], ["notes", "book"], ["folio", "book"], ["embers_tome", "book"],
@@ -629,6 +638,85 @@ def draw(shape, it):
         ic.line((8.5, 6), (10.5, 27.5), 1.6, c * 0.65)
         ic.disc(17.5, 15, 3.4, GOLD)
         ic.disc(17.5, 15, 1.8, np.minimum(c * 1.5 + 0.2, 1))
+    # ---- Milestone 35 shapes
+    elif shape == "feather":
+        ic.line((7, 26), (24, 6), 1.2, BONE)                          # quill
+        ic.poly([(9, 21), (14, 12), (21, 5), (26, 4), (24, 10), (18, 17), (12, 23)], c)
+        ic.poly([(18, 9), (23, 6), (21, 10)], light)
+        for k in range(3):
+            ic.px(13 + k * 3, 19 - k * 3, c * 0.6, flat=True)        # notches
+    elif shape == "scale":
+        ic.poly([(16, 4), (26, 10), (24, 22), (16, 28), (8, 22), (6, 10)], c)
+        ic.poly([(16, 8), (22, 12), (16, 15), (10, 12)], light)
+        ic.line((16, 15), (16, 26), 1, c * 0.7)
+        glint(ic, 12, 10)
+    elif shape == "tooth":
+        ic.poly([(8, 6), (24, 6), (22, 14), (19, 27), (16, 18), (13, 27), (10, 14)], BONE)
+        ic.rect(8, 6, 24, 9, WOOD)
+        glint(ic, 11, 10)
+    elif shape == "goo":
+        ic.ellipse(16, 20, 11, 7, c)
+        ic.disc(13, 13, 5, c)
+        ic.disc(20, 15, 4, c)
+        ic.disc(12, 11, 1.6, np.array([1, 1, 1.0]), flat=True)
+        ic.px(19, 13, np.array([1, 1, 1.0]))
+    elif shape == "pearl":
+        ic.ellipse(16, 22, 12, 5, hexc("#B9A58C"))                    # open shell
+        ic.disc(16, 16, 6.5, c)
+        ic.disc(13, 13, 2, np.array([1, 1, 1.0]), flat=True)
+    elif shape == "sugar":
+        ic.ellipse(16, 22, 11, 6, WHITE)
+        for (x, y) in [(10, 14), (16, 11), (21, 15), (13, 18), (19, 19)]:
+            ic.rect(x, y, x + 3, y + 3, c)
+        ic.px(17, 11, np.array([1, 1, 1.0]))
+    elif shape == "honeycomb":
+        for (cx, cy) in [(10, 11), (17, 8), (24, 11), (10, 19), (17, 16), (24, 19), (17, 24)]:
+            ic.poly([(cx - 3, cy - 2), (cx, cy - 4), (cx + 3, cy - 2), (cx + 3, cy + 2), (cx, cy + 4), (cx - 3, cy + 2)], GOLD)
+            ic.disc(cx, cy, 1.4, ORANGE, flat=True)
+    elif shape == "cake":
+        ic.rect(6, 15, 26, 26, hexc("#C88A4E"))
+        ic.rect(6, 12, 26, 16, WHITE)
+        ic.rect(6, 19, 26, 21, GOLD)                                  # honey layer
+        ic.disc(16, 9, 2.6, RED)
+        ic.line((16, 7), (18, 4), 1, LEAF)
+    elif shape == "cloth":
+        ic.rect(6, 9, 26, 24, c)
+        ic.ellipse(6, 16.5, 3, 7.5, c * 0.8)
+        ic.line((10, 11), (24, 11), 1, light)
+        ic.line((10, 22), (24, 22), 1, c * 0.75)
+    elif shape == "spool":
+        ic.rect(8, 6, 24, 9, WOOD)
+        ic.rect(8, 23, 24, 26, WOOD)
+        ic.rect(10, 9, 22, 23, c)
+        for y in (12, 16, 20):
+            ic.line((10, y), (22, y - 1), 1, light)
+    elif shape == "key":
+        ic.disc(10, 10, 6, c)
+        ic.erase_disc(10, 10, 2.5)
+        ic.line((13, 13), (26, 26), 2.2, c)
+        ic.line((22, 22), (19, 25), 2, c)
+        ic.line((25, 25), (22, 28), 2, c)
+        glint(ic, 7, 7)
+    elif shape == "saddle":
+        ic.poly([(5, 14), (11, 18), (21, 18), (27, 12), (28, 17), (22, 23), (10, 23), (4, 18)], LEATHER)
+        ic.rect(9, 10, 13, 15, LEATHER * 0.85)
+        ic.line((16, 20), (16, 28), 1, DARK)
+        ic.rect(14, 27, 19, 29, hexc("#B8BCC6"))
+    elif shape == "boat":
+        ic.poly([(3, 15), (29, 15), (25, 23), (7, 23)], WOOD)
+        ic.line((5, 17), (27, 17), 1, WOOD_D)
+        ic.line((9, 25), (25, 9), 1.4, WOOD_D)                        # oar
+        ic.ellipse(25, 9, 2.5, 1.5, WOOD)
+    elif shape == "tophat":
+        ic.ellipse(16, 24, 13, 3, DARK)
+        ic.rect(9, 7, 23, 23, DARK)
+        ic.rect(9, 18, 23, 21, c)
+        glint(ic, 11, 9)
+    elif shape == "mask":
+        ic.ellipse(16, 15, 11, 12, c)
+        ic.ellipse(11, 13, 2.6, 2, DARK)
+        ic.ellipse(21, 13, 2.6, 2, DARK)
+        ic.line((12, 22), (20, 22), 1, DARK)
     elif shape == "crate":
         ic.rect(5, 7, 27, 28, WOOD)
         ic.rect(5, 7, 27, 9, WOOD_D); ic.rect(5, 26, 27, 28, WOOD_D)
@@ -639,7 +727,9 @@ def draw(shape, it):
     return ic
 
 
-ALL_SHAPES = ["sword", "greatsword", "dagger", "axe", "hatchet", "pickaxe", "hammer", "spear", "staff", "wand", "bow",
+ALL_SHAPES = ["feather", "scale", "tooth", "goo", "pearl", "sugar", "honeycomb", "cake", "cloth", "spool", "key",
+              "saddle", "boat", "tophat", "mask",
+              "sword", "greatsword", "dagger", "axe", "hatchet", "pickaxe", "hammer", "spear", "staff", "wand", "bow",
               "arrow", "shield", "crown", "helmet", "hood", "hat", "boots", "gloves", "armor", "robe", "ring", "amulet",
               "badge", "potion", "vial", "meat", "meat_cooked", "berries", "bread", "bowl", "carrot", "pumpkin",
               "coconut", "fruit", "wheat", "flower", "root", "heart", "orb", "ore", "ingot", "nugget", "gem", "crystal",

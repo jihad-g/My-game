@@ -2,6 +2,27 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.43.0] — Milestone 35: Icons and item uses
+
+### Added
+- **Icons for every item (297).** The icon generator got 15 new pixel drawings (feather, scale, tooth, ectoplasm,
+  pearl, sugar, honeycomb, cake, cloth, spool, key, saddle, boat, top hat, mask). The M23 elemental armour, the
+  M27 gear and the M33 monster drops now each have their own icon instead of a plain fallback.
+- **Ember Feather recipe**: 1 Ember Feather + 12 Wooden Arrows -> 12 Fire Arrows at the workbench.
+- **Honey food** (campfire): Honey Bread (bread + honeycomb), Honey Roast (2 cooked meat + honeycomb),
+  Honey Cake (wheat, sugar, honeycomb, berries). They fill you more than plain food and warm you up.
+- **Silk** (tailoring table): Silk Cloth (3 spider silk), Silk Bandage (heals 60, stops bleeding),
+  Silkweave Robe (silk cloth + ectoplasm) and Silkweave Hood (silk cloth + pearl) for spellcasters.
+- **Uses for the M33 drops**: Dragonbone Greatsword (dragon bones + mithril, forge), Serpentscale Boots
+  (+6% move speed), Mimic Tooth Amulet (crit), Pearl Ring (mana), Fletched Arrows (turkey feathers; hit
+  harder than wooden arrows) and a second Mana Tonic recipe from Ectoplasm.
+- Recipes are learned the first time you pick up the main ingredient.
+- Creative mode → Items: "New (M35)" row (ingredients, the new items, learn the new recipes).
+
+### Tests
+- `test_m35_icons_data` (every item has an icon, recipes link up, self-check clean) and
+  `test_m35_crafting_ingame` (each new recipe crafts, the honey cake feeds you). Screenshot mode `--only=icons`.
+
 ## [0.42.1] — Better dodge roll
 
 ### Changed
