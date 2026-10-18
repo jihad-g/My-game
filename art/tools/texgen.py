@@ -320,15 +320,21 @@ S_SAND = [0.66, 0.72, 0.78, 0.84, 0.90, 0.96]
 
 
 def sand_top(seed=201, n=3):
-    base = clean_lonely(rank_levels(fbm(seed, 2, 4, 0.3), [2, 4, 3]) + 2)   # 2..4 calm
+    """Milestone 34: fine grain mottling (like the M26 grass), wind-sorted grain
+    streaks, little pebbles and the odd shell."""
+    base = clean_lonely(rank_levels(fbm(seed, 4, 8, 0.55), [1, 3, 4, 2]) + 1, passes=1)   # 1..4
     def make(k):
         r = rng(seed + 13 * k)
         lv = base.copy()
-        for (x, y) in scatter(r, 3 + k % 2, 5.0, 2, 1):
-            stamp(lv, x, y, ["LD"] if r.random() < 0.5 else ["DL"], {"L": 5, "D": 1})
+        for (x, y) in scatter(r, 6, 3.4, 3, 1, margin=0):            # light grain streaks
+            stamp(lv, x, y, ["LLM"] if r.random() < 0.5 else ["MLL"], {"L": 5, "M": 4})
+        for (x, y) in scatter(r, 4, 4.2, 1, 1, margin=0):            # dark grains
+            lv[y % N, x % N] = 0
+        for (x, y) in scatter(r, 1 + k % 2, 7.0, 2, 2):
+            stamp(lv, x, y, PEBBLE, {"L": 5, "M": 3, "D": 0})
         if k == 2:  # a tiny shell
-            for (x, y) in scatter(r, 1, 8, 2, 2):
-                stamp(lv, x, y, ["WL", "LD"], {"W": 5, "L": 4, "D": 1})
+            for (x, y) in scatter(r, 1, 8, 3, 2):
+                stamp(lv, x, y, [".W.", "WLD"], {"W": 5, "L": 4, "D": 1})
         return lv
     return [to_rgb(lv, S_SAND) for lv in family(n, make)]
 
@@ -444,39 +450,51 @@ S_SNOW = [0.70, 0.74, 0.78, 0.82, 0.86, 0.92]
 
 
 def snow_top(seed=501, n=2):
-    base = clean_lonely(rank_levels(fbm(seed, 2, 4, 0.3), [1, 3, 4, 2]) + 1)
+    """Milestone 34: soft wind-carved drifts (curved shadow lines), fine crystal
+    texture and a few bright sparkles."""
+    base = clean_lonely(rank_levels(fbm(seed, 3, 8, 0.4), [1, 3, 5, 2]) + 1, passes=1)
+    ys, xs = np.mgrid[0:N, 0:N]
     def make(k):
         r = rng(seed + 11 * k)
         lv = base.copy()
-        for (x, y) in scatter(r, 3, 5, 1, 1):
-            lv[y, x] = 5                                  # sparkles (rare singles are OK)
-        for (x, y) in scatter(r, 2, 6, 3, 1):
-            stamp(lv, x, y, ["DDD"], {"D": 0})            # little drift shadows
+        # Two drift lines that wander across the tile (periodic).
+        for j, off in enumerate((4 + 2 * k, 11 + k)):
+            wave = np.round(off + 1.6 * np.sin(2 * np.pi * (xs[0] / N) * (1 + j) + seed + k)).astype(int) % N
+            for x in range(N):
+                lv[wave[x], x] = 1
+                lv[(wave[x] - 1) % N, x] = max(lv[(wave[x] - 1) % N, x], 4)
+        for (x, y) in scatter(r, 4, 4.5, 1, 1):
+            lv[y, x] = 5
         return lv
     return [to_rgb(lv, S_SNOW, warm=0.0) * np.array([0.99, 1.0, 1.02]) for lv in family(n, make)]
 
 
 def ice_top(seed=511):
-    ys, xs = np.mgrid[0:N, 0:N]
-    lv = np.full((N, N), 3)
-    streak = ((xs + ys) % 16 == 3) | ((xs + ys) % 16 == 4)
-    lv[streak] = 5
-    lv[((xs + ys) % 16 == 11)] = 4
-    soft = pnoise(2, 2, seed) < 0.3
-    lv[soft & ~streak] = 2
-    # cracks (two short lines)
-    for (x0, y0, dx, dy, ln) in [(3, 9, 1, 0, 4), (11, 3, 0, 1, 3)]:
-        for i in range(ln):
-            lv[(y0 + i * dy) % N, (x0 + i * dx) % N] = 0
+    """Milestone 34: cracked ice plates (lit rims, dark cracks), frosted patches
+    and trapped air bubbles."""
+    pts = [(2, 3), (9, 1.5), (14, 7), (6, 9), (12, 13), (2.5, 14)]
+    idx, crack = voronoi([(float(a), float(b)) for a, b in pts])
+    lv = np.array([3, 4, 3, 2, 3, 4])[idx]
+    frost = pnoise(3, 3, seed) > 0.62
+    lv[frost] = 5
+    lv = bevel(lv, crack, 5, None, 0)
+    r = rng(seed)
+    for (x, y) in scatter(r, 4, 4.0, 1, 1, margin=2):
+        if not crack[y, x]:
+            lv[y, x] = 5                                       # bubbles
     return lv
 
 
 def ice_side(seed=521):
+    """Milestone 34: clear ice in layers with vertical light streaks and bubbles."""
     ys, xs = np.mgrid[0:N, 0:N]
-    lv = np.full((N, N), 3)
-    lv[(xs % 8 == 2) | (xs % 8 == 3)] = 4
-    lv[pnoise(2, 3, seed) < 0.28] = 2
-    lv[(ys % 8 == 7)] = 1        # faint block layers
+    lv = clean_lonely(rank_levels(fbm(seed, 2, 4, 0.4, sx=0.5, sy=2.0), [2, 4, 3]) + 2)
+    lv[(xs % 8 == 2)] = 5
+    lv[(xs % 8 == 3)] = 4
+    lv[(ys % 8 == 7)] = 1
+    r = rng(seed)
+    for (x, y) in scatter(r, 3, 4.5, 1, 1, margin=1):
+        lv[y, x] = 5
     return lv
 
 
@@ -511,12 +529,16 @@ S_CAVE = [0.56, 0.64, 0.72, 0.80, 0.88, 1.0]
 
 
 def cave_top(seed=701, n=2):
-    border_pts = [(1, 1), (10, 1.5), (15.5, 9), (3, 13)]
+    """Milestone 34: rough cave floor - small bevelled facets, fine grit and a
+    few mineral glints."""
     def make(k):
         r = rng(seed + 3 * k)
-        inner = [(float(r.uniform(5, 11)), float(r.uniform(5, 11)))]
-        idx, crack = voronoi([(float(a), float(b)) for a, b in border_pts] + inner)
-        lv = np.array([2, 3, 2, 3, 2])[idx]
+        pts = [(1, 1), (6, 2), (12, 1.5), (15.5, 7), (10, 7), (4, 8), (2, 13), (8, 13.5), (13, 12)]
+        pts = [(a + (float(r.uniform(-0.6, 0.6)) if 2 < a < 14 else 0), b) for a, b in pts]
+        idx, crack = voronoi([(float(a), float(b)) for a, b in pts])
+        lv = np.array([2, 3, 2, 3, 4, 2, 3, 2, 3])[idx]
+        grit = fbm(seed + 9 + k, 8, 16, 0.5) > 0.72
+        lv[grit & ~crack] = np.maximum(lv[grit & ~crack] - 1, 1)
         lv = bevel(lv, crack, 4, None, 0)
         for (x, y) in scatter(r, 2, 6, 1, 1, margin=3):
             lv[y, x] = 5                                     # mineral glints
@@ -525,9 +547,12 @@ def cave_top(seed=701, n=2):
 
 
 def cave_side(seed=711):
-    pts = [(2, 2), (11, 3), (6, 10), (14, 12)]
+    """Milestone 34: rough tall facets with fine grit and a damp dark seam."""
+    pts = [(2, 2), (11, 3), (6, 10), (14, 12), (8, 6), (3, 13)]
     idx, crack = voronoi([(float(a), float(b)) for a, b in pts], sx=0.7, sy=1.3)
-    lv = np.array([2, 3, 2, 3])[idx]
+    lv = np.array([2, 3, 2, 3, 4, 2])[idx]
+    grit = fbm(seed + 3, 8, 16, 0.5) > 0.74
+    lv[grit & ~crack] = np.maximum(lv[grit & ~crack] - 1, 1)
     return bevel(lv, crack, 4, None, 0)
 
 

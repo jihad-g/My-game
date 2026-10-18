@@ -168,6 +168,7 @@ static func water() -> Material:
 		var m := ShaderMaterial.new()
 		m.shader = load("res://assets/shaders/water.gdshader")
 		m.set_shader_parameter(&"fade_channel", 0)  # fades with the chunk ground
+		m.set_shader_parameter(&"ripple_strength", 1.0)  # Milestone 34 (Creative can switch it off)
 		_cache[&"water"] = m
 	return _cache[&"water"]
 

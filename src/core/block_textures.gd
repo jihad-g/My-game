@@ -5,7 +5,7 @@ class_name BlockTextures
 
 const ARRAY_PATH := "res://assets/textures/block_textures.png"
 const SIZE := 16
-const COUNT := 115
+const COUNT := 119
 ## Tinted textures are multiplied by this (a stored 0.8 = no change).
 const GAIN := 1.25
 
@@ -124,7 +124,11 @@ const LAYER := {
 	&"iron_plate": 111,
 	&"cloth": 112,
 	&"tilled_soil": 113,
-	&"glass": 114,
+	&"stair_wood": 114,
+	&"stair_stone": 115,
+	&"path_dirt": 116,
+	&"path_cobble": 117,
+	&"glass": 118,
 }
 
 ## Layers stored in real colours (multiply a white vertex colour).

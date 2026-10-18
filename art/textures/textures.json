@@ -294,8 +294,8 @@
    "tint": "tinted",
    "face": "top",
    "group": "sand",
-   "shades": 5,
-   "mean": 0.8,
+   "shades": 6,
+   "mean": 0.798,
    "desc": "Beach / shore sand, calm, few grains. Variant 0."
   },
   "sand_top_1": {
@@ -303,7 +303,7 @@
    "tint": "tinted",
    "face": "top",
    "group": "sand",
-   "shades": 5,
+   "shades": 6,
    "mean": 0.8,
    "desc": "Beach / shore sand, calm, few grains. Variant 1."
   },
@@ -312,8 +312,8 @@
    "tint": "tinted",
    "face": "top",
    "group": "sand",
-   "shades": 5,
-   "mean": 0.8,
+   "shades": 6,
+   "mean": 0.802,
    "desc": "Beach / shore sand, calm, few grains. Variant 2."
   },
   "sand_side": {
@@ -456,7 +456,7 @@
    "tint": "tinted",
    "face": "top",
    "group": "snow",
-   "shades": 6,
+   "shades": 5,
    "mean": 0.8,
    "desc": "Snow: very soft drifts, rare sparkles. Variant 0."
   },
@@ -465,7 +465,7 @@
    "tint": "tinted",
    "face": "top",
    "group": "snow",
-   "shades": 6,
+   "shades": 5,
    "mean": 0.8,
    "desc": "Snow: very soft drifts, rare sparkles. Variant 1."
   },
@@ -474,8 +474,8 @@
    "tint": "tinted_edge",
    "face": "edge",
    "group": "snow",
-   "shades": 14,
-   "mean": 0.785,
+   "shades": 15,
+   "mean": 0.792,
    "desc": "Snow cap over dirt: rounded bumps, no thin drips."
   },
   "snow_side": {
@@ -501,7 +501,7 @@
    "tint": "tinted",
    "face": "side",
    "group": "ice",
-   "shades": 4,
+   "shades": 5,
    "mean": 0.8,
    "desc": "Ice wall: vertical light bands."
   },
@@ -528,8 +528,8 @@
    "tint": "tinted",
    "face": "top",
    "group": "cave_stone",
-   "shades": 5,
-   "mean": 0.8,
+   "shades": 6,
+   "mean": 0.797,
    "desc": "Cave floor: rough facets, mineral glints. Variant 0."
   },
   "cave_stone_top_1": {
@@ -537,8 +537,8 @@
    "tint": "tinted",
    "face": "top",
    "group": "cave_stone",
-   "shades": 5,
-   "mean": 0.798,
+   "shades": 6,
+   "mean": 0.8,
    "desc": "Cave floor: rough facets, mineral glints. Variant 1."
   },
   "cave_stone_side": {
@@ -546,7 +546,7 @@
    "tint": "tinted",
    "face": "side",
    "group": "cave_stone",
-   "shades": 4,
+   "shades": 5,
    "mean": 0.8,
    "desc": "Cave wall: rough tall facets."
   },
@@ -627,8 +627,8 @@
    "tint": "full",
    "face": "prop",
    "group": "ore",
-   "shades": 8,
-   "mean": 0.491,
+   "shades": 9,
+   "mean": 0.481,
    "desc": "Ore rock (copper): dark stone with copper nuggets. Full colour - use white vertex colour."
   },
   "ore_iron": {
@@ -636,8 +636,8 @@
    "tint": "full",
    "face": "prop",
    "group": "ore",
-   "shades": 7,
-   "mean": 0.507,
+   "shades": 8,
+   "mean": 0.495,
    "desc": "Ore rock (iron): dark stone with iron nuggets. Full colour - use white vertex colour."
   },
   "ore_coal": {
@@ -645,8 +645,8 @@
    "tint": "full",
    "face": "prop",
    "group": "ore",
-   "shades": 7,
-   "mean": 0.454,
+   "shades": 8,
+   "mean": 0.446,
    "desc": "Ore rock (coal): dark stone with coal nuggets. Full colour - use white vertex colour."
   },
   "ore_silver": {
@@ -654,8 +654,8 @@
    "tint": "full",
    "face": "prop",
    "group": "ore",
-   "shades": 7,
-   "mean": 0.532,
+   "shades": 8,
+   "mean": 0.521,
    "desc": "Ore rock (silver): dark stone with silver nuggets. Full colour - use white vertex colour."
   },
   "bush_leaves": {
@@ -1026,6 +1026,42 @@
    "shades": 5,
    "mean": 0.8,
    "desc": "Farm plot soil: furrows every 0.25 m. Tint SOIL."
+  },
+  "stair_wood": {
+   "file": "stair_wood.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_stairs",
+   "shades": 6,
+   "mean": 0.799,
+   "desc": "Wooden stair tread: lit nosing, worn middle. Tint WOOD."
+  },
+  "stair_stone": {
+   "file": "stair_stone.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_stairs",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Stone step: chipped front edge, worn middle."
+  },
+  "path_dirt": {
+   "file": "path_dirt.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_path",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Trodden dirt path with ruts and pebbles. Tint SOIL."
+  },
+  "path_cobble": {
+   "file": "path_cobble.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_path",
+   "shades": 5,
+   "mean": 0.792,
+   "desc": "Cobblestone path: round stones in dark mortar."
   },
   "glass": {
    "file": "glass.png",

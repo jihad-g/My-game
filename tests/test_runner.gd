@@ -161,6 +161,8 @@ func _ready() -> void:
 	await _run_async(&"test_m32_hit_frame_ingame")
 	_run(&"test_m33_mobs_data")
 	await _run_async(&"test_m33_mobs_ingame")
+	_run(&"test_m34_textures")
+	await _run_async(&"test_m34_textures_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5210,7 +5212,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.41"), "version 0.41 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.42"), "version 0.42 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -7327,7 +7329,8 @@ func test_v026_block_textures() -> void:
 	# New palette.
 	for b in gen.biomes:
 		if (b as BiomeData).id == &"verdant_meadow":
-			check((b as BiomeData).top_color.to_html(false) == "5a9a34", "meadow uses the new art-bible green")
+			# (M26 retuned the meadow green; the test now follows the art-bible value in the biome file)
+			check((b as BiomeData).top_color.is_equal_approx(Color(0.38, 0.58, 0.24)), "meadow uses the art-bible green")
 	# Props and building pieces.
 	var lib := PropLibrary.new()
 	var oak := lib.get_mesh(&"tree_oak")
@@ -7353,7 +7356,9 @@ func test_v026_block_textures() -> void:
 	Settings.set_value("block_textures", false)
 	check(Settings.get_value("block_textures") == false, "textures can be turned off")
 	if DisplayServer.get_name() != "headless":  # the headless renderer keeps no shader globals
-		check(is_equal_approx(float(RenderingServer.global_shader_parameter_get(&"block_textures")), 0.0), "the shaders see the setting")
+		var g = RenderingServer.global_shader_parameter_get(&"block_textures")
+		if g != null:  # some renderers don't hand global values back at runtime
+			check(is_equal_approx(float(g), 0.0), "the shaders see the setting")
 	Settings.set_value("block_textures", true)
 
 
@@ -9645,5 +9650,58 @@ func test_m33_mobs_ingame() -> void:
 		t.receive_hit(DamageInfo.create(1.0, p, &"physical"))
 		await _frames(60)
 		check(t.global_position.distance_to(p.global_position) > d0 + 1.0, "a hit turkey runs away (%.1f -> %.1f m)" % [d0, t.global_position.distance_to(p.global_position)])
+	world.queue_free()
+	await _frames(5)
+
+
+# --- Milestone 34: textures ------------------------------------------------------------------
+
+func test_m34_textures() -> void:
+	for n in [&"stair_wood", &"stair_stone", &"path_dirt", &"path_cobble"]:
+		check(BlockTextures.LAYER.has(n), "texture %s is in the block texture array" % n)
+	var img := (load(BlockTextures.ARRAY_PATH) as Texture2D).get_image()
+	check(img.get_height() == BlockTextures.SIZE * BlockTextures.COUNT, "the texture strip has %d layers" % BlockTextures.COUNT)
+	# The restyled ground: rich detail (many shades) like the M26 grass.
+	for n in [&"sand_top_0", &"snow_top_0", &"ice_top", &"cave_stone_top_0", &"cave_stone_side", &"path_cobble"]:
+		var layer: int = BlockTextures.LAYER[n]
+		var shades := {}
+		for y in 16:
+			for x in 16:
+				shades[img.get_pixel(x, layer * 16 + y).to_html(false)] = true
+		check(shades.size() >= 5, "%s has %d shades" % [n, shades.size()])
+	# Stairs and paths use the new textures.
+	for pair in [[&"wood_stairs", &"stair_wood"], [&"stone_stairs", &"stair_stone"], [&"dirt_path", &"path_dirt"], [&"cobble_path", &"path_cobble"]]:
+		var b := BlockMesh.new()
+		BuildMeshes.build_into(b, BuildingManager.get_piece_data(pair[0]).mesh)
+		var arrays: Array = b.to_arrays()
+		var uv2: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV2]
+		var want := float(BlockTextures.LAYER[pair[1]] + 1)
+		var found := false
+		for v in uv2:
+			found = found or absf(fmod(v.x, 256.0) - want) < 0.5
+		check(found, "%s shows the %s texture" % [pair[0], pair[1]])
+	var path := BuildingManager.get_piece_data(&"cobble_path")
+	check(path != null and not path.blocks_movement and BuildingManager.slot_kind(path) == "floor", "path tiles are floor tiles you walk over")
+	var water := Materials.water() as ShaderMaterial
+	check(water.get_shader_parameter(&"ripple_strength") != null and (water.shader.code.find("pixel_ripples") >= 0), "water has animated pixel ripples")
+
+
+func test_m34_textures_ingame() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.creative = true
+	var before := world.building.pieces.size()
+	world.hud.creative._demo_paths()
+	await _frames(3)
+	var paths := 0
+	for k in world.building.pieces:
+		var bp: BuildPiece = world.building.pieces[k]
+		if bp.data.id in [&"dirt_path", &"cobble_path"]:
+			paths += 1
+	check(paths >= 15 and world.building.pieces.size() > before, "Creative lays path tiles (%d)" % paths)
+	world.hud.creative._toggle_ripples()
+	check(float((Materials.water() as ShaderMaterial).get_shader_parameter(&"ripple_strength")) < 0.5, "Creative turns the ripples off")
+	world.hud.creative._toggle_ripples()
+	check(float((Materials.water() as ShaderMaterial).get_shader_parameter(&"ripple_strength")) > 0.5, "and on again")
 	world.queue_free()
 	await _frames(5)

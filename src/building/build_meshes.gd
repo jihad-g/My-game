@@ -744,7 +744,7 @@ static func build_wood_stairs(b: BlockMesh) -> void:
 	var rise := 2.6 / 6.0
 	for i in 6:
 		var top := (i + 1) * rise
-		b.texture = &"wood_beam"
+		b.texture = &"stair_wood"  # Milestone 34: treads with a lit nosing
 		b.box(Vector3(0, top - 0.05, -0.25 + i * 0.5), Vector3(0.96, 0.1, 0.5), WOOD * (0.95 + 0.05 * (i % 2)))
 		b.texture = &"planks_wall"
 		b.box(Vector3(0, (top - 0.1) * 0.5, -0.25 + i * 0.5), Vector3(0.9, top - 0.1, 0.5), WOOD_DARK * 0.9)
@@ -760,7 +760,20 @@ static func build_stone_stairs(b: BlockMesh) -> void:
 	for i in 6:
 		var top := (i + 1) * rise
 		b.texture = &"stone_bricks"
-		b.box(Vector3(0, top * 0.5, -0.25 + i * 0.5), Vector3(1.0, top, 0.5), STONE * (0.9 + 0.06 * (i % 2)))
+		b.box(Vector3(0, (top - 0.08) * 0.5, -0.25 + i * 0.5), Vector3(1.0, top - 0.08, 0.5), STONE * (0.9 + 0.06 * (i % 2)))
+		b.texture = &"stair_stone"  # Milestone 34: chipped step edge
+		b.box(Vector3(0, top - 0.04, -0.25 + i * 0.5), Vector3(1.0, 0.08, 0.5), STONE * (1.0 + 0.04 * (i % 2)))
+
+
+## Milestone 34: path tiles - flat on the ground, nothing to trip over.
+static func build_dirt_path(b: BlockMesh) -> void:
+	b.texture = &"path_dirt"
+	b.box(Vector3(0, 0.02, 0), Vector3(1.0, 0.04, 1.0), SOIL * 1.35)
+
+
+static func build_cobble_path(b: BlockMesh) -> void:
+	b.texture = &"path_cobble"
+	b.box(Vector3(0, 0.03, 0), Vector3(1.0, 0.06, 1.0), STONE * 1.02)
 
 
 ## Ladder: two rails and rungs against the cell's far (+Z) side, one storey plus a bit.

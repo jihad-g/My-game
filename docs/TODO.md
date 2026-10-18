@@ -105,6 +105,16 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 34 — Textures  ✅ (v0.42.0)
+
+- [x] Sand, snow (+ snow edge), ice and cave stone restyled like the M26 grass
+- [x] Stair tread textures (wood, stone); dirt and cobblestone path tiles (new build pieces)
+- [x] Animated pixel water ripples (crests and spreading rings)
+- [x] Creative controls; tests `test_m34_*` run and pass
+- [ ] NOT IMPLEMENTED: desert sand, mud and gravel keep their M26 textures
+- [ ] NOT IMPLEMENTED: villages don't lay path tiles on their streets yet
+- [ ] NOT IMPLEMENTED: ripples around the player, boats and swimming creatures (they are world patterns, not splashes)
+
 ## Milestone 33 — More mobs  ✅ (v0.41.0)
 
 - [x] Bone Dragon (crypt boss), Shadow Serpent, Door Mimic, Ghost Cat, Diver Zombie, Turkey, Top-Hat Bear, Cupcake Critter, Berry Jelly

@@ -2,6 +2,25 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.42.0] — Milestone 34: Textures
+
+### Changed
+- **Sand, snow, ice and cave stone restyled** in the M26 grass style (our own pixel art, 16 px per metre):
+  - Sand: fine grain mottling, light wind-sorted grain streaks, dark grains, pebbles and the odd shell.
+  - Snow: soft wind-carved drift lines with a lit lip, fine crystal texture and sparkles (also the snow cap edge).
+  - Ice: cracked plates with lit rims and dark cracks, frosted patches and trapped air bubbles; ice walls in layers.
+  - Cave stone: smaller bevelled facets with fine grit and mineral glints (ores sit in the new stone too).
+- **Stairs** use new tread textures: wooden treads with a lit nosing and a worn middle, stone steps with chipped edges.
+
+### Added
+- **Path tiles**: Dirt Path (1 clay) and Cobblestone Path (2 stone) - flat floor tiles to lay roads between your
+  buildings. They don't block anyone.
+- **Animated water ripples**: pixel-sized light crests drift across lakes and the sea, and rings spread from
+  random spots every few seconds.
+- Creative mode → World: "Stairs and path tiles here", and a "Textures" row (go to a beach, go to the tundra,
+  water ripples on/off).
+- Tests `test_m34_textures`, `test_m34_textures_ingame`; screenshot mode `--only=textures`.
+
 ## [0.41.0] — Milestone 33: More mobs
 
 ### Added

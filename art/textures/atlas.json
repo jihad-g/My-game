@@ -11,9 +11,9 @@
  },
  "array": {
   "file": "atlas_array.png",
-  "layers": 115,
+  "layers": 119,
   "layer_size": 16,
-  "import": "Godot: Import As 'Texture2DArray', Horizontal 1, Vertical 115"
+  "import": "Godot: Import As 'Texture2DArray', Horizontal 1, Vertical 119"
  },
  "tint_modes": {
   "tinted": "final = vertex_colour * tex.rgb * tex_gain",
@@ -861,8 +861,8 @@
    "tint": "tinted",
    "face": "top",
    "group": "sand",
-   "shades": 5,
-   "mean": 0.8,
+   "shades": 6,
+   "mean": 0.798,
    "desc": "Beach / shore sand, calm, few grains. Variant 0.",
    "layer": 32,
    "cell": [
@@ -887,7 +887,7 @@
    "tint": "tinted",
    "face": "top",
    "group": "sand",
-   "shades": 5,
+   "shades": 6,
    "mean": 0.8,
    "desc": "Beach / shore sand, calm, few grains. Variant 1.",
    "layer": 33,
@@ -913,8 +913,8 @@
    "tint": "tinted",
    "face": "top",
    "group": "sand",
-   "shades": 5,
-   "mean": 0.8,
+   "shades": 6,
+   "mean": 0.802,
    "desc": "Beach / shore sand, calm, few grains. Variant 2.",
    "layer": 34,
    "cell": [
@@ -1329,7 +1329,7 @@
    "tint": "tinted",
    "face": "top",
    "group": "snow",
-   "shades": 6,
+   "shades": 5,
    "mean": 0.8,
    "desc": "Snow: very soft drifts, rare sparkles. Variant 0.",
    "layer": 50,
@@ -1355,7 +1355,7 @@
    "tint": "tinted",
    "face": "top",
    "group": "snow",
-   "shades": 6,
+   "shades": 5,
    "mean": 0.8,
    "desc": "Snow: very soft drifts, rare sparkles. Variant 1.",
    "layer": 51,
@@ -1381,8 +1381,8 @@
    "tint": "tinted_edge",
    "face": "edge",
    "group": "snow",
-   "shades": 14,
-   "mean": 0.785,
+   "shades": 15,
+   "mean": 0.792,
    "desc": "Snow cap over dirt: rounded bumps, no thin drips.",
    "layer": 52,
    "cell": [
@@ -1459,7 +1459,7 @@
    "tint": "tinted",
    "face": "side",
    "group": "ice",
-   "shades": 4,
+   "shades": 5,
    "mean": 0.8,
    "desc": "Ice wall: vertical light bands.",
    "layer": 55,
@@ -1537,8 +1537,8 @@
    "tint": "tinted",
    "face": "top",
    "group": "cave_stone",
-   "shades": 5,
-   "mean": 0.8,
+   "shades": 6,
+   "mean": 0.797,
    "desc": "Cave floor: rough facets, mineral glints. Variant 0.",
    "layer": 58,
    "cell": [
@@ -1563,8 +1563,8 @@
    "tint": "tinted",
    "face": "top",
    "group": "cave_stone",
-   "shades": 5,
-   "mean": 0.798,
+   "shades": 6,
+   "mean": 0.8,
    "desc": "Cave floor: rough facets, mineral glints. Variant 1.",
    "layer": 59,
    "cell": [
@@ -1589,7 +1589,7 @@
    "tint": "tinted",
    "face": "side",
    "group": "cave_stone",
-   "shades": 4,
+   "shades": 5,
    "mean": 0.8,
    "desc": "Cave wall: rough tall facets.",
    "layer": 60,
@@ -1823,8 +1823,8 @@
    "tint": "full",
    "face": "prop",
    "group": "ore",
-   "shades": 8,
-   "mean": 0.491,
+   "shades": 9,
+   "mean": 0.481,
    "desc": "Ore rock (copper): dark stone with copper nuggets. Full colour - use white vertex colour.",
    "layer": 69,
    "cell": [
@@ -1849,8 +1849,8 @@
    "tint": "full",
    "face": "prop",
    "group": "ore",
-   "shades": 7,
-   "mean": 0.507,
+   "shades": 8,
+   "mean": 0.495,
    "desc": "Ore rock (iron): dark stone with iron nuggets. Full colour - use white vertex colour.",
    "layer": 70,
    "cell": [
@@ -1875,8 +1875,8 @@
    "tint": "full",
    "face": "prop",
    "group": "ore",
-   "shades": 7,
-   "mean": 0.454,
+   "shades": 8,
+   "mean": 0.446,
    "desc": "Ore rock (coal): dark stone with coal nuggets. Full colour - use white vertex colour.",
    "layer": 71,
    "cell": [
@@ -1901,8 +1901,8 @@
    "tint": "full",
    "face": "prop",
    "group": "ore",
-   "shades": 7,
-   "mean": 0.532,
+   "shades": 8,
+   "mean": 0.521,
    "desc": "Ore rock (silver): dark stone with silver nuggets. Full colour - use white vertex colour.",
    "layer": 72,
    "cell": [
@@ -2988,14 +2988,14 @@
     0.62890625
    ]
   },
-  "glass": {
-   "file": "glass.png",
-   "tint": "full",
+  "stair_wood": {
+   "file": "stair_wood.png",
+   "tint": "tinted",
    "face": "building",
-   "group": "building_glass",
-   "shades": 2,
-   "mean": 0.885,
-   "desc": "Window glass (alpha 110, glints 200). Not used by the current window mesh (it has no pane).",
+   "group": "building_stairs",
+   "shades": 6,
+   "mean": 0.799,
+   "desc": "Wooden stair tread: lit nosing, worn middle. Tint WOOD.",
    "layer": 114,
    "cell": [
     2,
@@ -3011,6 +3011,110 @@
     0.14453125,
     0.56640625,
     0.20703125,
+    0.62890625
+   ]
+  },
+  "stair_stone": {
+   "file": "stair_stone.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_stairs",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Stone step: chipped front edge, worn middle.",
+   "layer": 115,
+   "cell": [
+    3,
+    8
+   ],
+   "px": [
+    55,
+    145,
+    16,
+    16
+   ],
+   "uv": [
+    0.21484375,
+    0.56640625,
+    0.27734375,
+    0.62890625
+   ]
+  },
+  "path_dirt": {
+   "file": "path_dirt.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_path",
+   "shades": 6,
+   "mean": 0.8,
+   "desc": "Trodden dirt path with ruts and pebbles. Tint SOIL.",
+   "layer": 116,
+   "cell": [
+    4,
+    8
+   ],
+   "px": [
+    73,
+    145,
+    16,
+    16
+   ],
+   "uv": [
+    0.28515625,
+    0.56640625,
+    0.34765625,
+    0.62890625
+   ]
+  },
+  "path_cobble": {
+   "file": "path_cobble.png",
+   "tint": "tinted",
+   "face": "building",
+   "group": "building_path",
+   "shades": 5,
+   "mean": 0.792,
+   "desc": "Cobblestone path: round stones in dark mortar.",
+   "layer": 117,
+   "cell": [
+    5,
+    8
+   ],
+   "px": [
+    91,
+    145,
+    16,
+    16
+   ],
+   "uv": [
+    0.35546875,
+    0.56640625,
+    0.41796875,
+    0.62890625
+   ]
+  },
+  "glass": {
+   "file": "glass.png",
+   "tint": "full",
+   "face": "building",
+   "group": "building_glass",
+   "shades": 2,
+   "mean": 0.885,
+   "desc": "Window glass (alpha 110, glints 200). Not used by the current window mesh (it has no pane).",
+   "layer": 118,
+   "cell": [
+    6,
+    8
+   ],
+   "px": [
+    109,
+    145,
+    16,
+    16
+   ],
+   "uv": [
+    0.42578125,
+    0.56640625,
+    0.48828125,
     0.62890625
    ]
   }

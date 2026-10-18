@@ -655,7 +655,11 @@ func _build_world() -> void:
 	_row(v, "Season", sea)
 	# Milestone 29: travel.
 	# Milestone 30.
-	_row(v, "Build", [["A two-storey house here", _demo_house]])
+	_row(v, "Build", [["A two-storey house here", _demo_house], ["Stairs and path tiles here", _demo_paths]])
+	# Milestone 34: texture tour.
+	_row(v, "Textures", [["Beach (sand)", func() -> void: _go_biome_named(&"sandy_beach")],
+		["Tundra (snow, ice)", func() -> void: _go_biome_named(&"snowy_tundra")],
+		["Water ripples on/off", _toggle_ripples]])
 	_row(v, "Travel", [["Unlock waystones within 3 km", _unlock_waystones], ["A saddled horse", _spawn_horse],
 		["A boat on the nearest water", _spawn_boat]])
 	_row(v, "Nature", [["Lightning on a tree", _lightning_tree], ["Set the nearest tree on fire", _fire_tree],
@@ -713,6 +717,37 @@ func _demo_house() -> void:
 	var c := Vector2i(floori(player.global_position.x) + 3, floori(player.global_position.z) - 2)
 	var n := world.building.build_demo_house(c)
 	_say("built a two-storey house (%d pieces) - stairs on the east side, a ladder on the west" % n)
+
+
+## Milestone 34: a little plaza - cobble and dirt path tiles, wood and stone stairs.
+func _demo_paths() -> void:
+	var c := Vector2i(floori(player.global_position.x) + 2, floori(player.global_position.z) - 3)
+	var n := 0
+	for dx in 7:
+		for dz in 3:
+			var id := &"cobble_path" if dz == 1 else &"dirt_path"
+			if world.building.place(BuildingManager.get_piece_data(id), c + Vector2i(dx, dz), "floor", 0, player, false):
+				n += 1
+	for k in 2:
+		var st := world.building.place(BuildingManager.get_piece_data([&"wood_stairs", &"stone_stairs"][k]), c + Vector2i(1 + k * 4, 4), "object", 0, player, false)
+		n += 1 if st else 0
+	_say("laid %d path tiles and stairs" % n)
+
+
+func _go_biome_named(id: StringName) -> void:
+	for i in _biome_ids.size():
+		if _biome_ids[i] == id:
+			_biome_pick.select(i)
+			_go_biome()
+			return
+	_say("no biome %s" % id)
+
+
+func _toggle_ripples() -> void:
+	var m := Materials.water() as ShaderMaterial
+	var on: bool = float(m.get_shader_parameter(&"ripple_strength")) < 0.5
+	m.set_shader_parameter(&"ripple_strength", 1.0 if on else 0.0)
+	_say("water ripples %s" % ("on" if on else "off"))
 
 
 func _unlock_waystones() -> void:

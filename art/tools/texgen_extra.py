@@ -444,6 +444,61 @@ def tilled_soil_lv(seed=4101):
     return lv
 
 
+# --- Milestone 34: stairs and paths -----------------------------------------------------
+
+def stair_wood_lv(seed=4111):
+    """Wooden stair tread (top of a step, 0.5 m deep): two boards with a rounded,
+    lit front nosing, a dark gap behind it and scuffed middle."""
+    lv = np.full((N, N), 3)
+    r = rng(seed)
+    for row in range(2):
+        y0 = row * 8
+        lv[y0:y0 + 8] = 3 - row % 2 + 0
+        lv[y0] = 5; lv[y0 + 1] = 4                  # nosing: lit front edge
+        lv[y0 + 7] = 0                              # gap to the next board
+        lv[y0 + 2:y0 + 6, 6:10] = np.minimum(lv[y0 + 2:y0 + 6, 6:10], 2)   # worn path in the middle
+        for (x, y) in scatter(r, 2, 6, 1, 1, margin=2):
+            lv[y0 + 2 + y % 4, x] = 1               # nail heads / knots
+    return lv
+
+
+def stair_stone_lv(seed=4121):
+    """Stone step: a chiselled front edge with chips, worn smooth in the middle."""
+    lv = np.full((N, N), 3)
+    lv[0] = 5; lv[1] = 4
+    lv[8] = 5; lv[9] = 4
+    lv[7] = 0; lv[15] = 0
+    lv[3:6, 5:11] = 2; lv[11:14, 5:11] = 2
+    r = rng(seed)
+    for (x, y) in scatter(r, 4, 4, 1, 1, margin=0):
+        lv[(y // 8) * 8, x] = 1                     # chipped front edges
+    return lv
+
+
+def path_dirt_lv(seed=4131):
+    """Trodden earth path: packed soil, two faint ruts, embedded pebbles."""
+    lv = clean_lonely(rank_levels(T.fbm(seed, 3, 8, 0.5), [1, 3, 4, 2]) + 1, passes=1)
+    xs = np.arange(N)
+    lv[:, (xs % 8 == 2) | (xs % 8 == 3)] = np.maximum(lv[:, (xs % 8 == 2) | (xs % 8 == 3)] - 1, 1)   # ruts
+    r = rng(seed)
+    for (x, y) in scatter(r, 4, 4.5, 2, 2):
+        stamp(lv, x, y, T.PEBBLE, {"L": 5, "M": 4, "D": 0})
+    return lv
+
+
+def path_cobble_lv(seed=4141):
+    """Cobblestones: round stones set in dark mortar, lit from the top-left."""
+    pts = []
+    r = rng(seed)
+    for gy in range(4):
+        for gx in range(4):
+            pts.append((gx * 4 + 2 + (gy % 2) * 2 + float(r.uniform(-0.6, 0.6)), gy * 4 + 2 + float(r.uniform(-0.5, 0.5))))
+    idx, crack = voronoi([(float(a % N), float(b)) for a, b in pts])
+    tones = r.integers(2, 5, len(pts))
+    lv = tones[idx]
+    return bevel(lv, crack, 5, None, 0)
+
+
 def glass_rgba():
     ys, xs = np.mgrid[0:N, 0:N]
     rgb = np.tile(hexc("#BFE3F2"), (N, N, 1))
@@ -522,6 +577,11 @@ def build():
     save("iron_plate", tinted(iron_plate_lv(), T.S_STONE, warm=0.0), "tinted", "Iron plate with rivets: reinforced door, traps, forge, chest bands.", "building", group="building_metal")
     save("cloth", tinted(cloth_lv(), T.G6, warm=0.02), "tinted", "Woven cloth with a seam every 0.5 m: bed, tailoring, banners, rugs. Tint the cloth colour.", "building", group="building_cloth")
     save("tilled_soil", tinted(tilled_soil_lv(), T.G6), "tinted", "Farm plot soil: furrows every 0.25 m. Tint SOIL.", "building", group="building_farm")
+    # Milestone 34
+    save("stair_wood", tinted(stair_wood_lv(), S_WOOD), "tinted", "Wooden stair tread: lit nosing, worn middle. Tint WOOD.", "building", group="building_stairs")
+    save("stair_stone", tinted(stair_stone_lv(), T.S_STONE, warm=0.02), "tinted", "Stone step: chipped front edge, worn middle.", "building", group="building_stairs")
+    save("path_dirt", tinted(path_dirt_lv(), T.G6), "tinted", "Trodden dirt path with ruts and pebbles. Tint SOIL.", "building", group="building_path")
+    save("path_cobble", tinted(path_cobble_lv(), T.S_STONE, warm=0.03), "tinted", "Cobblestone path: round stones in dark mortar.", "building", group="building_path")
     g_rgb, g_a = glass_rgba()
     save("glass", g_rgb, "full", "Window glass (alpha 110, glints 200). Not used by the current window mesh (it has no pane).",
          "building", alpha=g_a, group="building_glass")

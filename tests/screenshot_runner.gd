@@ -26,6 +26,10 @@ func _ready() -> void:
 		await _new_folk_showcase()
 		get_tree().quit()
 		return
+	if "--only=textures" in OS.get_cmdline_user_args():
+		await _textures_showcase()
+		get_tree().quit()
+		return
 	if "--only=mobs" in OS.get_cmdline_user_args():
 		await _mobs_showcase()
 		get_tree().quit()
@@ -2315,6 +2319,80 @@ func _rich_world_showcase() -> void:
 
 
 ## Milestone 30: a two-storey house with stairs, a balcony and a ladder.
+## Milestone 34: restyled sand, snow and cave stone, stairs and path tiles, water ripples.
+func _textures_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	p.creative = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 11.0
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	world.weather.settle()
+	var g := world.generator
+	var origin := p.global_position
+	var n := 1
+	for id in [&"sandy_beach", &"snowy_tundra"]:
+		var q := _find_biome(g, origin, id)
+		if q == Vector3.INF:
+			continue
+		await _teleport(world, q)
+		_clear_monsters(world)
+		world.camera_rig._target_distance = 9.0
+		world.camera_rig._target_pitch = 50.0
+		await _wait(60)
+		await _shot("textures_%d_%s" % [n, id])
+		n += 1
+	# Paths and stairs on flat meadow ground.
+	var flat := _dry_center(world, origin, 14.0)
+	await _teleport(world, flat)
+	_clear_monsters(world)
+	world.hud.creative._demo_paths()
+	p.global_position += Vector3(5.5, 0, 1.0)
+	world.camera_rig._target_distance = 10.0
+	world.camera_rig._target_pitch = 55.0
+	await _wait(60)
+	await _shot("textures_%d_paths_stairs" % n)
+	n += 1
+	# Water ripples at a shore.
+	var shore := Vector3.INF
+	for r in range(20, 1500, 20):
+		for k in 24:
+			var q := origin + Vector3(cos(TAU * k / 24.0), 0, sin(TAU * k / 24.0)) * r
+			if g.get_height_at(q) < TerrainGenerator.WATER_Y - 2.0 and g.get_height_at(q + Vector3(6, 0, 0)) > TerrainGenerator.WATER_Y:
+				shore = q + Vector3(6, 0, 0)
+				break
+		if shore != Vector3.INF:
+			break
+	if shore != Vector3.INF:
+		await _teleport(world, shore)
+		world.camera_rig._target_distance = 8.0
+		world.camera_rig._target_pitch = 60.0
+		await _wait(60)
+		await _shot("textures_%d_water" % n)
+		n += 1
+	# Cave stone.
+	var e := g.get_cave_entrances_near(floori(origin.x) - 600, floori(origin.z) - 600, floori(origin.x) + 600, floori(origin.z) + 600)
+	if not e.is_empty():
+		var epos := Vector3(e[0].x + 0.5, g.get_height_blocks(e[0].x, e[0].y) * 0.5, e[0].y + 0.5)
+		await _teleport(world, epos + Vector3(3, 0.5, 2))
+		world.travel_to_layer(TerrainGenerator.Layer.UNDERGROUND, epos)
+		while not world.is_ready:
+			await get_tree().process_frame
+		world.camera_rig._target_distance = 10.0
+		await _wait(80)
+		await _shot("textures_%d_cave" % n)
+	world.queue_free()
+	await _wait(5)
+
+
 ## Milestone 33: the new creatures side by side (the mimic once asleep, once awake).
 func _mobs_showcase() -> void:
 	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")

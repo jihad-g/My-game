@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BuildPieceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/building/build_piece_data.gd" id="1_bp"]
+
+[resource]
+script = ExtResource("1_bp")
+id = &"cobble_path"
+display_name = "Cobblestone Path"
+description = "A cobblestone path tile: round stones set in mortar."
+category = 0
+placement = 0
+behavior = 0
+cost = {
+&"stone": 2
+}
+mesh = &"cobble_path"
+collision_size = Vector3(1, 0.06, 1)
+collision_center = Vector3(0, 0.03, 0)
+blocks_movement = false
+required_level = 2
+fade_near_camera = false
