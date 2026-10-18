@@ -114,6 +114,19 @@ func play_bite() -> void:
 	tw.tween_property(_head, "rotation:x", 0.0, 0.25)
 
 
+## Milestone 32: hurt - the boar jerks away from the blow and squeals (head up).
+func play_flinch(strength: float, side: float) -> void:
+	net_event.emit(&"play_flinch", [strength, side])
+	if _root.rotation.z != 0.0:
+		return  # dead
+	var s := clampf(strength, 0.3, 1.5)
+	var tw := create_tween()
+	tw.tween_property(_root, "rotation", Vector3(-0.2 * s, 0.0, side * 0.15 * s), 0.07).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(_head, "rotation:x", -0.45 * s, 0.07)
+	tw.tween_property(_root, "rotation", Vector3.ZERO, 0.25).set_trans(Tween.TRANS_QUAD)
+	tw.parallel().tween_property(_head, "rotation:x", 0.0, 0.25)
+
+
 func flash() -> void:
 	_flash = 0.1
 	_update_overlay()

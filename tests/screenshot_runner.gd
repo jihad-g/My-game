@@ -26,6 +26,10 @@ func _ready() -> void:
 		await _new_folk_showcase()
 		get_tree().quit()
 		return
+	if "--only=anims" in OS.get_cmdline_user_args():
+		await _anims_showcase()
+		get_tree().quit()
+		return
 	if "--only=dungeon2" in OS.get_cmdline_user_args():
 		await _dungeon2_showcase()
 		get_tree().quit()
@@ -2307,6 +2311,107 @@ func _rich_world_showcase() -> void:
 
 
 ## Milestone 30: a two-storey house with stairs, a balcony and a ladder.
+## Milestone 32: a contact sheet of monster animations - idle, wind-up, strike, hurt, death.
+func _anims_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.hud.visible = false
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 11.0
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	world.weather.settle()
+	world.camera_rig.set_process(false)
+	Materials.set_camera_fade(0.0)
+	# A flat spot with no dungeon, ruin or village in the picture.
+	var flat := _dry_center(world, p.global_position, 16.0)
+	for k in 24:
+		var q := _dry_center(world, p.global_position + Vector3(cos(k * 1.7), 0, sin(k * 1.7)) * (120.0 + k * 40.0), 16.0)
+		if world.generator.pois.near(q, 40.0).is_empty() and world.generator.settlements.near(q, 120.0).is_empty():
+			flat = q
+			break
+	await _teleport(world, flat + Vector3(-14, 0, -6))
+	_clear_monsters(world)
+	var rows := [&"frost_wolf", &"cave_spider", &"sand_scorpion", &"ember_phoenix", &"skeleton_warrior"]
+	var cols := ["Idle", "Wind-up", "Strike", "Hurt", "Death"]
+	var models: Array = []  # [row][col] -> MonsterModel
+	var y := world.get_ground_height(flat)
+	for r in rows.size():
+		var line: Array = []
+		var data := load("res://data/enemies/%s.tres" % rows[r]) as MonsterData
+		for c in cols.size():
+			var mm := MonsterModel.new()
+			world.add_child(mm)
+			mm.build(data)
+			mm.scale = Vector3.ONE * minf(data.model_scale, 1.1)
+			mm.global_position = Vector3(flat.x - 6.0 + c * 3.0, y, flat.z - 6.0 + r * 3.0)
+			mm.rotation.y = 0.5
+			line.append(mm)
+		models.append(line)
+		var name_l := Label3D.new()
+		name_l.text = data.display_name
+		name_l.font_size = 64
+		name_l.outline_size = 12
+		name_l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		world.add_child(name_l)
+		name_l.global_position = Vector3(flat.x - 9.2, y + 0.8, flat.z - 6.0 + r * 3.0)
+	for c in cols.size():
+		var l := Label3D.new()
+		l.text = cols[c]
+		l.font_size = 72
+		l.outline_size = 14
+		l.modulate = Color(1, 0.9, 0.55)
+		l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		world.add_child(l)
+		l.global_position = Vector3(flat.x - 6.0 + c * 3.0, y + 2.9, flat.z - 8.0)
+	var cam := Camera3D.new()
+	cam.fov = 44.0
+	world.add_child(cam)
+	cam.current = true
+	var centre := Vector3(flat.x - 1.5, y + 0.6, flat.z)
+	cam.global_position = centre + Vector3(0, 14, 14)
+	cam.look_at(centre)
+	await _wait(30)
+	# Play everything on a game-time clock, then stop time at T for the picture.
+	const T := 1.6
+	var t := 0.0
+	var started := [false, false, false, false]
+	while t < T:
+		if not started[0] and t >= T - 1.2:
+			started[0] = true
+			for line in models:
+				line[1].play_attack(&"overhead", 2.0, 0.2, 0.5)
+				line[1].set_telegraph(true)
+				line[4].play_death()
+		if not started[1] and t >= T - 0.4:
+			started[1] = true
+			for line in models:
+				line[2].play_attack(&"slash", 0.2, 0.8, 0.5)
+		if not started[2] and t >= T - 0.06:
+			started[2] = true
+			for line in models:
+				line[3].flash()
+				line[3].play_flinch(1.2, 1.0)
+		if not started[3] and t >= T - 0.18:
+			started[3] = true
+			for line in models:
+				line[2].hit_frame()
+		await get_tree().process_frame
+		t += get_process_delta_time()
+	Engine.time_scale = 0.0
+	await _wait(3)
+	await _shot("anims_1_sheet")
+	Engine.time_scale = 1.0
+	world.queue_free()
+	await _wait(5)
+
+
 ## Milestone 31: fog of war, the mini-map, a lever puzzle and the locked gate.
 func _dungeon2_showcase() -> void:
 	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")

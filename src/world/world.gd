@@ -94,6 +94,7 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	Seasons.forced = -1  # a forced season (Creative) never carries over to another world
+	Engine.time_scale = 1.0  # Creative slow motion (Milestone 32) never carries over either
 	Enemy.weather_sight = 1.0
 	generator = TerrainGenerator.new(GameState.world_seed, worldgen, GameState.terrain_shape)
 	Chunk.preload_features()  # Milestone 18d: no load spike at the first cave entrance

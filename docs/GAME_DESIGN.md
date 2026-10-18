@@ -1167,6 +1167,11 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 32 — Monster animations (v0.40.0).** BeastModel splits motion into a procedural layer (walk
+cycle, breathing, tails, wings, ears) and offsets that attacks, hurts and hit frames tween on top
+(`_lean`, `_lunge`, `_head_off`, `_jaw_open`...). MonsterModel marks the strike time of every attack and
+`hit_frame()` is called by Monster exactly when damage lands; big wind-ups (0.5 s+) shake and glow.
+
 **Done: Milestone 31 — Dungeons: fog of war, keys and puzzles (v0.39.0).** Each floor tracks the rooms and
 corridors you have seen (`DungeonInstance.explored`); dark lids cover the rest and the HUD mini-map
 (`src/ui/dungeon_map.gd`) draws only what you know. `DungeonPlan` now picks a Keeper room (reachable without the

@@ -5,7 +5,11 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.39.0 — Dungeons: fog of war, keys and puzzles**. Dungeon rooms stay dark until you find them, and a
+> Status: **v0.40.0 — Monster animations**. Creatures crouch and rear back before they strike, shake and glow before
+> big attacks, and the damage lands exactly on the strike. They flinch when hurt, topple or flip over when they
+> die, and their ears, tails and wings move on their own.
+>
+> Before that, **v0.39.0 — Dungeons: fog of war, keys and puzzles**. Dungeon rooms stay dark until you find them, and a
 > mini-map fills in as you explore. From rank D the last room is locked: kill the floor's Keeper for the key.
 > Puzzle rooms hide caged chests behind levers (pull them in order) or a pressure plate (hurry!).
 >

@@ -105,6 +105,18 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
 
+## Milestone 32 — Monster animations  ✅ (v0.40.0)
+
+- [x] Walk, attack, hurt and death for every monster type (humanoids already had them; beasts got new ones)
+- [x] Visible wind-up before big attacks: crouch, shake, red glow (plus the ground warning)
+- [x] Damage lands on the hit frame (melee, charges, slams, roars)
+- [x] Ears that twitch/prick/flatten, tails that sway, faster wing beats before a dive
+- [x] Creative "Animate" row and slow motion; tests `test_m32_*` run and pass
+- [ ] NOT IMPLEMENTED: capes and long hair that swing on humanoids (planned with M32 in the old list)
+- [ ] NOT IMPLEMENTED: hand-keyed animation clips for beasts (they are procedural poses, not an editor timeline)
+- [ ] NOT IMPLEMENTED: different death falls depending on the killing blow (fire, ice, a big hit)
+- [ ] Known limitation: ranged attacks (arrows, bolts) fire at the end of their wind-up, but the projectile takes time to arrive, so its "hit" is when it lands
+
 ## Milestone 31 — Dungeons: fog of war, keys, puzzles  ✅ (v0.39.0)
 
 - [x] Fog of war over unexplored rooms and corridors; braziers light when a room is found

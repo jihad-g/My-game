@@ -156,6 +156,9 @@ func _ready() -> void:
 	await _run_async(&"test_m30_climbing")
 	_run(&"test_m31_dungeon_plan")
 	await _run_async(&"test_m31_dungeon_ingame")
+	await _run_async(&"test_m32_anim_models")
+	await _run_async(&"test_m32_anim_parts")
+	await _run_async(&"test_m32_hit_frame_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5205,7 +5208,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.39"), "version 0.39 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.40"), "version 0.40 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -9332,5 +9335,216 @@ func test_m31_dungeon_ingame() -> void:
 	check(p.inventory.count_of(DungeonGate.KEY_ITEM) == 0, "leaving the floor turns spare keys to dust")
 	await _pframes(3)
 	check(not world.hud.dungeon_map.visible, "no mini-map on the surface")
+	world.queue_free()
+	await _frames(5)
+
+
+# --- Milestone 32: monster animations ---------------------------------------------------------
+
+## Where every mesh of a model sits, relative to the model (a "pose signature").
+func _pose_sig(n: Node3D) -> PackedVector3Array:
+	var out := PackedVector3Array()
+	var stack: Array = [n]
+	var inv := n.global_transform.affine_inverse()
+	while not stack.is_empty():
+		var c: Node = stack.pop_back()
+		if c is MeshInstance3D and (c as MeshInstance3D).is_visible_in_tree():
+			out.append(inv * (c as MeshInstance3D).global_transform * Vector3(0.1, 0.1, 0.1))
+		stack.append_array(c.get_children())
+	return out
+
+
+func _pose_diff(a: PackedVector3Array, b: PackedVector3Array) -> float:
+	if a.size() != b.size():
+		return 99.0
+	var best := 0.0
+	for i in a.size():
+		best = maxf(best, a[i].distance_to(b[i]))
+	return best
+
+
+func test_m32_anim_models() -> void:
+	# Every monster in the game, side by side: idle, attack, strike, hurt, death, reset.
+	var holder := Node3D.new()
+	add_child(holder)
+	var models: Array[MonsterModel] = []
+	var names: Array[String] = []
+	var i := 0
+	for file in ResourceLoader.list_directory("res://data/enemies/"):
+		var d := load("res://data/enemies/" + file) as MonsterData
+		if d == null:
+			continue
+		var mm := MonsterModel.new()
+		mm.position = Vector3((i % 8) * 4.0, 0, (i / 8) * 4.0)
+		holder.add_child(mm)
+		mm.build(d)
+		models.append(mm)
+		names.append(String(d.id))
+		i += 1
+	check(models.size() >= 30, "%d monster models built" % models.size())
+	await _pframes(5)
+	var idle: Array = []
+	for mm in models:
+		idle.append(_pose_sig(mm))
+	# Attack with a big wind-up: the body coils, shakes and glows; then the strike.
+	for mm in models:
+		mm.play_attack(&"overhead", 0.6, 0.12, 0.4)
+	await get_tree().create_timer(0.45).timeout
+	var no_windup: Array[String] = []
+	var trembling := 0
+	for k in models.size():
+		if _pose_diff(idle[k], _pose_sig(models[k])) < 0.02:
+			no_windup.append(names[k])
+		trembling += 1 if models[k].is_trembling() else 0
+	check(no_windup.is_empty(), "every monster winds up before it attacks (still: %s)" % ", ".join(no_windup))
+	check(trembling == models.size(), "big attacks shake the whole body (%d of %d)" % [trembling, models.size()])
+	var wind: Array = []
+	for mm in models:
+		wind.append(_pose_sig(mm))
+	await get_tree().create_timer(0.2).timeout
+	for mm in models:
+		mm.hit_frame()
+	var no_strike: Array[String] = []
+	for k in models.size():
+		if _pose_diff(wind[k], _pose_sig(models[k])) < 0.02:
+			no_strike.append(names[k])
+	check(no_strike.is_empty(), "the strike pose differs from the wind-up (same: %s)" % ", ".join(no_strike))
+	var shaking := 0
+	for mm in models:
+		shaking += 1 if mm.is_trembling() else 0
+	check(shaking == 0, "the shaking stops on the hit frame")
+	await get_tree().create_timer(0.8).timeout
+	# A small attack doesn't shake.
+	models[0].play_attack(&"slash", 0.2, 0.1, 0.2)
+	check(not models[0].is_trembling(), "quick attacks don't shake")
+	await get_tree().create_timer(0.6).timeout
+	# Hurt.
+	for k in models.size():
+		idle[k] = _pose_sig(models[k])
+		models[k].play_flinch(1.0, 1.0)
+	await _pframes(4)
+	var no_hurt: Array[String] = []
+	for k in models.size():
+		if _pose_diff(idle[k], _pose_sig(models[k])) < 0.02:
+			no_hurt.append(names[k])
+	check(no_hurt.is_empty(), "every monster flinches when hurt (still: %s)" % ", ".join(no_hurt))
+	await get_tree().create_timer(0.5).timeout
+	# Death and coming back (the pool reuses monsters).
+	for k in models.size():
+		idle[k] = _pose_sig(models[k])
+		models[k].play_death()
+	await get_tree().create_timer(0.8).timeout
+	var no_death: Array[String] = []
+	for k in models.size():
+		if _pose_diff(idle[k], _pose_sig(models[k])) < 0.1:
+			no_death.append(names[k])
+	check(no_death.is_empty(), "every monster has a death fall (still: %s)" % ", ".join(no_death))
+	for mm in models:
+		mm.reset_pose()
+	await _pframes(3)
+	var not_back: Array[String] = []
+	for k in models.size():
+		# (0.6 m: wings beat and tails sway, a body still lying dead is off by more)
+		if _pose_diff(idle[k], _pose_sig(models[k])) > 0.6:
+			not_back.append(names[k])
+	check(not_back.is_empty(), "reset_pose brings every body back (%s)" % ", ".join(not_back))
+	holder.queue_free()
+	await _pframes(2)
+
+
+func test_m32_anim_parts() -> void:
+	# Ears, tails and wings that move on their own.
+	var holder := Node3D.new()
+	add_child(holder)
+	var beasts := {}
+	for look in [&"wolf", &"fox", &"cat", &"rabbit", &"deer", &"stag", &"horse", &"bee", &"phoenix", &"scorpion", &"spider"]:
+		var b := BeastModel.new()
+		holder.add_child(b)
+		b.build(look, Color(0.5, 0.45, 0.4), Color(0.9, 0.5, 0.3))
+		beasts[look] = b
+	var eared := 0
+	for look in [&"wolf", &"fox", &"cat", &"rabbit", &"deer", &"stag", &"horse"]:
+		eared += 1 if beasts[look]._ears.size() == 2 else 0
+	check(eared == 7, "four-legged animals have two ears on pivots (%d of 7)" % eared)
+	var t0 := {}
+	for look in beasts:
+		var b: BeastModel = beasts[look]
+		t0[look] = [b._tail.rotation if b._tail else Vector3.ZERO, b._wings[0].rotation if not b._wings.is_empty() else Vector3.ZERO]
+	await get_tree().create_timer(0.7).timeout
+	var still: Array[String] = []
+	for look in [&"wolf", &"fox", &"cat", &"horse", &"scorpion"]:
+		var b: BeastModel = beasts[look]
+		if b._tail.rotation.distance_to(t0[look][0]) <= 0.005:
+			still.append(String(look))
+	check(still.is_empty(), "tails sway even when standing still (still: %s)" % ", ".join(still))
+	check(beasts[&"bee"]._wings[0].rotation.distance_to(t0[&"bee"][1]) > 0.01 and beasts[&"phoenix"]._wings[0].rotation.distance_to(t0[&"phoenix"][1]) > 0.01,
+		"wings beat")
+	# Ears: flat when hurt, pricked before a quick bite.
+	var wolf: BeastModel = beasts[&"wolf"]
+	var ear0 := wolf._ears[0].rotation.x
+	wolf.play_flinch(1.0, 1.0)
+	await get_tree().create_timer(0.25).timeout
+	check(wolf._ears[0].rotation.x < ear0 - 0.3, "ears flatten when hurt (%.2f -> %.2f)" % [ear0, wolf._ears[0].rotation.x])
+	await get_tree().create_timer(1.0).timeout
+	var deer: BeastModel = beasts[&"deer"]
+	var dz := deer._ears[0].rotation.z
+	deer.play_attack(&"bite", 0.3, 0.1, 0.3)
+	await get_tree().create_timer(0.2).timeout
+	check(absf(deer._ears[0].rotation.z - dz) > 0.02, "side ears move too (deer)")
+	# The horse keeps its head raised (its built pose) while the idle animation runs.
+	check(absf(beasts[&"horse"]._head.rotation.x - 0.55) < 0.2, "the horse holds its head up (%.2f)" % beasts[&"horse"]._head.rotation.x)
+	# Spiders lift their front legs before they strike.
+	var sp: BeastModel = beasts[&"spider"]
+	var leg0 := sp._legs[0].rotation.z
+	sp.play_attack(&"bite", 0.5, 0.1, 0.3)
+	await get_tree().create_timer(0.45).timeout
+	check(absf(sp._legs[0].rotation.z - leg0) > 0.4, "the spider raises its front legs")
+	holder.queue_free()
+	await _pframes(2)
+
+
+func test_m32_hit_frame_ingame() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	_clear_enemies(world)
+	p.health.max_health = 99999.0
+	p.health.current = 99999.0
+	var wolf := _spawn_monster(world, &"frost_wolf", Vector3(2.5, 0, 0))
+	check(wolf != null, "a frost wolf to fight")
+	if wolf:
+		var mm := wolf.model as MonsterModel
+		var hurt := [0]
+		p.health.damaged.connect(func(info: DamageInfo, _d: float) -> void:
+			if info.source == wolf and hurt[0] == 0:
+				hurt[0] = Time.get_ticks_msec())
+		var frames := 0
+		while frames < 600 and hurt[0] == 0:
+			await get_tree().physics_frame
+			frames += 1
+			p.velocity = Vector3.ZERO
+		var hurt_ms: int = hurt[0]
+		check(hurt_ms > 0, "the wolf bites (%d ticks)" % frames)
+		check(mm.last_hit_ms > 0 and absi(mm.last_hit_ms - hurt_ms) <= 40, "the damage lands on the hit frame (%d ms apart, ai %d)" % [mm.last_hit_ms - hurt_ms, wolf.ai])
+		check(absf(mm.strike_error) <= 0.04, "the hit frame is when the strike pose is reached (%.0f ms of game time apart)" % (mm.strike_error * 1000.0))
+		NodePool.release_or_free(wolf)
+	# A heavy attack: red glow and shaking during the wind-up, both gone on the hit.
+	var brute := _spawn_monster(world, &"bandit_brute", Vector3(2.5, 0, 0))
+	if brute and brute.mdata.heavy and brute.mdata.heavy.windup >= MonsterModel.BIG_WINDUP:
+		var bm := brute.model as MonsterModel
+		await _frames(2)
+		brute._start_attack(brute.mdata.heavy)
+		await _pframes(3)
+		check(bm._telegraph and bm.is_trembling(), "a heavy attack glows red and shakes while it winds up")
+		var at_hit := []
+		bm.struck.connect(func() -> void:
+			if at_hit.is_empty():
+				at_hit.append_array([bm._telegraph, bm.is_trembling(), bm.strike_error]))
+		var frames2 := 0
+		while frames2 < 300 and at_hit.is_empty():
+			await get_tree().physics_frame
+			frames2 += 1
+		check(at_hit.size() == 3 and not at_hit[0] and not at_hit[1] and absf(at_hit[2]) <= 0.04,
+			"the glow and the shaking end on the hit frame, right on the strike (%s)" % str(at_hit))
+		NodePool.release_or_free(brute)
 	world.queue_free()
 	await _frames(5)

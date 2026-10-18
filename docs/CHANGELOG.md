@@ -2,6 +2,28 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.40.0] — Milestone 32: Monster animations
+
+### Added
+- **Wind-up before every attack**: animals and creatures crouch, rear back, pull their head back or lift their
+  claws, front legs or sting before they strike. **Big attacks** (wind-up of half a second or more) also make the
+  whole body shake with effort and glow red, on top of the red warning circle on the ground.
+- **Damage lands on the hit frame**: the strike pose and the damage happen on the same game tick (bites, slams,
+  roars and charges). A short jolt on the body marks the hit.
+- **Hurt**: every creature jerks away from the blow; ears flatten and the tail tucks in. The Thornback Boar flinches too.
+- **Death**: four-legged animals topple onto their side with stiff legs, crawlers, spiders, crabs and scorpions flip
+  over and curl up their legs, flyers drop out of the air, wisps shrink away, pumpkins and acorns squash flat.
+- **Moving parts**: ears on wolves, foxes, cats, rabbits, deer, stags and horses twitch now and then, prick up
+  before an attack and flatten when hurt. Tails sway even when standing still. Wings beat faster before a dive.
+  Spiders lift their front legs before they bite; crabs raise their claws.
+- Creative mode → Monsters → "Animate": play Attack, Big attack, Hurt or Death on the nearest monster, and a
+  slow-motion switch (25% speed) to watch them.
+- Tests `test_m32_anim_models` (all 40 monster types), `test_m32_anim_parts`, `test_m32_hit_frame_ingame`;
+  screenshot mode `--only=anims`.
+
+### Fixed
+- Horses held their head straight instead of raised (the idle animation overwrote the built pose).
+
 ## [0.39.0] — Milestone 31: Dungeons - fog of war, keys and puzzles
 
 ### Added

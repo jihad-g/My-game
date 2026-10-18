@@ -389,6 +389,47 @@ func _give_set(wear: bool) -> void:
 
 # --- Monsters tab ---------------------------------------------------------------------
 
+## Milestone 32: plays one animation on the nearest monster (it doesn't hurt anyone).
+func _animate(what: StringName) -> void:
+	var best: Enemy = null
+	for e in get_tree().get_nodes_in_group(&"enemies"):
+		var en := e as Enemy
+		if en and not en.is_dead and en.model is MonsterModel and (best == null
+				or en.global_position.distance_to(player.global_position) < best.global_position.distance_to(player.global_position)):
+			best = en
+	if best == null or best.global_position.distance_to(player.global_position) > 30.0:
+		_say("no monster within 30 m")
+		return
+	var mm := best.model as MonsterModel
+	match what:
+		&"attack":
+			mm.play_attack(&"slash", 0.3, 0.12, 0.35)
+			get_tree().create_timer(0.3, false).timeout.connect(func() -> void:
+				if is_instance_valid(mm):
+					mm.hit_frame())
+		&"big":
+			mm.play_attack(&"overhead", 1.0, 0.15, 0.5)
+			mm.set_telegraph(true)
+			get_tree().create_timer(1.0, false).timeout.connect(func() -> void:
+				if is_instance_valid(mm):
+					mm.set_telegraph(false)
+					mm.hit_frame())
+		&"hurt":
+			mm.flash()
+			mm.play_flinch(1.0, 1.0 if randf() < 0.5 else -1.0)
+		&"death":
+			mm.play_death()
+			get_tree().create_timer(2.0, false).timeout.connect(func() -> void:
+				if is_instance_valid(mm) and is_instance_valid(best) and not best.is_dead:
+					mm.reset_pose())
+	_say("%s: %s" % [best.display_name(), what])
+
+
+func _toggle_slow_motion() -> void:
+	Engine.time_scale = 1.0 if Engine.time_scale < 1.0 else 0.25
+	_say("slow motion %s" % ("on (25%)" if Engine.time_scale < 1.0 else "off"))
+
+
 func _build_monsters() -> void:
 	var v := _tab("Monsters")
 	var all: Array = []
@@ -427,6 +468,10 @@ func _build_monsters() -> void:
 		Enemy.creative_freeze = on
 		_say("enemies frozen" if on else "enemies move again"))
 	_row(v, "Enemies", [["Clear enemies near you", _clear], ["Kill enemies near you (with loot)", _kill_near]])
+	# Milestone 32: watch the animations of the nearest monster (freeze enemies first to keep it still).
+	_row(v, "Animate", [["Attack", func() -> void: _animate(&"attack")], ["Big attack", func() -> void: _animate(&"big")],
+		["Hurt", func() -> void: _animate(&"hurt")], ["Death", func() -> void: _animate(&"death")],
+		["Slow motion on/off", _toggle_slow_motion]])
 	_row(v, "Raid", [["Bandits", func() -> void: _raid(&"bandits")], ["Tuskers", func() -> void: _raid(&"tuskers")],
 		["Undead", func() -> void: _raid(&"undead")], ["End the raid", _end_raid]])
 	var ev: Array = []

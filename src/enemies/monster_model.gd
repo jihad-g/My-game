@@ -7,6 +7,8 @@ extends Node3D
 
 ## Milestone 19: animation events, sent to co-op guests by the host (NetCombat).
 signal net_event(method: StringName, args: Array)
+## Milestone 32: an attack's damage just landed (the hit frame).
+signal struck
 
 const BEASTS := [&"wisp", &"crawler", &"thornmaw", &"wolf", &"scorpion", &"crab", &"deer", &"rabbit",
 	# Milestone 27
@@ -17,6 +19,16 @@ var _look: StringName = &""
 var _flash := 0.0
 var _telegraph := false
 var _alert: Label3D
+## Milestone 32: when the current attack's strike pose is due and when the last
+## hit frame happened (msec), and the shake before big attacks.
+const BIG_WINDUP := 0.5
+var strike_ms := 0
+var last_hit_ms := 0
+## Game-time seconds until the strike pose (counts down in physics ticks), and
+## how far off the last hit frame was from it (0 = exactly on the strike).
+var strike_left := 0.0
+var strike_error := 0.0
+var _tremble := 0.0
 
 
 func build(data: MonsterData) -> void:
@@ -66,8 +78,33 @@ func set_locomotion(speed: float, delta: float) -> void:
 
 func play_attack(anim: StringName, windup: float, active: float, recovery: float) -> void:
 	net_event.emit(&"play_attack", [anim, windup, active, recovery])
+	strike_ms = Time.get_ticks_msec() + int(windup * 1000.0)
+	strike_left = windup
+	# Big attacks: the whole body shakes with effort until the strike.
+	_tremble = windup if windup >= BIG_WINDUP else 0.0
 	if rig:
 		rig.play_attack(anim, windup, active, recovery)
+
+
+## The moment an attack's damage lands. Beasts jolt; the strike pose is reached
+## at this same moment because the damage waits for the end of the wind-up.
+func hit_frame() -> void:
+	net_event.emit(&"hit_frame", [])
+	last_hit_ms = Time.get_ticks_msec()
+	strike_error = strike_left
+	_tremble = 0.0
+	if rig and rig.has_method("on_hit_frame"):
+		rig.on_hit_frame()
+	struck.emit()
+
+
+func _physics_process(delta: float) -> void:
+	if strike_left > -10.0:
+		strike_left -= delta
+
+
+func is_trembling() -> bool:
+	return _tremble > 0.0
 
 
 func set_telegraph(on: bool) -> void:
@@ -100,6 +137,10 @@ func _update_overlay() -> void:
 
 
 func _process(delta: float) -> void:
+	if _tremble > 0.0 and rig:
+		_tremble -= delta
+		rig.position.x = randf_range(-0.035, 0.035) if _tremble > 0.0 else 0.0
+		rig.position.z = randf_range(-0.02, 0.02) if _tremble > 0.0 else 0.0
 	if _flash > 0.0:
 		_flash -= delta
 		if _flash <= 0.0:
@@ -141,14 +182,18 @@ func play_flinch(strength: float, side: float) -> void:
 
 func play_death() -> void:
 	set_telegraph(false)
+	_tremble = 0.0
 	if rig:
+		rig.position = Vector3.ZERO
 		rig.play_death()
 
 
 func reset_pose() -> void:
 	_outline = Color(0, 0, 0, 0)
 	set_telegraph(false)
+	_tremble = 0.0
 	if rig:
+		rig.position = Vector3.ZERO
 		rig.reset_pose()
 		if rig is HumanoidModel:
 			(rig as HumanoidModel)._root.rotation = Vector3.ZERO

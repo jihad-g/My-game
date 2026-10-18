@@ -23,6 +23,9 @@ var _head: Node3D
 var _quad := false
 ## Milestone 27: flapping wings and the hover height of flying looks.
 var _wings: Array[Node3D] = []
+## Milestone 32: ear pivots (twitch, prick up, flatten), the front legs of
+## spiders (raised before they strike) and the animation state.
+var _ears: Array[Node3D] = []
 var _hover := 0.0
 var _phase := 0.0
 var _move := 0.0
@@ -44,6 +47,7 @@ func build(p_look: StringName, p_tint: Color, p_accent: Color) -> void:
 	_tail = null
 	_head = null
 	_wings.clear()
+	_ears.clear()
 	_saddle = null
 	_hover = float(HOVER.get(look, 0.0))
 	_quad = look in QUADRUPEDS
@@ -101,6 +105,7 @@ func build(p_look: StringName, p_tint: Color, p_accent: Color) -> void:
 					_part(leg, Vector3(side * 0.3, -0.15, 0) * s, Vector3(0.55, 0.1, 0.1) * s, tint * 0.8)
 					_part(leg, Vector3(side * 0.58, -0.35, 0) * s, Vector3(0.1, 0.45, 0.1) * s, tint * 0.7)
 					_legs.append(leg)
+	_store_rest()
 
 
 ## Wolf (long snout, ears, bushy tail), deer (long legs, antlers, white tail)
@@ -132,7 +137,7 @@ func _build_quadruped() -> void:
 			_part(_head, Vector3(0, hd.y * 0.1, hd.z * 0.95), Vector3(0.22, 0.2, 0.32), tint.darkened(0.1))  # snout
 			_part(_head, Vector3(0, hd.y * 0.12, hd.z * 1.14), Vector3(0.1, 0.08, 0.04), Color(0.1, 0.1, 0.12))  # nose
 			for sx in [-0.13, 0.13]:
-				_part(_head, Vector3(sx, hd.y * 0.95, hd.z * 0.2), Vector3(0.1, 0.18, 0.08), tint.darkened(0.15))  # ears
+				_ear(Vector3(sx, hd.y * 0.95, hd.z * 0.2), Vector3(0.1, 0.18, 0.08), tint.darkened(0.15))
 			_jaw = Node3D.new()
 			_jaw.position = Vector3(0, 0.0, hd.z * 0.8)
 			_head.add_child(_jaw)
@@ -142,20 +147,20 @@ func _build_quadruped() -> void:
 			for sx in [-1.0, 1.0]:
 				_part(_head, Vector3(sx * 0.12, hd.y * 1.05, hd.z * 0.25), Vector3(0.05, 0.3, 0.05), accent)  # antlers
 				_part(_head, Vector3(sx * 0.2, hd.y * 1.25, hd.z * 0.25), Vector3(0.18, 0.05, 0.05), accent)
-				_part(_head, Vector3(sx * 0.2, hd.y * 0.75, hd.z * 0.1), Vector3(0.12, 0.08, 0.05), tint)  # ears
+				_ear(Vector3(sx * 0.2, hd.y * 0.75, hd.z * 0.1), Vector3(0.12, 0.08, 0.05), tint, true)
 			_head.position.y += 0.2  # long neck
 			_part(_body, Vector3(0, body.y * 0.45, body.z * 0.42), Vector3(0.22, 0.4, 0.22), tint)  # neck
 		&"rabbit":
 			for sx in [-0.06, 0.06]:
-				_part(_head, Vector3(sx, hd.y * 1.2, hd.z * 0.1), Vector3(0.06, 0.26, 0.06), tint)  # long ears
-				_part(_head, Vector3(sx, hd.y * 1.2, hd.z * 0.1 + 0.031), Vector3(0.03, 0.2, 0.01), accent)
+				var ear := _ear(Vector3(sx, hd.y * 1.2, hd.z * 0.1), Vector3(0.06, 0.26, 0.06), tint)  # long ears
+				_part(ear, Vector3(0, 0.13, 0.031), Vector3(0.03, 0.2, 0.01), accent)
 		&"fox":
 			# Ice fox: pointed snout, tall ears with pale insides, white ruff.
 			_part(_head, Vector3(0, hd.y * 0.08, hd.z * 0.95), Vector3(0.16, 0.14, 0.26), light)
 			_part(_head, Vector3(0, hd.y * 0.12, hd.z * 1.1), Vector3(0.07, 0.06, 0.04), Color(0.15, 0.18, 0.25))
 			for sx in [-0.11, 0.11]:
-				_part(_head, Vector3(sx, hd.y * 1.0, hd.z * 0.15), Vector3(0.11, 0.22, 0.07), tint)
-				_part(_head, Vector3(sx, hd.y * 0.98, hd.z * 0.15 + 0.04), Vector3(0.06, 0.15, 0.02), accent)
+				var ear := _ear(Vector3(sx, hd.y * 1.0, hd.z * 0.15), Vector3(0.11, 0.22, 0.07), tint)
+				_part(ear, Vector3(0, 0.09, 0.04), Vector3(0.06, 0.15, 0.02), accent)
 			_part(_body, Vector3(0, -body.y * 0.05, body.z * 0.42), Vector3(body.x * 0.9, body.y * 0.7, 0.16), Color(0.96, 0.97, 1.0))
 			_jaw = Node3D.new()
 			_jaw.position = Vector3(0, 0.0, hd.z * 0.8)
@@ -167,7 +172,7 @@ func _build_quadruped() -> void:
 			_head.position.y += 0.22
 			_part(_body, Vector3(0, body.y * 0.45, body.z * 0.42), Vector3(0.22, 0.42, 0.22), tint)
 			for sx in [-1.0, 1.0]:
-				_part(_head, Vector3(sx * 0.2, hd.y * 0.75, hd.z * 0.1), Vector3(0.12, 0.08, 0.05), tint)  # ears
+				_ear(Vector3(sx * 0.2, hd.y * 0.75, hd.z * 0.1), Vector3(0.12, 0.08, 0.05), tint, true)
 				var wood := Color(0.32, 0.22, 0.16)
 				_part(_head, Vector3(sx * 0.12, hd.y * 1.15, hd.z * 0.2), Vector3(0.05, 0.38, 0.05), wood)
 				_part(_head, Vector3(sx * 0.24, hd.y * 1.45, hd.z * 0.2), Vector3(0.22, 0.05, 0.05), wood)
@@ -200,7 +205,7 @@ func _build_quadruped() -> void:
 			_part(_head, Vector3(0, hd.y * 0.62, hd.z * 0.62), Vector3(0.08, 0.06, 0.34), Color(0.95, 0.94, 0.9))  # blaze
 			_part(_head, Vector3(0, hd.y * 0.9, hd.z * 0.05), Vector3(0.1, 0.1, 0.14), accent)  # forelock
 			for sx in [-0.09, 0.09]:
-				_part(_head, Vector3(sx, hd.y * 1.0, hd.z * -0.05), Vector3(0.07, 0.16, 0.06), tint.darkened(0.08))  # ears
+				_ear(Vector3(sx, hd.y * 1.0, hd.z * -0.05), Vector3(0.07, 0.16, 0.06), tint.darkened(0.08))
 			_saddle = Node3D.new()
 			_saddle.position = Vector3(0, body.y * 0.5, -0.05)
 			_body.add_child(_saddle)
@@ -216,7 +221,7 @@ func _build_quadruped() -> void:
 		&"cat":
 			# Witch cat: pointed ears and a crooked purple witch hat.
 			for sx in [-0.11, 0.11]:
-				_part(_head, Vector3(sx, hd.y * 0.95, hd.z * 0.2), Vector3(0.1, 0.16, 0.06), tint)
+				_ear(Vector3(sx, hd.y * 0.95, hd.z * 0.2), Vector3(0.1, 0.16, 0.06), tint)
 			_part(_head, Vector3(0, hd.y * 0.15, hd.z * 0.95), Vector3(0.14, 0.1, 0.1), tint.lightened(0.1))
 			var hat := Color(0.36, 0.2, 0.46)
 			_part(_head, Vector3(0, hd.y * 0.98, hd.z * 0.3), Vector3(0.5, 0.05, 0.46), hat)
@@ -344,6 +349,24 @@ func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color, glow: bool
 	return mi
 
 
+## Milestone 32: an ear on a pivot at its base, so it can twitch, prick up and flatten.
+## `side`: the ear sticks out sideways (deer, stag) instead of up.
+func _ear(pos: Vector3, size: Vector3, color: Color, side: bool = false) -> Node3D:
+	var pivot := Node3D.new()
+	var sx := signf(pos.x) if pos.x != 0.0 else 1.0
+	if side:
+		pivot.position = pos - Vector3(sx * size.x * 0.5, 0, 0)
+		_part(pivot, Vector3(sx * size.x * 0.5, 0, 0), size, color)
+	else:
+		pivot.position = pos - Vector3(0, size.y * 0.5, 0)
+		_part(pivot, Vector3(0, size.y * 0.5, 0), size, color)
+	pivot.set_meta(&"side", sx)
+	pivot.set_meta(&"sideways", side)
+	_head.add_child(pivot)
+	_ears.append(pivot)
+	return pivot
+
+
 ## Horses: show or hide the saddle.
 func set_saddle(on: bool) -> void:
 	if _saddle:
@@ -352,89 +375,315 @@ func set_saddle(on: bool) -> void:
 
 func set_locomotion(speed_ratio: float, delta: float) -> void:
 	_move = lerpf(_move, clampf(speed_ratio, 0.0, 1.5), 1.0 - exp(-10.0 * delta))
+
+
+# --- Milestone 32: animation ----------------------------------------------------------
+# The body moves procedurally every frame (walk cycle, breathing, wings, tails,
+# ears); attacks, hurts and the hit frame add offsets on top through tweens, so
+# the two never fight. Death stops the procedural part and tweens the body down.
+
+## A wind-up at least this long is a "big" attack: a deeper crouch, flattened ears.
+const BIG_WINDUP := 0.5
+
+var _lean := 0.0       # body pitch (negative = front up / rearing back)
+var _lunge := 0.0      # body forward offset (m)
+var _hop := 0.0        # body up offset (m)
+var _head_off := 0.0   # head pitch
+var _jaw_open := 0.0   # jaw / claws / pincers
+var _tail_off := 0.0   # tail pitch (scorpion sting)
+var _front_raise := 0.0  # spider front legs
+var _squash := 1.0     # body height scale (wide when < 1)
+var _ear_mood := 0.0   # -1 flat, 0 relaxed, 1 pricked up
+var _mood_t := 0.0
+var _twitch_i := -1
+var _twitch := 0.0
+var _twitch_t := 1.0
+var _beat_mult := 1.0  # wing beat speed
+var _dead := false
+var _atk_tween: Tween
+var _hit_tween: Tween
+var _rest := {}  # node -> Transform3D at build time
+var _rest_rot := {}  # node -> rotation at build time
+var _rest_y := 0.0
+## Milliseconds when the last attack's strike pose was reached / is due, and the
+## last hit frame (tests check they match).
+var strike_ms := 0
+var last_hit_ms := 0
+
+
+## Remembers the built pose of the moving parts (reset_pose goes back to it).
+func _store_rest() -> void:
+	_rest.clear()
+	_rest_rot.clear()
+	for n: Node3D in [_body, _head, _jaw, _tail, _orbit] + Array(_legs) + Array(_wings) + Array(_ears):
+		if n:
+			_rest[n] = n.transform
+			_rest_rot[n] = n.rotation
+	_rest_y = _body.position.y
+	_twitch_t = randf_range(0.5, 2.5)
+
+
+func _rest_of(n: Node3D) -> Transform3D:
+	return _rest.get(n, Transform3D.IDENTITY)
+
+
+## The built rotation of a part (Euler angles).
+func _rr(n: Node3D) -> Vector3:
+	return _rest_rot.get(n, Vector3.ZERO)
+
+
+func _process(delta: float) -> void:
+	if _body == null or _dead or _rest.is_empty():
+		return
 	_phase += delta * (3.0 + 12.0 * _move)
+	_animate_ears(delta)
 	if _orbit:
-		_orbit.rotation.y += delta * 2.5
-		_body.position.y = 1.3 + sin(_phase * 0.6) * 0.15
+		_orbit.rotation.y += delta * 2.5 * _beat_mult
+		_body.position = Vector3(0, 1.3 + sin(_phase * 0.6) * 0.15 + _hop, _lunge)
+		_body.scale = Vector3.ONE * (2.0 - _squash)
 		return
 	if _hover > 0.0:
-		# Milestone 27: flyers bob and beat their wings; the candle skull sways.
-		_body.position.y = _hover + sin(_phase * 0.5) * 0.12
-		var beat := 26.0 if look == &"bee" else 7.0
-		for i in _wings.size():
-			var side := -1.0 if _wings[i].position.x < 0.0 else 1.0
-			_wings[i].rotation.z = side * sin(Time.get_ticks_msec() / 1000.0 * beat) * (0.6 if look == &"bee" else 0.55)
-		_body.rotation.z = sin(_phase * 0.4) * 0.06
+		# Flyers bob and beat their wings (faster while winding up); the candle skull sways.
+		_body.position = Vector3(0, _hover + sin(_phase * 0.5) * 0.12 + _hop, _lunge)
+		var beat := (26.0 if look == &"bee" else 7.0) * _beat_mult
+		var amp := 0.6 if look == &"bee" else 0.55
+		for w in _wings:
+			var side := -1.0 if w.position.x < 0.0 else 1.0
+			w.rotation.z = _rr(w).z + side * sin(Time.get_ticks_msec() / 1000.0 * beat) * amp
+		_body.rotation = Vector3(_lean, 0, sin(_phase * 0.4) * 0.06)
 		if _tail:
-			_tail.rotation.x = sin(_phase * 0.5) * 0.15
+			_tail.rotation.x = _rr(_tail).x + sin(_phase * 0.5) * 0.15 + _tail_off
+		if _jaw:
+			_jaw.rotation.x = _jaw_open
 		return
 	var m := minf(_move, 1.0)
+	_body.position = Vector3(0, _rest_y + _hop, _lunge)
 	if _quad:
-		# Gallop: diagonal legs together, the body bobs and the tail sways.
+		# Gallop: diagonal legs together, the body bobs and the tail sways (even standing still).
 		for i in _legs.size():
 			var off := 0.0 if i in [0, 3] else PI
-			_legs[i].rotation.x = sin(_phase + off) * 0.7 * m
-		_body.rotation.x = sin(_phase * 2.0) * 0.04 * m
+			_legs[i].rotation = Vector3(sin(_phase + off) * 0.7 * m, 0, 0)
+		_body.rotation = Vector3(sin(_phase * 2.0) * 0.04 * m + _lean, 0, 0)
+		_body.scale = Vector3(2.0 - _squash, _squash + sin(_phase * 0.25) * 0.02 * (1.0 - m), 2.0 - _squash)
 		if _tail:
-			_tail.rotation.y = sin(_phase * 0.7) * (0.2 + 0.3 * m)
+			var tr := _rr(_tail)
+			_tail.rotation = Vector3(tr.x + _tail_off + sin(_phase * 0.35) * 0.05, sin(_phase * 0.7) * (0.2 + 0.3 * m), 0)
 		if _head:
-			_head.rotation.x = sin(_phase * 0.3) * 0.08 * (1.0 - m)  # grazing nod when idle
+			var hr := _rr(_head)
+			_head.rotation = Vector3(hr.x + sin(_phase * 0.3) * 0.08 * (1.0 - m) + _head_off, sin(_phase * 0.13) * 0.12 * (1.0 - m), 0)
+		if _jaw:
+			_jaw.rotation.x = _jaw_open
 		return
 	for i in _legs.size():
-		_legs[i].rotation.y = sin(_phase + i * 1.3) * 0.5 * m
-		# Lift each leg on its forward swing (Milestone 10).
+		var lr := _rr(_legs[i])
 		var side := -1.0 if _legs[i].position.x < 0.0 else 1.0
-		_legs[i].rotation.z = maxf(0.0, sin(_phase + i * 1.3 + 1.57)) * 0.35 * m * side
-	_body.rotation.z = sin(_phase) * 0.04 * m
-	_body.scale = Vector3(1.0, 1.0 + sin(_phase * 0.25) * 0.03 * (1.0 - m), 1.0)
+		var raise := _front_raise * side if (look == &"spider" and i % 4 == 0) else 0.0
+		# Lift each leg on its forward swing (Milestone 10).
+		_legs[i].rotation = Vector3(lr.x, lr.y + sin(_phase + i * 1.3) * 0.5 * m,
+			lr.z + maxf(0.0, sin(_phase + i * 1.3 + 1.57)) * 0.35 * m * side + raise)
+	_body.rotation = Vector3(_lean, 0, sin(_phase) * 0.04 * m)
+	_body.scale = Vector3(2.0 - _squash, _squash * (1.0 + sin(_phase * 0.25) * 0.03 * (1.0 - m)), 2.0 - _squash)
+	if _jaw:
+		_jaw.rotation.x = _jaw_open
+	if _tail:
+		var tr2 := _rr(_tail)
+		_tail.rotation = Vector3(tr2.x + _tail_off + sin(_phase * 0.4) * 0.08, sin(_phase * 0.23) * 0.15, 0)
+
+
+## Ears relax, twitch now and then, prick up before an attack and flatten when hurt.
+func _animate_ears(delta: float) -> void:
+	if _ears.is_empty():
+		return
+	if _mood_t > 0.0:
+		_mood_t -= delta
+		if _mood_t <= 0.0:
+			_ear_mood = 0.0
+	_twitch_t -= delta
+	if _twitch_t <= 0.0:
+		_twitch_t = randf_range(1.2, 3.5)
+		_twitch_i = randi() % _ears.size()
+		_twitch = 0.6
+	_twitch = move_toward(_twitch, 0.0, delta * 4.0)
+	var k := 1.0 - exp(-14.0 * delta)
+	for i in _ears.size():
+		var e := _ears[i]
+		var er := _rr(e)
+		var tw := _twitch if i == _twitch_i else 0.0
+		# Up ears tip back (flat) or forward (pricked); side ears droop or lift.
+		var side: float = e.get_meta(&"side", 1.0)
+		var tx := er.x
+		var tz := er.z + side * tw * 0.3
+		if e.get_meta(&"sideways", false):
+			tz += side * (-0.5 if _ear_mood < 0.0 else 0.2 * _ear_mood)
+		else:
+			tx += (-0.9 if _ear_mood < 0.0 else 0.25 * _ear_mood) - tw * 0.5 - _move * 0.15
+		e.rotation = Vector3(lerpf(e.rotation.x, tx, k), 0, lerpf(e.rotation.z, tz, k))
+
+
+func _set_mood(mood: float, seconds: float) -> void:
+	_ear_mood = mood
+	_mood_t = seconds
 
 
 func play_attack(_anim: StringName, windup: float, active: float, recovery: float) -> void:
+	if _dead:
+		return
+	var big := windup >= BIG_WINDUP
+	strike_ms = Time.get_ticks_msec() + int(windup * 1000.0)
+	_set_mood(-1.0 if big else 1.0, windup + active + recovery)
+	if _atk_tween and _atk_tween.is_valid():
+		_atk_tween.kill()
 	var tw := create_tween()
-	if _tail and look == &"scorpion":
-		# The sting arcs over the back and strikes forward.
-		tw.tween_property(_tail, "rotation:x", -0.5, windup)
-		tw.tween_property(_tail, "rotation:x", 0.9, active)
-		tw.tween_property(_tail, "rotation:x", 0.0, recovery)
+	_atk_tween = tw
+	var deep := 2.0 if big else 1.0
+	# 1) Wind-up: crouch and rear back. 2) Strike (the hit frame). 3) Recover.
+	var wind := {}
+	var hit := {}
+	if look == &"scorpion":
+		wind = {"_tail_off": -0.5 * deep, "_jaw_open": -0.35, "_lean": -0.08 * deep}
+		hit = {"_tail_off": 0.9, "_jaw_open": 0.25, "_lunge": 0.15}
+	elif _orbit:
+		wind = {"_squash": 0.8, "_hop": 0.15 * deep}
+		hit = {"_squash": 1.35, "_lunge": 0.35}
+		_beat_mult = 3.0
 	elif _hover > 0.0:
-		# Flyers dive forward at you.
-		tw.tween_property(_body, "position:z", -0.3, windup)
-		tw.tween_property(_body, "position:z", 0.6, active)
-		tw.tween_property(_body, "position:z", 0.0, recovery)
-		if _jaw:
-			tw.parallel().tween_property(_jaw, "rotation:x", 0.0, recovery)
-	elif _head and _jaw and look in [&"wolf", &"fox"]:
-		tw.tween_property(_head, "rotation:x", -0.4, windup)
-		tw.parallel().tween_property(_jaw, "rotation:x", 0.5, windup)
-		tw.tween_property(_head, "rotation:x", 0.3, active)
-		tw.parallel().tween_property(_jaw, "rotation:x", 0.0, active)
-		tw.tween_property(_head, "rotation:x", 0.0, recovery)
+		wind = {"_lunge": -0.3 * deep, "_hop": 0.15 * deep, "_lean": -0.25, "_jaw_open": -0.4}
+		hit = {"_lunge": 0.6, "_hop": -0.15, "_lean": 0.35, "_jaw_open": 0.2}
+		_beat_mult = 1.8
+	elif look == &"spider":
+		wind = {"_front_raise": 0.9, "_lean": -0.25 * deep, "_lunge": -0.1, "_jaw_open": -0.4}
+		hit = {"_front_raise": -0.2, "_lean": 0.2, "_lunge": 0.3, "_jaw_open": 0.4}
+	elif look == &"crab":
+		wind = {"_jaw_open": -0.8 * deep, "_squash": 0.92, "_lunge": -0.05}
+		hit = {"_jaw_open": 0.4, "_squash": 1.05, "_lunge": 0.2}
+	elif look in [&"pumpkin", &"acorn"]:
+		wind = {"_squash": 0.7 if big else 0.8, "_lean": -0.1}
+		hit = {"_squash": 1.15, "_hop": 0.3, "_lunge": 0.35, "_lean": 0.2}
+	elif _quad and look in [&"deer", &"stag", &"horse"]:
+		# Antler butt / rear up and stamp.
+		wind = {"_head_off": -0.35 * deep, "_lean": -0.2 * deep, "_lunge": -0.1}
+		hit = {"_head_off": 0.55, "_lean": 0.12, "_lunge": 0.35}
+	elif _quad and look in [&"rabbit", &"hedgehog"]:
+		wind = {"_squash": 0.75, "_lunge": -0.05}
+		hit = {"_squash": 1.15, "_hop": 0.25, "_lunge": 0.35}
+	elif _quad:
+		# Wolf, fox, cat: head back and jaws open, then the snap.
+		wind = {"_head_off": -0.4, "_jaw_open": 0.5, "_lean": -0.12 * deep, "_squash": 0.9, "_lunge": -0.12 * deep}
+		hit = {"_head_off": 0.3, "_jaw_open": 0.0, "_lean": 0.1, "_squash": 1.0, "_lunge": 0.4}
 	elif _jaw:
-		tw.tween_property(_jaw, "rotation:x", -0.6, windup)
-		tw.tween_property(_jaw, "rotation:x", 0.3, active)
-		tw.tween_property(_jaw, "rotation:x", 0.0, recovery)
+		# Crawler, thornmaw: rear back, jaws wide, lunge.
+		wind = {"_jaw_open": -0.6, "_lean": -0.15 * deep, "_lunge": -0.12 * deep, "_squash": 0.9}
+		hit = {"_jaw_open": 0.3, "_lean": 0.12, "_lunge": 0.35, "_squash": 1.05}
 	else:
-		tw.tween_property(_body, "scale", Vector3.ONE * 1.3, windup)
-		tw.tween_property(_body, "scale", Vector3.ONE, active + recovery)
+		wind = {"_squash": 0.8}
+		hit = {"_squash": 1.3}
+	_tween_props(tw, wind, windup, Tween.TRANS_SINE, Tween.EASE_OUT)
+	_tween_props(tw, hit, maxf(0.06, minf(active, 0.12)), Tween.TRANS_QUAD, Tween.EASE_IN)
+	if active > 0.12:
+		tw.tween_interval(active - 0.12)
+	var back := {}
+	for k in wind.keys() + hit.keys():
+		back[k] = 1.0 if k == "_squash" else 0.0
+	_tween_props(tw, back, maxf(recovery, 0.1), Tween.TRANS_SINE, Tween.EASE_IN_OUT)
+	tw.tween_callback(func() -> void: _beat_mult = 1.0)
 
 
-func play_death() -> void:
+## One step of a tween that moves several offsets together.
+func _tween_props(tw: Tween, props: Dictionary, time: float, trans: int, ease: int) -> void:
+	var first := true
+	for k: String in props:
+		var t := tw.tween_property(self, k, props[k], time) if first else tw.parallel().tween_property(self, k, props[k], time)
+		t.set_trans(trans).set_ease(ease)
+		first = false
+	if first:
+		tw.tween_interval(time)
+
+
+## The moment the attack's damage lands: a short impact jolt.
+func on_hit_frame() -> void:
+	last_hit_ms = Time.get_ticks_msec()
+	if _dead:
+		return
+	if _hit_tween and _hit_tween.is_valid():
+		_hit_tween.kill()
+	_hit_tween = create_tween()
+	_hit_tween.tween_property(self, "scale", Vector3(1.08, 0.92, 1.08), 0.04)
+	_hit_tween.tween_property(self, "scale", Vector3.ONE, 0.12)
+
+
+## Hurt: the body jerks away from the blow, the ears flatten and the tail tucks.
+func play_flinch(strength: float, side: float) -> void:
+	if _dead:
+		return
+	_set_mood(-1.0, 0.7)
+	var s := clampf(strength, 0.3, 1.5)
 	var tw := create_tween()
-	tw.tween_property(self, "scale", Vector3(1.2, 0.1, 1.2), 0.5)
+	tw.tween_property(self, "rotation", Vector3(-0.3 * s, 0.0, side * 0.2 * s), 0.07).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(self, "_head_off", -0.35 * s, 0.07)
+	tw.parallel().tween_property(self, "_tail_off", 0.35 * s, 0.07)
+	tw.tween_property(self, "rotation", Vector3.ZERO, 0.28).set_trans(Tween.TRANS_QUAD)
+	tw.parallel().tween_property(self, "_head_off", 0.0, 0.28)
+	tw.parallel().tween_property(self, "_tail_off", 0.0, 0.28)
+
+
+## Death: four-legged animals topple onto their side, crawlers flip over and curl
+## their legs, flyers drop out of the air, the wisp fades away.
+func play_death() -> void:
+	_dead = true
+	if _atk_tween and _atk_tween.is_valid():
+		_atk_tween.kill()
+	var tw := create_tween()
+	var side := -1.0 if randf() < 0.5 else 1.0
+	if _orbit:
+		tw.tween_property(self, "scale", Vector3.ONE * 0.05, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	elif _hover > 0.0:
+		for w in _wings:
+			tw.parallel().tween_property(w, "rotation:z", 1.2 if w.position.x > 0.0 else -1.2, 0.3)
+		tw.parallel().tween_property(_body, "position:y", 0.25, 0.45).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(_body, "rotation:z", side * 1.3, 0.45)
+	elif _quad:
+		tw.tween_property(self, "rotation:z", side * PI * 0.5, 0.45).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(self, "position:y", -0.08, 0.45)
+		for i in _legs.size():
+			tw.parallel().tween_property(_legs[i], "rotation:x", 0.35 if i < 2 else -0.35, 0.4)
+		if _head:
+			tw.parallel().tween_property(_head, "rotation:x", _rr(_head).x + 0.3, 0.4)
+		if _jaw:
+			tw.parallel().tween_property(_jaw, "rotation:x", 0.4, 0.4)
+	elif look in [&"pumpkin", &"acorn"]:
+		tw.tween_property(_body, "scale", Vector3(1.25, 0.25, 1.25), 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(_body, "rotation:z", side * 0.3, 0.45)
+	else:
+		# Flip over, legs curled up.
+		tw.tween_property(_body, "position:y", _rest_y + 0.35, 0.18).set_ease(Tween.EASE_OUT)
+		tw.parallel().tween_property(_body, "rotation:z", side * PI, 0.4)
+		tw.tween_property(_body, "position:y", _rest_y + 0.1, 0.2).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		for leg in _legs:
+			var ls := -1.0 if leg.position.x < 0.0 else 1.0
+			tw.parallel().tween_property(leg, "rotation:z", _rr(leg).z - ls * 0.9, 0.35)
+		if _tail:
+			tw.parallel().tween_property(_tail, "rotation:x", _rr(_tail).x + 0.8, 0.35)
 
 
 func reset_pose() -> void:
-	scale = Vector3.ONE
-	if _body:
-		_body.scale = Vector3.ONE
-	if _jaw:
-		_jaw.rotation = Vector3.ZERO
-	if _head:
-		_head.rotation = Vector3.ZERO
-	if _body and _hover <= 0.0:
-		_body.position.z = 0.0
-	if _tail:
-		_tail.rotation.x = {&"wolf": 0.6, &"fox": 0.5, &"cat": -0.9}.get(look, 0.0)
+	_dead = false
+	for t in [_atk_tween, _hit_tween]:
+		if t and t.is_valid():
+			t.kill()
+	_lean = 0.0
+	_lunge = 0.0
+	_hop = 0.0
+	_head_off = 0.0
+	_jaw_open = 0.0
+	_tail_off = 0.0
+	_front_raise = 0.0
+	_squash = 1.0
+	_ear_mood = 0.0
+	_beat_mult = 1.0
+	transform = Transform3D.IDENTITY
+	for n: Node3D in _rest:
+		if is_instance_valid(n):
+			n.transform = _rest[n]
 
 
 ## Wolf howl: head thrown back for a moment (Milestone 15).
@@ -442,9 +691,9 @@ func play_howl(duration: float = 0.9) -> void:
 	if _head == null:
 		return
 	var tw := create_tween()
-	tw.tween_property(_head, "rotation:x", -0.9, 0.2)
+	tw.tween_property(self, "_head_off", -0.9, 0.2)
 	tw.tween_interval(maxf(duration - 0.45, 0.1))
-	tw.tween_property(_head, "rotation:x", 0.0, 0.25)
+	tw.tween_property(self, "_head_off", 0.0, 0.25)
 
 
 # --- Milestone 27: new looks ------------------------------------------------------------

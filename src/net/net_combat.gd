@@ -38,7 +38,7 @@ const SUPPORT_RANGE := 12.0
 ## Damage types a guest's hit may carry.
 const DAMAGE_TYPES := [&"physical", &"fire", &"frost", &"lightning", &"arcane", &"holy", &"poison", &"shadow", &"true"]
 ## Model methods replayed on puppets (anything else from the host is ignored).
-const MODEL_EVENTS := [&"play_attack", &"set_telegraph", &"show_alert", &"play_flinch", &"freeze", &"set_exposed", &"play_bite"]
+const MODEL_EVENTS := [&"play_attack", &"set_telegraph", &"show_alert", &"play_flinch", &"freeze", &"set_exposed", &"play_bite", &"hit_frame"]
 ## Enemy methods a guest may ask the host to call on a monster.
 const ENEMY_CALLS := [&"apply_status", &"knock_down", &"stagger", &"on_parried", &"taunt", &"lose_target"]
 ## State flags.

@@ -514,6 +514,9 @@ func _think(delta: float) -> void:
 			velocity.z = _desired_velocity.z
 			if not _hit_done and tgt and dist <= 1.6 * mdata.model_scale:
 				_hit_done = true
+				# Milestone 32: the strike pose and the damage land together on contact.
+				(model as MonsterModel).play_attack(&"overhead", 0.0, 0.1, 0.3)
+				(model as MonsterModel).hit_frame()
 				_hit_target(tgt, mdata.heavy if mdata.heavy else mdata.melee, 1.3)
 			if ai_time <= 0.0 or (ai_time < 0.6 and is_on_wall()):
 				_set_ai(AI.RECOVER, 1.4 if is_on_wall() else 0.8)
@@ -827,6 +830,9 @@ func _start_attack(a: AttackData) -> void:
 	var speed := (0.75 if enraged else 1.0) / _speed_affix()
 	_set_ai(AI.ATTACK, a.total_duration() * speed)
 	(model as MonsterModel).play_attack(a.animation, a.windup * speed, a.active * speed, a.recovery * speed)
+	# Milestone 32: big wind-ups glow red as well as shaking (cleared on the hit frame).
+	if a.windup * speed >= MonsterModel.BIG_WINDUP:
+		(model as MonsterModel).set_telegraph(true)
 	# Milestone 18b: every heavy attack shows the same red ground warning that fills up before it hits.
 	if a == mdata.heavy and a.windup * speed >= 0.25:
 		var reach := a.reach * maxf(1.0, mdata.model_scale * 0.8)
@@ -849,6 +855,7 @@ func _do_attack(tgt: Node3D, to_t: Vector3, dist: float) -> void:
 	elif not _hit_done:
 		_hit_done = true
 		(model as MonsterModel).set_telegraph(false)
+		(model as MonsterModel).hit_frame()  # Milestone 32: damage lands with the strike pose
 		if tgt and dist <= a.reach * maxf(1.0, mdata.model_scale * 0.8) \
 				and (tgt is BuildPiece or get_facing().angle_to(to_t.normalized()) < deg_to_rad(a.arc_degrees) * 0.5):
 			_hit_target(tgt, a, 1.0)
@@ -893,6 +900,7 @@ func _hit_target(t: Node3D, a: AttackData, extra: float) -> void:
 
 ## Area hit around the monster (slam, nova). Raiders also hurt townsfolk and buildings.
 func _slam(radius: float, dmg: float, kb: float) -> void:
+	(model as MonsterModel).hit_frame()
 	Events.camera_shake.emit(0.45)
 	VFX.ring(get_parent(), global_position, radius, Color(1, 0.5, 0.2, 0.9), 0.4)
 	for t in GroundHazard.targets_in_radius(get_tree(), global_position, radius, true, false, _is_raider()):
@@ -908,6 +916,7 @@ func _slam(radius: float, dmg: float, kb: float) -> void:
 
 
 func _roar() -> void:
+	(model as MonsterModel).hit_frame()
 	Events.camera_shake.emit(0.5)
 	VFX.ring(get_parent(), global_position, 6.5, Color(1, 0.9, 0.6, 0.8), 0.5)
 	for t in GroundHazard.targets_in_radius(get_tree(), global_position, 6.5, true, false, _is_raider()):
