@@ -673,7 +673,7 @@ func _open_ground(origin: Vector3) -> Vector3:
 		for k in 16:
 			var q := origin + Vector3(cos(TAU * k / 16.0), 0, sin(TAU * k / 16.0)) * r
 			q.y = world.get_ground_height(q)
-			if q.y < TerrainGenerator.WATER_Y + 0.6:
+			if q.y < TerrainGenerator.WATER_Y + 0.6 or not world.generator.settlements.near(q, 110.0).is_empty():
 				continue
 			var flat := true
 			for d: Vector3 in [Vector3(8, 0, 0), Vector3(-8, 0, 0), Vector3(0, 0, 8), Vector3(0, 0, -8)]:
