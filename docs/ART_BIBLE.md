@@ -480,3 +480,23 @@ How it was built (so the next change knows where to look):
   Merged settlement meshes keep cards as their own "cards_*" meshes.
 - **Change a texture:** edit the Python, run the four scripts, done. Layer numbers may move; nothing in the
   game uses raw numbers, only names.
+
+---
+
+## 13. Held items: the voxel style (v0.47.0)
+
+From the owner's reference sheets (Milestone 39). Our own designs in that style, never copies.
+
+1. **Boxes only, one voxel size**: held items use 32 voxels per metre (2 per world pixel).
+2. **Each material is one ramp**, dark to light: steel, wood, leather, cloth (green/red/purple), gold, bone,
+   glass, rope, gems, teal, plus glowing fire/magic/arcane. Shadows lean blue/purple, lights warm.
+3. **Light from the top-left**: top and left edges one step lighter, bottom and right one darker (done
+   automatically by `voxkit.bake()`), wood grain streaks, a little noise on metal and cloth.
+4. **Quiet base + one accent**: grey metal and red-brown wood, then one strong colour (gem, grip wrap, gold).
+5. **Signature parts**: metal rings on handles, striped grip wraps, diamond pommels with a gem, rivets,
+   two-tone blades (lit left half, shaded right half), bevelled axe blades.
+6. **Glow**: only fire and magic: white-hot centre, coloured body, dark tip.
+7. **Tint groups**: steel is recoloured by the weapon's metal, `accent`/`glow` by the item's icon colour.
+8. Ambient occlusion is baked into the vertex colours; one shared material (`VoxelItems.material()`).
+
+Tools: `art/tools/voxel_items/` (`build.py` → `art/previews/voxel_items.png` and `src/art/voxel_item_data.gd`).

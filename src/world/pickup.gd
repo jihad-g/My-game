@@ -18,6 +18,8 @@ var _age := 0.0
 var _velocity := Vector3.ZERO
 var _ground_y := 0.0
 var _visual: MeshInstance3D
+## Milestone 39: dropped weapons, shields, wands and tomes show their voxel model.
+var _model: MeshInstance3D
 var _label: Label3D
 
 
@@ -33,6 +35,9 @@ func _ready() -> void:
 	_visual = MeshInstance3D.new()
 	_visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	add_child(_visual)
+	_model = MeshInstance3D.new()
+	_model.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	_visual.add_child(_model)
 	_label = Label3D.new()
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_label.position.y = 0.6
@@ -56,10 +61,20 @@ func setup(p_item_id: StringName, p_count: int, pos: Vector3, ground_y: float, p
 	_velocity = Vector3(randf_range(-1.5, 1.5), 3.5, randf_range(-1.5, 1.5))
 	var item: ItemData = ItemDB.get_item(item_id)
 	var col := item.icon_color if item else Color.MAGENTA
-	var b := BlockMesh.new()
-	b.box(Vector3.ZERO, Vector3(0.3, 0.3, 0.3), col)
-	b.box(Vector3(0, 0.2, 0), Vector3(0.14, 0.1, 0.14), col.lightened(0.3))
-	_visual.mesh = b.commit()
+	var vox: ArrayMesh = VoxelItems.item_mesh(item, 0.6) if item and VoxelItems.enabled else null
+	if vox:
+		_visual.mesh = null
+		_model.mesh = vox
+		# Centre the model on the pickup and tilt it so it reads from the high camera.
+		var box := vox.get_aabb()
+		_model.rotation = Vector3(0, 0, deg_to_rad(-35.0))
+		_model.position = -(_model.basis * (box.position + box.size * 0.5))
+	else:
+		_model.mesh = null
+		var b := BlockMesh.new()
+		b.box(Vector3.ZERO, Vector3(0.3, 0.3, 0.3), col)
+		b.box(Vector3(0, 0.2, 0), Vector3(0.14, 0.1, 0.14), col.lightened(0.3))
+		_visual.mesh = b.commit()
 	_label.text = "%s%s" % [item.display_name if item else String(item_id), " x%d" % count if count > 1 else ""]
 	_label.modulate = item.rarity_color() if item else Color.WHITE
 

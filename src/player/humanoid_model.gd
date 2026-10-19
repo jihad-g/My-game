@@ -895,6 +895,8 @@ func _build_weapon() -> void:
 			if c is MeshInstance3D:
 				_parts.erase(c as MeshInstance3D)
 			c.free()
+	if VoxelItems.enabled and _build_voxel_weapon():
+		return
 	var wood := Color(0.42, 0.28, 0.16)
 	var steel := weapon_color
 	var special := _weapon_item != null and _special_weapon(_weapon_item.id)
@@ -1001,6 +1003,90 @@ func _build_weapon() -> void:
 			_:
 				_part(_shield, Vector3(-0.05, 0, 0.1), Vector3(0.08, 0.55, 0.45), Color(0.5, 0.32, 0.18))
 				_part(_shield, Vector3(-0.1, 0, 0.1), Vector3(0.04, 0.2, 0.2), _accent)
+
+
+## Milestone 39: named weapons that have their own voxel model.
+const VOXEL_SPECIALS := [&"prismheart_blade", &"sporecrown_staff", &"gilded_greatsword", &"gilded_halberd", &"starlance"]
+const VOXEL_SHIELDS := {&"buckler": &"buckler", &"kite": &"kite_shield", &"gilded_kite": &"gilded_kite", &"aegis": &"aegis"}
+## Item +Y (blade) -> holder +Z, the way the old box weapons pointed.
+const _HELD_ROT := Vector3(PI * 0.5, 0.0, 0.0)
+
+
+## Milestone 39: weapons, shields, wands and tomes as voxel models in the style
+## of the owner's reference sheets (src/art/voxel_items.gd).
+func _build_voxel_weapon() -> bool:
+	var it := _weapon_item
+	var metal := weapon_color
+	var id: StringName = &""
+	var accent := it.icon_color if it else _accent
+	if it and it.id in VOXEL_SPECIALS:
+		id = it.id
+	else:
+		match _weapon_type:
+			&"sword":
+				id = &"sword"
+			&"axe":
+				id = &"axe"
+			&"dagger":
+				id = &"dagger"
+			&"staff":
+				id = &"staff"
+				accent = it.icon_color.lightened(0.2) if it and _class_id == &"player" else _accent
+			&"hammer":
+				id = &"warhammer" if it else &"mace"
+			&"greatsword":
+				id = &"greatsword"
+			&"hoe":
+				id = &"hoe"
+			&"bow":
+				id = &"bow"
+			&"spear":
+				id = &"halberd" if it and String(it.id).contains("halberd") else &"spear"
+			&"unarmed":
+				id = &""
+			_:
+				id = &"sword"
+	var reach := 0.4
+	if id == &"bow":
+		# Player bows sit in the left hand (Milestone 17c) and are a bit bigger.
+		var big := 1.25 if it else 1.0
+		var holder := _shield if it else _weapon
+		var limb := it.icon_color if it else Color(0.42, 0.28, 0.16)
+		_add_voxel(holder, id, metal, limb, Vector3(0, 0, 0.12), Vector3(0, PI * 0.5, 0), big)
+		reach = 0.3
+	elif id != &"":
+		_add_voxel(_weapon, id, metal, accent, Vector3.ZERO, _HELD_ROT)
+		reach = VoxelItems.reach(id)
+		if id == &"dagger":
+			_add_voxel(_shield, &"dagger", metal, accent, Vector3(0.06, -0.05, 0.05), _HELD_ROT)
+	_tip = Node3D.new()
+	_tip.position = Vector3(0, 0, reach)
+	_weapon.add_child(_tip)
+	# Caster off-hands (Milestone 17a): a wand or a book in the left hand.
+	var caster := _shield_item() if _class_id == &"player" else null
+	if caster and ItemData.CASTER_OFFHANDS.has(caster.weapon_type):
+		if caster.weapon_type == &"wand":
+			_add_voxel(_shield, &"wand", metal, caster.icon_color.lightened(0.3), Vector3(0, -0.02, 0.06), _HELD_ROT)
+		else:
+			_add_voxel(_shield, &"tome", metal, caster.icon_color, Vector3(0, -0.04, 0.12), Vector3.ZERO, 0.8)
+	if _has_shield:
+		var si := _shield_item() if _class_id == &"player" else null
+		var look: StringName = si.outfit_look if si else &""
+		var sid: StringName = VOXEL_SHIELDS.get(look, &"shield_round")
+		var sc := si.icon_color if si else _accent
+		_add_voxel(_shield, sid, metal, sc, Vector3(-0.06, 0, 0.1), Vector3(0, -PI * 0.5, 0))
+	return true
+
+
+func _add_voxel(holder: Node3D, id: StringName, metal: Color, accent: Color, pos: Vector3, rot: Vector3, scale_k: float = 1.0) -> MeshInstance3D:
+	if not VoxelItems.has(id):
+		return null
+	var mi := VoxelItems.make(id, metal, accent, VoxelItems.HAND_VOXEL * scale_k)
+	mi.position = pos
+	mi.rotation = rot
+	holder.add_child(mi)
+	_parts.append(mi)
+	return mi
 
 
 ## Stealth look: parts become translucent.

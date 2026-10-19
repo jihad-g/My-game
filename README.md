@@ -5,149 +5,8 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.46.0 — Combat feel**. Every swing, hit and explosion is retimed to a reference clip measured frame
-> by frame: snappy strikes with follow-through, a 3-frame hit-stop and a camera kick on heavy hits, white hit
-> flashes, sideways damage numbers, quick death poofs, new fire / magic / poison / pillar / beam blasts, and the
-> clip's camera (50° down, narrow lens) inside dungeons.
->
-> Before that, **v0.45.0 — Release polish**. A new title screen (moving pixel landscape, our own logo), a short "First
-> steps" tutorial, music for each biome and new sounds, graphics presets and field of view in Settings, beds that
-> take two cells, and townsfolk who walk around you instead of through you.
->
-> Before that, **v0.44.0 — Performance**. No more stutter near capitals, towns and ruins; big monster fights and fast
-> travel stay smooth (slowest frame under 25 ms in the stress tool). Before that, v0.43.0 — Icons and item uses:
-> every item has a pixel icon; honey food, silk clothes and gear made from the new monster drops.
->
-> Before that, **v0.41.0 — More mobs**. A Bone Dragon guards deep crypts, door mimics hide in dungeon rooms, and shadow
-> serpents, ghost cats, diver zombies, turkeys, a top-hat bear and cute cupcake and jelly critters roam the land.
->
-> Before that, **v0.40.0 — Monster animations**. Creatures crouch and rear back before they strike, shake and glow before
-> big attacks, and the damage lands exactly on the strike. They flinch when hurt, topple or flip over when they
-> die, and their ears, tails and wings move on their own.
->
-> Before that, **v0.39.0 — Dungeons: fog of war, keys and puzzles**. Dungeon rooms stay dark until you find them, and a
-> mini-map fills in as you explore. From rank D the last room is locked: kill the floor's Keeper for the key.
-> Puzzle rooms hide caged chests behind levers (pull them in order) or a pressure plate (hurry!).
->
-> Before that, **v0.38.0 — Multi-storey building**. Build up to four floors: upper floors on your walls, balconies,
-> stairs, ladders and stone foundations that level out slopes. Monsters follow you up the stairs and ladders.
->
-> Before that, **v0.37.0 — Travel**. Waystones in every village and at every dungeon (unlock them, then travel for a few
-> coins), wild horses to tame with carrots, saddles and a gallop bar, a whistle to call your horse, and a rowboat
-> for lakes and the sea.
->
-> Before that, **v0.36.0 — Weather that matters, and seasons**. Spring blossoms, golden autumn forests and snowy winters
-> (4 in-game days each). Crops grow in their seasons and faster in the rain, rain puts out campfires, lightning sets
-> trees on fire, and fog hides you from monsters.
->
-> Before that, **v0.35.0 — New mobs and gear**. Ten new creatures (bees, hedgehogs, acorn sprouts, frost foxes, blossom
-> stags, cave spiders, witch cats, candle skulls, pumpkin creepers and the ember phoenix) and new gear: the Explorer's
-> Gear with its big pack, the Gilded Paladin, Pilgrim's robes, the Prismheart Blade, Sporecrown Staff and Starlance.
->
-> Before that, **v0.34.0 — Rich World**. New block textures (fine grass, dark soil with pebbles, cracked stone slabs) and
-> much more ground cover: flowering shrubs, ferns, daisies, marigolds, pebbles, mossy boulders, fallen logs and stumps.
->
-> Before that, **v0.33.0 — Monster pathfinding**. Monsters now find their way around walls, houses, trees, cliffs and
-> water, through doors and dungeon corridors; raiders smash the wall in their way. Creative mode can draw their paths.
->
-> Before that, **v0.32.0 — Creative Mode**. Tick **Creative world** on the main menu (or press ` in any world) for a
-> full test and debug toolbox: every item, every monster, time, weather, teleport, test dungeons of any rank, free
-> building and crafting, and **Check the game**, which scans all the game data for broken links.
->
-> Before that, **v0.31.0 — Elemental Armour**. Eight new armour sets (fire, arcane, frost, poison, holy, stone,
-> lightning and brass) with glowing pixel looks, elemental resistances and damage bonuses. Find them in B-rank
-> and higher dungeons, or craft them with Delver's Marks after reading the Elemental Armoury codex.
->
-> Before that, **v0.30.0 — Pixel World and Deeper Dungeons**. Every character, monster, animal and weapon is now pixel
-> painted (16 pixels per metre). Dungeons pay better: a Delver's Cache for every cleared floor, a big first-clear
-> bonus, chests among the spikes, Fine and Masterwork gear, and legendary gear from S-rank bosses. Loot is no longer
-> lost when you take the stairs.
->
-> Before that, **v0.29.0 — Milestone 20: The Tuskers**. Monsters can now be drawn pixel by pixel (16 pixels per
-> metre, see-through and glowing pixels). Skeletons are redrawn, and a new boar-folk faction, the Tuskers (grunts,
-> brutes and their chief with a skull banner), roams the wilds and raids towns and bases.
->
-> Before that, **v0.28.0 — Milestone 19: Together in Danger**. Real co-op combat: monsters, bosses, raids and events
-> run while friends play together, everyone fights the same monsters, kills share XP, and healing, war cries and
-> cleanses reach friends nearby.
->
-> Before that, **v0.27.0 — Milestone 18d: a smoother world**. Terrain and trees fade in instead of popping, far
-> forests, towns and towers show on the horizon, new worlds have softer hills, wide beaches, river valleys and
-> biome borders that blend over about 32 m, and streaming loads what the camera sees first. Old saves keep
-> their land exactly.
->
-> Before that, **v0.26.0 — Block textures** (pixel-art ground, plants, buildings and item icons; new biome colours).
-> **v0.25.0 — World colour pass**: deeper greens, warmer sand, warm stone, every block a little
-> different, darker block sides for a chunky look, and trees that fade softly (no grainy pattern) when they stand
-> between the camera and your hero - closer to Minecraft Dungeons and Hytale. v0.24.0 added **Space to jump**
-> (dodge roll on Left Alt) and the **Vibrant** art style.
->
-> Before that, **Milestone 18c — Flow of Battle, part 3 (v0.23.0)**: spells look like magic. Fire throws embers and
-> leaves scorch marks, frost shatters into shards and cold mist, lightning forks and flickers, arcane spells draw
-> turning runes, holy light falls from the sky, and frozen enemies are wrapped in ice. Hands glow while you cast,
-> bolts leave trails, and ultimates slow time for a moment. **Creative mode** (the ` key) makes testing easy:
-> no damage, free abilities with no cooldown, levels, spells, a test kit and spawns.
->
-> Before that, **Milestone 18b — Flow of Battle, part 2 (v0.22.0)**: hack and slash. Every weapon's combo ends in a big
-> finisher (a spinning sword, a hammer ground slam, a greatsword leaping slam...), you can hold attack to keep
-> chaining, and swings turn to the nearest enemy. Hits freeze for a split second, enemies flinch from where you
-> hit them, and finishers knock them down. Packs of weak Skeleton Minions, Bandit Recruits and Cultist Acolytes
-> give you crowds to cut through, heavy enemy attacks warn you on the ground, and elites glow and roar.
->
-> Before that, **Milestone 18a — Flow of Battle, part 1 (v0.21.0)**: the game moves smoothly. A new animation
-> system blends every move instead of snapping: attacks have a wind-up, a strike and a recovery, the legs keep
-> running while you swing or cast, the body leans into turns and speed changes, feet don't slide, and block
-> steps glide. Movement is snappier (Settings → Gameplay → Movement feel), the dodge can cancel the end of an
-> attack, and the camera looks ahead where you walk, with a new fixed isometric option.
->
-> Before that, **Milestone 17d — Heroes' Arsenal, part 4 (v0.20.0)**: the ability books are complete. 72 more class
-> abilities for levels 66–100 (Storm of Steel, Sanctuary, Black Hole, Thousand Cuts...), a level-100 **ultimate**
-> for every class (Wrath of the Ancients, Paladin's Oath, Shard Nova, Night's Embrace) and **ability upgrades**:
-> from level 30 every active ability gets one of two upgrades (Firebolt can split into three bolts or leave
-> burning ground). Next: Milestone 18 "Flow of Battle" - smoother movement and animation, hack-and-slash combat,
-> better spell effects and smoother worlds ([`docs/M18_PLAN.md`](docs/M18_PLAN.md)).
->
-> Before that, **Milestone 17c — Heroes' Arsenal, part 3 (v0.19.0)**: 68 more class abilities (levels 32–64), 20 shared
-> spells that any class can learn from tomes (Light, Haste, Tame Beast, Spirit Wolf, Frost Path, Recall,
-> Shardfall...), and animations: abilities and spells have their own poses, greatswords and war hammers are held
-> with both hands, and bows are drawn properly.
->
-> Before that, **Milestone 17b — Heroes' Arsenal, part 2 (v0.18.0)**: the ability book (L). Every class now learns a new
-> ability every two levels - 15 new abilities per class up to level 30, 60 in total, including passives that are
-> always on. Put your favourite six on the bar (Z X C T V U) while resting at a bed or a campfire. A tome in your off
-> hand opens a third spell slot (N).
->
-> Before that, **Milestone 17a — Heroes' Arsenal, part 1 (v0.17.0)**: six new weapon types and 20 new weapons. Shoot
-> bows (hold to draw, release to shoot, craft arrows), keep enemies away with spears, stun them with war
-> hammers, swing greatswords, and hold a wand or tome as a caster. New attacks: hold heavy to charge it, lunge
-> out of a sprint, slam down while falling, and riposte after a perfect parry. Legendary weapons now have
-> special powers. The full plan for the rest of Milestone 17 (50 new abilities per class, 20 shared spells) is
-> in [`docs/ARSENAL_PLAN.md`](docs/ARSENAL_PLAN.md).
->
-> Before that, **Milestone 16 — The Lost Shards (v0.16.0)**: the Shardlands now have a story. Every world starts the
-> main quest - ask about the falling stars, recover Shard Fragments, defeat the three Shard Keepers, join the
-> Great Shards on an Arcane Altar and face the Starborn Colossus. Kingdom rulers give royal errands that end in
-> a knighthood, conversations have choices, 12 lore pages and kingdom histories wait to be found, and a
-> journal (O) keeps your quests, lore and the chronicle of your adventure.
->
-> Before that, **Milestone 15 — Living Wilds (v0.15.0)**: every land biome now has wild life - frost wolf packs
-> that howl for each other, sand scorpions hiding under the desert, crabs on the beaches, and deer and
-> rabbits to hunt for meat and hide. Abandoned camps, shipwrecks and buried caches hide treasure, the area
-> around spawn holds many more low-rank ruins and dungeons, crafted gear can come out Fine or Masterwork,
-> and a Draught of Forgetting lets you re-spend your skill points.
->
-> Before that, **Milestone 14 — Outfits & Gear Makes the Hero (v0.14.0)**: every class shares one body and you
-> look like what you wear. Create your character like a souls-like starting class - its starting stats,
-> a full outfit set, a weapon and supplies - and choose skin, hair and beard. Armour and clothes add +1/+2
-> to skills, full sets (Squire's Kit, Raider's Furs, Shadowstalker's Garb, Apprentice's Vestments) give set
-> bonuses, and armour weight matters: light armour keeps you hidden, heavy armour protects you but gets you
-> noticed. A Knight in shadow clothes with daggers plays like an Assassin; the class keeps a small talent, so
-> a Wizard is never a Knight's equal. Built on the beta (Milestone 13: tutorial, guide, settings and
-> accessibility, save recovery, crash reports, achievements, release builds - [`docs/RELEASE.md`](docs/RELEASE.md)).
-> Download a Windows build from [`releases/`](releases/) (v0.26.0). Balance: [`docs/BALANCE.md`](docs/BALANCE.md),
-> performance: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md), co-op: [`docs/MULTIPLAYER.md`](docs/MULTIPLAYER.md),
-> design: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md). See [`docs/TODO.md`](docs/TODO.md) for the honest status of every system and
-> [`docs/CHANGELOG.md`](docs/CHANGELOG.md) for history.
+> Status: **v0.47.0 — Voxel Arsenal**. Every weapon, shield, wand and tome is a voxel model in the style of
+> the owner's reference sheets, coloured by its metal (copper, mithril, sun...). Dropped weapons show their model.
 
 ![Ability poses](docs/screenshots/ability_poses.png)
 
@@ -579,6 +438,9 @@ D-pad spells and hotbar, View bag, Menu pause. Menus still need the mouse.
     the top, the slam freezes for 3 frames and kicks the camera. Kill something: it tips over and poofs. Cast a
     Fireball or Flame Pillar, or any area spell: the new blasts. Enter a dungeon: the camera turns to 50° with a
     narrow lens (Settings → Gameplay → *Dungeon camera* turns it off).
+76. **Voxel Arsenal (v0.47.0)** – open Creative → Items and equip any weapon or shield: it is a voxel model now.
+    Try a copper, an iron and a mithril sword - same shape, different metal. Drop one (or kill a monster that
+    drops one): it spins on the ground as its model.
 
 ## Run the automated tests
 

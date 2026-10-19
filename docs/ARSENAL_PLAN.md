@@ -381,3 +381,25 @@ times changed, to match a reference clip measured frame by frame (`CombatFeel`):
   (×0.6-1.8), above 0.55 a kick plus a short wobble.
 - New attacks get the clip's feel automatically; nothing to set per attack.
 
+## Milestone 39: how weapons look (v0.47.0)
+
+All held items are voxel models (`VoxelItems`, `src/art/voxel_items.gd`). Which model each item uses:
+
+| Item | Model |
+|---|---|
+| sword | `sword` (metal tint) |
+| greatsword | `greatsword` |
+| dagger | `dagger` in both hands |
+| axe | `axe` |
+| hammer | `warhammer` (player), `mace` (townsfolk/monsters) |
+| hoe | `hoe` |
+| staff | `staff` (crystal = item colour) |
+| spear | `spear`, or `halberd` when the id has "halberd" |
+| bow | `bow` (limbs = item colour), left hand for the player |
+| wand / tome | `wand` / `tome` (left hand) |
+| shield | `buckler`, `kite_shield`, `gilded_kite`, `aegis` by outfit look; `shield_round` otherwise |
+| named | `prismheart_blade`, `sporecrown_staff`, `gilded_greatsword`, `gilded_halberd`, `starlance` |
+
+To add a model: write a function in `art/tools/voxel_items/shard_items.py`, run
+`python3 art/tools/voxel_items/build.py`, then map it in `HumanoidModel._build_voxel_weapon` and
+`VoxelItems.model_for_item`.

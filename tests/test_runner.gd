@@ -178,6 +178,7 @@ func _ready() -> void:
 	_run(&"test_m38_feel_units")
 	await _run_async(&"test_m38_fx")
 	await _run_async(&"test_m38_ingame")
+	_run(&"test_m39_voxel_items")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5246,7 +5247,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.46"), "version 0.46 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.47"), "version 0.47 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -10685,3 +10686,36 @@ func test_m38_ingame() -> void:
 	p.health.invulnerable = false
 	world.queue_free()
 	await _frames(5)
+
+
+## Milestone 39: held items are voxel models in the reference style.
+func test_m39_voxel_items() -> void:
+	var bad := []
+	for id in VoxelItems.ids():
+		var m := VoxelItems.get_mesh(StringName(id))
+		if m == null or m.get_surface_count() == 0 or m.get_aabb().size.y < 0.1:
+			bad.append(id)
+	check(bad.is_empty() and VoxelItems.ids().size() >= 23, "every voxel item builds a mesh (%d items, bad: %s)" % [VoxelItems.ids().size(), bad])
+	# Metal tint changes the colour, and the result is cached.
+	var plain := VoxelItems.get_mesh(&"sword")
+	var copper := VoxelItems.get_mesh(&"sword", Color(0.88, 0.52, 0.3))
+	check(plain != copper and copper == VoxelItems.get_mesh(&"sword", Color(0.88, 0.52, 0.3)), "a copper sword is its own cached mesh")
+	# Every weapon, shield, wand and tome item has a model.
+	var missing := []
+	for iid in ItemDB.all_ids():
+		var item: ItemData = ItemDB.get_item(iid)
+		if item.weapon_type != &"" and item.weapon_type != &"unarmed" and VoxelItems.model_for_item(item).is_empty():
+			missing.append(item.id)
+	check(missing.is_empty(), "every weapon item has a voxel model (missing: %s)" % [missing])
+	check(VoxelItems.reach(&"greatsword") > VoxelItems.reach(&"dagger"), "a greatsword reaches further than a dagger")
+	# A hero with a sword holds a voxel sword; the swing trail tip sits at its end.
+	var m := HumanoidModel.new()
+	add_child(m)
+	m.set_outfit(PackedStringArray(), &"iron_sword")
+	m.set_weapon(&"sword", false)
+	var held := 0
+	for c in m._weapon.get_children():
+		if c is MeshInstance3D and (c as MeshInstance3D).mesh is ArrayMesh and String(c.name) == "sword":
+			held += 1
+	check(held == 1 and is_equal_approx(m._tip.position.z, VoxelItems.reach(&"sword")), "the hero holds the voxel sword")
+	m.free()

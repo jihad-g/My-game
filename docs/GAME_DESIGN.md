@@ -1195,6 +1195,12 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 39 — Voxel Arsenal (v0.47.0).** Held items (weapons, shields, wands, tomes) and dropped
+weapons are voxel models in the reference style: `VoxelItems` (`src/art/voxel_items.gd`) builds them from
+`src/art/voxel_item_data.gd` (made by `art/tools/voxel_items/build.py`), 32 voxels per metre, recoloured per
+item (metal + accent). `HumanoidModel._build_voxel_weapon` places them; `Pickup.setup` shows them on the ground.
+Art only: no stats changed. Armour in this style is NOT IMPLEMENTED yet.
+
 **Done: Milestone 38 — Combat feel (v0.46.0).** Timing measured from a reference clip, all in `CombatFeel`.
 Swing shape in `AnimLibrary.attack` (anticipation, 2-3 frame strike, follow-through, heavy hang) and
 `BeastModel.play_attack`; hit-stop in `PlayerCombat._apply_hitstop`; hit pops `BlastFX.hit_pop`; camera kick

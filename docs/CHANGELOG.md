@@ -2,6 +2,35 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.47.0] — Milestone 39: Voxel Arsenal (items in the reference style)
+
+Every held item is now a voxel model in the style of the owner's reference sheets (chunky boxes, one voxel
+size, colour ramps with light from the top-left, metal rings, striped grips, glowing crystals). Our own
+designs in that style - nothing copied.
+
+### Changed
+- **Weapons**: sword, greatsword, dagger (and the off-hand dagger), axe, warhammer, mace (townsfolk and
+  monsters), hoe, staff, spear, halberd and bow are voxel models (`src/art/voxel_items.gd`, `VoxelItems`).
+- **Named weapons** have their own models: Prismheart Blade, Sporecrown Staff, Gilded Greatsword, Gilded
+  Halberd, Starlance.
+- **Shields**: round shield (townsfolk, monsters), buckler, kite shield, gilded kite shield, Aegis of Dawn.
+- **Off-hands**: wand and tome.
+- **Colours per item**: metal parts take the item's metal (copper, iron, mithril, star, sun...), crystals, bow
+  limbs, shield paint and book covers take the item's colour - one model, many items.
+- **Dropped loot**: weapons, shields, wands and tomes on the ground show their voxel model (spinning, tilted)
+  instead of a coloured cube. Other loot keeps the cube.
+- Fire and magic parts glow (bloom on Forward+; bright colour on Compatibility).
+
+### Added
+- `art/tools/voxel_items/` - the voxel designer (Python): `shard_items.py` (the 23 designs), `voxkit.py`
+  (palette, auto shading), `build.py` (preview `art/previews/voxel_items.png` + `src/art/voxel_item_data.gd`).
+- Screenshot: `--only=voxel` (`60_voxel_items_a`, `61_voxel_items_b`, `62_voxel_loot`).
+- Test `test_m39_voxel_items`.
+
+### Not changed
+- Damage, speed, reach, the swing timing and the hit frame are exactly as before (art only).
+- `VoxelItems.enabled = false` brings back the old box weapons.
+
 ## [0.46.0] — Milestone 38: Combat feel (the reference clip)
 
 Combat timing and effects measured frame by frame from a reference clip of an isometric dungeon crawler

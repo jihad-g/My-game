@@ -4,6 +4,17 @@ Legend: `[x]` completed (implemented + tested) · `[~]` in progress / partial (d
 
 Nothing below is marked `[x]` unless it runs in the game today.
 
+## Milestone 39 — Voxel Arsenal (v0.47.0)
+
+- [x] All held weapons, shields, wands and tomes are voxel models in the reference style (`VoxelItems`)
+- [x] Named weapons have their own models (Prismheart Blade, Sporecrown Staff, Gilded Greatsword, Gilded Halberd, Starlance)
+- [x] Metal and accent colours per item; dropped weapons/shields show their model
+- [ ] NOT IMPLEMENTED: armour and clothes (helmets, plate, robes, boots) in the same voxel style - they are still painted boxes (PixelAuto)
+- [ ] NOT IMPLEMENTED: item icons (2D) redrawn from the voxel models - icons still come from `art/tools/icongen.py`
+- [ ] NOT IMPLEMENTED: dropped food, materials and potions as voxel models (still a coloured cube)
+- [ ] NOT IMPLEMENTED: own models for every named weapon (e.g. Shadowfang, Sunforged Blade, Titan's Greataxe use the shared sword/axe model with their metal colour)
+- [ ] NOT IMPLEMENTED: checked on Forward+ with a real GPU (only the Compatibility renderer was checked)
+
 ## Phase 1 — Playable prototype  ✅
 
 - [x] Godot 4.4 project architecture (autoloads, components, data resources, scenes)

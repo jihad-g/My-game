@@ -127,6 +127,10 @@ func _ready() -> void:
 		await _book_showcase()
 		get_tree().quit()
 		return
+	if "--only=voxel" in OS.get_cmdline_user_args():
+		await _voxel_showcase()
+		get_tree().quit()
+		return
 	if "--only=arsenal" in OS.get_cmdline_user_args():
 		await _arsenal_showcase()
 		get_tree().quit()
@@ -557,6 +561,76 @@ func _book_showcase() -> void:
 
 
 ## Milestone 17a: the new weapons in the hands of the shared body, and their icons.
+## Milestone 39: every held item as a voxel model, on heroes, townsfolk and the ground.
+func _voxel_showcase() -> void:
+	var root := Node3D.new()
+	add_child(root)
+	var cam := Camera3D.new()
+	cam.position = Vector3(0, 1.6, 6.2)
+	cam.rotation_degrees = Vector3(-8, 0, 0)
+	cam.fov = 45.0
+	root.add_child(cam)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-50, -35, 0)
+	sun.shadow_enabled = true
+	root.add_child(sun)
+	var env := WorldEnvironment.new()
+	env.environment = Environment.new()
+	env.environment.background_mode = Environment.BG_COLOR
+	env.environment.background_color = Color(0.122, 0.118, 0.141)
+	env.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.environment.ambient_light_color = Color(0.8, 0.82, 0.92)
+	env.environment.ambient_light_energy = 0.6
+	root.add_child(env)
+	# [class kit, main hand, off hand]
+	var specs := [
+		[&"knight", &"iron_sword", &"iron_kite_shield"], [&"barbarian", &"copper_waraxe", &""],
+		[&"assassin", &"mithril_dirk", &""], [&"knight", &"fallen_king_greatsword", &""],
+		[&"barbarian", &"frostbite_warhammer", &""], [&"assassin", &"starfall_bow", &""],
+		[&"wizard", &"staff_of_the_archmage", &"stormcaller_wand"], [&"wizard", &"copper_staff", &"embers_tome"],
+		[&"knight", &"mithril_halberd", &""], [&"knight", &"gilded_greatsword", &""],
+		[&"assassin", &"prismheart_blade", &""], [&"wizard", &"sporecrown_staff", &""],
+		[&"knight", &"starlance", &"aegis_of_dawn"], [&"knight", &"sunforged_blade", &"gilded_kite_shield"],
+	]
+	for i in specs.size():
+		var s: Array = specs[i]
+		var eq := ClassPicker.starting_equipment(ClassRegistry.get_class_data(s[0]))
+		eq.equip(ItemDB.get_item(s[1]))
+		if s[2] != &"":
+			eq.equip(ItemDB.get_item(s[2]))
+		var m := HumanoidModel.new()
+		root.add_child(m)
+		@warning_ignore("integer_division")
+		var row := i / 7
+		m.position = Vector3(-4.2 + (i % 7) * 1.4, 0, -row * 40.0)
+		m.rotation.y = 0.55
+		m.set_appearance(ClassRegistry.get_class_data(s[0]))
+		m.set_body(CharacterLook.default_for(s[0]))
+		if eq.weapon() == null:
+			push_warning("voxel showcase: no weapon for %s" % [s])
+			continue
+		m.set_outfit(eq.outfit_ids(), eq.weapon().id)
+		m.set_weapon(eq.weapon_type(), eq.has_shield())
+	# Dropped loot in front.
+	var loot := [&"gilded_halberd", &"iron_sword", &"copper_waraxe", &"mithril_staff", &"wooden_buckler", &"recurve_bow", &"iron_kite_shield", &"embers_tome", &"stone_maul"]
+	for i in loot.size():
+		var p := Pickup.new()
+		root.add_child(p)
+		p.setup(loot[i], 1, Vector3(-4.4 + i * 1.1, -80.0, 0.0), -80.4, false)
+		p._velocity = Vector3.ZERO  # no toss: keep the row tidy for the picture
+	await _wait(60)
+	await _shot("60_voxel_items_a")
+	cam.position.z -= 40.0
+	await _wait(5)
+	await _shot("61_voxel_items_b")
+	cam.position = Vector3(0, -77.6, 4.6)
+	cam.rotation_degrees = Vector3(-26, 0, 0)
+	await _wait(5)
+	await _shot("62_voxel_loot")
+	root.queue_free()
+	await _wait(3)
+
+
 func _arsenal_showcase() -> void:
 	var root := Node3D.new()
 	add_child(root)
