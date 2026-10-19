@@ -3335,7 +3335,7 @@ func _feel_showcase() -> void:
 	await _wait(20)
 	m.set_physics_process(false)
 	m.global_position = pos
-	Engine.time_scale = 0.1
+	Engine.time_scale = 0.02
 	p.combat.request(&"light")
 	for i in 600:
 		await get_tree().process_frame
@@ -3348,7 +3348,7 @@ func _feel_showcase() -> void:
 	Engine.time_scale = 1.0
 	await _wait(30)
 	var fwd := p.global_position + aim * 6.0
-	Engine.time_scale = 0.1  # slow-motion capture: this software renderer is slow
+	Engine.time_scale = 0.02  # slow-motion capture: this software renderer is slow
 	BlastFX.fire_blast(d, fwd, 3.25)
 	await _wait_game(CombatFeel.sec(4.0))
 	await _shot("feel_3_fire_blast_f4")
