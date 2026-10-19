@@ -51,12 +51,12 @@ static func attack(anim: StringName, windup: float, active: float, recovery: flo
 	var heavy := CombatFeel.is_heavy_windup(windup)
 	var ant := (ready - strike) * CombatFeel.ANTICIPATION
 	var over := strike + (strike - ready) * (CombatFeel.HEAVY_OVERSHOOT if heavy else CombatFeel.OVERSHOOT)
-	var t_ant := windup * (0.45 if heavy else 0.7)
+	var t_ant := windup * (0.55 if heavy else 0.7)
 	var ready_end := ready + ant * (0.6 if heavy else 0.0)
 	var t_hit := windup + minf(active, CombatFeel.sec(CombatFeel.HEAVY_STRIKE_FRAMES if heavy else CombatFeel.STRIKE_FRAMES))
 	var follow := over.lerp(strike, 0.3)
 	var arm_r := func(v: Vector3) -> Vector3: return Vector3(v.x, v.y, 0.0)
-	var arm_keys := [[0.0, ready.lerp(REST_ARM, 0.5), AnimClip.LINEAR], [t_ant, ready + ant, AnimClip.EASE_OUT],
+	var arm_keys := [[0.0, ready.lerp(REST_ARM, 0.5), AnimClip.LINEAR], [t_ant, ready + ant, AnimClip.IN_OUT],
 		[windup, ready_end, AnimClip.IN_OUT], [t_hit, over, AnimClip.LINEAR]]
 	if t_strike > t_hit + 0.005:
 		arm_keys.append([t_strike, follow, AnimClip.EASE_OUT])
@@ -95,7 +95,7 @@ static func attack(anim: StringName, windup: float, active: float, recovery: flo
 		# Both hands on the handle: the left arm follows the right one.
 		var off := Vector3(0.15, 0.7, 0.0)
 		c.key(&"arm_l", 0.0, arm_r.call(ready.lerp(REST_ARM, 0.5)) + off)
-		c.key(&"arm_l", t_ant, arm_r.call(ready + ant) + off, AnimClip.EASE_OUT)
+		c.key(&"arm_l", t_ant, arm_r.call(ready + ant) + off, AnimClip.IN_OUT)
 		c.key(&"arm_l", windup, arm_r.call(ready_end) + off, AnimClip.IN_OUT)
 		c.key(&"arm_l", t_hit, arm_r.call(over) + off, AnimClip.LINEAR)
 		if t_strike > t_hit + 0.005:
