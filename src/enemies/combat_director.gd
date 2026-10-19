@@ -66,15 +66,44 @@ static func circle_point(target_pos: Vector3, slot_angle: float, radius: float =
 
 
 ## Push away from nearby monsters so packs spread out.
-static func separation(m: Node3D) -> Vector3:
-	var push := Vector3.ZERO
-	for e in m.get_tree().get_nodes_in_group(&"enemies"):
+## Milestone 36: a snapshot of where the live monsters are, rebuilt once per
+## physics tick and bucketed in a grid of SEPARATION-sized cells. Each query
+## looks at 9 cells instead of every enemy (40 monsters used to make 1600
+## node lookups per tick).
+static var _snap_frame := -1
+static var _snap_grid: Dictionary = {}  # Vector2i -> PackedVector3Array
+
+
+static func _snapshot(tree: SceneTree) -> void:
+	var f := Engine.get_physics_frames()
+	if f == _snap_frame:
+		return
+	_snap_frame = f
+	_snap_grid.clear()
+	for e in tree.get_nodes_in_group(&"enemies"):
 		var o := e as Node3D
-		if o == null or o == m or not o.is_visible_in_tree() or o.get("is_dead") == true:
+		if o == null or not o.is_visible_in_tree() or o.get("is_dead") == true:
 			continue
-		var d := m.global_position - o.global_position
-		d.y = 0.0
-		var l := d.length()
-		if l > 0.01 and l < SEPARATION:
-			push += d / l * (SEPARATION - l) / SEPARATION
+		var p := o.global_position
+		var c := Vector2i(floori(p.x / SEPARATION), floori(p.z / SEPARATION))
+		var list: PackedVector3Array = _snap_grid.get(c, PackedVector3Array())
+		list.append(p)
+		_snap_grid[c] = list
+
+
+static func separation(m: Node3D) -> Vector3:
+	_snapshot(m.get_tree())
+	var push := Vector3.ZERO
+	var me := m.global_position
+	var c := Vector2i(floori(me.x / SEPARATION), floori(me.z / SEPARATION))
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			var list: PackedVector3Array = _snap_grid.get(c + Vector2i(dx, dz), PackedVector3Array())
+			for p in list:
+				var d := me - p
+				d.y = 0.0
+				var l := d.length()
+				# l > 0.01 also skips this monster's own entry in the snapshot.
+				if l > 0.01 and l < SEPARATION:
+					push += d / l * (SEPARATION - l) / SEPARATION
 	return push

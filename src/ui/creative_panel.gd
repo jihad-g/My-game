@@ -1093,6 +1093,8 @@ func _build_debug() -> void:
 	_row(v, "Check", [["Check the game (data links)", _self_check], ["Errors in the log", _log_errors]])
 	_row(v, "Monsters", [["Show monster paths on / off", _toggle_paths], ["Pathfinding on / off", _toggle_nav],
 		["Pathfinding stats", _nav_stats]])
+	_row(v, "Perf (M36)", [["Spawn a crowd of 40", _spawn_crowd], ["Measure 10 s of frames", _measure_frames],
+		["Monsters think every tick on / off", _toggle_slow_think]])
 	_report.editable = false
 	_report.custom_minimum_size = Vector2(0, 300)
 	_report.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1153,7 +1155,7 @@ func perf_text() -> String:
 	lines.append("Pixel art: %d atlas pages, %d painted part meshes" % [PixelAuto.page_count(), PixelAuto.cached_count()])
 	if world:
 		var s := world.chunk_manager.get_debug_stats()
-		lines.append("Chunks %d loaded · %d pending · cache %.1f MB" % [s.loaded, s.pending, s.cache_mb])
+		lines.append("Chunks %d loaded · %d pending · cache %.1f MB · %d prefetched" % [s.loaded, s.pending, s.cache_mb, s.prefetched])
 		lines.append("Enemies %d (in the world) · pickups %d" % [get_tree().get_nodes_in_group(&"enemies").size(),
 			world.pickup_pool.active_count()])
 		lines.append("Weather %s · %s, day %d · %s%s · monster sight x%.2f" % [world.weather.kind_name() if world.weather else "-",
@@ -1169,6 +1171,52 @@ func perf_text() -> String:
 func _perf() -> void:
 	_report.text = perf_text()
 	_say("performance snapshot taken")
+
+
+## Milestone 36: 40 fighting monsters around you, two per frame (as raid waves come).
+func _spawn_crowd() -> void:
+	var ids := [&"skeleton_warrior", &"thorn_crawler", &"bandit_thug", &"grotto_cultist"]
+	var n := 40
+	for i in n:
+		var ang := TAU * i / n
+		var pos := player.global_position + Vector3(cos(ang), 0, sin(ang)) * (8.0 + (i % 4) * 3.0)
+		pos.y = world.get_ground_height(pos) + 0.3
+		world.spawner.spawn_enemy(load("res://scenes/enemies/monster.tscn"), pos, "", load("res://data/enemies/%s.tres" % ids[i % ids.size()]))
+		if i % 2 == 1:
+			await get_tree().process_frame
+	_say("spawned a crowd of %d monsters" % n)
+
+
+## Milestone 36: frame times over 10 seconds (average, 95th percentile, slowest).
+func _measure_frames() -> void:
+	_say("measuring frames for 10 s...")
+	var times := PackedFloat64Array()
+	var last := Time.get_ticks_usec()
+	var t := 0.0
+	while t < 10.0:
+		await get_tree().process_frame
+		var now := Time.get_ticks_usec()
+		var ms := (now - last) / 1000.0
+		last = now
+		times.append(ms)
+		t += ms / 1000.0
+	# (Stress, in tests/, is not part of the game build: summarised here.)
+	var sorted := times.duplicate()
+	sorted.sort()
+	var sum := 0.0
+	for x in times:
+		sum += x
+	var avg := sum / maxf(1.0, times.size())
+	var p95: float = sorted[mini(sorted.size() - 1, int(sorted.size() * 0.95))]
+	var worst: float = sorted[sorted.size() - 1]
+	_report.text = "Frames over 10 s: %d\nAverage %.1f ms · 95th percentile %.1f ms · slowest %.1f ms (stress tool budget 25 ms)\n\n%s" % [
+		times.size(), avg, p95, worst, perf_text()]
+	_say("slowest frame %.1f ms" % worst)
+
+
+func _toggle_slow_think() -> void:
+	Monster.slow_think = not Monster.slow_think
+	_say("monsters walking about think %s" % ("every other tick (fast)" if Monster.slow_think else "every tick (old)"))
 
 
 # --- Common ---------------------------------------------------------------------------

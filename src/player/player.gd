@@ -142,6 +142,9 @@ var _last_yaw := 0.0
 
 func _ready() -> void:
 	add_to_group(&"player")
+	# Milestone 36: 1 cm instead of Godot's 1 mm margin - a tenth of the cost of
+	# each move on the terrain mesh, with no visible gap (see Enemy._ready).
+	safe_margin = 0.01
 	model.footstep.connect(_on_footstep)
 	model.roll_landed.connect(func() -> void:
 		if is_on_floor():

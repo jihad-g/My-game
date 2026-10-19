@@ -17,6 +17,16 @@ var is_built := false
 ## A raid is attacking this settlement (Milestone 7): villagers hide, guards fight.
 var under_attack := false
 var _task := -1
+## Milestone 36: the main-thread part of the build (meshes, collision, doors,
+## lights, townsfolk) runs as small steps over several frames, about
+## STEP_BUDGET_MS per frame. A capital used to cost one ~120 ms frame.
+const STEP_BUDGET_MS := 3.0
+## Collision boxes added per step.
+const BOXES_PER_STEP := 200
+var _steps: Array[Callable] = []
+var _steps_queued := false
+## Frames the staged build took (tests, debug).
+var build_frames := 0
 var _roof_nodes: Dictionary = {}  # building index -> MeshInstance3D
 var _hidden_roof := -1
 var _roof_check := 0.0
@@ -24,13 +34,19 @@ var _roof_check := 0.0
 var _nodes: Array[Vector3] = []
 var _adj: Dictionary = {}
 var _blockers: Array[Rect2] = []
+var _day := 0
+## Size of the mesh tiles a settlement is split into (metres, Milestone 36).
+const MESH_TILE := 32.0
 
 
 func setup(p_info: SettlementInfo, p_manager: Node, day: int) -> void:
 	info = p_info
 	manager = p_manager
 	name = "Site_%s" % info.id.replace(":", "_").replace(",", "_")
-	layout = SettlementLayout.build(info, day)
+	_day = day
+	# Milestone 36: a capital's layout takes ~10 ms, so it is built on the worker
+	# thread with the meshes (see _build_threaded); villages too, for simplicity.
+	BuildingManager.all_pieces()  # fill the piece registry on the main thread first
 
 
 func _ready() -> void:
@@ -42,23 +58,56 @@ func _ready() -> void:
 
 
 func _build_threaded() -> void:
+	layout = SettlementLayout.build(info, _day)
 	_build_static()
 	_build_graph()
 
 
-func _finish_build() -> void:
-	WorkerThreadPool.wait_for_task_completion(_task)
-	_task = -1
-	_attach_static()
-	_build_interactive()
-	_spawn_npcs()
+## Turns the worker's result into the list of main-thread build steps.
+func _queue_steps() -> void:
+	if _task != -1:
+		WorkerThreadPool.wait_for_task_completion(_task)
+		_task = -1
+	if _steps_queued:
+		return
+	_steps_queued = true
+	for key: String in _arrays.keys():
+		_steps.append(_attach_mesh.bind(key))
+	_steps.append(_make_collision_body)
+	for i in range(0, _boxes.size(), BOXES_PER_STEP):
+		_steps.append(_add_boxes.bind(i, mini(i + BOXES_PER_STEP, _boxes.size())))
+	_steps.append(func() -> void: _boxes.clear())
+	_steps.append(_build_interactive)
+	for d in layout.npcs:
+		_steps.append(_spawn_npc.bind(d))
+	_steps.append(_finish_steps)
+
+
+## Runs build steps until `budget_ms` is used (at least one step). Returns true when done.
+func _run_steps(budget_ms: float) -> bool:
+	var t0 := Time.get_ticks_usec()
+	while not _steps.is_empty():
+		var step: Callable = _steps.pop_front()
+		step.call()
+		if budget_ms >= 0.0 and (Time.get_ticks_usec() - t0) / 1000.0 >= budget_ms:
+			break
+	return _steps.is_empty()
+
+
+func _finish_steps() -> void:
 	is_built = true
+	_trader_due = true  # next frame: the wagon and trader are a step of their own
+
+
+var _trader_due := false
 
 
 ## Blocks until the site is ready (tests, teleports).
 func finish_now() -> void:
-	if not is_built and _task != -1:
-		_finish_build()
+	if is_built or (_task == -1 and not _steps_queued):
+		return  # built already, or not in the tree yet (nothing started)
+	_queue_steps()
+	_run_steps(-1.0)
 
 
 func _exit_tree() -> void:
@@ -69,70 +118,42 @@ func _exit_tree() -> void:
 
 # --- Geometry --------------------------------------------------------------------------
 
-## Worker thread: merge every static piece into a few BlockMeshes (pure arrays).
-var _arrays: Dictionary = {}   # "solid"/"walls"/"glow"/"roof_<i>" -> surface arrays
+## Worker thread: merge every static piece into tiled BlockMeshes (pure arrays).
+var _arrays: Dictionary = {}   # "solid@x_z"/"walls@x_z"/"glow@x_z"/"roof_<i>" -> surface arrays
 var _boxes: Array = []         # [size, transform]
 
 
 func _build_static() -> void:
-	var groups := {&"solid": BlockMesh.new(), &"walls": BlockMesh.new(), &"glow": BlockMesh.new()}
-	for s in layout.statics:
-		var g: BlockMesh = groups[&"glow"] if s.get("glow", false) else (groups[&"walls"] if s.fade else groups[&"solid"])
-		g.xform = s.xform
-		BuildMeshes.build_into(g, s.mesh, info.color)
-		var size: Vector3 = s.box_size
-		if size != Vector3.ZERO:
-			_boxes.append([size, (s.xform as Transform3D) * Transform3D(Basis.IDENTITY, s.box_center)])
-	for b in layout.boxes:
-		_boxes.append([b.size, b.xform])
-	for k in groups:
-		if groups[k].has_boxes():
-			_arrays[String(k)] = groups[k].to_arrays()
-		var cards: Array = groups[k].card_arrays()
-		if not cards.is_empty():
-			_arrays["cards_%s" % k] = cards  # v0.26.0: crops/plants on cut-out cards
-	for idx in layout.roofs:
-		var rb := BlockMesh.new()
-		for r in layout.roofs[idx]:
-			rb.xform = r.xform
-			BuildMeshes.build_into(rb, r.mesh)
-		_arrays["roof_%d" % idx] = rb.to_arrays()
+	var merged := StaticGeometry.merge(layout.statics, layout.boxes, layout.roofs, info.color, MESH_TILE)
+	_arrays = merged.arrays
+	_boxes = merged.boxes
 
 
-## Main thread: turn the merged arrays and boxes into nodes.
-func _attach_static() -> void:
-	var mats := {"solid": Materials.vertex_color(), "walls": Materials.vertex_color_occluder(), "glow": Materials.vertex_color_emissive()}
-	for key: String in _arrays:
-		var mesh := ArrayMesh.new()
-		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _arrays[key])
-		var mi := MeshInstance3D.new()
-		mi.name = key.capitalize().replace(" ", "")
-		mi.mesh = mesh
-		mi.material_override = Materials.sprite(0.25) if key.begins_with("cards_") else mats.get(key, Materials.vertex_color())
-		if key == "glow":
-			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		add_child(mi)
-		if key.begins_with("roof_"):
-			_roof_nodes[int(key.substr(5))] = mi
-	_arrays.clear()
-	var body := StaticBody3D.new()
-	body.name = "Collision"
-	body.collision_layer = Layers.BUILDING
-	body.collision_mask = 0
-	var shapes := {}  # one shared BoxShape3D per size
-	for b in _boxes:
-		var size: Vector3 = b[0]
-		var key := size.snapped(Vector3(0.001, 0.001, 0.001))
-		if not shapes.has(key):
-			var box := BoxShape3D.new()
-			box.size = size
-			shapes[key] = box
-		var cs := CollisionShape3D.new()
-		cs.shape = shapes[key]
-		cs.transform = b[1]
-		body.add_child(cs)
-	add_child(body)
-	_boxes.clear()
+## Main thread: one merged mesh becomes a node (a build step).
+func _attach_mesh(key: String) -> void:
+	if not _arrays.has(key):
+		return
+	var mi := StaticGeometry.attach_mesh(self, key, _arrays[key])
+	if key.begins_with("roof_"):
+		_roof_nodes[int(key.substr(5))] = mi
+	_arrays.erase(key)
+
+
+var _collision_body: StaticBody3D
+var _box_shapes := {}  # one shared BoxShape3D per size
+
+
+func _make_collision_body() -> void:
+	_collision_body = StaticGeometry.make_body(self, Layers.BUILDING)
+
+
+func _add_boxes(from: int, to: int) -> void:
+	StaticGeometry.add_boxes(_collision_body, _boxes, from, to, _box_shapes)
+
+
+## Number of collision boxes on the site (tests).
+func collision_box_count() -> int:
+	return _collision_body.get_shape_owners().size() if _collision_body else 0
 
 
 func _build_interactive() -> void:
@@ -273,13 +294,11 @@ func find_path(from: Vector3, to: Vector3) -> PackedVector3Array:
 
 # --- People --------------------------------------------------------------------------------
 
-func _spawn_npcs() -> void:
-	for d in layout.npcs:
-		var n := NPC.new()
-		n.setup(self, d)
-		add_child(n)
-		npcs.append(n)
-	refresh_trader()
+func _spawn_npc(d: Dictionary) -> void:
+	var n := NPC.new()
+	n.setup(self, d)
+	add_child(n)
+	npcs.append(n)
 
 
 func set_under_attack(on: bool) -> void:
@@ -338,9 +357,18 @@ func npc_by_role(role: StringName) -> NPC:
 
 func _process(delta: float) -> void:
 	if not is_built:
-		if _task != -1 and WorkerThreadPool.is_task_completed(_task):
-			_finish_build()
+		if _task != -1:
+			if not WorkerThreadPool.is_task_completed(_task):
+				return
+			_queue_steps()
+		elif not _steps_queued:
+			return
+		build_frames += 1
+		_run_steps(STEP_BUDGET_MS)
 		return
+	if _trader_due:
+		_trader_due = false
+		refresh_trader()
 	_roof_check -= delta
 	if _roof_check > 0.0 or World.instance == null or World.instance.player == null:
 		return
@@ -357,6 +385,8 @@ func _process(delta: float) -> void:
 
 ## Index of the building containing a local point (or -1).
 func building_at(local: Vector3) -> int:
+	if layout == null:
+		return -1  # still being laid out on the worker thread
 	for b in layout.buildings:
 		var r: Rect2 = b.rect
 		if r.has_point(Vector2(local.x, local.z)):

@@ -433,7 +433,20 @@ func best_title() -> String:
 # --- Tracker --------------------------------------------------------------------------------
 
 ## What the HUD shows for the tracked quest: {title, text, target (Vector3 or INF), where}.
-func tracker() -> Dictionary:
+## Milestone 36: the hints "nearest village / ruin / dungeon" search a few km
+## of the world (up to ~50 ms in a new area), so the HUD gets them from a
+## worker thread and a cache that is renewed when the quest step changes or
+## you move HINT_MOVE metres. `block` = compute now if not cached (tests, journal).
+const HINT_MOVE := 48.0
+const SEARCHED_HINTS := ["village", "poi", "dungeon"]
+var _hint := {"key": "", "pos": Vector3.INF, "target": Vector3.INF}
+var _hint_task := -1
+var _hint_task_key := ""
+var _hint_task_pos := Vector3.INF
+var _hint_result := Vector3.INF
+
+
+func tracker(block: bool = true) -> Dictionary:
 	var id: StringName = QuestBook.MAIN if active.has(QuestBook.MAIN) else (active.keys()[0] if not active.is_empty() else &"")
 	if id == &"":
 		return {}
@@ -448,7 +461,7 @@ func tracker() -> Dictionary:
 			text += " (%d / 3)" % keepers.size()
 		"deliver":
 			text += " (have %d)" % world.player.inventory.count_of(step.item)
-	var target := _hint_target(id, step)
+	var target := _hint_cached(id, step, block)
 	var where := ""
 	if target != Vector3.INF:
 		var p := world.player.global_position
@@ -456,23 +469,68 @@ func tracker() -> Dictionary:
 	return {"title": q.title, "text": text, "target": target, "where": where, "step": int(st.step) + 1, "steps": (q.steps as Array).size()}
 
 
+func _hint_cached(id: StringName, step: Dictionary, block: bool) -> Vector3:
+	var hint := String(step.get("hint", ""))
+	if not hint in SEARCHED_HINTS:
+		return _hint_target(id, step)  # cheap: no search
+	var p := world.player.global_position
+	var key := "%s|%d|%s|%d" % [id, step_index(id), hint, keepers.size()]
+	if _hint_task != -1 and WorkerThreadPool.is_task_completed(_hint_task):
+		WorkerThreadPool.wait_for_task_completion(_hint_task)
+		_hint_task = -1
+		_hint = {"key": _hint_task_key, "pos": _hint_task_pos, "target": _hint_result}
+	var pos: Vector3 = _hint.pos
+	if _hint.key == key and Vector2(p.x - pos.x, p.z - pos.z).length() < HINT_MOVE:
+		return _hint.target
+	if block:
+		var t := _hint_target(id, step)
+		_hint = {"key": key, "pos": p, "target": t}
+		return t
+	if _hint_task == -1:
+		_hint_task_key = key
+		_hint_task_pos = p
+		var kp: Array = QuestBook.KEEPERS if hint == "dungeon" and step.goal != "keepers" else keepers.duplicate()
+		_hint_task = WorkerThreadPool.add_task(_hint_search.bind(hint, p, world.generator, kp), false, "quest_hint")
+	return _hint.target if _hint.key == key else Vector3.INF
+
+
+## Worker thread: the searched hints (settlements and POIs are thread-safe).
+func _hint_search(hint: String, p: Vector3, gen: TerrainGenerator, keepers_now: Array) -> void:
+	_hint_result = _search_hint(hint, p, gen, keepers_now)
+
+
+func _search_hint(hint: String, p: Vector3, gen: TerrainGenerator, keepers_now: Array) -> Vector3:
+	match hint:
+		"village":
+			var near := gen.settlements.near(p, 3000.0)
+			return near[0].world_center() if not near.is_empty() else Vector3.INF
+		"poi":
+			return _nearest_poi(gen.pois, p, [PoiInfo.Kind.RUINS, PoiInfo.Kind.TOWER, PoiInfo.Kind.TEMPLE], -1)
+		"dungeon":
+			for k in QuestBook.KEEPERS:
+				if not keepers_now.has(k):
+					return _nearest_poi(gen.pois, p, [PoiInfo.Kind.DUNGEON], QuestBook.KEEPER_THEME[k])
+			return _nearest_poi(gen.pois, p, [PoiInfo.Kind.DUNGEON], -1)
+	return Vector3.INF
+
+
+func _exit_tree() -> void:
+	if _hint_task != -1:
+		WorkerThreadPool.wait_for_task_completion(_hint_task)
+		_hint_task = -1
+
+
 func _hint_target(id: StringName, step: Dictionary) -> Vector3:
 	var p := world.player.global_position
-	match String(step.get("hint", "")):
-		"village":
-			var near := world.generator.settlements.near(p, 3000.0)
-			return near[0].world_center() if not near.is_empty() else Vector3.INF
+	var hint := String(step.get("hint", ""))
+	if hint == "dungeon" and step.goal != "keepers":
+		return _search_hint("dungeon", p, world.generator, QuestBook.KEEPERS)  # any dungeon
+	if hint in SEARCHED_HINTS:
+		return _search_hint(hint, p, world.generator, keepers)
+	match hint:
 		"giver":
 			var info := world.generator.settlements.find(String(active[id].get("settlement", "")))
 			return info.world_center() if info else Vector3.INF
-		"poi":
-			return _nearest_poi(p, [PoiInfo.Kind.RUINS, PoiInfo.Kind.TOWER, PoiInfo.Kind.TEMPLE], -1)
-		"dungeon":
-			if step.goal == "keepers":
-				for k in QuestBook.KEEPERS:
-					if not keepers.has(k):
-						return _nearest_poi(p, [PoiInfo.Kind.DUNGEON], QuestBook.KEEPER_THEME[k])
-			return _nearest_poi(p, [PoiInfo.Kind.DUNGEON], -1)
 		"altar":
 			var best := Vector3.INF
 			for s in get_tree().get_nodes_in_group(&"crafting_stations"):
@@ -486,8 +544,7 @@ func _hint_target(id: StringName, step: Dictionary) -> Vector3:
 	return Vector3.INF
 
 
-func _nearest_poi(p: Vector3, kinds: Array, theme: int) -> Vector3:
-	var pois := world.exploration.pois()
+func _nearest_poi(pois: Exploration, p: Vector3, kinds: Array, theme: int) -> Vector3:
 	var c := Vector2i(floori(p.x / Exploration.CELL), floori(p.z / Exploration.CELL))
 	var best := Vector3.INF
 	var best_d := INF

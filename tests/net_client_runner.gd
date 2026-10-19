@@ -243,7 +243,8 @@ func _run() -> void:
 	p.global_position = before + Vector3(300, 0, 0)
 	r.corrected = await _wait(func() -> bool: return p.global_position.distance_to(before) < 20.0, 8.0)
 	Net.say("hello from guest")
-	await _frames(30)
+	# 2 s (was 0.5 s): a host on a slow machine must see the chat before we leave.
+	await _frames(120)
 	r.requests_ok = Net.client.replies.ok
 	r.requests_failed = Net.client.replies.failed
 	_finish()

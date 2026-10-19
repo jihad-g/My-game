@@ -201,7 +201,11 @@ func _process(delta: float) -> void:
 	if not is_ready and chunk_manager.is_near_area_ready():
 		_on_area_ready()
 	if not is_ready:
+		_warm_models(8.0)  # the loading screen mostly waits on worker threads
 		return
+	_warm_frames += 1
+	if not _warm_done and _warm_frames % 10 == 0:
+		_warm_models(0.0)  # anything left: one look every 10th frame
 	_keep_in_world()
 	_biome_check_left -= delta
 	if _biome_check_left <= 0.0:
@@ -287,6 +291,38 @@ func _keep_in_world() -> void:
 		if Time.get_ticks_msec() - _edge_toast_msec > 8000:
 			_edge_toast_msec = Time.get_ticks_msec()
 			Events.toast.emit("The endless sea stretches on. This is the edge of the world.", Color(0.6, 0.8, 1.0))
+
+
+## Milestone 36: every monster look is built once while the loading screen
+## waits for the terrain workers. The first build of a look costs 4-15 ms
+## (its meshes and textures are then cached), and that used to land in play
+## when a new kind of monster first appeared.
+static var _warm_list: Array = []
+static var _warm_looks: Dictionary = {}
+static var _warm_done := false
+var _warm_frames := 0
+
+
+## Builds monster looks for up to `budget_ms` (at least one).
+func _warm_models(budget_ms: float) -> void:
+	if _warm_done:
+		return
+	if _warm_list.is_empty() and _warm_looks.is_empty():
+		for f in ResourceLoader.list_directory("res://data/enemies/"):
+			if f.ends_with(".tres"):
+				_warm_list.append("res://data/enemies/" + f)
+	var t0 := Time.get_ticks_usec()
+	while not _warm_list.is_empty():
+		var md := load(_warm_list.pop_back()) as MonsterData
+		if md and not _warm_looks.has(md.look):
+			_warm_looks[md.look] = true
+			var m := MonsterModel.new()
+			add_child(m)
+			m.build(md)
+			m.free()
+			if (Time.get_ticks_usec() - t0) / 1000.0 >= budget_ms:
+				break
+	_warm_done = _warm_list.is_empty()
 
 
 func _on_area_ready() -> void:

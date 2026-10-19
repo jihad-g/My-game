@@ -51,6 +51,10 @@ static func preload_features() -> void:
 			_feature_cache[path] = load(path)
 ## prop index -> {"prop_id", "mm_index", "transform", "position", "body"}
 var _instances: Dictionary = {}
+## Milestone 36: the interactive bodies of LOD0 props (trees you chop, rocks you
+## mine) are made a few at a time after the chunk appears - ChunkManager calls
+## build_bodies() with a small time budget each frame. [index, PropData, position, scale]
+var _body_queue: Array = []
 
 
 func _init() -> void:
@@ -124,6 +128,12 @@ func build(data: ChunkData, fade: bool = false) -> void:
 		_water_mesh.surface_set_material(0, Materials.water())
 
 	if lod == 0 and not data.collision_faces.is_empty():
+		# Milestone 36: the surface is a closed top skin, so only caves need
+		# two-sided collision; one-sided contacts are ~5x cheaper for every
+		# character standing on the ground.
+		var two_sided := data.layer != TerrainGenerator.Layer.SURFACE
+		if _shape.backface_collision != two_sided:
+			_shape.backface_collision = two_sided
 		_shape.set_faces(data.collision_faces)
 		_body.process_mode = Node.PROCESS_MODE_INHERIT
 		_collision.disabled = false
@@ -215,7 +225,7 @@ func _build_props(data: ChunkData) -> void:
 			mm.set_instance_transform(k, xf)
 			var entry := {"prop_id": prop_id, "mm_index": k, "transform": xf, "position": p.position, "body": null}
 			if lod == 0 and pdata.interact_mode != PropData.InteractMode.NONE:
-				entry.body = _create_body(p.index, pdata, p.position, s)
+				_body_queue.append([p.index, pdata, p.position, s])
 			_instances[p.index] = entry
 		mmi.visible = true
 
@@ -237,6 +247,24 @@ func _get_mmi(prop_id: StringName, pdata: PropData) -> MultiMeshInstance3D:
 	add_child(mmi)
 	_prop_mmis[prop_id] = mmi
 	return mmi
+
+
+## True while some prop bodies still have to be made (see _body_queue).
+func has_pending_bodies() -> bool:
+	return not _body_queue.is_empty()
+
+
+## Makes queued prop bodies until `deadline_usec` (at least one). Returns true when none are left.
+func build_bodies(deadline_usec: int) -> bool:
+	while not _body_queue.is_empty():
+		var q: Array = _body_queue.pop_front()
+		var entry: Dictionary = _instances.get(q[0], {})
+		if entry.is_empty() or entry.body != null:
+			continue  # harvested (or made) in the meantime
+		entry.body = _create_body(q[0], q[1], q[2], q[3])
+		if Time.get_ticks_usec() >= deadline_usec:
+			break
+	return _body_queue.is_empty()
 
 
 func _create_body(index: int, pdata: PropData, pos: Vector3, s: float) -> PropBody:
@@ -336,6 +364,7 @@ func prop_count() -> int:
 
 
 func clear_props() -> void:
+	_body_queue.clear()
 	for index in _instances:
 		var body = _instances[index].body
 		if is_instance_valid(body):

@@ -350,6 +350,24 @@ func _player() -> Node3D:
 	return p
 
 
+## Seconds since the last think (Milestone 36: thinking may skip ticks, so
+## movement timers use this instead of the physics step).
+var _dt := 1.0 / 60.0
+## AI states in which a monster may think every other tick (Milestone 36).
+const SLOW_THINK_STATES := [AI.IDLE, AI.WANDER, AI.CHASE, AI.RETURN, AI.MARCH, AI.RECOVER]
+
+
+## Creative mode can switch the every-other-tick thinking off (to compare).
+static var slow_think := true
+
+
+func _can_think_slow() -> bool:
+	if not slow_think or not ai in SLOW_THINK_STATES or is_boss():
+		return false
+	# Close to the target, attacks start on time.
+	return not _alive(target) or _flat_dist(target) > 5.0
+
+
 func _is_raider() -> bool:
 	return objective != Vector3.INF
 
@@ -393,6 +411,7 @@ func _flat_dist(t: Node3D) -> float:
 
 
 func _think(delta: float) -> void:
+	_dt = delta
 	ai_time -= delta
 	_atk_cd -= delta
 	_heavy_cd -= delta
@@ -731,7 +750,7 @@ func _combat(tgt: Node3D, to_t: Vector3, dist: float) -> void:
 			elif need_token and not is_boss() and dist < CombatDirector.RING + 2.5 \
 					and CombatDirector.attackers_of(tgt) >= CombatDirector.MAX_MELEE:
 				# Wait for an opening: circle the target at our slot.
-				_slot_angle += get_physics_process_delta_time() * 0.35
+				_slot_angle += _dt * 0.35
 				var spot := CombatDirector.circle_point(tgt.global_position, _slot_angle)
 				var to_spot := spot - global_position
 				to_spot.y = 0.0
@@ -1325,7 +1344,7 @@ func _move_dir(dir: Vector3, speed: float) -> void:
 	if dir.length_squared() < 0.0001:
 		return
 	dir = dir.normalized()
-	var dt := get_physics_process_delta_time()
+	var dt := _dt
 	_avoid_t -= dt
 	if _avoid_t <= 0.0:
 		_avoid_t = 0.2
@@ -1371,12 +1390,13 @@ func _move_to(goal: Vector3, speed: float) -> void:
 		_following = false
 		_move_dir(to, speed)
 		return
-	var dt := get_physics_process_delta_time()
+	var dt := _dt
 	_nav_t -= dt
 	var moved := Vector2(goal.x - _nav_goal.x, goal.z - _nav_goal.z).length() if _nav_goal != Vector3.INF else INF
 	var need := _nav_t <= 0.0 or moved > maxf(1.5, to.length() * 0.25) or _nav_i >= nav_path.size()
 	if need and NavGrid.take_search():
-		var r := NavGrid.find_path(w, global_position, goal, _is_raider())
+		var limit := NavGrid.MAX_NODES_CLOSE if to.length() < NavGrid.CLOSE_GOAL_M and not _is_raider() else NavGrid.MAX_NODES
+		var r := NavGrid.find_path(w, global_position, goal, _is_raider(), limit)
 		nav_path = r.points
 		nav_reached = r.reached
 		_nav_i = 0

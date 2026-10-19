@@ -16,6 +16,18 @@ var chests: Array[LootChest] = []
 var _roofs: Dictionary = {}
 var _hidden_roof := false
 var _check := 0.0
+## Milestone 36: the layout and the merged meshes are made on a worker thread,
+## then the nodes are added a few at a time (about STEP_BUDGET_MS per frame).
+## A temple used to cost one 20-40 ms frame.
+const STEP_BUDGET_MS := 3.0
+const BOXES_PER_STEP := 200
+var is_built := false
+var _task := -1
+var _merged: Dictionary = {}
+var _steps: Array[Callable] = []
+var _steps_queued := false
+var _body: StaticBody3D
+var _shapes := {}
 
 
 func setup(p: PoiInfo, m: Node) -> void:
@@ -26,9 +38,64 @@ func setup(p: PoiInfo, m: Node) -> void:
 
 func _ready() -> void:
 	position = Vector3(poi.center.x + 0.5, poi.ground_y(), poi.center.y + 0.5)
+	BuildingManager.all_pieces()  # fill the piece registry on the main thread first
+	load("res://src/building/build_meshes.gd")
 	var gen: TerrainGenerator = World.instance.generator if World.instance else null
+	_task = WorkerThreadPool.add_task(_build_threaded.bind(gen), false, "poi_site")
+
+
+## Worker thread: layout and merged meshes (pure data).
+func _build_threaded(gen: TerrainGenerator) -> void:
 	layout = PoiLayout.build(poi, (func(pos: Vector3) -> float: return gen.get_height_at(pos)) if gen else Callable())
-	_roofs = StaticGeometry.attach(self, StaticGeometry.merge(layout.statics, layout.boxes, layout.roofs, poi.color))
+	_merged = StaticGeometry.merge(layout.statics, layout.boxes, layout.roofs, poi.color)
+
+
+func _queue_steps() -> void:
+	if _task != -1:
+		WorkerThreadPool.wait_for_task_completion(_task)
+		_task = -1
+	if _steps_queued:
+		return
+	_steps_queued = true
+	for key: String in _merged.arrays.keys():
+		_steps.append(_attach_mesh.bind(key))
+	_steps.append(func() -> void: _body = StaticGeometry.make_body(self))
+	var boxes: Array = _merged.boxes
+	for i in range(0, boxes.size(), BOXES_PER_STEP):
+		_steps.append(func() -> void: StaticGeometry.add_boxes(_body, boxes, i, mini(i + BOXES_PER_STEP, boxes.size()), _shapes))
+	_steps.append(_add_doors_and_chests)
+	_steps.append(_add_objects_and_lights)
+	for g in layout.guardians:
+		_steps.append(_spawn_guardian.bind(g))
+	_steps.append(func() -> void:
+		_merged.clear()
+		is_built = true)
+
+
+func _run_steps(budget_ms: float) -> void:
+	var t0 := Time.get_ticks_usec()
+	while not _steps.is_empty():
+		var step: Callable = _steps.pop_front()
+		step.call()
+		if budget_ms >= 0.0 and (Time.get_ticks_usec() - t0) / 1000.0 >= budget_ms:
+			break
+
+
+## Blocks until the site is complete (tests, teleports, update_now(true)).
+func finish_now() -> void:
+	if is_built or (_task == -1 and not _steps_queued):
+		return
+	_queue_steps()
+	_run_steps(-1.0)
+
+
+func _attach_mesh(key: String) -> void:
+	var mi := StaticGeometry.attach_mesh(self, key, _merged.arrays[key])
+	if key.begins_with("roof_"):
+		_roofs[int(key.substr(5))] = mi
+
+
+func _add_doors_and_chests() -> void:
 	var door_data := BuildingManager.get_piece_data(&"wood_door")
 	for xf: Transform3D in layout.doors:
 		var d := BuildPiece.new()
@@ -53,6 +120,9 @@ func _ready() -> void:
 			if World.instance:
 				World.instance.player.character.grant_xp(40, Progression.Source.EXPLORATION))
 		add_child(cb)
+
+
+func _add_objects_and_lights() -> void:
 	for o in layout.objects:
 		var po := PoiObject.new()
 		po.kind = o.kind
@@ -78,7 +148,6 @@ func _ready() -> void:
 		sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		sign.position = Vector3(0, 5.3, -1.0)
 		add_child(sign)
-	_spawn_guardians()
 
 
 func _add_chest(c: Dictionary) -> LootChest:
@@ -95,26 +164,26 @@ func _add_chest(c: Dictionary) -> LootChest:
 	return ch
 
 
-func _spawn_guardians() -> void:
+## One guardian (a build step).
+func _spawn_guardian(g: Dictionary) -> void:
 	var w := World.instance
 	if w == null:
 		return
-	for g in layout.guardians:
-		if poi.kind == PoiInfo.Kind.TEMPLE and manager.has_state("cleared:" + poi.id):
-			continue
-		var data := load("res://data/enemies/%s.tres" % g.data) as MonsterData
-		if data == null or not GameState.can_spawn_slot(g.key, 1800.0):
-			continue
-		var m := w.spawner.spawn_enemy(MONSTER_SCENE, to_global(g.pos), g.key, data) as Monster
-		if m == null:
-			continue
-		m.configure(PoiLayout.RANK_POWER[poi.rank], PoiLayout.RANK_DAMAGE[poi.rank], PoiLayout.RANK_LEVELS[poi.rank], PoiLayout.RANK_XP[poi.rank])
-		m.leash_mult = 0.6
-		if float(g.dormant) > 0.0:
-			m.make_dormant(float(g.dormant))
-		if poi.kind == PoiInfo.Kind.TEMPLE:
-			m.enemy_died.connect(_on_guardian_died, CONNECT_ONE_SHOT)
-		guardians.append(m)
+	if poi.kind == PoiInfo.Kind.TEMPLE and manager.has_state("cleared:" + poi.id):
+		return
+	var data := load("res://data/enemies/%s.tres" % g.data) as MonsterData
+	if data == null or not GameState.can_spawn_slot(g.key, 1800.0):
+		return
+	var m := w.spawner.spawn_enemy(MONSTER_SCENE, to_global(g.pos), g.key, data) as Monster
+	if m == null:
+		return
+	m.configure(PoiLayout.RANK_POWER[poi.rank], PoiLayout.RANK_DAMAGE[poi.rank], PoiLayout.RANK_LEVELS[poi.rank], PoiLayout.RANK_XP[poi.rank])
+	m.leash_mult = 0.6
+	if float(g.dormant) > 0.0:
+		m.make_dormant(float(g.dormant))
+	if poi.kind == PoiInfo.Kind.TEMPLE:
+		m.enemy_died.connect(_on_guardian_died, CONNECT_ONE_SHOT)
+	guardians.append(m)
 
 
 func _on_guardian_died(_e: Enemy) -> void:
@@ -126,6 +195,9 @@ func _on_guardian_died(_e: Enemy) -> void:
 
 
 func _exit_tree() -> void:
+	if _task != -1:
+		WorkerThreadPool.wait_for_task_completion(_task)
+		_task = -1
 	for m in guardians:
 		if is_instance_valid(m) and m.enemy_died.is_connected(_on_guardian_died):
 			m.enemy_died.disconnect(_on_guardian_died)
@@ -135,6 +207,15 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
+	if not is_built:
+		if _task != -1:
+			if not WorkerThreadPool.is_task_completed(_task):
+				return
+			_queue_steps()
+		elif not _steps_queued:
+			return
+		_run_steps(STEP_BUDGET_MS)
+		return
 	if _roofs.is_empty() or World.instance == null:
 		return
 	_check -= delta

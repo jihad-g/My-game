@@ -34,6 +34,10 @@ func _ready() -> void:
 		await _mobs_showcase()
 		get_tree().quit()
 		return
+	if "--only=perf" in OS.get_cmdline_user_args():
+		await _perf_showcase()
+		get_tree().quit()
+		return
 	if "--only=icons" in OS.get_cmdline_user_args():
 		await _icons_showcase()
 		get_tree().quit()
@@ -2563,6 +2567,43 @@ func _anims_showcase() -> void:
 	await _wait(3)
 	await _shot("anims_1_sheet")
 	Engine.time_scale = 1.0
+	world.queue_free()
+	await _wait(5)
+
+
+## Milestone 36: a 40-monster fight and the Creative frame-time report.
+func _perf_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 11.0
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	world.weather.settle()
+	_clear_monsters(world)
+	world.hud.story.visible = false
+	var panel := world.hud.creative
+	panel.set_creative(true)
+	await panel._spawn_crowd()
+	await _wait(90)
+	await _shot("perf_1_crowd")
+	panel.toggle()
+	panel._tabs.current_tab = 5
+	await _wait(10)
+	# Like the stress tool: CPU frame time (this machine draws with a slow software
+	# renderer), measured once the panel has settled.
+	RenderingServer.render_loop_enabled = false
+	await _wait(10)
+	await panel._measure_frames()
+	RenderingServer.render_loop_enabled = true
+	await _wait(5)
+	await _shot("perf_2_report")
 	world.queue_free()
 	await _wait(5)
 

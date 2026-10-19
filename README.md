@@ -5,9 +5,9 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.43.0 — Icons and item uses**. Every item has a pixel icon; honey food, silk clothes, an Ember Feather
-> recipe and gear made from the new monster drops (Dragonbone Greatsword, Serpentscale Boots, Pearl Ring...).
-> Before that, v0.42.1 — the dodge roll became a proper forward roll.
+> Status: **v0.44.0 — Performance**. No more stutter near capitals, towns and ruins; big monster fights and fast
+> travel stay smooth (slowest frame under 25 ms in the stress tool). Before that, v0.43.0 — Icons and item uses:
+> every item has a pixel icon; honey food, silk clothes and gear made from the new monster drops.
 >
 > Before that, **v0.41.0 — More mobs**. A Bone Dragon guards deep crypts, door mimics hide in dungeon rooms, and shadow
 > serpents, ghost cats, diver zombies, turkeys, a top-hat bear and cute cupcake and jelly critters roam the land.

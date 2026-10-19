@@ -13,6 +13,12 @@ extends Node
 @export var max_active: int = 60
 ## Seconds between retries for slots that were too close to the player.
 @export var retry_interval: float = 3.0
+## Milestone 36: at most this many wild monsters appear per frame (a first
+## spawn of a kind costs 5-10 ms; after a teleport whole groups used to come
+## at once). The rest wait for the next frames.
+const SPAWNS_PER_FRAME := 3
+var _budget_frame := -1
+var _spawned_now := 0
 ## Automatic spawning into chunks (tests turn this off to fight in an empty
 ## world; spawn_enemy() still works).
 var wild_enabled := true
@@ -41,7 +47,10 @@ func _process(delta: float) -> void:
 			continue
 		var remaining: Array = []
 		for s: Dictionary in _waiting[coord]:
-			if not _try_spawn(coord, s):
+			if not _budget_left():
+				remaining.append(s)
+				_retry_left = 0.0  # carry on next frame
+			elif not _try_spawn(coord, s):
 				remaining.append(s)
 		if remaining.is_empty():
 			_waiting.erase(coord)
@@ -72,7 +81,10 @@ func _on_chunk_ready(coord: Vector2i, lod: int, chunk: Chunk) -> void:
 	var data_spawns := _spawns_for(coord)
 	var waiting: Array = []
 	for s: Dictionary in data_spawns:
-		if not _try_spawn(coord, s):
+		if not _budget_left():
+			waiting.append(s)
+			_retry_left = 0.0
+		elif not _try_spawn(coord, s):
 			waiting.append(s)
 	if not waiting.is_empty():
 		_waiting[coord] = waiting
@@ -85,6 +97,15 @@ func _on_chunk_removed(coord: Vector2i) -> void:
 ## Spawn slots are a pure function of seed + coord (see TerrainGenerator).
 func _spawns_for(coord: Vector2i) -> Array:
 	return generator.get_spawn_slots(coord)
+
+
+## True while this frame may still spawn a wild monster (Milestone 36).
+func _budget_left() -> bool:
+	var f := Engine.get_process_frames()
+	if f != _budget_frame:
+		_budget_frame = f
+		_spawned_now = 0
+	return _spawned_now < SPAWNS_PER_FRAME
 
 
 func _try_spawn(coord: Vector2i, s: Dictionary) -> bool:
@@ -104,6 +125,7 @@ func _try_spawn(coord: Vector2i, s: Dictionary) -> bool:
 	var enemy := spawn_enemy(rule.enemy_scene, s.position, s.key, rule.enemy_data)
 	if enemy == null:
 		return false
+	_spawned_now += 1
 	scale_for_distance(enemy)
 	if not _by_chunk.has(coord):
 		_by_chunk[coord] = []

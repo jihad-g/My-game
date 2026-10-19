@@ -12,6 +12,8 @@ const BUDGET_P95_MS := 33.3
 const BUDGET_STREAM_SPIKE_MS := 250.0
 const BUDGET_STREAM_READY_S := 12.0
 const BUDGET_CHUNK_MS := 60.0
+## Milestone 36: the slowest single frame of any scenario (headless stress tool).
+const BUDGET_MAX_MS := 25.0
 
 
 # --- World generation ------------------------------------------------------------------------
@@ -164,19 +166,32 @@ static func benchmark(tree: SceneTree, world: World, scale: float = 1.0) -> Dict
 	await tree.process_frame
 	out.idle = await frame_times(tree, roundi(180 * scale))
 	out.idle.nodes = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
-	# 1. A crowd of fighting monsters around the player.
+	# 1. A crowd of fighting monsters around the player. Milestone 36: they
+	# arrive two per frame, as raid waves and the wild spawner bring them in,
+	# and those frames are measured too.
 	var md_ids := [&"skeleton_warrior", &"thorn_crawler", &"bandit_thug", &"grotto_cultist"]
 	var spawned := []
 	var n_enemies := roundi(40 * scale)
-	for i in n_enemies:
-		var ang := TAU * i / n_enemies
-		var pos := p.global_position + Vector3(cos(ang), 0, sin(ang)) * (8.0 + (i % 4) * 3.0)
-		pos.y = world.get_ground_height(pos) + 0.3
-		var md: MonsterData = load("res://data/enemies/%s.tres" % md_ids[i % md_ids.size()])
-		var m := world.spawner.spawn_enemy(PoiSite.MONSTER_SCENE, pos, "", md)
-		if m:
-			spawned.append(m)
-	out.enemies = await frame_times(tree, roundi(240 * scale))
+	var crowd := PackedFloat64Array()
+	var clast := Time.get_ticks_usec()
+	var next := 0
+	for f in roundi(240 * scale):
+		for k in 2:
+			if next >= n_enemies:
+				break
+			var ang := TAU * next / n_enemies
+			var pos := p.global_position + Vector3(cos(ang), 0, sin(ang)) * (8.0 + (next % 4) * 3.0)
+			pos.y = world.get_ground_height(pos) + 0.3
+			var md: MonsterData = load("res://data/enemies/%s.tres" % md_ids[next % md_ids.size()])
+			var m := world.spawner.spawn_enemy(PoiSite.MONSTER_SCENE, pos, "", md)
+			if m:
+				spawned.append(m)
+			next += 1
+		await tree.process_frame
+		var cnow := Time.get_ticks_usec()
+		crowd.append((cnow - clast) / 1000.0)
+		clast = cnow
+	out.enemies = summarize(crowd)
 	out.enemies.count = spawned.size()
 	for m in spawned:
 		if is_instance_valid(m):

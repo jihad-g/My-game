@@ -50,6 +50,7 @@ func setup(p_site: SettlementSite, d: Dictionary) -> void:
 
 
 func _ready() -> void:
+	safe_margin = 0.04  # Milestone 36: see Enemy._ready (cheap terrain contacts)
 	collision_layer = Layers.INTERACTABLE | Layers.NPC
 	collision_mask = 0
 	var cs := CollisionShape3D.new()

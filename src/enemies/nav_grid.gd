@@ -31,11 +31,18 @@ const TTL_MS := 3000
 const STEP_UP := 2
 const STEP_DOWN := 8
 const MAX_NODES := 1800
+## Node limit for close goals (under CLOSE_GOAL_M), Milestone 36.
+const MAX_NODES_CLOSE := 1000
+const CLOSE_GOAL_M := 20.0
 const MAX_RADIUS := 56
 ## Obstacles grow by this much (monster body radius).
 const INFLATE := 0.3
 ## Path searches allowed per physics frame (all monsters together).
 const SEARCHES_PER_FRAME := 4
+## Milestone 36: and at most this much time per physics frame (the first search
+## always runs) - a search that has to scan new tiles can take a few ms, and a
+## crowd asking at once made 10+ ms frames.
+const SEARCH_BUDGET_US := 1500
 const TILE_BUILDS_PER_FRAME := 6
 
 const F_SOLID := 1
@@ -68,6 +75,7 @@ static var _tiles: Dictionary = {}  # Vector2i -> {"t": msec, "h": PackedInt32Ar
 static var _context := ""
 static var _frame := -1
 static var _searches := 0
+static var _spent_us := 0
 static var _builds := 0
 static var stats := {"searches": 0, "tiles_built": 0, "nodes": 0, "reached": 0, "partial": 0, "ms": 0.0}
 
@@ -80,12 +88,13 @@ static func _tick_frame() -> void:
 		_frame = f
 		_searches = 0
 		_builds = 0
+		_spent_us = 0
 
 
 ## True if a search may run this frame (and counts it).
 static func take_search() -> bool:
 	_tick_frame()
-	if _searches >= SEARCHES_PER_FRAME:
+	if _searches >= SEARCHES_PER_FRAME or (_searches > 0 and _spent_us >= SEARCH_BUDGET_US):
 		return false
 	_searches += 1
 	return true
@@ -542,7 +551,9 @@ static func _ladder_links(world: World, centre: Vector2i) -> Dictionary:
 
 ## {"points": PackedVector3Array, "reached": bool, "breach": bool}.
 ## `breaker`: raiders - player buildings cost a lot but can be passed.
-static func find_path(world: World, from: Vector3, to: Vector3, breaker: bool = false) -> Dictionary:
+## `max_nodes` (Milestone 36): monsters chasing something close pass a smaller
+## limit (MAX_NODES_CLOSE) - a search that exhausts 1800 nodes takes ~9 ms.
+static func find_path(world: World, from: Vector3, to: Vector3, breaker: bool = false, max_nodes: int = MAX_NODES) -> Dictionary:
 	var t_start := Time.get_ticks_usec()
 	_check_context(world)
 	stats.searches += 1
@@ -569,7 +580,7 @@ static func find_path(world: World, from: Vector3, to: Vector3, breaker: bool = 
 	var best_k := sk
 	var best_h := _octile(s, g) + absi(sl - gl)
 	var nodes := 0
-	while not open_k.is_empty() and nodes < MAX_NODES:
+	while not open_k.is_empty() and nodes < max_nodes:
 		var ck := _pop(open_f, open_k)
 		if closed.has(ck):
 			continue
@@ -674,6 +685,7 @@ static func find_path(world: World, from: Vector3, to: Vector3, breaker: bool = 
 	if out.reached and out.points.size() > 0:
 		out.points[out.points.size() - 1] = Vector3(to.x, out.points[out.points.size() - 1].y, to.z)
 	stats.ms += (Time.get_ticks_usec() - t_start) / 1000.0
+	_spent_us += Time.get_ticks_usec() - t_start
 	return out
 
 

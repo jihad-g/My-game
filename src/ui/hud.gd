@@ -865,7 +865,7 @@ func show_story(title: String, text: String) -> void:
 
 
 func _update_quest_tracker() -> void:
-	var t := world.quests.tracker()
+	var t := world.quests.tracker(false)  # Milestone 36: cached, searched on a worker
 	_quest_label.visible = not t.is_empty() and world.dungeon == null
 	if t.is_empty():
 		return

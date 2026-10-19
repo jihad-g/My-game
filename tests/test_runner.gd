@@ -166,6 +166,8 @@ func _ready() -> void:
 	await _run_async(&"test_m34_textures_ingame")
 	_run(&"test_m35_icons_data")
 	await _run_async(&"test_m35_crafting_ingame")
+	_run(&"test_m36_perf_units")
+	await _run_async(&"test_m36_perf_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -778,7 +780,9 @@ func test_integration() -> void:
 	var raw := player.inventory.count_of(&"raw_meat")
 	var cooked := player.inventory.count_of(&"cooked_meat")  # Barbarians start with some (M14)
 	fire.interact(player)
-	check(player.inventory.count_of(&"cooked_meat") == cooked + 1 and player.inventory.count_of(&"raw_meat") == raw - 1, "cooking converts raw meat")
+	# Skilled cooks sometimes get a second portion (Campfire.interact), so 1 or 2.
+	var gained := player.inventory.count_of(&"cooked_meat") - cooked
+	check((gained == 1 or gained == 2) and player.inventory.count_of(&"raw_meat") == raw - 1, "cooking converts raw meat (+%d)" % gained)
 	fire.queue_free()
 
 	# 8. Cold exposure in the real world: debuffs but never damage
@@ -2027,7 +2031,8 @@ func test_m5_living() -> void:
 	var body_count := 0
 	for c in site.get_children():
 		if c is StaticBody3D:
-			body_count += c.get_child_count()
+			# Milestone 36: the boxes sit straight on the body (shape owners), not as child nodes.
+			body_count += (c as CollisionObject3D).get_shape_owners().size()
 	check(body_count > 50, "buildings have collision (%d shapes)" % body_count)
 	# Paths: every door reaches the plaza along clear streets.
 	var paths_ok := true
@@ -4739,7 +4744,13 @@ func test_m12_worldgen_stress() -> void:
 func test_m12_performance() -> void:
 	var world: World = await _boot_class(&"knight")
 	await _frames(30)
+	# Milestone 36: the budgets are CPU budgets (like the headless stress tool).
+	# The test machine draws with a software renderer whose speed has nothing to
+	# do with a player's GPU (the same v0.29 code measured 7 ms frames there on
+	# 17 Oct and 236 ms on 18 Oct), so drawing is paused while frames are measured.
+	RenderingServer.render_loop_enabled = false
 	var b: Dictionary = await Stress.benchmark(get_tree(), world, 0.6)
+	RenderingServer.render_loop_enabled = true
 	for k in ["idle", "enemies", "buildings", "particles", "streaming"]:
 		var st: Dictionary = b[k]
 		print("   %-10s avg %.1f ms, p95 %.1f ms, max %.1f ms" % [k, st.avg, st.p95, st.max])
@@ -5215,7 +5226,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.43"), "version 0.43 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.44"), "version 0.44 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -9840,5 +9851,161 @@ func test_m35_crafting_ingame() -> void:
 			p.use_slot(i)
 			break
 	check(p.hunger.current > h0 + 30.0, "the honey cake fills you up")
+	world.queue_free()
+	await _frames(5)
+
+
+## Milestone 36: performance pass - the pure parts.
+func test_m36_perf_units() -> void:
+	# Town meshes come in 32 m tiles.
+	var statics := []
+	for x in [-40.0, -5.0, 5.0, 40.0]:
+		statics.append({"mesh": &"wood_floor", "xform": Transform3D(Basis.IDENTITY, Vector3(x, 0, 0))})
+	var merged := StaticGeometry.merge(statics, [], {}, Color.WHITE, 32.0)
+	var keys: Array = merged.arrays.keys()
+	check(keys.size() >= 3 and keys.all(func(k: String) -> bool: return k.begins_with("solid@") or k.begins_with("cards_")),
+		"town meshes are split into tiles (%s)" % str(keys))
+	var single := StaticGeometry.merge(statics, [])
+	check(single.arrays.has("solid"), "without a tile size it is one mesh, as before")
+	# Path searches have a time budget and a smaller limit for close goals.
+	check(NavGrid.SEARCH_BUDGET_US > 0 and NavGrid.MAX_NODES_CLOSE < NavGrid.MAX_NODES, "path searches are budgeted")
+	# The slowest-frame budget is part of the stress tool.
+	check(Stress.BUDGET_MAX_MS <= 25.0, "stress tool budget: slowest frame under %.0f ms" % Stress.BUDGET_MAX_MS)
+
+
+## Milestone 36: performance pass in game - staged town/POI builds, spawn
+## budgets, the quest hint search, collision margins, monster thinking.
+func test_m36_perf_ingame() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	check(World._warm_done or not World._warm_list.is_empty() or World._warm_looks.size() > 10,
+		"monster looks are built while the world loads (%d looks)" % World._warm_looks.size())
+	# A capital is built over several frames, a few small steps each.
+	var k := _nearest(world, true)
+	if check(k != null, "found a kingdom capital"):
+		var site := SettlementSite.new()
+		site.setup(k, world.living, 1)
+		world.living.add_child(site)
+		check(not site.is_built and site.layout == null, "the layout is made on a worker thread")
+		var frames := 0
+		while not site.is_built and frames < 600:
+			await get_tree().process_frame
+			frames += 1
+		check(site.is_built and site.build_frames >= 5, "%s was built over %d frames" % [k.name, site.build_frames])
+		check(site.collision_box_count() > 300 and site.npcs.size() == site.layout.npcs.size(),
+			"its collision (%d boxes) and townsfolk (%d) are all there" % [site.collision_box_count(), site.npcs.size()])
+		var tiles := 0
+		for c in site.get_children():
+			if c is MeshInstance3D and String(c.name).begins_with("Solid"):
+				tiles += 1
+		check(tiles >= 4, "the capital is drawn as %d mesh tiles" % tiles)
+		# Step by step: no single step is a long one.
+		var site2 := SettlementSite.new()
+		site2.setup(k, world.living, 1)
+		world.living.add_child(site2)
+		WorkerThreadPool.wait_for_task_completion(site2._task)
+		site2._queue_steps()
+		var worst := 0.0
+		while not site2._steps.is_empty():
+			var t0 := Time.get_ticks_usec()
+			site2._run_steps(0.0)
+			worst = maxf(worst, (Time.get_ticks_usec() - t0) / 1000.0)
+		check(site2.is_built and worst < 30.0, "the slowest build step took %.1f ms" % worst)
+		site.queue_free()
+		site2.queue_free()
+		await _frames(3)
+	# POI sites: built in steps too, and finish_now completes one at once.
+	var poi: PoiInfo = null
+	for q in world.generator.pois.near(p.global_position, 3000.0):
+		if q.kind == PoiInfo.Kind.TEMPLE or q.kind == PoiInfo.Kind.TOWER:
+			poi = q
+			break
+	if check(poi != null, "found a tower or temple"):
+		var ps := PoiSite.new()
+		ps.setup(poi, world.exploration)
+		world.exploration.add_child(ps)
+		check(not ps.is_built, "a POI site is not built in the frame it appears")
+		ps.finish_now()
+		check(ps.is_built and ps.layout != null and ps.get_child_count() > 3, "finish_now completes it (%d nodes)" % ps.get_child_count())
+		ps.queue_free()
+		await _frames(2)
+	# Wild spawns: at most a few per frame.
+	var sp := world.spawner
+	sp.wild_enabled = false  # nothing else may use the budget during the check
+	sp._budget_frame = Engine.get_process_frames()
+	sp._spawned_now = EnemySpawner.SPAWNS_PER_FRAME
+	check(not sp._budget_left(), "the wild spawn budget for this frame is used up")
+	await _pframes(2)
+	check(sp._budget_left(), "and it refills the next frame")
+	sp.wild_enabled = true
+	# Quest hint: searched on a worker thread, same answer as the direct search.
+	var ql := world.quests
+	if ql.is_active(QuestBook.MAIN):
+		var direct: Dictionary = ql.tracker(true)
+		ql._hint = {"key": "", "pos": Vector3.INF, "target": Vector3.INF}
+		var t0 := Time.get_ticks_usec()
+		ql.tracker(false)
+		var ms := (Time.get_ticks_usec() - t0) / 1000.0
+		var frames := 0
+		var t: Dictionary = {}
+		while frames < 120:
+			await get_tree().process_frame
+			frames += 1
+			t = ql.tracker(false)
+			if t.get("where", "") != "":
+				break
+		check(ms < 5.0 and t.get("where", "") == direct.get("where", "x"),
+			"the HUD's quest hint is found in the background (%.1f ms on the main thread, %d frames): %s" % [ms, frames, t.get("where", "")])
+	# Collision margins and spawn lift.
+	check(is_equal_approx(p.safe_margin, 0.01), "the player's collision margin is 1 cm")
+	var m := _spawn_monster(world, &"skeleton_warrior", Vector3(14, 0, 0))
+	check(m != null and is_equal_approx(m.safe_margin, 0.04), "monsters use a 4 cm collision margin")
+	if m:
+		check(m.global_position.y > m.home_position.y + 0.03, "monsters appear a few cm above the ground and land")
+		# Thinking every other tick: only when not about to attack.
+		m.target = p
+		m.ai = Monster.AI.CHASE
+		check(m._can_think_slow(), "a monster chasing from 14 m thinks every other tick")
+		m.ai = Monster.AI.ATTACK
+		check(not m._can_think_slow(), "an attacking monster thinks every tick")
+		m.ai = Monster.AI.CHASE
+		m.global_position = p.global_position + Vector3(2, 0, 0)
+		check(not m._can_think_slow(), "and so does one right next to its target")
+		await _frames(30)
+		check(m.is_on_floor() and m.global_position.y - world.get_ground_height(m.global_position) < 0.2, "the monster stands on the ground")
+	# Surface terrain collision is one-sided (caves keep two-sided).
+	var any_chunk: Chunk = null
+	for c in world.chunk_manager.get_children():
+		if c is Chunk and (c as Chunk).has_collision():
+			any_chunk = c
+			break
+	check(any_chunk != null and not any_chunk._shape.backface_collision, "surface terrain collision is one-sided")
+	# Terrain chunks: their tree/rock bodies are made a few at a time.
+	var cm := world.chunk_manager
+	var lod0: Chunk = null
+	for c in cm.get_children():
+		if c is Chunk and (c as Chunk).lod == 0 and (c as Chunk).prop_count() > 3:
+			lod0 = c
+			break
+	if check(lod0 != null, "found a full-detail chunk with props"):
+		lod0.build(cm.generator.generate_chunk(lod0.coord, 0, lod0.layer))
+		check(lod0.has_pending_bodies(), "a freshly built chunk queues its prop bodies instead of making them all at once")
+		if not cm._body_chunks.has(lod0):
+			cm._body_chunks.append(lod0)
+		await _pframes(30)
+		var bodies := 0
+		for c in lod0.get_children():
+			if c is PropBody:
+				bodies += 1
+		check(not lod0.has_pending_bodies() and bodies > 0, "they are all made within a few frames (%d bodies)" % bodies)
+	# Monster groups keep apart through the cell grid (same result as before).
+	var a := _spawn_monster(world, &"skeleton_warrior", Vector3(20, 0, 0))
+	var b := _spawn_monster(world, &"skeleton_warrior", Vector3(20.6, 0, 0))
+	await _frames(2)
+	if a and b:
+		var push := CombatDirector.separation(a)
+		check(push.x < -0.1, "crowded monsters push apart (%.2f)" % push.x)
 	world.queue_free()
 	await _frames(5)

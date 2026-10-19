@@ -39,6 +39,12 @@ signal chunk_removed(coord: Vector2i)
 @export var prefetch_seconds: float = 3.0
 ## Most chunks queued for prefetch at once.
 @export var max_prefetch: int = 96
+## Speed (m/s) from which travelling keeps a worker for the prefetch (Milestone 36).
+const PREFETCH_MIN_SPEED := 8.0
+## Milestone 36: main-thread time per frame for the interactive prop bodies of
+## new LOD0 chunks (a chunk used to make all of its bodies in its build frame).
+const BODY_BUDGET_MS := 1.0
+var _body_chunks: Array[Chunk] = []
 ## Draws low-detail terrain to the horizon beyond the LOD rings.
 @export var far_terrain_enabled: bool = true
 ## Settlements/POIs within this distance (m) are laid out in the background.
@@ -145,6 +151,7 @@ func _process(delta: float) -> void:
 		_maybe_prewarm()
 	_dispatch()
 	_apply_results()
+	_build_bodies()
 	if not _settled and is_near_area_ready():
 		_settled = true
 	_update_fade_map()
@@ -173,16 +180,47 @@ func is_collision_ready_at(pos: Vector3) -> bool:
 	return chunk != null and chunk.has_collision()
 
 
-## True when every LOD0 chunk around the focus is built.
+## True when every LOD0 chunk around the focus is built (prop bodies included).
 func is_near_area_ready() -> bool:
 	if focus == null or TerrainGenerator.world_to_chunk(focus.global_position) != _center:
 		return false  # focus moved; desired set not refreshed yet
 	for coord in _desired:
 		if _desired[coord] == 0:
 			var chunk: Chunk = _chunks.get(coord)
-			if chunk == null or chunk.lod != 0:
+			if chunk == null or chunk.lod != 0 or chunk.has_pending_bodies():
 				return false
 	return not _desired.is_empty()
+
+
+## Milestone 36: makes the queued prop bodies of LOD0 chunks, nearest chunk
+## first, within BODY_BUDGET_MS (and all of them while the area loads).
+func _build_bodies() -> void:
+	if _body_chunks.is_empty():
+		return
+	var budget := BODY_BUDGET_MS if _settled else 8.0
+	var deadline := Time.get_ticks_usec() + int(budget * 1000.0)
+	while not _body_chunks.is_empty():
+		var best := 0
+		var best_d := INF
+		for i in _body_chunks.size():
+			var c := _body_chunks[i]
+			var d := INF if not is_instance_valid(c) else Vector2(c.coord - _center).length_squared()
+			if d < best_d:
+				best_d = d
+				best = i
+		var chunk := _body_chunks[best]
+		if not is_instance_valid(chunk) or chunk.lod != 0 or chunk.build_bodies(deadline):
+			_body_chunks.remove_at(best)
+		if Time.get_ticks_usec() >= deadline:
+			return
+
+
+## Makes every queued prop body now (tests, teleports).
+func finish_bodies() -> void:
+	for c in _body_chunks:
+		if is_instance_valid(c):
+			c.build_bodies(Time.get_ticks_usec() + 1000000000)
+	_body_chunks.clear()
 
 
 func loaded_count() -> int:
@@ -332,21 +370,25 @@ func _update_desired() -> void:
 	# Rebuild the work queue. Closest first, nudged towards the direction of
 	# travel so the area ahead appears before the area behind.
 	_queue.clear()
-	for coord: Vector2i in _desired:
-		var chunk: Chunk = _chunks.get(coord)
-		if chunk != null and chunk.lod == _desired[coord]:
-			continue
-		if _pending.has(coord) and _pending[coord].lod == _desired[coord] and not _pending[coord].prefetch:
-			continue
-		_queue.append(coord)
 	var bias := Vector2(predicted_center() - _center).limit_length(2.0)
 	# Milestone 18d: the part of the screen the camera looks at fills in first
 	# (the top-down camera sees much further ahead than behind the hero).
 	var view := view_direction()
 	bias += Vector2(view.x, view.z) * 1.5
 	var focus_pt := Vector2(_center) + bias
-	_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
-		return Vector2(a).distance_squared_to(focus_pt) < Vector2(b).distance_squared_to(focus_pt))
+	# Milestone 36: sort (distance², x, z) vectors with the engine's own sort -
+	# the old script comparison function cost ~5 ms per chunk border.
+	var keyed: Array[Vector3] = []
+	for coord: Vector2i in _desired:
+		var chunk: Chunk = _chunks.get(coord)
+		if chunk != null and chunk.lod == _desired[coord]:
+			continue
+		if _pending.has(coord) and _pending[coord].lod == _desired[coord] and not _pending[coord].prefetch:
+			continue
+		keyed.append(Vector3(Vector2(coord).distance_squared_to(focus_pt), coord.x, coord.y))
+	keyed.sort()
+	for k in keyed:
+		_queue.append(Vector2i(int(k.y), int(k.z)))
 	_update_prefetch()
 
 
@@ -368,16 +410,31 @@ func _update_prefetch() -> void:
 			var now: int = _desired.get(coord, 99)
 			if lod >= now or _cache.has(Vector4i(coord.x, coord.y, lod, layer)):
 				continue
-			list.append([coord, lod, Vector2(dx, dz).length_squared()])
-	# Nearest to where the focus is heading first.
-	list.sort_custom(func(a: Array, b: Array) -> bool: return a[2] < b[2])
+			list.append(Vector4(dx * dx + dz * dz, coord.x, coord.y, lod))
+	# Nearest to where the focus is heading first (engine sort, Milestone 36).
+	list.sort()
 	for i in mini(list.size(), max_prefetch):
-		_prefetch_queue.append([list[i][0], list[i][1]])
+		var v: Vector4 = list[i]
+		_prefetch_queue.append([Vector2i(int(v.y), int(v.z)), int(v.w)])
+
+
+## Milestone 36: workers the prefetch may use while the needed queue still has
+## work - one while travelling, unless a full-detail (LOD0) chunk is waiting.
+func _travel_prefetch_slots() -> int:
+	if _prefetch_queue.is_empty() or _threads < 2 or single_threaded or _velocity.length() < PREFETCH_MIN_SPEED:
+		return 0
+	for k in mini(_queue.size(), 12):
+		var c: Vector2i = _queue[k]
+		if int(_desired.get(c, 2)) == 0 and not _pending.has(c):
+			return 0
+	return 1
 
 
 func _dispatch() -> void:
 	var i := 0
-	while _pending.size() < _threads and i < _queue.size():
+	# Keep one worker free for the prefetch while travelling (see above).
+	var limit := _threads - mini(_travel_prefetch_slots(), 1)
+	while _pending.size() < limit and i < _queue.size():
 		var coord := _queue[i]
 		if _pending.has(coord):
 			i += 1  # still generating another LOD; retried when it completes
@@ -395,14 +452,24 @@ func _dispatch() -> void:
 			_cached_ready.append(cached)
 			continue
 		_start_task(coord, lod, false)
-	# Prefetch only with spare workers: never slows down what is needed now.
-	while _pending.size() < _threads - 1 and not _prefetch_queue.is_empty() and _queue.size() <= i:
+	# Prefetch with spare workers. When everything needed now is already
+	# running, up to all but one worker; while travelling (Milestone 36) one
+	# worker as long as no full-detail chunk is waiting - the needed queue is
+	# never empty on the move, so before this the prefetch never ran.
+	var drained := _queue.size() <= i
+	var allowed := (_threads - 1) if drained else _travel_prefetch_slots()
+	var running := 0
+	for c: Vector2i in _pending:
+		if _pending[c].prefetch:
+			running += 1
+	while running < allowed and _pending.size() < (_threads - 1 if drained else _threads) and not _prefetch_queue.is_empty():
 		var item: Array = _prefetch_queue.pop_front()
 		var coord: Vector2i = item[0]
 		var lod: int = item[1]
 		if _pending.has(coord) or _cache.has(Vector4i(coord.x, coord.y, lod, layer)):
 			continue
 		_start_task(coord, lod, true)
+		running += 1
 	if far and not (single_threaded and not _pending.is_empty()):
 		far.dispatch(maxi(1, _threads - _pending.size()))
 
@@ -477,6 +544,8 @@ func _build(data: ChunkData) -> void:
 		chunk = _take_chunk()
 		_chunks[data.coord] = chunk
 	chunk.build(data, fade_in and _settled)
+	if chunk.has_pending_bodies() and not _body_chunks.has(chunk):
+		_body_chunks.append(chunk)
 	if chunk.is_fading():
 		_fading.append(chunk)
 	chunk_ready.emit(data.coord, data.lod, chunk)

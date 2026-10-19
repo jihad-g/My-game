@@ -102,8 +102,25 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: full quests (multi-step, story), dialogue trees with choices beyond the fixed options
 - [ ] NOT IMPLEMENTED: buying houses, renting beds at an inn, kingdom wars/politics (raids on settlements: Milestone 7)
 - [ ] NOT IMPLEMENTED: crop watering, animals/livestock; village crops can't be harvested by the player (seasons: M28)
-- [ ] Known limitation: approaching a kingdom capital costs one ~40 ms frame on the main thread (collision nodes); geometry merges on a worker
+- [x] Fixed in Milestone 36: approaching a kingdom capital no longer stutters (the site is built in small steps over ~20 frames)
 - [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
+
+## Milestone 36 — Performance  ✅ (v0.44.0)
+
+- [x] Prefetch bug fixed: while travelling one worker loads the area ahead (unless a full-detail chunk is waiting)
+- [x] Heavy builds split over frames: towns and capitals (layout + meshes on a worker, then small steps: one
+      mesh tile, 200 collision boxes, the doors, one townsperson per step), ruins/towers/temples the same way;
+      terrain chunks make their tree/rock bodies a few at a time (1 ms per frame, nearest chunk first)
+- [x] Capital stutter removed: one ~120 ms frame before, now ~20 frames of a few ms; towns are 32 m mesh tiles
+- [x] Monster crowds: grid separation, think every other tick when walking about, step-up retry cooldown,
+      4 cm collision margins (1 cm for the player), one-sided surface terrain collision, path search budget
+- [x] Spawning: raid waves 2 per frame, wild spawns at most 3 per frame, monster looks warmed while loading
+- [x] Quest tracker hint searched on a worker thread (up to 54 ms on the main thread before)
+- [x] Chunk ring and far-tile queues sorted by the engine (a chunk border cost up to ~15 ms before)
+- [x] Stress tool: slowest frame under 25 ms in every scenario (headless); Creative "Perf (M36)" row; tests `test_m36_*`
+- [ ] NOT IMPLEMENTED: frame times with rendering on real GPUs (the stress tool measures CPU work, headless)
+- [ ] NOT IMPLEMENTED: incremental (multi-frame) path searches - a single long search can still take a few ms
+- [ ] NOT IMPLEMENTED: Jolt physics (tried: crowds are faster, but streaming had new spikes - left for later)
 
 ## Milestone 35 — Icons and item uses  ✅ (v0.43.0)
 
@@ -252,7 +269,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Tests `test_m24_*` run and pass (42 checks); older groups re-run and pass
 - [ ] NOT IMPLEMENTED: Creative mode in co-op (single player only, on purpose for now)
 - [ ] NOT IMPLEMENTED: fly / no-clip, place any building piece without unlocking it, collision shape view
-- [ ] Known issue (older than M24, also fails on v0.31.0): `test_m9_streaming` "prefetch generated chunks ahead" - the prefetch queue fills but `prefetched` stays 0. Check in the performance pass (item 9).
+- [x] Fixed in Milestone 36: `test_m9_streaming` "prefetch generated chunks ahead" (the prefetch only ran when nothing else was queued, which never happens while travelling)
 - [ ] NOT IMPLEMENTED: Creative changes are not undone when you turn it off (levels, items and recipes stay) - use a Creative world
 
 ## Milestone 23 — Elemental Armour  ✅ (v0.31.0)

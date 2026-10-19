@@ -72,6 +72,9 @@ explore points of interest and dungeons → get better gear → go further out (
 - **Smoother land (v0.27.0, new worlds)**: flowing hills, gentle lowlands, wide beaches, river valleys, and
   biome borders that blend over about 32 m. Worlds made before v0.27.0 keep their original land.
 - **Streaming without pop-in (v0.27.0)**: terrain and props fade in; far forests, towns and towers show on the horizon.
+- **No stutter (v0.44.0)**: towns, capitals, ruins, towers and temples appear over several frames (their
+  layout and meshes are made on worker threads); raid waves and wild monsters arrive a few per frame; the
+  streamer looks ahead while you travel. The stress tool keeps the slowest frame under 25 ms.
 - **Kingdoms and villages** with generated names (e.g. "Kingdom of Valdoria", capital "Valdor"). The
   survey of seed 20250101 finds 229 capitals and 658 villages. Each kingdom has a ruler on a throne who
   gives titles: *Friend of …*, *Knight of …*, *Champion of …*.
@@ -295,7 +298,10 @@ Each system has a short "how it works" note. Key numbers come from the code and 
   thorned, blinking, juggernaut, venomous. Champions have two.
 - **Scaling**: by dungeon rank, and in the wild by distance from spawn (one rank per 1.2 km). Not by the
   player's level.
-- Perception is distance only (no line of sight). No navmesh pathfinding.
+- Perception is distance only (no line of sight). Paths: grid A* (NavGrid, Milestone 25).
+- **Big fights stay smooth (v0.44.0)**: a monster that is walking about or closing in (not next to its
+  target, no attack under way) thinks every other tick; crowding uses a grid instead of checking every
+  other monster; path searches have a time budget per tick.
 - **Important:** in the open world only the Thornback Boar spawns on its own, and only in 4 biomes
   (Verdant Meadows, Whispering Forest, Frostpine Taiga, Emerald Jungle). All other monsters appear only at
   points of interest, in dungeons, in raids and in events.

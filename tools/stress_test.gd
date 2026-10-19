@@ -80,7 +80,8 @@ func _bench(md: PackedStringArray) -> void:
 	md.append("## In-game frame times")
 	md.append("")
 	md.append("Main scene, knight at the default spawn, view distance from the default settings. Budgets: average")
-	md.append("≤ %.1f ms (60 fps), 95th percentile ≤ %.1f ms (30 fps); streaming hitches ≤ %.0f ms." % [Stress.BUDGET_AVG_MS, Stress.BUDGET_P95_MS, Stress.BUDGET_STREAM_SPIKE_MS])
+	md.append("≤ %.1f ms (60 fps), 95th percentile ≤ %.1f ms (30 fps), slowest frame of every scenario ≤ %.0f ms" % [Stress.BUDGET_AVG_MS, Stress.BUDGET_P95_MS, Stress.BUDGET_MAX_MS])
+	md.append("(Milestone 36); streaming hitches ≤ %.0f ms." % Stress.BUDGET_STREAM_SPIKE_MS)
 	md.append("")
 	md.append("| Scenario | Load | Average | 95th pct | Worst |")
 	md.append("|---|---|---:|---:|---:|")
@@ -91,6 +92,18 @@ func _bench(md: PackedStringArray) -> void:
 	md.append(_row("Streaming (4 × 700 m jumps)", "near area ready ≤ %.1f s" % float(b.streaming.ready_s), b.streaming))
 	md.append("")
 	md.append("Static memory after the run: %.0f MB." % float(b.memory_mb))
+	var worst := 0.0
+	for k in ["idle", "enemies", "buildings", "particles", "streaming"]:
+		worst = maxf(worst, float(b[k].max))
+	md.append("")
+	md.append("**Slowest frame: %.1f ms** (budget %.0f ms) - %s." % [worst, Stress.BUDGET_MAX_MS,
+		"within budget" if worst <= Stress.BUDGET_MAX_MS else "OVER BUDGET"])
+	md.append("")
+	md.append("Milestone 36: the monster crowd arrives two per frame (as raid waves and the wild spawner bring")
+	md.append("monsters in) and those frames are measured. Towns, capitals and ruins are built in small steps")
+	md.append("over several frames, terrain chunks make their prop bodies 1 ms per frame, monsters that are")
+	md.append("only walking about think every other tick, and collision margins keep contacts with the terrain")
+	md.append("mesh cheap.")
 	md.append("")
 	md.append("Notes: chunk meshes are built on worker threads and committed under a per-frame budget")
 	md.append("(`ChunkManager`), so streaming shows up as a few longer frames, not stalls. Far terrain is")

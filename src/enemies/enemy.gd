@@ -50,6 +50,10 @@ const FAR_DISTANCE := 42.0
 var _far := false
 var _think_acc := 0.0
 var _think_skip := 0
+## Milestone 36: seconds before the next step-up probe after a failed one.
+var _step_cd := 0.0
+const STEP_RETRY := 0.3
+const SPAWN_LIFT := 0.06
 var _puffed := false
 # Milestone 19 co-op (NetCombat).
 ## Network id on a co-op host (0 = not sent yet / offline).
@@ -65,6 +69,10 @@ var _boss_shown := false
 
 func _ready() -> void:
 	add_to_group(&"enemies")
+	# Milestone 36: a 4 cm collision margin. With Godot's default (1 mm) a body
+	# standing on the terrain mesh re-collided in every slide step: ~1.1 ms per
+	# move_and_slide instead of ~0.06 ms, the biggest cost of a crowd.
+	safe_margin = 0.04
 	collision_layer = Layers.ENEMY
 	collision_mask = Layers.TERRAIN | Layers.PROP | Layers.PLAYER | Layers.ENEMY | Layers.BUILDING
 	floor_snap_length = 0.6
@@ -92,7 +100,9 @@ func _apply_data() -> void:
 func spawn_at(pos: Vector3, key: String) -> void:
 	spawn_key = key
 	home_position = pos
-	global_position = pos
+	# Milestone 36: a few cm up, so the first move is a landing - a body that
+	# starts touching the terrain mesh cost up to 10 ms to push out.
+	global_position = pos + Vector3(0, SPAWN_LIFT, 0)
 	is_dead = false
 	exposed = false
 	velocity = Vector3.ZERO
@@ -271,6 +281,16 @@ func _physics_process(delta: float) -> void:
 			_think(_think_acc)
 			_think_acc = 0.0
 			_desired_velocity *= status.speed_mult()
+	elif _can_think_slow():
+		# Milestone 36: walking about or closing in (no attack under way, not
+		# next to the target): think every other tick, half the crowd each
+		# tick. The last decision (direction, speed) carries over.
+		_think_acc += delta
+		_think_skip = (_think_skip + 1) % 2
+		if _think_skip == get_instance_id() % 2:
+			_think(_think_acc)
+			_think_acc = 0.0
+			_desired_velocity *= status.speed_mult()
 	else:
 		_think(delta + _think_acc)
 		_think_acc = 0.0
@@ -287,8 +307,13 @@ func _physics_process(delta: float) -> void:
 	else:
 		_apply_gravity(delta)
 	# Only probe for a step when something stopped us last tick (saves physics queries).
-	if is_on_floor() and is_on_wall() and _blocked_by_world():
-		GroundMotion.try_step_up(self, Vector3(velocity.x, 0, velocity.z) * delta, max_step_height)
+	# Milestone 36: after a failed try (a tree or a cliff, not a step) wait a
+	# moment before probing again - a monster pushing into a wall used to
+	# make four physics probes every tick.
+	_step_cd -= delta
+	if _step_cd <= 0.0 and is_on_floor() and is_on_wall() and _blocked_by_world():
+		if not GroundMotion.try_step_up(self, Vector3(velocity.x, 0, velocity.z) * delta, max_step_height):
+			_step_cd = STEP_RETRY
 	move_and_slide()
 	velocity -= _knockback
 	_knockback = _knockback.move_toward(Vector3.ZERO, 25.0 * delta)
@@ -300,6 +325,11 @@ func _physics_process(delta: float) -> void:
 		poise = move_toward(poise, data.max_poise, data.max_poise * 0.25 * delta)
 	if global_position.y < -60.0:
 		NodePool.release_or_free(self)
+
+
+## Milestone 36: true when this enemy may think every other tick (see Monster).
+func _can_think_slow() -> bool:
+	return false
 
 
 ## True when last tick's movement ran into terrain or a building (a possible

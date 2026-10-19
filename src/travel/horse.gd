@@ -66,6 +66,7 @@ var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity", 
 
 func _ready() -> void:
 	add_to_group(&"horses")
+	safe_margin = 0.04  # Milestone 36: see Enemy._ready (cheap terrain contacts)
 	collision_layer = Layers.INTERACTABLE
 	collision_mask = Layers.TERRAIN | Layers.PROP | Layers.BUILDING
 	floor_snap_length = 0.5

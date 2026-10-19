@@ -2,6 +2,56 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.44.0] — Milestone 36: Performance
+
+### Fixed
+- **Prefetch while travelling** (`test_m9_streaming` "prefetch generated chunks ahead", failing since before
+  v0.26): the look-ahead loading only started when nothing else was queued, which never happens on the move.
+  Now one worker loads the area ahead while you travel, as long as no full-detail chunk is waiting.
+- **Stutter near capitals and towns**: a capital used to be attached in one frame (~120 ms: 1,250 collision
+  boxes as separate nodes, 22 townsfolk, the meshes). Its layout and meshes are now made on a worker thread
+  and the rest is added in small steps (one mesh tile, 200 collision boxes, the doors, one townsperson) over
+  about 20 frames. Towns are split into 32 m mesh tiles; collision boxes sit directly on one body.
+- **Ruins, towers and temples** are built the same way (they cost 20-40 ms in one frame before).
+- **Terrain chunks**: the bodies of the trees and rocks you can chop or mine are made a few at a time after
+  a chunk appears (1 ms per frame, nearest chunk first), not all in the chunk's build frame. The loading
+  screen and "area ready" wait for the ones around you.
+- **The quest tracker** searched up to 3 km of the world on the main thread every half second (up to 54 ms
+  after a long trip). The search now runs on a worker thread and is cached.
+
+### Changed (smoother big fights and travel)
+- Monster crowds: keeping apart uses a grid snapshot per tick instead of every monster checking every
+  other one; monsters walking about or closing in (not next to their target, no attack under way) think
+  every other tick; a monster pushing into a wall waits 0.3 s before trying to step up again.
+- Collision margins: 4 cm for monsters, NPCs and horses, 1 cm for the player (Godot's 1 mm default made
+  each move on the terrain ~20x more expensive). Monsters appear 6 cm above the ground and land.
+- Surface terrain collision is one-sided (caves stay two-sided): contacts are ~5x cheaper.
+- Path searches: at most 1.5 ms per physics tick (the first search always runs) and a 1,000-node limit for
+  close goals.
+- Raid waves arrive two raiders per frame; wild monsters at most three per frame.
+- Every monster look is built once while the loading screen waits (a first build costs 4-15 ms).
+- The chunk ring and far-tile queues are sorted by the engine (crossing a chunk border cost up to ~15 ms).
+
+### Stress tool
+- New budget: the slowest frame of every scenario under 25 ms (headless). The monster crowd now arrives
+  two per frame, as in the game, and those frames are measured too. See docs/PERFORMANCE.md.
+- Slowest frames before -> after: monster crowd 62.4 -> 19.8 ms, streaming 62.3 -> 19.4 ms, large base
+  19.3 -> 12.3 ms, particles 11.5 -> 10.1 ms, idle 13.9 -> 23.1 ms (one frame; all within the 25 ms budget).
+  Crowd 95th percentile 30.8 -> 14.4 ms.
+
+### Added
+- Creative mode → Debug: "Perf (M36)" row - spawn a crowd of 40, measure 10 s of frames (average,
+  95th percentile, slowest), switch the every-other-tick thinking off to compare.
+
+### Tests
+- `test_m36_perf_units`, `test_m36_perf_ingame` (staged builds, mesh tiles, spawn budget, quest hint
+  worker, margins, thinking, one-sided terrain, crowd grid); `test_m9_streaming` passes again.
+- `test_m12_performance` measures CPU frame time with drawing paused, like the stress tool: the test
+  machine's software renderer became ~35x slower (the same older code went from 7 ms to 236 ms frames),
+  which says nothing about a player's GPU.
+- `test_integration`: cooking may give a bonus portion (skilled cooking), so 1 or 2 cooked meat count.
+- `test_m5_living` counts the town's collision shapes on the body (they are no longer child nodes).
+
 ## [0.43.0] — Milestone 35: Icons and item uses
 
 ### Added

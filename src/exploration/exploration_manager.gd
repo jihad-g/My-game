@@ -64,6 +64,8 @@ func update_now(spawn_all: bool = false) -> void:
 			add_child(site)
 			sites[poi.id] = site
 			spawned += 1
+	if spawn_all:
+		finish_sites()
 	for id in sites.keys():
 		if (sites[id] as PoiSite).poi.distance_to(p) > DESPAWN_RANGE:
 			_free(id)
@@ -98,8 +100,10 @@ func site_of(poi: PoiInfo) -> PoiSite:
 	return sites.get(poi.id)
 
 
+## Finishes building every streamed-in site now (tests, teleports).
 func finish_sites() -> void:
-	pass  # POI sites build synchronously
+	for id in sites:
+		(sites[id] as PoiSite).finish_now()
 
 
 ## Real seconds in one game hour (the day length can change).

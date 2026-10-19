@@ -118,6 +118,9 @@ func update_focus(center: Vector2i, layer: int, hole_r: int) -> void:
 		if dr.x > radius_chunks + TILE_CHUNKS or dr.y < hole_r - 0.5:
 			_release(t)
 	_queue.clear()
+	# Milestone 36: (nearest distance, x, z) vectors sorted by the engine - the
+	# old script comparison function recomputed both distances per comparison.
+	var keyed: Array[Vector3] = []
 	for tz in range(tc.y - rt, tc.y + rt + 1):
 		for tx in range(tc.x - rt, tc.x + rt + 1):
 			var t := Vector2i(tx, tz)
@@ -125,12 +128,11 @@ func update_focus(center: Vector2i, layer: int, hole_r: int) -> void:
 			if dr.x > radius_chunks or dr.y < hole_r - 0.5:
 				continue
 			var tile: Dictionary = _tiles.get(t, {})
-			if tile.is_empty():
-				_queue.append(t)
-			elif tile.hole != center and (tile.holed or dr.x <= hole_r + 1.5):
-				_queue.append(t)  # the hole moved across this tile: re-cut it
-	_queue.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
-		return tile_distance_range(a, center).x < tile_distance_range(b, center).x)
+			if tile.is_empty() or (tile.hole != center and (tile.holed or dr.x <= hole_r + 1.5)):
+				keyed.append(Vector3(dr.x, t.x, t.y))  # new, or the hole moved across it: re-cut
+	keyed.sort()
+	for k in keyed:
+		_queue.append(Vector2i(int(k.y), int(k.z)))
 
 
 ## Starts up to `slots` worker jobs (shared with chunk generation).

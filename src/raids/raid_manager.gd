@@ -63,6 +63,10 @@ var raided: Dictionary = {}
 ## A settlement raid that has been announced: {id, at (world_time), tier}.
 var pending_town: Dictionary = {}
 var _counter := 0
+## Milestone 36: a wave's raiders are spawned a couple per physics tick, not all
+## in one frame (up to 10 monsters at once cost ~30-80 ms). [id, pos, tier, blood]
+var _spawn_queue: Array = []
+const SPAWNS_PER_FRAME := 2
 var _rng := RandomNumberGenerator.new()
 
 
@@ -251,6 +255,7 @@ func _process(delta: float) -> void:
 	if not pending_town.is_empty() and GameState.world_time >= float(pending_town.at):
 		_resolve_pending_town()
 	if raid.is_empty():
+		_spawn_queue.clear()
 		return
 	raid.elapsed = float(raid.elapsed) + delta
 	match raid.phase:
@@ -265,6 +270,8 @@ func _process(delta: float) -> void:
 
 
 func _update_fight(delta: float) -> void:
+	if not _spawn_queue.is_empty():
+		return  # the wave is still arriving
 	var alive := alive_raiders()
 	raid.wave_t = float(raid.wave_t) + delta
 	if int(raid.wave) < int(raid.waves) and (alive.size() <= 1 or float(raid.wave_t) >= WAVE_GAP):
@@ -330,11 +337,33 @@ func _spawn_wave() -> void:
 			dist -= 4.0
 			pos = center + Vector3(cos(a), 0, sin(a)) * dist
 		pos.y = world.get_ground_height(pos) + 0.4
-		var m := spawn_raider(ids[k], pos, tier, blood)
-		if m and not raid.monsters.has(m):
-			raid.monsters.append(m)
+		_spawn_queue.append([ids[k], pos, tier, blood])
+	_spawn_queued(SPAWNS_PER_FRAME)
 	Events.raid_wave.emit(raid.target, w, int(raid.waves))
 	Events.toast.emit("Raid wave %d of %d!" % [w, int(raid.waves)], Color(1, 0.5, 0.35))
+
+
+## The queued raiders arrive two per physics tick (steady whatever the frame rate).
+func _physics_process(_delta: float) -> void:
+	if not _spawn_queue.is_empty():
+		if raid.is_empty():
+			_spawn_queue.clear()
+		else:
+			_spawn_queued(SPAWNS_PER_FRAME)
+
+
+## Spawns up to `n` queued raiders (see _spawn_queue).
+func _spawn_queued(n: int) -> void:
+	for i in mini(n, _spawn_queue.size()):
+		var q: Array = _spawn_queue.pop_front()
+		var m := spawn_raider(q[0], q[1], q[2], q[3])
+		if m and not raid.monsters.has(m):
+			raid.monsters.append(m)
+
+
+## Spawns the rest of the wave now (tests).
+func flush_spawns() -> void:
+	_spawn_queued(_spawn_queue.size())
 
 
 func spawn_raider(id: StringName, pos: Vector3, tier: int, blood: bool) -> Monster:
@@ -353,6 +382,7 @@ func spawn_raider(id: StringName, pos: Vector3, tier: int, blood: bool) -> Monst
 
 
 func _finish(won: bool) -> void:
+	_spawn_queue.clear()
 	var r := raid
 	raid = {}
 	var tier: int = r.tier
