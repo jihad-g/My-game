@@ -3261,40 +3261,58 @@ func _feel_showcase() -> void:
 	await _wait(20)
 	m.set_physics_process(false)
 	m.global_position = pos
+	Engine.time_scale = 0.1
 	p.combat.request(&"light")
-	for i in 60:
+	for i in 600:
 		await get_tree().process_frame
 		if p.combat.phase == PlayerCombat.Phase.ACTIVE:
 			break
-	await _wait(3)
-	await _shot("feel_2_hit_pop_flash_number")
-	await _wait(50)
+	await _wait_game(CombatFeel.sec(1.0))
+	await _shot("feel_2_hit_pop_flash")
+	await _wait_game(CombatFeel.sec(6.0))
+	await _shot("feel_2b_number_pops_out")
+	Engine.time_scale = 1.0
+	await _wait(30)
 	var fwd := p.global_position + aim * 6.0
+	Engine.time_scale = 0.1  # slow-motion capture: this software renderer is slow
 	BlastFX.fire_blast(d, fwd, 3.25)
-	await _wait(9)
-	await _shot("feel_3_fire_blast_f5")
-	await _wait(14)
-	await _shot("feel_4_fire_ring_smoke")
-	await _wait(70)
+	await _wait_game(CombatFeel.sec(4.0))
+	await _shot("feel_3_fire_blast_f4")
+	await _wait_game(CombatFeel.sec(5.0))
+	await _shot("feel_4_fire_ring_f9")
+	await _wait_game(CombatFeel.sec(12.0))
+	await _shot("feel_4b_fire_smoke_f21")
+	await _wait_game(1.5)
 	BlastFX.magic_burst(d, fwd, 4.2, &"arcane")
-	await _wait(9)
-	await _shot("feel_5_magic_dome_f5")
-	await _wait(40)
-	await _shot("feel_6_magic_puffs")
-	await _wait(60)
+	await _wait_game(CombatFeel.sec(4.0))
+	await _shot("feel_5_magic_dome_f4")
+	await _wait_game(CombatFeel.sec(16.0))
+	await _shot("feel_6_magic_puffs_f20")
+	await _wait_game(3.0)
 	var side := aim.cross(Vector3.UP).normalized()
 	BlastFX.poison_cloud(d, fwd + side * 3.0, 2.3, 3.0)
 	BlastFX.fire_pillar(d, fwd - side * 3.0)
 	BlastFX.beam(d, p.global_position + Vector3(0, 1.2, 0), fwd + Vector3(0, 1.0, 0))
-	await _wait(12)
-	await _shot("feel_7_poison_pillar_beam")
+	await _wait_game(CombatFeel.sec(3.0))
+	await _shot("feel_7_poison_pillar_beam_f3")
+	await _wait_game(CombatFeel.sec(5.0))
+	await _shot("feel_7b_pillar_burning_f8")
 	m.set_physics_process(true)
 	m.health.current = 0.1
 	m.receive_hit(DamageInfo.create(99.0, p, &"true"))
-	await _wait(26)
+	await _wait_game(0.45)
 	await _shot("feel_8_death_tip")
-	await _wait(18)
+	await _wait_game(Enemy.DEATH_POOF - 0.45 + CombatFeel.sec(3.0))
 	await _shot("feel_9_death_poof")
+	Engine.time_scale = 1.0
 	world.queue_free()
 	await _wait(5)
+
+
+## Waits until `seconds` of game time have passed (works with Engine.time_scale).
+func _wait_game(seconds: float) -> void:
+	var t := 0.0
+	while t < seconds:
+		await get_tree().process_frame
+		t += get_process_delta_time()
 
