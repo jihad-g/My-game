@@ -90,6 +90,9 @@ static var _cube: BoxMesh
 static var _sphere: SphereMesh
 static var _column: CylinderMesh
 static var active := 0
+## Screenshots: when 0 or more, new effects are drawn frozen at this many seconds
+## after they start (no tween) and removed after 2 s of real time.
+static var preview_time := -1.0
 ## Counts for tests.
 static var made := 0
 
@@ -231,9 +234,17 @@ static func fire_blast(parent: Node, at: Vector3, radius: float = 3.25) -> void:
 	var root := _host(parent, c)
 	# The ring forms as the fireball peaks (frame 4). Tied to the effect, so it never
 	# fires after the effect (or its parent) is gone.
-	root.create_tween().tween_callback(func() -> void:
+	var make_ring := func() -> void:
 		if root.is_inside_tree():
-			ground_ring(root.get_parent(), c, 2.0 * k, 6.5 * k, 8.0, 1.4 * k, 0.3 * k, Color("f8de86"), Color("db7046"), 6.0, 5.0)).set_delay(CombatFeel.sec(4.0))
+			ground_ring(root.get_parent(), c, 2.0 * k, 6.5 * k, 8.0, 1.4 * k, 0.3 * k, Color("f8de86"), Color("db7046"), 6.0, 5.0)
+	if preview_time >= 0.0:
+		if preview_time >= CombatFeel.sec(4.0):
+			var keep := preview_time
+			preview_time -= CombatFeel.sec(4.0)
+			make_ring.call()
+			preview_time = keep
+	else:
+		root.create_tween().tween_callback(make_ring).set_delay(CombatFeel.sec(4.0))
 	var ball := MeshInstance3D.new()
 	ball.mesh = _sphere_mesh()
 	var bm := _shader_mat("fresnel", FRESNEL_SHADER)
@@ -726,12 +737,16 @@ static func _host(parent: Node, at: Vector3) -> Node3D:
 ## Plays `update(t)` over `seconds` of game time, then frees the effect.
 ## `counted` effects free a slot of MAX_ACTIVE when they end.
 static func _run(root: Node3D, seconds: float, update: Callable, counted := false) -> void:
+	if counted:
+		root.tree_exiting.connect(func() -> void: active = maxi(active - 1, 0), CONNECT_ONE_SHOT)
+	if preview_time >= 0.0:
+		update.call(minf(preview_time, seconds))
+		root.get_tree().create_timer(2.0, true, false, true).timeout.connect(root.queue_free)
+		return
 	update.call(0.0)
 	var tw := root.create_tween()
 	tw.tween_method(update, 0.0, seconds, seconds)
 	tw.tween_callback(root.queue_free)
-	if counted:
-		root.tree_exiting.connect(func() -> void: active = maxi(active - 1, 0), CONNECT_ONE_SHOT)
 
 
 static func _shader_mat(id: String, code: String) -> ShaderMaterial:

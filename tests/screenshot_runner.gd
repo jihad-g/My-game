@@ -3348,29 +3348,29 @@ func _feel_showcase() -> void:
 	Engine.time_scale = 1.0
 	await _wait(30)
 	var fwd := p.global_position + aim * 6.0
-	Engine.time_scale = 0.02  # slow-motion capture: this software renderer is slow
-	BlastFX.fire_blast(d, fwd, 3.25)
-	await _wait_game(CombatFeel.sec(4.0))
-	await _shot("feel_3_fire_blast_f4")
-	await _wait_game(CombatFeel.sec(5.0))
-	await _shot("feel_4_fire_ring_f9")
-	await _wait_game(CombatFeel.sec(12.0))
-	await _shot("feel_4b_fire_smoke_f21")
-	await _wait_game(1.5)
-	BlastFX.magic_burst(d, fwd, 4.2, &"arcane")
-	await _wait_game(CombatFeel.sec(4.0))
-	await _shot("feel_5_magic_dome_f4")
-	await _wait_game(CombatFeel.sec(16.0))
-	await _shot("feel_6_magic_puffs_f20")
-	await _wait_game(3.0)
+	# Effects are drawn frozen at an exact frame (this software renderer is too slow to catch them live).
+	for f in [3.0, 7.0, 16.0]:
+		BlastFX.preview_time = CombatFeel.sec(f)
+		BlastFX.fire_blast(d, fwd, 3.25)
+		await _wait(2)
+		await _shot("feel_3_fire_blast_f%d" % int(f))
+		await _wait_real(2.2)
+	for f in [1.0, 4.0, 20.0]:
+		BlastFX.preview_time = CombatFeel.sec(f)
+		BlastFX.magic_burst(d, fwd, 4.2, &"arcane")
+		await _wait(2)
+		await _shot("feel_5_magic_f%d" % int(f))
+		await _wait_real(2.2)
 	var side := aim.cross(Vector3.UP).normalized()
+	BlastFX.preview_time = CombatFeel.sec(6.0)
 	BlastFX.poison_cloud(d, fwd + side * 3.0, 2.3, 3.0)
 	BlastFX.fire_pillar(d, fwd - side * 3.0)
+	BlastFX.preview_time = CombatFeel.sec(2.0)
 	BlastFX.beam(d, p.global_position + Vector3(0, 1.2, 0), fwd + Vector3(0, 1.0, 0))
-	await _wait_game(CombatFeel.sec(3.0))
-	await _shot("feel_7_poison_pillar_beam_f3")
-	await _wait_game(CombatFeel.sec(5.0))
-	await _shot("feel_7b_pillar_burning_f8")
+	await _wait(2)
+	await _shot("feel_7_poison_pillar_beam")
+	BlastFX.preview_time = -1.0
+	await _wait_real(2.2)
 	m.set_physics_process(true)
 	m.health.current = 0.1
 	m.receive_hit(DamageInfo.create(99.0, p, &"true"))
@@ -3381,6 +3381,11 @@ func _feel_showcase() -> void:
 	Engine.time_scale = 1.0
 	world.queue_free()
 	await _wait(5)
+
+
+## Waits `seconds` of real time.
+func _wait_real(seconds: float) -> void:
+	await get_tree().create_timer(seconds, true, false, true).timeout
 
 
 ## Waits until `seconds` of game time have passed (works with Engine.time_scale).
