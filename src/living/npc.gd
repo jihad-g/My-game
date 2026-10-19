@@ -11,6 +11,10 @@ extends CharacterBody3D
 ## Raids (Milestone 7): while the settlement is under attack villagers hide in
 ## their homes; guards fight and can be knocked down (never killed) - they get
 ## back up when the raid is over.
+## Milestone 37: townsfolk don't walk through people. They steer around anyone
+## in their way (keeping to the right), never end a step inside someone, wait
+## and say "Excuse me" when the player blocks the way, step aside when the
+## player keeps walking into them and go back to their spot afterwards.
 
 const WALK_SPEED := 1.8
 const GUARD_RANGE := 18.0
@@ -39,6 +43,27 @@ var _far_acc := 0.0
 var hp := GUARD_HEALTH
 var downed := false
 var is_dead := false  # townsfolk never die (raiders knock guards down)
+
+## Milestone 37: keeping out of people's way.
+const BODY_RADIUS := 0.35
+## Room taken by a player on horseback.
+const MOUNTED_RADIUS := 0.9
+## How far ahead a walking townsperson looks for people in the way (metres).
+const LOOK_AHEAD := 1.8
+## Seconds without getting closer before a walker settles for "close enough".
+const STALL_TIME := 2.5
+## Creative toggle (and tests): off = townsfolk walk through people as before.
+static var avoid_people := true
+var _best_dist := INF
+var _stall := 0.0
+var _ghost := 0.0  # seconds left ignoring other townsfolk (two stuck in a doorway)
+var _anchor := Vector3.INF  # where an idle townsperson stood before stepping aside
+var _calm := 0.0
+var _pressed := 0.0
+var _crowd_t := 0.0
+## Times this townsperson stepped aside or said "Excuse me" (tests, debug).
+var made_way := 0
+var excused := 0
 
 
 func setup(p_site: SettlementSite, d: Dictionary) -> void:
@@ -196,6 +221,7 @@ func _farm_at(p: Vector3) -> int:
 
 func _place_at(target: Vector3) -> void:
 	position = target
+	_anchor = Vector3.INF
 	_path = PackedVector3Array()
 	_inside = site.building_at(target)
 	_arrived()
@@ -204,6 +230,7 @@ func _place_at(target: Vector3) -> void:
 ## Plans a route to `to`: out of the current building/farm, along the streets,
 ## in through the destination's door or gate.
 func _go(to: Vector3) -> void:
+	_anchor = Vector3.INF  # a new errand: no going back to where it stepped aside from
 	var pts := PackedVector3Array()
 	var start := position
 	var tb := site.building_at(to)
@@ -246,6 +273,12 @@ func _set_path(pts: PackedVector3Array) -> void:
 	_path = pts
 	_path_i = 0
 	_inside = -1
+	_reset_progress()
+
+
+func _reset_progress() -> void:
+	_best_dist = INF
+	_stall = 0.0
 
 
 func _wake() -> void:
@@ -301,19 +334,22 @@ func _physics_process(delta: float) -> void:
 		model.rotation.y = lerp_angle(model.rotation.y, atan2(to.x, to.z), 1.0 - exp(-10.0 * delta))
 		model.set_locomotion(0.0, delta)
 		return
+	var near := not far and avoid_people
 	if _guard_target != null:
-		_fight(delta)
+		_fight(delta, near)
 		return
 	if not _path.is_empty():
-		_walk(delta)
+		_walk(delta, near)
 		return
 	model.set_locomotion(0.0, delta)
 	if asleep:
 		return
+	if near:
+		_make_way(delta)
 	_idle(delta)
 
 
-func _walk(delta: float) -> void:
+func _walk(delta: float, near: bool = false) -> void:
 	var target := _path[_path_i]
 	var to := target - position
 	to.y = 0.0
@@ -322,14 +358,203 @@ func _walk(delta: float) -> void:
 	if dist <= step:
 		position = Vector3(target.x, target.y, target.z)
 		_path_i += 1
+		_reset_progress()
 		if _path_i >= _path.size():
 			_arrived()
 		return
 	var dir := to / dist
-	position += dir * step
+	var v := dir
+	if near:
+		_ghost = maxf(_ghost - delta, 0.0)
+		v = _avoid(dir)
+	position += v * step
 	position.y = move_toward(position.y, target.y, delta)
-	model.rotation.y = lerp_angle(model.rotation.y, atan2(dir.x, dir.z), 1.0 - exp(-10.0 * delta))
-	model.set_locomotion(0.45, delta)
+	if near:
+		_keep_apart()
+		if _stalled(dist, delta):
+			return
+	var face := v if v.length_squared() > 0.04 else dir
+	model.rotation.y = lerp_angle(model.rotation.y, atan2(face.x, face.z), 1.0 - exp(-10.0 * delta))
+	model.set_locomotion(0.45 * clampf(v.length(), 0.3, 1.0), delta)
+
+
+# --- Keeping out of people's way (Milestone 37) -------------------------------------------
+
+## The walking direction steered around the nearest person ahead, shorter when
+## someone is right in front. Two townsfolk meeting head-on both keep to the right.
+## (Only the nearest one steers: adding up every push can cancel out in a crowd.)
+func _avoid(dir: Vector3) -> Vector3:
+	var right := dir.cross(Vector3.UP)
+	var steer := Vector3.ZERO
+	var nearest := INF
+	var speed := 1.0
+	for e in site.people_near(position, self):
+		if e[2] and _ghost > 0.0:
+			continue
+		var rel: Vector3 = site.person_pos(e) - position
+		rel.y = 0.0
+		var ahead := rel.dot(dir)
+		var reach: float = LOOK_AHEAD + e[1]
+		if ahead <= 0.0 or ahead > reach:
+			continue
+		var side := rel.dot(right)
+		var clear: float = BODY_RADIUS + e[1] + 0.25
+		if absf(side) >= clear:
+			continue
+		if ahead < clear + 0.15:
+			speed = minf(speed, clampf((ahead - BODY_RADIUS - e[1]) / 0.4, 0.15, 1.0))
+		if ahead < nearest:
+			nearest = ahead
+			var away := -signf(side) if absf(side) > 0.12 else 1.0
+			steer = right * away * (0.6 + 1.6 * (1.0 - ahead / reach))
+	if steer == Vector3.ZERO:
+		return dir
+	return (dir + steer).normalized() * speed
+
+
+## Never ends a step inside someone: pushed out along the line between them.
+## A townsperson always gives way to players; walkers give way to people
+## standing still; two walkers (or two standing) share the push.
+func _keep_apart() -> bool:
+	var pushed := false
+	var me_walking := not _path.is_empty()
+	for e in site.people_near(position, self):
+		if e[2] and _ghost > 0.0:
+			continue
+		var rel: Vector3 = position - site.person_pos(e)
+		rel.y = 0.0
+		var need: float = BODY_RADIUS + e[1] + 0.02
+		var d := rel.length()
+		if d >= need:
+			continue
+		var share := 1.0
+		if e[2]:
+			var other_walking := not (e[0] as NPC)._path.is_empty()
+			if me_walking == other_walking:
+				share = 0.5
+			elif not me_walking:
+				continue  # the walker steps around me
+		if d < 0.001:
+			rel = Vector3.RIGHT.rotated(Vector3.UP, float(get_instance_id() % 628) * 0.01)
+		else:
+			rel /= d
+		position += rel * (need - d) * share
+		pushed = true
+	return pushed
+
+
+## Walking but not getting closer: settles for "close enough" at the end of
+## the way; otherwise says "Excuse me" and walks a detour round a player in
+## the way, and lets other stuck townsfolk through (they ignore each other for
+## a moment). True if it arrived.
+func _stalled(dist: float, delta: float) -> bool:
+	if dist < _best_dist - 0.05:
+		_best_dist = dist
+		_stall = 0.0
+		return false
+	_stall += delta
+	if _stall < STALL_TIME:
+		return false
+	_reset_progress()
+	if _path_i == _path.size() - 1 and dist < 1.6:
+		_path_i = _path.size()
+		_arrived()
+		return true
+	var by_player := false
+	for e in site.people_near(position, self):
+		if not e[2] and (site.person_pos(e) - position).length() < BODY_RADIUS + e[1] + 0.6:
+			by_player = true
+	if by_player:
+		excused += 1
+		Events.damage_dealt.emit(global_position + Vector3(0, 2.0, 0), 0.0, false, false, "Excuse me")
+		_detour()
+	_ghost = 2.0
+	return false
+
+
+## A corner point beside whoever is in the way (on the quieter side, the right
+## if both are the same), then on along the old way.
+func _detour() -> void:
+	var dir := _path[_path_i] - position
+	dir.y = 0.0
+	if dir.length() < 0.01:
+		return
+	dir = dir.normalized()
+	var right := dir.cross(Vector3.UP)
+	var best := right
+	var best_crowd := INF
+	for side: Vector3 in [right, -right]:
+		var corner := position + side * 1.3 + dir * 0.5
+		var crowd := 0.0
+		for e in site.people_near(corner, self):
+			crowd += maxf(0.0, 1.5 - (site.person_pos(e) - corner).length())
+		if crowd < best_crowd - 0.01:
+			best_crowd = crowd
+			best = side
+	var to := position + best * 1.3 + dir * 0.5
+	to.y = position.y
+	_path.insert(_path_i, to)
+	_reset_progress()
+
+
+## Standing townsfolk: no overlapping (people placed in the same spot spread
+## out), and they step aside when the player keeps walking into them, then go
+## back to their spot once the player has moved on.
+func _make_way(delta: float) -> void:
+	_crowd_t -= delta
+	if _crowd_t > 0.0:
+		return
+	_crowd_t = 0.2
+	_keep_apart()
+	var player := World.instance.player
+	var rel := position - site.to_local(player.global_position)
+	rel.y = 0.0
+	var d := rel.length()
+	var vel := Vector3(player.velocity.x, 0.0, player.velocity.z)
+	if d < BODY_RADIUS * 2.0 + 0.3 and vel.length() > 1.0 and vel.normalized().dot(rel / maxf(d, 0.01)) > 0.4:
+		_calm = 0.0
+		_pressed += 0.2
+		if _pressed >= 0.6:
+			_pressed = 0.0
+			_step_aside(rel, vel)
+		return
+	_pressed = 0.0
+	if _anchor != Vector3.INF and d > 2.5:
+		_calm += 0.2
+		if _calm >= 2.0:
+			_calm = 0.0
+			var back := _anchor
+			_anchor = Vector3.INF
+			_path = PackedVector3Array([back])
+			_path_i = 0
+			_reset_progress()
+
+
+func _step_aside(rel: Vector3, vel: Vector3) -> void:
+	if _anchor == Vector3.INF:
+		_anchor = position
+	var fwd := vel.normalized()
+	var side := fwd.cross(Vector3.UP)
+	if side.dot(rel) < 0.0:
+		side = -side
+	var to := position + side * 1.0 + fwd * 0.2
+	to.y = position.y
+	_path = PackedVector3Array([to])
+	_path_i = 0
+	_reset_progress()
+	made_way += 1
+
+
+## Creative toggle: townsfolk keep out of people's way, and the player bumps
+## into them instead of passing through.
+static func set_avoidance(on: bool) -> void:
+	avoid_people = on
+	var w := World.instance
+	if w and w.player:
+		if on:
+			w.player.collision_mask |= Layers.NPC
+		else:
+			w.player.collision_mask &= ~Layers.NPC
 
 
 func _idle(delta: float) -> void:
@@ -381,7 +606,7 @@ func _scan_for_monsters() -> void:
 		_go(_target_for(&"work"))
 
 
-func _fight(delta: float) -> void:
+func _fight(delta: float, near: bool = false) -> void:
 	if not is_instance_valid(_guard_target) or _guard_target.is_dead:
 		_guard_target = null
 		_go(_target_for(activity))
@@ -392,6 +617,8 @@ func _fight(delta: float) -> void:
 	_attack_cd -= delta
 	if to.length() > 1.7:
 		global_position += to.normalized() * WALK_SPEED * 1.6 * delta
+		if near:
+			_keep_apart()
 		model.set_locomotion(0.9, delta)
 		return
 	model.set_locomotion(0.0, delta)

@@ -441,6 +441,42 @@ def sfx_defs():
     d["horn"] = lambda: reverb(mul(biquad_lp(osc(lambda t: note(50) * (1 + 0.01 * math.sin(t * 30)), 2.0, "saw"), 1100, 1.2),
                                    env_adsr(int(2.0 * SR), 0.25, 0.3, 0, 0.6, 0.8)), 0.85, 0.35)
     d["boss_roar"] = lambda: mix_into(growl(115, 55, 1.6, 0.7), boom(116, 1.2), 0.0, 0.4)
+
+    # Milestone 37: sounds for travel and dungeon features (our own synthesis).
+    def neigh(seed):
+        # A whinny: a bright voice that wobbles fast and falls, then a breathy snort.
+        rng = random.Random(seed)
+        v = osc(lambda t: (900 - 520 * t) * (1 + 0.06 * math.sin(t * 2 * math.pi * 11)), 0.9, "saw")
+        v = biquad_lp(v, 2200, 1.4)
+        v = mul(v, env_adsr(len(v), 0.04, 0.2, 0, 0.35, 0.7))
+        snort = mul(bandpass(noise(0.25, rng), 300, 1800), exp_env(int(0.25 * SR), 0.07))
+        return mix_into(v, snort, 0.82, 0.6)
+
+    def hoof(seed, f=320):
+        # Clip-clop: two short woody knocks.
+        rng = random.Random(seed)
+        def knock(fr):
+            k = mul(osc(fr, 0.06, "tri"), exp_env(int(0.06 * SR), 0.012))
+            return mix_into(k, mul(bandpass(noise(0.04, rng), 900, 3000), exp_env(int(0.04 * SR), 0.008)), 0, 0.5)
+        return mix_into(knock(f), knock(f * 1.18), 0.11, 0.8)
+
+    d["horse_neigh"] = lambda: neigh(120)
+    d["hoof_0"] = lambda: hoof(121, 300)
+    d["hoof_1"] = lambda: hoof(122, 340)
+    # A lever: a wooden creak and an iron clunk.
+    d["lever"] = lambda: mix_into(mul(osc(lambda t: 260 + 140 * t, 0.22, "saw"), env_adsr(int(0.22 * SR), 0.02, 0.05, 0, 0.08, 0.25)),
+                                   metal(123, 520, 0.35), 0.18, 0.7)
+    # A heavy gate: a low stone grind that slows, then a thump.
+    d["gate_open"] = lambda: mix_into(mul(lowpass(noise(1.3, random.Random(124)), lambda t: 700 - 380 * t),
+                                          env_adsr(int(1.3 * SR), 0.12, 0.2, 0, 0.35, 0.8)), thud(125, 80, 0.4, 0.8, 900), 1.15, 0.9)
+    # A pressure plate: a stone click.
+    d["plate_click"] = lambda: mix_into(thud(126, 260, 0.08, 0.9, 4000), pop(900, 0.05), 0.0, 0.4)
+    # A waystone waking: a low hum that rises into a soft chime.
+    d["waystone"] = lambda: mix_into(mul(osc(lambda t: 110 + 40 * t, 1.6, "tri"), env_adsr(int(1.6 * SR), 0.4, 0.3, 0, 0.6, 0.6)),
+                                      chime([72, 79, 84, 91], 1.4, 0.18, 3.0, 0.6), 0.5, 0.7)
+    # An oar stroke: a swish through water.
+    d["oar"] = lambda: mix_into(mul(bandpass(noise(0.5, random.Random(127)), 300, 2400), env_adsr(int(0.5 * SR), 0.12, 0.15, 0, 0.2, 0.6)),
+                                 splash(128, 0.4, 0.4), 0.12, 0.5)
     return d
 
 
@@ -572,6 +608,9 @@ SCALES = {
     "aeolian": [0, 2, 3, 5, 7, 8, 10],
     "phrygian": [0, 1, 3, 5, 7, 8, 10],
     "ionian": [0, 2, 4, 5, 7, 9, 11],
+    # Milestone 37 (biome music)
+    "lydian": [0, 2, 4, 6, 7, 9, 11],
+    "hijaz": [0, 1, 4, 5, 7, 8, 10],
 }
 
 
@@ -649,6 +688,20 @@ def render_track(name, bpm, bars, root, scale_name, progression, inst, seed, dru
                 elif drums == "deep":
                     if beat_i == 0 or beat_i == 5:
                         mix_into(mixbuf, tom(55, rng, 0.8), t, 0.45)
+                elif drums == "hand":
+                    # Milestone 37 (desert): a hand drum - deep "dum", bright "tek".
+                    if beat_i in (0, 3, 4):
+                        mix_into(mixbuf, tom(72, rng, 0.35), t, 0.4)
+                    if beat_i in (2, 6, 7):
+                        mix_into(mixbuf, hat(rng, 0.05), t, 0.16)
+                        mix_into(mixbuf, tom(190, rng, 0.12), t, 0.12)
+                elif drums == "jungle":
+                    # Milestone 37 (jungle): rolling toms and shakers.
+                    if beat_i % 2 == 0:
+                        mix_into(mixbuf, tom([110, 92, 130, 92][(beat_i // 2) % 4], rng, 0.3), t, 0.32)
+                    mix_into(mixbuf, hat(rng, 0.04), t, 0.07 if beat_i % 2 else 0.1)
+                    if rng.random() < 0.3:
+                        mix_into(mixbuf, hat(rng, 0.03), t + spb * 0.25, 0.05)
 
     # Lead melody (two 4-bar phrases repeated with variation).
     phrase = melody(rng, sc, root + 12, 4, bpbar, lead_density)
@@ -666,6 +719,10 @@ def render_track(name, bpm, bars, root, scale_name, progression, inst, seed, dru
             elif inst == "bell":
                 s = fm_bell(note(mn), dur + 1.2, 3.5, 1.8, 0.9)
                 g = 0.18
+            elif inst == "marimba":
+                # Milestone 37 (jungle): a short wooden mallet tone.
+                s = fm_bell(note(mn), 0.6, 4.0, 1.2, 0.25)
+                g = 0.26
             elif inst == "flute":
                 s = osc(lambda t, f=note(mn): f * (1 + 0.004 * math.sin(t * 30)), dur + 0.15, "sine")
                 s2 = osc(note(mn) * 2, dur + 0.15, "sine")
@@ -697,24 +754,41 @@ def music_defs():
         "dungeon": lambda: render_track("dungeon", 66, 20, 45, "phrygian", [0, 1, 0, 6], "dark", 304, drums="deep", lead_density=0.35),
         "boss": lambda: render_track("boss", 150, 32, 47, "phrygian", [0, 1, 5, 4], "drive", 305, drums="war", arp=True, lead_density=0.8),
         "menu": lambda: render_track("menu", 76, 24, 55, "dorian", [0, 3, 6, 4], "bell", 306, drums=None, arp=True, lead_density=0.4),
+        # Milestone 37: daytime music for the biomes (meadow and forest keep explore_day).
+        "biome_desert": lambda: render_track("biome_desert", 96, 32, 50, "hijaz", [0, 1, 0, 6], "lute", 310, drums="hand", lead_density=0.6),
+        "biome_snow": lambda: render_track("biome_snow", 62, 24, 57, "aeolian", [0, 5, 2, 6], "bell", 311, drums=None, lead_density=0.35),
+        "biome_jungle": lambda: render_track("biome_jungle", 112, 32, 55, "major_penta", [0, 2, 3, 1], "marimba", 312, drums="jungle", lead_density=0.7),
+        "biome_swamp": lambda: render_track("biome_swamp", 58, 20, 43, "aeolian", [0, 5, 0, 6], "dark", 313, drums="deep", lead_density=0.3),
+        "biome_mountain": lambda: render_track("biome_mountain", 80, 32, 52, "dorian", [0, 6, 3, 4], "flute", 314, drums="soft", lead_density=0.5),
+        "biome_coast": lambda: render_track("biome_coast", 84, 32, 59, "major_penta", [0, 3, 1, 4], "lute", 315, drums="soft", arp=True, lead_density=0.5),
+        "biome_glade": lambda: render_track("biome_glade", 72, 24, 60, "lydian", [0, 1, 4, 0], "bell", 316, drums=None, arp=True, lead_density=0.45),
     }
 
 
 def main():
     only = None
+    names = None  # Milestone 37: --names=a,b only makes those (the rest stay byte-identical)
     for a in sys.argv[1:]:
         if a.startswith("--only="):
             only = a[7:]
+        elif a.startswith("--names="):
+            names = set(a[8:].split(","))
     if only in (None, "sfx"):
         for name, fn in sfx_defs().items():
+            if names and name not in names:
+                continue
             write_wav(os.path.join(OUT, "sfx", name + ".wav"), fade(normalize(fn(), 0.85)))
             print("sfx", name)
     if only in (None, "ambience"):
         for name, fn in ambience_defs().items():
+            if names and name not in names:
+                continue
             write_ogg(os.path.join(OUT, "ambience", name + ".ogg"), normalize(fn(), 0.7))
             print("ambience", name)
     if only in (None, "music"):
         for name, fn in music_defs().items():
+            if names and name not in names:
+                continue
             write_ogg(os.path.join(OUT, "music", name + ".ogg"), fn(), 4)
             print("music", name)
 

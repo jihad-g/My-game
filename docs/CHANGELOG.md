@@ -2,6 +2,49 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.45.0] — Milestone 37: Release polish
+
+### Added
+- **Title screen**: a moving pixel-art landscape made for the game (dusk sky with stars and a setting sun,
+  floating islands with glowing shards, three layers of blocky mountains and hills drifting past, pines, a
+  little castle with a lit window, clouds and rising sparks), drawn at 320 x 180 and scaled up with crisp
+  pixels; our own pixel **SHARDLANDS** logo with a crystal shard; big buttons - Continue (your latest world),
+  New world, Load world, Multiplayer, Settings, Achievements, Quit - and the version number. Creating a world,
+  your worlds and multiplayer are now pages with a Back button (or Esc).
+- **"First steps" tutorial**: a new player is offered a short tutorial in their first world. Six basics - walk,
+  gather three things, open the bag, craft a tool, chop a tree, build something - shown as a checklist on the
+  left of the HUD with the keys you actually use, ticked in any order. The hints that would say the same thing
+  stay quiet. "Skip" ends it; Settings → Replay the tutorial offers it again. Players who already know the
+  basics (their profile has done the hints) aren't offered it.
+- **Biome music**: seven new tunes for exploring by day - desert, snow (tundra and taiga), jungle, swamp,
+  mountains, coast and sea, crystal glade. Meadows and forests keep the old tune; nights, towns, dungeons,
+  fights and bosses keep their music.
+- **New sounds**: horse hooves on every stride and a neigh when you mount or whistle, oar strokes for boats,
+  dungeon levers, pressure plates, gates and caged chests opening, waystones (unlocking and travelling).
+- **Settings → Display & graphics**: a graphics quality preset (Low: no shadows, no horizon terrain, no ambient
+  particles, no smoothing, 75% resolution; Medium; High), a field-of-view slider (30-75°, default 45°) and
+  anti-aliasing (off / 2x / 4x). Changing any of the preset's settings shows "Custom".
+- Creative mode → World: **Music** (force any tune, or automatic), **Sounds** (play each new sound),
+  **Graphics** (Low / Medium / High, FOV 35/45/60°), **Townsfolk** (make way on/off, six townsfolk walk at you),
+  **Tutorial** (restart or skip the first steps, replay all hints) and **Bed** (a bed in front of you).
+
+### Fixed
+- **Bed overlap**: the 1.9 m bed sat in a 1 m cell and stuck into both neighbours. A bed now takes two cells -
+  its own and the one at its foot (the way it's turned). Nothing else can be built on the foot cell, no wall
+  can go through its middle, and upstairs it needs floor under both cells. A bed in an old save that has
+  something at its foot stays one cell long.
+- **Townsfolk walked through people**: they now steer around the player, other players and each other
+  (two people meeting head-on both keep to the right), never end a step inside someone, wait and say "Excuse
+  me" when you block their way, step aside when you keep walking into them and walk back to their spot once
+  you've gone. Two townsfolk stuck in a doorway let each other through. The player now bumps into townsfolk
+  instead of passing through them. Only townsfolk near you do this (the far ones don't need it).
+- Saving your base as a blueprint stored a staircase (and now a bed) once per cell it covers; each piece is
+  stored once.
+- Multiplayer guests: when a staircase or bed was taken down, its other cells stayed taken on the guest's side.
+- Test bot (`tests/playthrough.gd`): on a busy machine it could lose the tree it walked to (its chunk was
+  rebuilt meanwhile) and count wood before the drops reached it; it now finds the tree again and waits for
+  its loot.
+
 ## [0.44.0] — Milestone 36: Performance
 
 ### Fixed

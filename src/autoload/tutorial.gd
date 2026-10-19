@@ -8,9 +8,16 @@ extends Node
 ## Progress is per player profile (user://profile.cfg), not per world, so a
 ## second world doesn't repeat what you already know. Settings → Gameplay turns
 ## hints off or replays them.
+##
+## Milestone 37: "First steps", a short guided tutorial. A new player is
+## offered it in their first world: six basics (walk, gather, open the bag,
+## craft, chop, build) shown as a checklist on the HUD, ticked in any order.
+## While it runs the hints that say the same thing stay quiet. It can be
+## skipped, and restarted from Settings (Replay the tutorial) or Creative mode.
 
 signal hint_changed(step: Dictionary)  ## empty = no hint
 signal step_completed(id: StringName)
+signal first_steps_changed
 
 const PROFILE_PATH := "user://profile.cfg"
 ## Seconds between a finished hint and the next one.
@@ -53,7 +60,34 @@ const STEPS := [
 		"text": "Press {toggle_help} any time for the guide: every control, and how survival, combat, crafting and the world work."},
 ]
 
+## Milestone 37: the guided first steps. `hint` = the contextual hint it replaces.
+const FIRST_STEPS := [
+	{"id": &"fs_move", "hint": &"move", "title": "Walk around",
+		"text": "Walk with {move}. Hold {sprint} to sprint and press {dodge} to roll."},
+	{"id": &"fs_gather", "hint": &"gather", "title": "Gather 3 things",
+		"text": "Walk up to sticks, stones and fibre plants and press {interact}."},
+	{"id": &"fs_bag", "hint": &"inventory", "title": "Open your bag",
+		"text": "Press {inventory}. Right-click food to eat it and gear to wear it."},
+	{"id": &"fs_craft", "hint": &"craft", "title": "Craft a tool",
+		"text": "Press {crafting} and make a Stone Hatchet: stones, sticks and rope. Crafting never fails."},
+	{"id": &"fs_chop", "hint": &"chop", "title": "Chop a tree",
+		"text": "Hit a tree or a rock with {attack_light}. Tools in your bag are used by themselves."},
+	{"id": &"fs_build", "hint": &"build", "title": "Build something",
+		"text": "Press {build_mode}, pick a piece and place it - a torch needs only sticks and fibre."},
+]
+## Distance to walk for the first step (metres).
+const FS_WALK := 8.0
+## Items to pick up for the second step.
+const FS_PICKUPS := 3
+
 var done: Dictionary = {}  # id -> true
+## "" = not offered yet on this profile, "running", "finished", "skipped".
+var first_steps := ""
+var fs_done: Dictionary = {}  # first-step id -> true
+var _fs_flags: Dictionary = {}
+var _fs_pickups := 0
+var _fs_start := Vector3.INF
+var _fs_check := 0.0
 var current: Dictionary = {}
 var profile_path := PROFILE_PATH
 ## Things that happened since the current hint appeared (set by events/UI).
@@ -69,23 +103,32 @@ var _start_hunger := 0.0
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_PAUSABLE
 	load_progress()
-	Events.item_picked_up.connect(func(_i: StringName, _n: int) -> void: _flags[&"picked_up"] = true)
-	Events.item_crafted.connect(func(_i: StringName, _n: int) -> void: _flags[&"crafted"] = true)
-	Events.resource_harvested.connect(func(_p: StringName, _x: int) -> void: _flags[&"harvested"] = true)
+	Events.item_picked_up.connect(func(_i: StringName, n: int) -> void:
+		_flag(&"picked_up")
+		if first_steps == "running":
+			_fs_pickups += maxi(n, 1))
+	Events.item_crafted.connect(func(_i: StringName, _n: int) -> void: _flag(&"crafted"))
+	Events.resource_harvested.connect(func(_p: StringName, _x: int) -> void: _flag(&"harvested"))
 	Events.damage_dealt.connect(func(_p: Vector3, amount: float, _c: bool, to_player: bool, _t: String) -> void:
 		if not to_player and amount > 0.0:
-			_flags[&"hit_enemy"] = true)
-	Events.building_changed.connect(func() -> void: _flags[&"built"] = true)
-	Events.npc_talk.connect(func(_n: Node) -> void: _flags[&"talked"] = true)
-	Events.open_requests.connect(func(_s: Node) -> void: _flags[&"talked"] = true)
-	Events.settlement_entered.connect(func(_id: String) -> void: _flags[&"in_village"] = true)
-	Events.poi_discovered.connect(func(_id: String) -> void: _flags[&"found_poi"] = true)
-	Events.player_respawned.connect(func() -> void: _flags[&"respawned"] = true)
+			_flag(&"hit_enemy"))
+	Events.building_changed.connect(func() -> void: _flag(&"built"))
+	Events.npc_talk.connect(func(_n: Node) -> void: _flag(&"talked"))
+	Events.open_requests.connect(func(_s: Node) -> void: _flag(&"talked"))
+	Events.settlement_entered.connect(func(_id: String) -> void: _flag(&"in_village"))
+	Events.poi_discovered.connect(func(_id: String) -> void: _flag(&"found_poi"))
+	Events.player_respawned.connect(func() -> void: _flag(&"respawned"))
 
 
 ## UI and systems report actions the tutorial waits for (inventory_opened...).
 func notify(flag: StringName) -> void:
+	_flag(flag)
+
+
+func _flag(flag: StringName) -> void:
 	_flags[flag] = true
+	if first_steps == "running":
+		_fs_flags[flag] = true
 
 
 func is_done(id: StringName) -> bool:
@@ -106,6 +149,8 @@ func _process(delta: float) -> void:
 	if _start_pos == Vector3.INF:
 		_start_pos = w.player.global_position
 		_start_yaw = w.camera_rig._target_yaw if w.camera_rig else 0.0
+	if first_steps == "running":
+		_update_first_steps(delta, w)
 	_check_left -= delta
 	if not current.is_empty():
 		_shown_for += delta
@@ -122,6 +167,8 @@ func _process(delta: float) -> void:
 	for step in STEPS:
 		if done.has(step.id):
 			continue
+		if first_steps == "running" and _covered_by_first_steps(step.id):
+			continue  # the checklist already says this
 		if _condition(step.show, w):
 			# Already did it before the hint came up? Count it and move on.
 			if step.done != &"timeout" and _condition(step.done, w) and step.id not in [&"move", &"camera", &"hunger"]:
@@ -236,6 +283,10 @@ func load_progress() -> void:
 		return
 	for id in cf.get_value("tutorial", "done", []):
 		done[StringName(id)] = true
+	first_steps = String(cf.get_value("tutorial", "first_steps", ""))
+	fs_done.clear()
+	for id in cf.get_value("tutorial", "first_steps_done", []):
+		fs_done[StringName(id)] = true
 
 
 func save_progress() -> void:
@@ -245,6 +296,11 @@ func save_progress() -> void:
 	for id in done:
 		ids.append(String(id))
 	cf.set_value("tutorial", "done", ids)
+	cf.set_value("tutorial", "first_steps", first_steps)
+	var fs_ids := []
+	for id in fs_done:
+		fs_ids.append(String(id))
+	cf.set_value("tutorial", "first_steps_done", fs_ids)
 	cf.save(profile_path)
 
 
@@ -252,5 +308,97 @@ func reset_progress() -> void:
 	done.clear()
 	_flags.clear()
 	_start_pos = Vector3.INF
+	first_steps = ""  # offered again
+	fs_done.clear()
+	_fs_flags.clear()
 	save_progress()
 	_set_current({})
+	first_steps_changed.emit()
+
+
+# --- First steps (Milestone 37) --------------------------------------------------------------
+
+## True while the offer ("take the short tutorial?") should show: a new
+## player only - someone who already did a few of the hints knows the basics.
+func first_steps_offered() -> bool:
+	return first_steps == "" and done.size() < 3 and bool(Settings.get_value("tutorial_hints"))
+
+
+func start_first_steps() -> void:
+	first_steps = "running"
+	fs_done.clear()
+	_fs_flags.clear()
+	_fs_pickups = 0
+	_fs_start = Vector3.INF
+	save_progress()
+	if not current.is_empty() and _covered_by_first_steps(current.id):
+		_set_current({})
+	first_steps_changed.emit()
+
+
+func skip_first_steps() -> void:
+	first_steps = "skipped"
+	save_progress()
+	first_steps_changed.emit()
+
+
+## Creative mode and tests: run the first steps again from the start.
+func restart_first_steps() -> void:
+	start_first_steps()
+
+
+## The first step not ticked yet (empty when all are done).
+func first_steps_next() -> Dictionary:
+	for st in FIRST_STEPS:
+		if not fs_done.has(st.id):
+			return st
+	return {}
+
+
+func _covered_by_first_steps(hint_id: StringName) -> bool:
+	for st in FIRST_STEPS:
+		if st.hint == hint_id:
+			return true
+	return false
+
+
+func _update_first_steps(delta: float, w: World) -> void:
+	var p := w.player
+	if _fs_start == Vector3.INF:
+		_fs_start = p.global_position
+	_fs_check -= delta
+	if _fs_check > 0.0:
+		return
+	_fs_check = 0.25
+	var changed := false
+	for st in FIRST_STEPS:
+		if fs_done.has(st.id) or not _first_step_done(st.id, p):
+			continue
+		fs_done[st.id] = true
+		changed = true
+		complete(st.hint)  # its hint won't come up later
+		Audio.play_ui(&"notify", -6.0)
+	if not changed:
+		return
+	if fs_done.size() >= FIRST_STEPS.size():
+		first_steps = "finished"
+		Events.toast.emit("First steps done! Press %s any time for the guide." % InputSetup.action_label(&"toggle_help"), Color(0.75, 1.0, 0.7))
+	save_progress()
+	first_steps_changed.emit()
+
+
+func _first_step_done(id: StringName, p: Player) -> bool:
+	match id:
+		&"fs_move":
+			return Vector2(p.global_position.x - _fs_start.x, p.global_position.z - _fs_start.z).length() >= FS_WALK
+		&"fs_gather":
+			return _fs_pickups >= FS_PICKUPS
+		&"fs_bag":
+			return _fs_flags.has(&"inventory_opened")
+		&"fs_craft":
+			return _fs_flags.has(&"crafted")
+		&"fs_chop":
+			return _fs_flags.has(&"harvested")
+		&"fs_build":
+			return _fs_flags.has(&"built")
+	return false

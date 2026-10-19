@@ -62,5 +62,5 @@ func interact(_player: Node) -> void:
 	if is_down:
 		return
 	set_down(true)
-	Audio.play_at(&"block", global_position, -2.0)
+	Audio.play_at(&"lever", global_position, -2.0)
 	pulled.emit(self)

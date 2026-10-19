@@ -396,7 +396,7 @@ func _apply_build(op: String, entry: Dictionary) -> void:
 			b.from_save([entry])
 	elif op == "remove":
 		if piece:
-			b.pieces.erase(k)
+			b._erase_keys(piece)  # all its cells (stairs, two-cell beds)
 			VFX.burst(piece.get_parent(), piece.global_position + Vector3(0, 1.0, 0), 1.2, Color(0.55, 0.45, 0.35, 0.6), 0.25)
 			piece.queue_free()
 			Events.building_changed.emit()

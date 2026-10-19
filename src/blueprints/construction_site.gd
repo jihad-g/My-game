@@ -174,7 +174,7 @@ func check_entry(i: int) -> String:
 		return "Unknown piece"
 	if w.player.character.level < data.required_level:
 		return "Requires level %d" % data.required_level
-	return w.building.check_place(data, e.cell, e.slot, null, false)
+	return w.building.check_place(data, e.cell, e.slot, null, false, int(e.get("rot", 0)))
 
 
 ## Builds entry `i` (paying materials). Returns "" on success or why not.

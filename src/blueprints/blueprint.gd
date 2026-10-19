@@ -225,6 +225,8 @@ static func capture(manager: BuildingManager, center: Vector3, radius: float, la
 		var piece: BuildPiece = manager.pieces[k]
 		if not is_instance_valid(piece) or piece.layer != layer:
 			continue
+		if k != BuildingManager.key(piece.cell, piece.slot, piece.layer):
+			continue  # the other cells of a staircase or a bed (each piece once)
 		if Vector2(piece.cell.x + 0.5 - center.x, piece.cell.y + 0.5 - center.z).length() > radius:
 			continue
 		if piece.data.behavior == BuildPieceData.Behavior.CLAIM:

@@ -160,6 +160,16 @@ func storey_y(cell: Vector2i, storey: int) -> float:
 	return _base(cell) + storey * WALL_HEIGHT
 
 
+## Milestone 37: a bed is two cells long - its own cell and the one at its feet
+## (local +Z). The old 1.9 m bed sat in one 1 m cell and stuck into both neighbours.
+static func bed_dir(rot: int) -> Vector2i:
+	return [Vector2i(0, 1), Vector2i(1, 0), Vector2i(0, -1), Vector2i(-1, 0)][posmod(rot, 4)]
+
+
+static func is_two_cell(data: BuildPieceData, slot: String) -> bool:
+	return data.behavior == BuildPieceData.Behavior.BED and base_slot(slot) == "object"
+
+
 ## World transform of a piece at an address.
 func transform_for(data: BuildPieceData, cell: Vector2i, slot: String, rot: int) -> Transform3D:
 	var parts := split_slot(slot)
@@ -184,11 +194,14 @@ func transform_for(data: BuildPieceData, cell: Vector2i, slot: String, rot: int)
 		"object":
 			if pieces.has(key(cell, slot_at("floor", int(parts[1])), world.layer)):
 				pos.y = g + up + FLOOR_TOP
+			if is_two_cell(data, slot):
+				var d := bed_dir(rot)
+				pos += Vector3(d.x, 0, d.y) * 0.5  # spans this cell and the next
 	return Transform3D(basis, pos)
 
 
 ## "" if the piece can be placed there, otherwise why not.
-func check_place(data: BuildPieceData, cell: Vector2i, slot: String, player: Player, pay: bool = true) -> String:
+func check_place(data: BuildPieceData, cell: Vector2i, slot: String, player: Player, pay: bool = true, rot: int = 0) -> String:
 	if player and player.creative:
 		pay = false  # Creative mode (Milestone 24): building is free
 	if pieces.has(key(cell, slot, world.layer)):
@@ -200,6 +213,17 @@ func check_place(data: BuildPieceData, cell: Vector2i, slot: String, player: Pla
 	var multi := _storey_rules(data, cell, base, storey, slot)
 	if multi != "":
 		return multi
+	# Milestone 37: two-cell beds.
+	if is_two_cell(data, slot):
+		var c2 := cell + bed_dir(rot)
+		if pieces.has(key(c2, slot, world.layer)):
+			return "No room for the bed (something is at its foot)"
+		if _edge_between(cell, c2, storey):
+			return "A wall is in the way of the bed"
+		if storey > 0 and not pieces.has(key(c2, slot_at("floor", storey), world.layer)):
+			return "The bed needs a floor under both cells"
+	if base.begins_with("edge") and _bed_across(cell, base, storey):
+		return "A bed is in the way"
 	var center := Vector3(cell.x + 0.5, 0, cell.y + 0.5)
 	center.y = _ground(cell)
 	if player:
@@ -221,7 +245,7 @@ func check_place(data: BuildPieceData, cell: Vector2i, slot: String, player: Pla
 		if town and town.contains(center, margin):
 			return "This land belongs to %s" % town.name
 	if base != "roof" and storey == 0:
-		var blocker := _obstruction(data, cell, slot)
+		var blocker := _obstruction(data, cell, slot, rot)
 		if blocker != "":
 			return "Blocked by %s" % blocker
 	if base == "roof" and not _roof_supported(cell, storey):
@@ -242,20 +266,44 @@ func check_place(data: BuildPieceData, cell: Vector2i, slot: String, player: Pla
 
 
 ## Name of a tree/rock/ore in the way of a piece, or "".
-func _obstruction(data: BuildPieceData, cell: Vector2i, slot: String) -> String:
+func _obstruction(data: BuildPieceData, cell: Vector2i, slot: String, rot: int = 0) -> String:
 	if not is_inside_tree():
 		return ""
 	var box := BoxShape3D.new()
 	box.size = (data.collision_size * Vector3(0.9, 0.9, 0.9)).max(Vector3(0.3, 0.3, 0.3))
 	var q := PhysicsShapeQueryParameters3D.new()
 	q.shape = box
-	q.transform = transform_for(data, cell, slot, 0).translated_local(data.collision_center)
+	q.transform = transform_for(data, cell, slot, rot).translated_local(data.collision_center)
 	q.collision_mask = Layers.PROP
 	for hit in get_world_3d().direct_space_state.intersect_shape(q, 4):
 		var body := hit.collider as PropBody
 		if body and body.data:
 			return body.data.display_name
 	return ""
+
+
+## A wall, door, window or fence on the edge between two neighbouring cells.
+func _edge_between(a: Vector2i, b: Vector2i, storey: int) -> bool:
+	var l := world.layer
+	var d := b - a
+	if d == Vector2i(0, 1):
+		return pieces.has(key(b, slot_at("edge_n", storey), l))
+	if d == Vector2i(0, -1):
+		return pieces.has(key(a, slot_at("edge_n", storey), l))
+	if d == Vector2i(1, 0):
+		return pieces.has(key(b, slot_at("edge_w", storey), l))
+	if d == Vector2i(-1, 0):
+		return pieces.has(key(a, slot_at("edge_w", storey), l))
+	return false
+
+
+## True when one bed lies across the given edge (it covers the cells on both sides).
+func _bed_across(cell: Vector2i, base: String, storey: int) -> bool:
+	var other := cell - (Vector2i(0, 1) if base == "edge_n" else Vector2i(1, 0))
+	var l := world.layer
+	var a: BuildPiece = pieces.get(key(cell, slot_at("object", storey), l))
+	var b: BuildPiece = pieces.get(key(other, slot_at("object", storey), l))
+	return a != null and a == b and a.data.behavior == BuildPieceData.Behavior.BED
 
 
 func _roof_supported(cell: Vector2i, storey: int = 0) -> bool:
@@ -373,7 +421,7 @@ func check_stairs(cell: Vector2i, rot: int, storey: int) -> String:
 
 ## Places a piece. `pay` consumes materials from the player's inventory.
 func place(data: BuildPieceData, cell: Vector2i, slot: String, rot: int, player: Player, pay: bool = true) -> BuildPiece:
-	if check_place(data, cell, slot, player, pay) != "":
+	if check_place(data, cell, slot, player, pay, rot) != "":
 		return null
 	if data.behavior == BuildPieceData.Behavior.STAIRS and check_stairs(cell, rot, storey_of(slot)) != "":
 		return null
@@ -403,7 +451,23 @@ func _spawn(data: BuildPieceData, cell: Vector2i, slot: String, rot: int, layer:
 	piece.global_transform = transform_for(data, cell, slot, rot)
 	world.layer = saved_layer
 	piece.visible = layer == world.layer
-	pieces[key(cell, slot, layer)] = piece
+	var k1 := key(cell, slot, layer)
+	var under: BuildPiece = pieces.get(k1)
+	if under != null and is_instance_valid(under) and k1 in under.extra_keys and is_two_cell(under.data, under.slot):
+		# Something takes a bed's foot (older saves): that bed goes back to one cell.
+		under.extra_keys.erase(k1)
+		var ud := bed_dir(under.rot)
+		under.global_position -= Vector3(ud.x, 0, ud.y) * 0.5
+	pieces[k1] = piece
+	if is_two_cell(data, slot):
+		var k2 := key(cell + bed_dir(rot), slot, layer)
+		if pieces.has(k2):
+			# An older save with something at the bed's foot: keep the old one-cell bed.
+			var d := bed_dir(rot)
+			piece.global_position -= Vector3(d.x, 0, d.y) * 0.5
+		else:
+			pieces[k2] = piece
+			piece.extra_keys.append(k2)
 	if data.behavior == BuildPieceData.Behavior.STAIRS:
 		# The other cells of the staircase are taken too (Milestone 30).
 		var st := storey_of(slot)

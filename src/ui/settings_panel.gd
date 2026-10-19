@@ -60,6 +60,8 @@ func _ready() -> void:
 	_slider("Interface", "ui_volume")
 
 	_page("Display & graphics")
+	_choice("Graphics quality", "graphics_quality", Settings.QUALITY_NAMES)
+	_slider("Field of view", "fov", Settings.FOV_MIN, Settings.FOV_MAX, 1.0, "°")
 	_toggle("Fullscreen", "fullscreen")
 	_toggle("V-Sync", "vsync")
 	_choice_values("Frame rate limit", "max_fps", Settings.FPS_CHOICES, func(f: int) -> String: return "Unlimited" if f == 0 else "%d FPS" % f)
@@ -68,6 +70,7 @@ func _ready() -> void:
 	_choice("Art style", "art_style", ["Vibrant - rich colours, glow and soft shade", "Classic - the older, softer look"])
 	_toggle("Block textures (pixel-art ground, plants and buildings)", "block_textures")
 	_choice("Shadows", "shadows", ["Off", "Low", "High"])
+	_choice("Anti-aliasing (smooth edges)", "msaa", ["Off", "2x", "4x"])
 	_toggle("Horizon terrain", "far_terrain")
 	_toggle("Weather particles", "weather_particles")
 	_toggle("Ambient particles (fireflies, leaves...)", "ambient_particles")
@@ -246,7 +249,8 @@ func _row(text: String) -> HBoxContainer:
 	return h
 
 
-func _slider(text: String, key: String, lo: float = 0.0, hi: float = 1.0, step: float = 0.05) -> void:
+## `unit`: "%" shows 0..1 as a percentage, "°" shows the value in degrees.
+func _slider(text: String, key: String, lo: float = 0.0, hi: float = 1.0, step: float = 0.05, unit: String = "%") -> void:
 	var h := _row(text)
 	var s := HSlider.new()
 	s.min_value = lo
@@ -260,14 +264,18 @@ func _slider(text: String, key: String, lo: float = 0.0, hi: float = 1.0, step: 
 	val.custom_minimum_size.x = 60
 	h.add_child(val)
 	s.value = float(Settings.get_value(key))
-	val.text = "%d%%" % roundi(s.value * 100.0)
+	var fmt := func(x: float) -> String: return ("%d°" % roundi(x)) if unit == "°" else ("%d%%" % roundi(x * 100.0))
+	s.set_meta(&"fmt", fmt)
+	s.set_meta(&"label", val)
+	val.text = fmt.call(s.value)
 	# The interface scale applies when you let go (rescaling while dragging
 	# would move the slider out from under the mouse).
 	var live := key != "ui_scale"
 	s.value_changed.connect(func(x: float) -> void:
-		val.text = "%d%%" % roundi(x * 100.0)
+		val.text = fmt.call(x)
 		if live or not s.has_focus():
-			Settings.set_value(key, x))
+			Settings.set_value(key, x)
+			_quality_changed(key))
 	if not live:
 		s.drag_ended.connect(func(_c: bool) -> void: Settings.set_value(key, s.value))
 
@@ -277,7 +285,9 @@ func _toggle(text: String, key: String) -> void:
 	var c := CheckButton.new()
 	c.set_meta(&"key", key)
 	c.button_pressed = bool(Settings.get_value(key))
-	c.toggled.connect(func(on: bool) -> void: Settings.set_value(key, on))
+	c.toggled.connect(func(on: bool) -> void:
+		Settings.set_value(key, on)
+		_quality_changed(key))
 	h.add_child(c)
 
 
@@ -288,7 +298,10 @@ func _choice(text: String, key: String, options: Array) -> void:
 		o.add_item(opt)
 	o.set_meta(&"key", key)
 	o.selected = int(Settings.get_value(key))
-	o.item_selected.connect(func(i: int) -> void: Settings.set_value(key, i))
+	o.item_selected.connect(func(i: int) -> void:
+		Settings.set_value(key, i)
+		if key == "graphics_quality" or Settings.QUALITY_PRESETS[0].has(key):
+			_refresh())  # a preset changes other controls (and they can make it "Custom")
 	h.add_child(o)
 
 
@@ -305,6 +318,16 @@ func _choice_values(text: String, key: String, choices: Array, label: Callable) 
 	h.add_child(o)
 
 
+## Milestone 37: after a graphics setting changed, show which preset it now
+## matches (or "Custom") in the quality choice.
+func _quality_changed(key: String) -> void:
+	if not Settings.QUALITY_PRESETS[0].has(key):
+		return
+	for c in find_children("*", "OptionButton", true, false):
+		if c.has_meta(&"key") and String(c.get_meta(&"key")) == "graphics_quality":
+			(c as OptionButton).selected = int(Settings.get_value("graphics_quality"))
+
+
 ## Re-reads every control from Settings (after reset).
 func _refresh() -> void:
 	for c in find_children("*", "", true, false):
@@ -313,6 +336,8 @@ func _refresh() -> void:
 		var v = Settings.get_value(String(c.get_meta(&"key")))
 		if c is HSlider:
 			(c as HSlider).set_value_no_signal(float(v))
+			if c.has_meta(&"label") and c.has_meta(&"fmt"):
+				(c.get_meta(&"label") as Label).text = (c.get_meta(&"fmt") as Callable).call(float(v))
 		elif c is CheckButton:
 			(c as CheckButton).set_pressed_no_signal(bool(v))
 		elif c is OptionButton:

@@ -76,7 +76,7 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Blueprints / auto-build and the companion web designer (Milestone 8)
 - [ ] NOT IMPLEMENTED: crafting queues / crafting time (crafting is instant), station upgrades, fuel for forges
 - [ ] NOT IMPLEMENTED: using materials straight from nearby chests while crafting or building
-- [ ] Known limitation: the bed mesh is 1.9 m long in a 1 m cell and can overlap a neighbour cell's furniture
+- [x] Fixed in Milestone 37: a bed takes two cells (its own and the one at its foot), so it no longer overlaps a neighbour cell's furniture
 
 ## Milestone 5 — Living world  ✅ (this milestone, Phases 3–4)
 
@@ -103,7 +103,33 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: buying houses, renting beds at an inn, kingdom wars/politics (raids on settlements: Milestone 7)
 - [ ] NOT IMPLEMENTED: crop watering, animals/livestock; village crops can't be harvested by the player (seasons: M28)
 - [x] Fixed in Milestone 36: approaching a kingdom capital no longer stutters (the site is built in small steps over ~20 frames)
-- [ ] Known limitation: NPCs don't collide with each other or the player (they walk through people, not through walls)
+- [x] Fixed in Milestone 37: townsfolk keep out of people's way (they still have no wall collision)
+
+## Milestone 37 — Release polish  ✅ (v0.45.0)
+
+- [x] Settings: graphics quality presets (Low / Medium / High; "Custom" once you change one of their settings),
+      field of view slider (30-75°), anti-aliasing (off / 2x / 4x); key rebinding and volume were already there (M13)
+- [x] Biome music: 7 new tunes (desert, snow, jungle, swamp, mountain, coast, crystal glade) while exploring by day;
+      meadows and forests keep the old tune; nights, towns, dungeons, fights and bosses keep theirs
+- [x] New sounds: horse hooves (every stride) and neighing, boat oars, dungeon levers, pressure plates, gates and
+      caged chests opening, waystones (unlock and travel)
+- [x] "First steps" tutorial: offered to a new player (Start / No thanks); walk, gather 3 things, open the bag,
+      craft, chop, build - a checklist on the left of the HUD, ticked in any order; the hints that say the same thing
+      stay quiet; Skip any time; Settings → Replay the tutorial offers it again
+- [x] Title screen: moving pixel-art landscape (dusk sky, stars, sun, floating shard islands, mountains, pines, a
+      castle, sparks), our own pixel logo, big buttons (Continue, New world, Load world, Multiplayer, Settings,
+      Achievements, Quit), version number; creating, loading and multiplayer are pages with a Back button (Esc)
+- [x] Bed overlap fixed: a bed takes two cells, nothing else goes on its foot, no wall through its middle, and upstairs
+      it needs floor under both cells; old saves with something at the foot keep a one-cell bed
+- [x] Townsfolk don't walk through people: they steer around the player, other players and each other (keeping to
+      the right), never end a step inside someone, say "Excuse me" when you block the way, step aside when you keep
+      walking into them and go back to their spot after; the player bumps into them instead of passing through
+- [x] Creative → World: Music, Sounds, Graphics, Townsfolk, Tutorial and Bed rows; tests `test_m37_*`
+- [ ] NOT IMPLEMENTED: the music and sounds are made by our generator (tools/gen_audio.py), not recorded by musicians
+- [ ] NOT IMPLEMENTED: townsfolk have no wall collision - stepping around someone near a building they can clip a corner
+- [ ] NOT IMPLEMENTED: monsters and animals don't step around townsfolk (they push through)
+- [ ] NOT IMPLEMENTED: the first-steps tutorial covers the basics only; combat, levels, towns and dungeons still use the hints
+- [ ] NOT IMPLEMENTED: graphics presets don't change the view distance (chunk radius) or texture quality
 
 ## Milestone 36 — Performance  ✅ (v0.44.0)
 

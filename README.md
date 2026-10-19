@@ -5,7 +5,11 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.44.0 — Performance**. No more stutter near capitals, towns and ruins; big monster fights and fast
+> Status: **v0.45.0 — Release polish**. A new title screen (moving pixel landscape, our own logo), a short "First
+> steps" tutorial, music for each biome and new sounds, graphics presets and field of view in Settings, beds that
+> take two cells, and townsfolk who walk around you instead of through you.
+>
+> Before that, **v0.44.0 — Performance**. No more stutter near capitals, towns and ruins; big monster fights and fast
 > travel stay smooth (slowest frame under 25 ms in the stress tool). Before that, v0.43.0 — Icons and item uses:
 > every item has a pixel icon; honey food, silk clothes and gear made from the new monster drops.
 >
@@ -559,6 +563,12 @@ D-pad spells and hotbar, View bag, Menu pause. Menus still need the mouse.
     (Tailoring, after you get boar hide) and Leather Gloves, equip a dagger: you look and play like an
     Assassin, but keep Knight abilities. In light armour idle monsters notice you later; in full iron they
     notice you sooner and dodging costs more stamina. Item tooltips show Light / Medium / Heavy.
+74. **Release polish (v0.45.0)** – the title screen shows a moving pixel landscape and big buttons;
+    *New world*, *Load world* and *Multiplayer* open their own pages (Back or Esc returns). In a new profile
+    the first world offers the **First steps** tutorial (a checklist on the left; *Skip* ends it). Esc →
+    Settings → Display & graphics: *Graphics quality*, *Field of view*, *Anti-aliasing*. Walk into a village
+    crowd: townsfolk go around you and each other. Build a bed: it takes two cells. Creative → World has
+    Music, Sounds, Graphics, Townsfolk ("Six walk at me"), Tutorial and Bed rows to try all of it.
 
 ## Run the automated tests
 

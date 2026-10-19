@@ -39,7 +39,7 @@ func _process(delta: float) -> void:
 	if on and not is_down:
 		is_down = true
 		_top.position.y = -0.07
-		Audio.play_at(&"block", global_position, -4.0)
+		Audio.play_at(&"plate_click", global_position, -4.0)
 		pressed.emit()
 	elif not on and is_down:
 		is_down = false

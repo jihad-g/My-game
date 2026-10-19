@@ -26,6 +26,9 @@ const DEFAULTS := {
 	# Gameplay
 	"difficulty": 1, "tutorial_hints": true, "autosave_minutes": 2, "damage_numbers": true,
 	"camera_rotate_speed": 1.0,
+	# Milestone 37: camera field of view (degrees) and the graphics quality preset
+	# (0 low, 1 medium, 2 high, 3 custom - set when you change one of its settings).
+	"fov": 45.0, "graphics_quality": 2, "msaa": 2,
 	## Milestone 18a: 0 = Snappy (quick start, stop and turn), 1 = Weighty (the old feel).
 	"movement_feel": 0,
 	## Milestone 18a: a fixed isometric camera (no rotating), like classic action RPGs.
@@ -49,6 +52,16 @@ const DIFFICULTY_HUNGER := [0.6, 1.0, 1.25]
 const AUTOSAVE_CHOICES := [0, 1, 2, 5, 10]  # minutes, 0 = off
 const FPS_CHOICES := [0, 30, 60, 120, 144]  # 0 = unlimited
 const COLORBLIND_NAMES := ["Off", "Protanopia (red-weak)", "Deuteranopia (green-weak)", "Tritanopia (blue-weak)"]
+## Milestone 37: what each graphics quality preset sets.
+const QUALITY_NAMES := ["Low - fastest (no shadows, no horizon, 75% resolution)", "Medium", "High", "Custom (your own choices below)"]
+const QUALITY_PRESETS := [
+	{"render_scale": 0.75, "shadows": 0, "far_terrain": false, "ambient_particles": false, "weather_particles": true, "msaa": 0},
+	{"render_scale": 1.0, "shadows": 1, "far_terrain": true, "ambient_particles": true, "weather_particles": true, "msaa": 1},
+	{"render_scale": 1.0, "shadows": 2, "far_terrain": true, "ambient_particles": true, "weather_particles": true, "msaa": 2},
+]
+const QUALITY_CUSTOM := 3
+const FOV_MIN := 30.0
+const FOV_MAX := 75.0
 
 var values: Dictionary = DEFAULTS.duplicate()
 ## Settings file path (tests point this elsewhere).
@@ -74,9 +87,31 @@ func get_value(key: String) -> Variant:
 
 func set_value(key: String, v: Variant) -> void:
 	values[key] = v
+	if key == "graphics_quality" and int(v) >= 0 and int(v) < QUALITY_PRESETS.size():
+		# Milestone 37: a preset sets its group of graphics settings.
+		var preset: Dictionary = QUALITY_PRESETS[int(v)]
+		for k in preset:
+			values[k] = preset[k]
+	elif QUALITY_PRESETS[0].has(key):
+		values["graphics_quality"] = matching_quality()
 	apply()
 	save_settings()
 	changed.emit()
+
+
+## The preset the current graphics settings match (QUALITY_CUSTOM if none).
+func matching_quality() -> int:
+	for i in QUALITY_PRESETS.size():
+		var ok := true
+		for k in QUALITY_PRESETS[i]:
+			var a = get_value(k)
+			var b = QUALITY_PRESETS[i][k]
+			if (b is float and not is_equal_approx(float(a), b)) or (not b is float and a != b):
+				ok = false
+				break
+		if ok:
+			return i
+	return QUALITY_CUSTOM
 
 
 var _loading_bindings := false
@@ -168,6 +203,7 @@ func apply() -> void:
 	var vp := get_viewport()
 	if vp:
 		vp.scaling_3d_scale = clampf(float(get_value("render_scale")), 0.5, 1.0)
+		vp.msaa_3d = [Viewport.MSAA_DISABLED, Viewport.MSAA_2X, Viewport.MSAA_4X][clampi(int(get_value("msaa")), 0, 2)]
 	if get_tree() and get_tree().root:
 		get_tree().root.content_scale_factor = clampf(float(get_value("ui_scale")), 0.75, 1.5)
 	UITheme.set_high_contrast(bool(get_value("high_contrast")))
@@ -200,3 +236,5 @@ func apply_to_world(w: World) -> void:
 		w.camera_rig.shake_enabled = bool(get_value("screen_shake")) and not reduce_motion()
 		w.camera_rig.rotate_speed_scale = clampf(float(get_value("camera_rotate_speed")), 0.25, 2.5)
 		w.camera_rig.set_fixed(bool(get_value("fixed_camera")))
+		if w.camera_rig.camera:
+			w.camera_rig.camera.fov = clampf(float(get_value("fov")), FOV_MIN, FOV_MAX)

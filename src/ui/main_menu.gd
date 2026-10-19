@@ -1,7 +1,9 @@
 class_name MainMenu
 extends Control
 ## Title screen: create worlds (name + seed), load or delete saved worlds,
-## or quick-play a temporary world.
+## or quick-play a temporary world. Milestone 37: a moving pixel-art
+## landscape, our own pixel logo and a column of big buttons (Continue, New
+## world, Load world, Multiplayer, Settings, Achievements, Quit).
 ##
 ## Command line shortcuts (handled once per launch):
 ##   -- --seed=<number or text>   quick-play a temporary world with that seed
@@ -31,6 +33,17 @@ var crash_notice := PanelContainer.new()
 var _mp_name := LineEdit.new()
 var _mp_host := CheckBox.new()
 var _mp_address := LineEdit.new()
+## Milestone 37: the title screen - moving pixel landscape, our own logo,
+## big buttons; creating, loading and multiplayer are pages with a Back button.
+var backdrop := TitleBackdrop.new()
+var _title_page := CenterContainer.new()
+var _logo := TextureRect.new()
+var _continue := Button.new()
+var _continue_id := ""
+var _version := Label.new()
+var _dim := ColorRect.new()
+var _pages: Dictionary = {}
+var _page := ""
 
 
 func _ready() -> void:
@@ -50,6 +63,7 @@ func _ready() -> void:
 		_status.text = "Backup restored."
 		_refresh_list())
 	_refresh_list()
+	show_page("")
 	if not _cmdline_handled:
 		_cmdline_handled = true
 		_handle_command_line.call_deferred()
@@ -92,44 +106,143 @@ func _handle_command_line() -> void:
 
 
 func _build() -> void:
-	var bg := ColorRect.new()
-	bg.color = Color(0.09, 0.1, 0.17)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	# Milestone 37: a moving pixel-art landscape behind everything.
+	add_child(backdrop)
+	_dim.color = Color(0.03, 0.02, 0.07, 0.6)
+	_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dim.visible = false
+	add_child(_dim)
+	_build_title_page()
+	_pages["new"] = _page_wrap("Create a world", _build_new_page())
+	_pages["load"] = _page_wrap("Your worlds", _build_load_page())
+	_pages["mp"] = _page_wrap("Multiplayer", _build_mp_page())
+	for k in _pages:
+		_pages[k].visible = false
+		add_child(_pages[k])
+	_version.text = "v%s  beta" % ProjectSettings.get_setting("application/config/version", "")
+	_version.add_theme_font_size_override(&"font_size", 14)
+	_version.add_theme_color_override(&"font_color", Color(1, 0.92, 0.75, 0.85))
+	_version.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_version.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_version.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_version.offset_right = -14
+	_version.offset_bottom = -10
+	add_child(_version)
+	var credit := Label.new()
+	credit.text = "Every pixel and every note made for Shardlands"
+	credit.add_theme_font_size_override(&"font_size", 13)
+	credit.add_theme_color_override(&"font_color", Color(1, 0.92, 0.75, 0.6))
+	credit.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	credit.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	credit.offset_left = 14
+	credit.offset_bottom = -10
+	add_child(credit)
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_status.add_theme_color_override(&"font_color", Color(1, 0.6, 0.5))
+	_status.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_status.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_status.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_status.offset_bottom = -34
+	add_child(_status)
+	_confirm.dialog_text = "Delete this world permanently?"
+	_confirm.confirmed.connect(func() -> void:
+		SaveManager.delete_world(_pending_delete)
+		_refresh_list())
+	add_child(_confirm)
+	resized.connect(_fit_logo)
+	_fit_logo()
+
+
+## The title: logo, tagline and the main buttons.
+func _build_title_page() -> void:
+	_title_page.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_title_page)
+	var v := VBoxContainer.new()
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_theme_constant_override(&"separation", 12)
+	_title_page.add_child(v)
+	_logo.texture = PixelLogo.texture()
+	_logo.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_logo.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	v.add_child(_logo)
+	var sub := Label.new()
+	sub.text = "A blocky open-world survival RPG"
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.add_theme_font_size_override(&"font_size", 18)
+	sub.add_theme_color_override(&"font_color", Color(1.0, 0.9, 0.75))
+	sub.add_theme_constant_override(&"outline_size", 6)
+	v.add_child(sub)
+	_build_crash_notice(v)
+	var gap := Control.new()
+	gap.custom_minimum_size.y = 8
+	v.add_child(gap)
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	col.add_theme_constant_override(&"separation", 8)
+	v.add_child(col)
+	_continue.name = "Continue"
+	_continue.pressed.connect(_on_continue)
+	col.add_child(_title_button(_continue, "Continue"))
+	col.add_child(_title_button(Button.new(), "New world", func() -> void: show_page("new")))
+	col.add_child(_title_button(Button.new(), "Load world", func() -> void: show_page("load")))
+	col.add_child(_title_button(Button.new(), "Multiplayer", func() -> void: show_page("mp")))
+	col.add_child(_title_button(Button.new(), "Settings", func() -> void: _settings.visible = true))
+	col.add_child(_title_button(Button.new(), "Achievements", func() -> void: achievements.visible = true))
+	col.add_child(_title_button(Button.new(), "Quit", func() -> void: get_tree().quit()))
+
+
+## A big title-screen button in our pixel style (square corners, gold edge).
+func _title_button(b: Button, text: String, on_press: Callable = Callable()) -> Button:
+	b.text = text
+	if b.name == "" or String(b.name).begins_with("@"):
+		b.name = text.capitalize().replace(" ", "")  # "New world" -> NewWorld
+	b.custom_minimum_size = Vector2(320, 44)
+	b.add_theme_font_size_override(&"font_size", 20)
+	b.add_theme_stylebox_override(&"normal", UITheme.panel_style(Color(0.07, 0.05, 0.11, 0.82), Color(0.72, 0.56, 0.3), 2, 0))
+	b.add_theme_stylebox_override(&"hover", UITheme.panel_style(Color(0.2, 0.12, 0.2, 0.92), Color(1.0, 0.84, 0.45), 2, 0))
+	b.add_theme_stylebox_override(&"focus", UITheme.panel_style(Color(0.2, 0.12, 0.2, 0.0), Color(1.0, 0.9, 0.6), 2, 0))
+	b.add_theme_stylebox_override(&"pressed", UITheme.panel_style(Color(0.04, 0.03, 0.06, 0.95), Color(1.0, 0.84, 0.45), 2, 0))
+	b.add_theme_color_override(&"font_hover_color", Color(1.0, 0.9, 0.55))
+	if on_press.is_valid():
+		b.pressed.connect(on_press)
+	b.pressed.connect(func() -> void: Audio.play_ui(&"ui_click", -6.0))
+	return b
+
+
+## A sub-page in the middle of the screen with a Back button.
+func _page_wrap(title: String, content: Control) -> Control:
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-	var root := VBoxContainer.new()
-	root.add_theme_constant_override(&"separation", 18)
-	center.add_child(root)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override(&"separation", 10)
+	center.add_child(v)
+	var top := HBoxContainer.new()
+	var back := Button.new()
+	back.name = "Back"
+	back.text = "< Back"
+	back.pressed.connect(func() -> void: show_page(""))
+	top.add_child(back)
+	var h := _header(title)
+	h.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	top.add_child(h)
+	var spacer := Control.new()
+	spacer.custom_minimum_size.x = back.get_minimum_size().x
+	top.add_child(spacer)
+	v.add_child(top)
+	v.add_child(content)
+	return center
 
-	var title := Label.new()
-	title.text = "SHARDLANDS"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override(&"font_size", 64)
-	title.add_theme_color_override(&"font_color", UITheme.GOLD)
-	title.add_theme_constant_override(&"outline_size", 12)
-	root.add_child(title)
-	var sub := Label.new()
-	sub.text = "A blocky open-world survival RPG · beta v%s" % ProjectSettings.get_setting("application/config/version", "")
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.add_theme_color_override(&"font_color", UITheme.TEXT_DIM)
-	root.add_child(sub)
 
-	_build_crash_notice(root)
-
-	var cols := HBoxContainer.new()
-	cols.add_theme_constant_override(&"separation", 18)
-	root.add_child(cols)
-
-	# New world
+func _build_new_page() -> Control:
 	var new_panel := PanelContainer.new()
-	new_panel.custom_minimum_size = Vector2(580, 0)
-	cols.add_child(new_panel)
+	new_panel.custom_minimum_size = Vector2(620, 0)
 	var nv := VBoxContainer.new()
 	nv.add_theme_constant_override(&"separation", 10)
 	new_panel.add_child(nv)
-	nv.add_child(_header("Create a world"))
 	nv.add_child(_small("World name"))
 	_name_edit.placeholder_text = "My World"
 	nv.add_child(_name_edit)
@@ -162,15 +275,15 @@ func _build() -> void:
 		_start_game())
 	nv.add_child(quick)
 	nv.add_child(_small("Same seed = same world, on any machine."))
+	return new_panel
 
-	# World list
+
+func _build_load_page() -> Control:
 	var list_panel := PanelContainer.new()
-	list_panel.custom_minimum_size = Vector2(430, 420)
-	cols.add_child(list_panel)
+	list_panel.custom_minimum_size = Vector2(560, 420)
 	var lv := VBoxContainer.new()
 	lv.add_theme_constant_override(&"separation", 10)
 	list_panel.add_child(lv)
-	lv.add_child(_header("Your worlds"))
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -178,22 +291,28 @@ func _build() -> void:
 	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_list.add_theme_constant_override(&"separation", 8)
 	scroll.add_child(_list)
+	var folder := Button.new()
+	folder.text = "Open saves folder"
+	folder.pressed.connect(func() -> void:
+		DirAccess.make_dir_recursive_absolute(SaveManager.worlds_dir)
+		OS.shell_open(ProjectSettings.globalize_path(SaveManager.worlds_dir)))
+	lv.add_child(folder)
+	return list_panel
 
-	# Multiplayer (Milestone 11)
+
+func _build_mp_page() -> Control:
 	var mp_panel := PanelContainer.new()
-	mp_panel.custom_minimum_size = Vector2(340, 0)
-	cols.add_child(mp_panel)
+	mp_panel.custom_minimum_size = Vector2(420, 0)
 	var mv := VBoxContainer.new()
 	mv.add_theme_constant_override(&"separation", 8)
 	mp_panel.add_child(mv)
-	mv.add_child(_header("Multiplayer"))
 	mv.add_child(_small("Your name"))
 	_mp_name.text = Net.player_name
 	_mp_name.max_length = 16
 	mv.add_child(_mp_name)
 	_mp_host.text = "Host the world I play (port %d)" % NetProtocol.DEFAULT_PORT
 	mv.add_child(_mp_host)
-	mv.add_child(_small("Friends join with your IP address. Guests use the class picked on the left."))
+	mv.add_child(_small("Friends join with your IP address. Guests use the class picked under New world."))
 	mv.add_child(_small("Join a game: address (IP or IP:port)"))
 	_mp_address.placeholder_text = "127.0.0.1"
 	mv.add_child(_mp_address)
@@ -203,39 +322,59 @@ func _build() -> void:
 		var a := _mp_address.text.strip_edges()
 		join_game(a if a != "" else "127.0.0.1"))
 	mv.add_child(join)
-	mv.add_child(_small("Co-op foundation: building, gathering and crafting\nare shared; monsters are paused in shared games."))
+	mv.add_child(_small("Co-op: building, gathering, crafting and fights are shared."))
+	return mp_panel
 
-	var bottom := HBoxContainer.new()
-	bottom.alignment = BoxContainer.ALIGNMENT_CENTER
-	bottom.add_theme_constant_override(&"separation", 12)
-	root.add_child(bottom)
-	var folder := Button.new()
-	folder.text = "Open saves folder"
-	folder.pressed.connect(func() -> void:
-		DirAccess.make_dir_recursive_absolute(SaveManager.worlds_dir)
-		OS.shell_open(ProjectSettings.globalize_path(SaveManager.worlds_dir)))
-	bottom.add_child(folder)
-	var settings_btn := Button.new()
-	settings_btn.text = "Settings"
-	settings_btn.pressed.connect(func() -> void: _settings.visible = true)
-	bottom.add_child(settings_btn)
-	var ach_btn := Button.new()
-	ach_btn.text = "Achievements"
-	ach_btn.pressed.connect(func() -> void: achievements.visible = true)
-	bottom.add_child(ach_btn)
-	var quit := Button.new()
-	quit.text = "Quit"
-	quit.pressed.connect(func() -> void: get_tree().quit())
-	bottom.add_child(quit)
-	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_status.add_theme_color_override(&"font_color", Color(1, 0.6, 0.5))
-	root.add_child(_status)
 
-	_confirm.dialog_text = "Delete this world permanently?"
-	_confirm.confirmed.connect(func() -> void:
-		SaveManager.delete_world(_pending_delete)
-		_refresh_list())
-	add_child(_confirm)
+## Shows a sub-page ("new", "load", "mp") or the title ("").
+func show_page(page: String) -> void:
+	_page = page if _pages.has(page) else ""
+	_title_page.visible = _page == ""
+	_dim.visible = _page != ""
+	for k in _pages:
+		_pages[k].visible = k == _page
+	if _page == "":
+		_refresh_continue()
+	else:
+		UIFx.pop_in(_pages[_page])
+
+
+func current_page() -> String:
+	return _page
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _page != "" and event.is_action_pressed(&"ui_cancel") and not _settings.visible:
+		show_page("")
+		get_viewport().set_input_as_handled()
+
+
+## Logo size follows the window: whole-pixel steps keep it crisp.
+func _fit_logo() -> void:
+	if _logo.texture == null:
+		return
+	var img_size := _logo.texture.get_size()
+	var k := clampi(floori(size.y / 125.0), 3, 10)
+	_logo.custom_minimum_size = img_size * k
+
+
+## "Continue" plays the most recently played world.
+func _refresh_continue() -> void:
+	var worlds := SaveManager.list_worlds()
+	_continue.visible = not worlds.is_empty()
+	if worlds.is_empty():
+		return
+	var meta: Dictionary = worlds[0]
+	_continue_id = String(meta.id)
+	_continue.text = "Continue - %s" % str(meta.get("name", meta.id))
+	_continue.tooltip_text = "%s, level %d" % [String(meta.get("class", "knight")).capitalize(), int(meta.get("level", 1))]
+
+
+func _on_continue() -> void:
+	if _continue_id != "" and SaveManager.load_world(_continue_id):
+		_start_game()
+	else:
+		_status.text = "Could not load '%s' (see log)" % _continue_id
 
 
 ## "The game closed unexpectedly" notice (Milestone 13, CrashHandler).
@@ -278,6 +417,7 @@ func _build_crash_notice(root: VBoxContainer) -> void:
 func _select_class(id: StringName) -> void:
 	_selected_class = id
 	picker.select_class(id)
+	show_page("new")
 
 
 func _header(text: String) -> Label:

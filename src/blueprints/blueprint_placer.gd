@@ -103,7 +103,7 @@ func move_to(cell: Vector2i) -> void:
 		var c := cell + Vector2i(int(e.x), int(e.z))
 		_ghosts[i].global_transform = w.building.transform_for(data, c, String(e.slot), int(e.rot))
 		# Roofs are checked for support once the walls stand, so don't mark them now.
-		var why := "" if e.slot == "roof" else w.building.check_place(data, c, String(e.slot), null, false)
+		var why := "" if e.slot == "roof" else w.building.check_place(data, c, String(e.slot), null, false, int(e.rot))
 		if why != "":
 			blocked += 1
 		_ghosts[i].material_override = BlueprintHologram.material(why != "")

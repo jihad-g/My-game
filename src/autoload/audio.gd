@@ -234,8 +234,25 @@ func set_music(track: StringName) -> void:
 			old.stop())
 
 
+## Milestone 37: daytime exploring music by biome (meadows and forests keep
+## explore_day). Tracks come from tools/gen_audio.py like the rest.
+const BIOME_MUSIC := {
+	&"sunscorch_desert": &"biome_desert",
+	&"snowy_tundra": &"biome_snow", &"frostpine_taiga": &"biome_snow",
+	&"emerald_jungle": &"biome_jungle",
+	&"murk_swamp": &"biome_swamp",
+	&"stonecrown_mountains": &"biome_mountain",
+	&"sandy_beach": &"biome_coast", &"deep_ocean": &"biome_coast",
+	&"crystal_glade": &"biome_glade",
+}
+## Creative mode can force a track ("" = automatic).
+static var music_override: StringName = &""
+
+
 ## Picks the track for the moment (World calls this about once a second).
 static func pick_music(ctx: Dictionary) -> StringName:
+	if music_override != &"" and not ctx.get("menu", false):
+		return music_override
 	if ctx.get("menu", false):
 		return &"menu"
 	if ctx.get("boss", false):
@@ -248,7 +265,7 @@ static func pick_music(ctx: Dictionary) -> StringName:
 		return &"town"
 	if ctx.get("night", false):
 		return &"explore_night"
-	return &"explore_day"
+	return BIOME_MUSIC.get(StringName(ctx.get("biome", &"")), &"explore_day")
 
 
 # --- Ambience ----------------------------------------------------------------------------------

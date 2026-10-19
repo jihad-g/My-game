@@ -106,6 +106,8 @@ var _settings := SettingsPanel.new()
 var guide := GuidePanel.new()
 var achievements := AchievementsPanel.new()
 var tutorial_card := TutorialCard.new()
+## Milestone 37: the guided "First steps" checklist.
+var first_steps := FirstStepsPanel.new()
 ## Red edge glow when hurt / low on health (Milestone 10).
 var _vignette := ColorRect.new()
 var _vignette_hit := 0.0
@@ -153,6 +155,7 @@ func _ready() -> void:
 	_creative_label.visible = false
 	_root.add_child(_creative_label)
 	_root.add_child(tutorial_card)
+	_root.add_child(first_steps)
 	_root.add_child(guide)
 	_dialogue.trade_requested.connect(func(n: NPC) -> void:
 		_dialogue.close()

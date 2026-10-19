@@ -157,6 +157,7 @@ func travel(to_key: String) -> String:
 	p.stop_riding(false, true)
 	var dest := position_of(to_key) + Vector3(0, 0, 1.6)
 	Audio.play(&"teleport", -2.0)
+	Audio.play(&"waystone", -6.0)  # Milestone 37: the stone's hum as you arrive
 	VFX.motes(world, p.global_position + Vector3(0, 1, 0), Color(0.45, 0.85, 1.0), 24, 0.8)
 	world.teleport_to(dest)
 	if horse:

@@ -135,7 +135,7 @@ func _process(_delta: float) -> void:
 func _update_target(point: Vector3) -> void:
 	_address = world.building.address_for(selected, point, build_storey())
 	_ghost.global_transform = world.building.transform_for(selected, _address.cell, _address.slot, rot)
-	var reason := world.building.check_place(selected, _address.cell, _address.slot, world.player)
+	var reason := world.building.check_place(selected, _address.cell, _address.slot, world.player, true, rot)
 	if reason == "" and selected.behavior == BuildPieceData.Behavior.STAIRS:
 		reason = world.building.check_stairs(_address.cell, rot, BuildingManager.storey_of(_address.slot))
 	_ghost.material_override = _ok_mat if reason == "" else _bad_mat

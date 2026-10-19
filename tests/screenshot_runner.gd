@@ -34,6 +34,10 @@ func _ready() -> void:
 		await _mobs_showcase()
 		get_tree().quit()
 		return
+	if "--only=release" in OS.get_cmdline_user_args():
+		await _release_showcase()
+		get_tree().quit()
+		return
 	if "--only=perf" in OS.get_cmdline_user_args():
 		await _perf_showcase()
 		get_tree().quit()
@@ -3126,3 +3130,91 @@ func _new_folk_showcase() -> void:
 	cam.look_at(t2)
 	await _wait(15)
 	await _shot("newfolk_gear")
+
+
+## Milestone 37: release polish - the new title screen, the "First steps"
+## tutorial in a village full of townsfolk, and the graphics settings.
+func _release_showcase() -> void:
+	CrashHandler.crashed_last_time = false  # an earlier test run may have been stopped
+	var m := (load("res://scenes/menu/main_menu.tscn") as PackedScene).instantiate()
+	add_child(m)
+	await _wait(90)
+	await _shot("m37_1_title_screen")
+	m.queue_free()
+	await _wait(5)
+	var saved_profile := Tutorial.profile_path
+	Tutorial.profile_path = "user://shot_profile_m37.cfg"
+	DirAccess.remove_absolute(Tutorial.profile_path)
+	Tutorial.reset_progress()
+	Settings.values["tutorial_hints"] = true
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	world.day_night.day_length = 1.0e9
+	world.day_night.hour = 10.0
+	world.day_night.advance_hours(0.0)
+	world.weather.force(0, 1.0)
+	world.weather.settle()
+	_clear_monsters(world)
+	world.hud.story.visible = false
+	var green := [&"verdant_meadow", &"whispering_forest", &"emerald_jungle"]
+	var village: SettlementInfo = null
+	for st in world.generator.settlements.near(p.global_position, 4000.0):
+		if not st.is_kingdom() and (village == null or (st.biome_id in green and not village.biome_id in green)):
+			village = st
+	await _teleport(world, village.world_center() + Vector3(0.5, 0, -1.5))
+	world.living.update_now(true)
+	world.living.finish_sites()
+	await _wait(30)
+	# The checklist two steps in (the other hints already seen, so only the checklist shows).
+	for st in Tutorial.STEPS:
+		if not Tutorial._covered_by_first_steps(st.id):
+			Tutorial.done[st.id] = true
+	Tutorial.start_first_steps()
+	Tutorial.fs_done[&"fs_move"] = true
+	Tutorial.fs_done[&"fs_gather"] = true
+	Tutorial.first_steps_changed.emit()
+	# Townsfolk out and about around the player, a few walking past.
+	var site := world.living.site_of(village)
+	if site:
+		var c := site.to_local(p.global_position)
+		var k := 0
+		for n in site.npcs:
+			if k >= 6:
+				break
+			n.visible = true
+			n.asleep = false
+			n._think = 999.0
+			var a := TAU * k / 6.0
+			n.position = c + Vector3(cos(a), 0, sin(a)) * 3.2
+			n.position.y = c.y - 0.4
+			n._path = PackedVector3Array([c - Vector3(cos(a), 0, sin(a)) * 3.2 + Vector3(0, -0.4, 0)]) if k % 2 == 0 else PackedVector3Array()
+			n._path_i = 0
+			n._reset_progress()
+			k += 1
+	world.camera_rig._target_distance = 18.0
+	world.camera_rig._target_pitch = 52.0
+	await _wait(75)
+	await _shot("m37_2_first_steps_village")
+	# Graphics settings: quality preset, field of view, anti-aliasing.
+	var sp: SettingsPanel = world.hud._settings
+	world.hud._pause.visible = true  # the settings panel lives on the pause screen
+	world.hud._pause_box.visible = false
+	sp.visible = true
+	for i in sp.tabs.get_tab_count():
+		if sp.tabs.get_tab_title(i).begins_with("Display"):
+			sp.tabs.current_tab = i
+	await _wait(20)
+	await _shot("m37_3_graphics_settings")
+	sp.visible = false
+	world.hud._pause.visible = false
+	world.queue_free()
+	await _wait(5)
+	DirAccess.remove_absolute(Tutorial.profile_path)
+	Tutorial.profile_path = saved_profile
+	Tutorial.load_progress()

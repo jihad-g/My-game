@@ -73,6 +73,24 @@ func _props_dropping(item: StringName) -> Array:
 	return out
 
 
+## A prop dropping `item` that this character can take, within `r` m of `pos`.
+func _usable_near(item: StringName, pos: Vector3, r: float) -> PropBody:
+	var p := _p()
+	for b: PropBody in _props_dropping(item):
+		if b.global_position.distance_to(pos) <= r and (b.data.tool_kind == &"" or p.best_tool_tier(b.data.tool_kind) >= b.data.tool_tier):
+			return b
+	return null
+
+
+## Loot still lying on the ground near `pos` (it flies to the player and is collected).
+func _pickups_near(pos: Vector3, r: float) -> bool:
+	for n in world.pickup_pool.active_nodes():
+		var pk := n as Pickup
+		if pk and pk.is_inside_tree() and pk.auto_collect and pk.global_position.distance_to(pos) < r:
+			return true
+	return false
+
+
 ## Gathers until the inventory holds `n` of `item` (or gives up).
 func gather(item: StringName, n: int) -> bool:
 	var p := _p()
@@ -90,7 +108,14 @@ func gather(item: StringName, n: int) -> bool:
 			tries += 3
 			continue
 		tries += 1
-		await walk_to(body.global_position + Vector3(0.9, 0, 0.9))
+		var spot := body.global_position
+		await walk_to(spot + Vector3(0.9, 0, 0.9))
+		if not is_instance_valid(body) or body.is_queued_for_deletion() or not body.is_inside_tree():
+			# Its chunk was rebuilt while we walked (a busy machine streams slower):
+			# take the same kind of prop standing there now.
+			body = _usable_near(item, spot, 1.5)
+			if body == null:
+				continue
 		if body.data.interact_mode == PropData.InteractMode.GATHER:
 			body.interact(p)
 			play_time += 1.5
@@ -101,7 +126,11 @@ func gather(item: StringName, n: int) -> bool:
 				body.receive_hit(DamageInfo.create(10.0, p))
 				play_time += 0.8
 		# Drops land as pickups at the player's feet and get collected.
-		await _frames(50)
+		await _frames(30)
+		for w in 120:
+			if not _pickups_near(p.global_position, 4.0):
+				break
+			await _frames(1)
 	return p.inventory.count_of(item) >= n
 
 

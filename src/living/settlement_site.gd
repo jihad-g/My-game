@@ -353,6 +353,65 @@ func npc_by_role(role: StringName) -> NPC:
 	return null
 
 
+# --- Crowd (Milestone 37) -----------------------------------------------------------------
+
+## Grid cell size for finding people near a townsperson (metres).
+const CROWD_CELL := 2.0
+var _crowd: Dictionary = {}  # Vector2i -> Array of [node, radius, is_npc]
+var _crowd_tick := -1
+var _near: Array = []
+
+
+## People near a local point: townsfolk who are out and about, the player and
+## the other players, each as [node, radius, is_npc]. The grid is rebuilt once
+## per physics tick. The returned array is reused - read it before calling again.
+func people_near(local: Vector3, exclude: Node) -> Array:
+	var tick := Engine.get_physics_frames()
+	if tick != _crowd_tick:
+		_crowd_tick = tick
+		_rebuild_crowd()
+	_near.clear()
+	var c := Vector2i(floori(local.x / CROWD_CELL), floori(local.z / CROWD_CELL))
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			var k := c + Vector2i(dx, dz)
+			if _crowd.has(k):
+				for e in _crowd[k]:
+					if e[0] != exclude:
+						_near.append(e)
+	return _near
+
+
+## Where a crowd entry stands now, in this site's local space.
+func person_pos(e: Array) -> Vector3:
+	var n: Node3D = e[0]
+	if not is_instance_valid(n):
+		return Vector3.INF
+	return n.position if e[2] else to_local(n.global_position)
+
+
+func _rebuild_crowd() -> void:
+	_crowd.clear()
+	for n in npcs:
+		if is_instance_valid(n) and n.visible and not n.asleep and not n.downed:
+			_crowd_add(n.position, n, NPC.BODY_RADIUS, true)
+	var w := World.instance
+	if w and w.player and not w.player.is_dead and w.player.is_inside_tree():
+		var r := NPC.MOUNTED_RADIUS if w.player.is_riding() else NPC.BODY_RADIUS
+		_crowd_add(to_local(w.player.global_position), w.player, r, false)
+	for rp in get_tree().get_nodes_in_group(&"remote_players"):
+		var r3 := rp as Node3D
+		if r3 and r3.visible:
+			_crowd_add(to_local(r3.global_position), r3, NPC.BODY_RADIUS, false)
+
+
+func _crowd_add(local: Vector3, node: Node3D, radius: float, is_npc: bool) -> void:
+	var c := Vector2i(floori(local.x / CROWD_CELL), floori(local.z / CROWD_CELL))
+	if not _crowd.has(c):
+		_crowd[c] = []
+	_crowd[c].append([node, radius, is_npc])
+
+
 # --- Per frame --------------------------------------------------------------------------------
 
 func _process(delta: float) -> void:

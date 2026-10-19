@@ -43,7 +43,7 @@ func open() -> void:
 	is_open = true
 	if chest and is_instance_valid(chest) and chest.locked_reason == SEALED:
 		chest.locked_reason = ""
-	Audio.play_at(&"door", global_position, -2.0)
+	Audio.play_at(&"gate_open", global_position, -4.0)
 	create_tween().tween_property(_bars, "position:y", 1.75, 0.5)
 	for c in get_children():
 		if c is CollisionShape3D:
@@ -56,7 +56,7 @@ func close() -> void:
 	is_open = false
 	if chest and is_instance_valid(chest) and chest.locked_reason == "":
 		chest.locked_reason = SEALED
-	Audio.play_at(&"door", global_position, -2.0)
+	Audio.play_at(&"gate_open", global_position, -4.0)
 	create_tween().tween_property(_bars, "position:y", 0.0, 0.25)
 	for c in get_children():
 		if c is CollisionShape3D:

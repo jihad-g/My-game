@@ -72,7 +72,7 @@ func open() -> void:
 		return
 	is_open = true
 	collision_layer = 0
-	Audio.play_at(&"door", global_position, 0.0)
+	Audio.play_at(&"gate_open", global_position, 0.0)
 	var tw := create_tween()
 	tw.tween_property(_bars, "position:y", -size.y + 0.1, 0.8).set_trans(Tween.TRANS_QUAD)
 	NavGrid.invalidate_at(global_position)

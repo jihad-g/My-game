@@ -726,7 +726,7 @@ func _act_place(ps: PeerState, a: Array) -> Dictionary:
 	if ps.level < data.required_level:
 		return _no("Requires level %d" % data.required_level)
 	var w := world()
-	var why: String = with_layer(layer, func() -> String: return w.building.check_place(data, cell, slot, null, false))
+	var why: String = with_layer(layer, func() -> String: return w.building.check_place(data, cell, slot, null, false, rot))
 	if why == "" and data.behavior == BuildPieceData.Behavior.STAIRS:
 		why = with_layer(layer, func() -> String: return w.building.check_stairs(cell, rot, BuildingManager.storey_of(slot)))
 	if why != "":

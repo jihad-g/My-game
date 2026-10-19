@@ -169,6 +169,7 @@ func music_context() -> Dictionary:
 		"underground": world.layer == TerrainGenerator.Layer.UNDERGROUND,
 		"town": world.living != null and world.living.current != null,
 		"night": world.day_night.is_night(),
+		"biome": world.current_biome.id if world.current_biome else &"",
 	}
 
 

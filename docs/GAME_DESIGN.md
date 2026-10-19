@@ -256,6 +256,8 @@ Each system has a short "how it works" note. Key numbers come from the code and 
   within 30 m). Up to 8 construction sites. Save your base as a blueprint; import/export JSON; an
   offline **web designer** (`web/blueprint-designer/index.html`).
 - One storey only (no stairs, no second floor).
+- **Beds take two cells** (Milestone 37): the bed's own cell and the one at its foot (the way it is turned).
+  Nothing else can be built on the foot cell and no wall can go through the middle of a bed.
 
 ### 3.12 Settlements and NPCs
 - **Villages** (one decision per 384 m region) and **kingdom capitals** (one per realm of 4×4 regions),
@@ -268,6 +270,9 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 - **Dialogue**: greeting by role and reputation, "What's new?" gossip built from the real world (adds
   villages, caves, dungeons and other places to your map).
 - Guards fight monsters near capitals.
+- **Townsfolk keep out of people's way** (Milestone 37): they steer around the player, other players and each
+  other (keeping to the right), never overlap anyone, wait and say "Excuse me" if you block the way, step aside
+  when you keep walking into them and go back to their spot after. The player bumps into them.
 
 ### 3.13 Economy
 - Coins: copper, silver, gold. Prices depend on the region (wood is dear in the desert, food in the
@@ -365,8 +370,10 @@ Each system has a short "how it works" note. Key numbers come from the code and 
   motes. Foliage sways in the wind; water ripples.
 
 ### 3.22 Audio
-- All sound is synthesized by `tools/gen_audio.py`: 71 sound effects, 10 ambience loops, 7 music tracks
-  (menu, day, night, town, combat, dungeon, boss).
+- All sound is synthesized by `tools/gen_audio.py`: 79 sound effects, 10 ambience loops, 14 music tracks
+  (menu, day, night, town, combat, dungeon, boss, and since Milestone 37 seven biome tunes: desert, snow,
+  jungle, swamp, mountain, coast, crystal glade - they play while exploring by day; meadows and forests keep
+  the day tune). Milestone 37 sounds: hooves, neigh, oars, levers, pressure plates, gates, waystones.
 - 3D positional sound pool, pitch variation, rate limiting, cave reverb. A music director crossfades
   tracks by situation; ambience mixes by biome, time, weather and place. Five volume sliders.
 
@@ -379,6 +386,10 @@ Each system has a short "how it works" note. Key numbers come from the code and 
   guide (F1), settings, achievements, main menu, save recovery, multiplayer bar and chat.
 - 32×32 pixel-art icons drawn by code for every item. Panels pop in with sound.
 - Menus need the mouse (no gamepad menu navigation yet). English only.
+- **Title screen** (Milestone 37): a moving pixel-art landscape (`src/ui/title_backdrop.gd`, drawn at 320 x 180
+  and scaled up), our own pixel logo (`src/ui/pixel_logo.gd`), big buttons (Continue, New world, Load world,
+  Multiplayer, Settings, Achievements, Quit) and the version; New world / Load world / Multiplayer are pages
+  with a Back button.
 
 ### 3.24 Tutorial
 - 16 contextual hints that appear when they matter (moving, camera, gathering, bag, crafting, chopping,
@@ -386,11 +397,16 @@ Each system has a short "how it works" note. Key numbers come from the code and 
   show your real keys. Progress is kept per player profile; turn off or replay in Settings.
 - Guide (F1) with all controls and pages on survival, combat, character, crafting, building, the world
   and saving.
+- **First steps** (Milestone 37): a short guided tutorial offered to a new player - walk, gather 3 things,
+  open the bag, craft a tool, chop a tree, build something - as a checklist on the HUD, in any order. The
+  hints that say the same thing stay quiet. Skip any time; Settings → Replay the tutorial offers it again.
 
 ### 3.25 Settings and accessibility
 - Tabs: Gameplay, Controls, Audio, Display & graphics, Accessibility.
 - Difficulty (Story / Normal / Hard), autosave interval, damage numbers, camera speed, frame cap, FPS
   counter, fullscreen, V-Sync, render scale, shadows, horizon terrain, particles, screen shake.
+- Milestone 37: graphics quality preset (Low / Medium / High / Custom), field of view (30-75°, default 45°),
+  anti-aliasing (off / 2x / 4x).
 - Rebinding for keyboard/mouse and gamepad separately, with conflict warnings; toggle sprint.
 - Accessibility: interface scale 75–150%, colour-vision filters (protanopia, deuteranopia,
   tritanopia), high-contrast UI, directional sound captions, reduced flashing, reduced motion.
@@ -1178,6 +1194,16 @@ Old saves keep their land exactly. Milestone 18 is complete.
 **Done: Milestone 19 — "Together in Danger" (v0.28.0).** Real co-op combat: the host runs every monster, guests
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
+
+**Done: Milestone 37 — Release polish (v0.45.0).** Title screen (`TitleBackdrop`, `PixelLogo`, pages in
+`MainMenu.show_page`), the "First steps" tutorial (`Tutorial.FIRST_STEPS`, `FirstStepsPanel`), biome music
+(`Audio.BIOME_MUSIC`, picked by `Audio.pick_music` from `AmbientEffects.music_context().biome`), new sounds,
+graphics presets (`Settings.QUALITY_PRESETS`, `matching_quality`), FOV and MSAA, two-cell beds
+(`BuildingManager.bed_dir`, `is_two_cell`, `extra_keys`) and townsfolk avoidance (`SettlementSite.people_near`,
+`NPC._avoid`, `_keep_apart`, `_stalled`, `_make_way`).
+
+**Done: Milestone 36 — Performance (v0.44.0).** Staged town and POI builds, prop bodies a few per frame, crowd
+and spawn budgets, the quest hint on a worker thread; the stress tool's slowest frame is under 25 ms.
 
 **Done: Milestone 34 — Textures (v0.42.0).** Textures are generated by `art/tools/texgen.py` (+ `texgen_extra.py`),
 packed by `build_atlas.py` and exported by `export_game.py`. Water ripples are drawn in

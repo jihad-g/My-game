@@ -90,7 +90,8 @@ func interact(player: Node) -> void:
 		w.travel.unlock(key, title, global_position)
 		refresh()
 		VFX.motes(get_parent(), global_position + Vector3(0, 1.6, 0), Color(0.45, 0.85, 1.0), 24, 0.8)
-		Audio.play(&"discover", -2.0)
+		Audio.play(&"discover", -4.0)
+		Audio.play_at(&"waystone", global_position + Vector3(0, 1.5, 0), -2.0)
 		Events.toast.emit("Waystone unlocked: %s. Use any waystone to travel here" % title, Color(0.6, 0.9, 1.0))
 		return
 	if w.hud and w.hud.has_method("open_travel_panel"):

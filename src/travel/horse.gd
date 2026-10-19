@@ -170,6 +170,7 @@ func feed(player: Node) -> bool:
 	make_tame()
 	Events.toast.emit("You tamed %s! Put a saddle on to ride (craft one at a tailoring table)" % horse_name, Color(0.7, 1, 0.7))
 	Audio.play(&"level_up", -6.0)
+	Audio.play_at(&"horse_neigh", global_position + Vector3(0, 1.4, 0), -2.0)
 	return true
 
 
@@ -271,9 +272,17 @@ func is_galloping() -> bool:
 
 ## Called every physics frame by the rider: the horse stands under them.
 func follow_rider(pos: Vector3, yaw: float, speed: float, delta: float) -> void:
+	# Milestone 37: hooves - a clip-clop every stride (longer strides when galloping).
+	_stride += Vector2(pos.x - global_position.x, pos.z - global_position.z).length()
+	if _stride > (2.2 if speed > 8.0 else 1.3):
+		_stride = 0.0
+		Audio.play_at(&"hoof", pos, -6.0 if speed > 8.0 else -9.0, 0.08)
 	global_position = pos
 	rotation = Vector3(0, yaw, 0)
 	model.set_locomotion(speed / 6.0, delta)
+
+
+var _stride := 0.0
 
 
 # --- Whistle ------------------------------------------------------------------------
@@ -285,6 +294,7 @@ func call_to(who: Node3D) -> bool:
 	if global_position.distance_to(who.global_position) > WHISTLE_RANGE:
 		return false
 	_follow = who
+	Audio.play_at(&"horse_neigh", global_position + Vector3(0, 1.4, 0), -4.0)
 	return true
 
 

@@ -60,12 +60,20 @@ func _ready() -> void:
 		_oars.append(pivot)
 
 
+var _stroke := 0
+
+
 func _process(delta: float) -> void:
 	_t += delta
 	# Bob on the water.
 	_model.position.y = sin(_t * 1.7) * 0.04
 	_model.rotation.z = sin(_t * 1.3) * 0.03
 	var rowing := rider != null and rider.get("velocity") is Vector3 and Vector2(rider.velocity.x, rider.velocity.z).length() > 0.5
+	# Milestone 37: a splash of the oars at each stroke.
+	var stroke := int(_t * 5.0 / PI)
+	if rowing and stroke != _stroke:
+		Audio.play_at(&"oar", global_position, -8.0, 0.1)
+	_stroke = stroke
 	for i in _oars.size():
 		var side := -1.0 if i == 0 else 1.0
 		_oars[i].rotation.y = (sin(_t * 5.0) * 0.6 * side) if rowing else lerpf(_oars[i].rotation.y, 0.0, delta * 3.0)

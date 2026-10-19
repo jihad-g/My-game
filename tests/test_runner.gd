@@ -5,7 +5,8 @@ extends Node
 ## Run headless:
 ##   godot --headless --path . res://tests/test_runner.tscn
 ## Exit code 0 = all passed, 1 = failures.
-## Run only some tests: add `-- --only=test_m14` (tests whose name contains it).
+## Run only some tests: add `-- --only=test_m14` (tests whose name contains it;
+## several parts separated by commas, e.g. `--only=test_m5_,test_m7_`).
 
 var _passed := 0
 var _failed := 0
@@ -168,12 +169,28 @@ func _ready() -> void:
 	await _run_async(&"test_m35_crafting_ingame")
 	_run(&"test_m36_perf_units")
 	await _run_async(&"test_m36_perf_ingame")
+	await _run_async(&"test_m37_bed")
+	await _run_async(&"test_m37_crowd")
+	await _run_async(&"test_m37_tutorial")
+	_run(&"test_m37_polish_units")
+	await _run_async(&"test_m37_title")
+	await _run_async(&"test_m37_creative")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
 
+## `--only=a,b` runs the tests whose name contains any of the parts.
+func _wanted(test: StringName) -> bool:
+	if _only == "":
+		return true
+	for part in _only.split(",", false):
+		if String(test).contains(part):
+			return true
+	return false
+
+
 func _run(test: StringName) -> void:
-	if _only != "" and not String(test).contains(_only):
+	if not _wanted(test):
 		return
 	_current = test
 	print("\n-- %s" % test)
@@ -181,7 +198,7 @@ func _run(test: StringName) -> void:
 
 
 func _run_async(test: StringName) -> void:
-	if _only != "" and not String(test).contains(_only):
+	if not _wanted(test):
 		return
 	_current = test
 	print("\n-- %s" % test)
@@ -5226,7 +5243,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.44"), "version 0.44 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.45"), "version 0.45 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -10007,5 +10024,499 @@ func test_m36_perf_ingame() -> void:
 	if a and b:
 		var push := CombatDirector.separation(a)
 		check(push.x < -0.1, "crowded monsters push apart (%.2f)" % push.x)
+	world.queue_free()
+	await _frames(5)
+
+
+# --- Milestone 37: release polish -------------------------------------------------------------
+
+## A bed takes two cells (its own and the one at its foot), so it no longer
+## sticks into the neighbouring cells' furniture or walls.
+func test_m37_bed() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	var c := _flat_area(world, 10)
+	await _teleport_to(world, c + Vector3(-6, 0, 0))
+	var bm := world.building
+	var l := world.layer
+	var bed := BuildingManager.get_piece_data(&"bed")
+	var chest := BuildingManager.get_piece_data(&"storage_chest")
+	var wall := BuildingManager.get_piece_data(&"wood_wall")
+	check(BuildingManager.bed_dir(0) == Vector2i(0, 1) and BuildingManager.bed_dir(1) == Vector2i(1, 0)
+		and BuildingManager.bed_dir(2) == Vector2i(0, -1) and BuildingManager.bed_dir(5) == Vector2i(1, 0),
+		"a bed's foot points the way it is turned")
+	var cell := Vector2i(floori(c.x), floori(c.z))
+	var b := bm.place(bed, cell, "object", 0, null, false)
+	if check(b != null, "a bed is placed"):
+		var foot := cell + Vector2i(0, 1)
+		check(bm.pieces.get(BuildingManager.key(foot, "object", l)) == b, "it takes the cell at its foot too")
+		check(absf(b.global_position.z - (cell.y + 1.0)) < 0.01 and absf(b.global_position.x - (cell.x + 0.5)) < 0.01,
+			"it lies across both cells")
+		check(bm.check_place(chest, foot, "object", null, false) != "", "nothing else can go at the bed's foot")
+		check(bm.check_place(wall, foot, "edge_n", null, false) == "A bed is in the way", "no wall through the middle of a bed")
+		check(bm.check_place(wall, cell, "edge_n", null, false) == "", "a wall at its head is fine")
+		var saved: Array = bm.to_save().filter(func(e: Dictionary) -> bool: return String(e.id) == "bed")
+		check(saved.size() == 1, "the bed is saved once")
+		check(bm.remove(b, p), "the bed can be taken down")
+		check(not bm.pieces.has(BuildingManager.key(foot, "object", l)) and not bm.pieces.has(BuildingManager.key(cell, "object", l)),
+			"both cells are free again")
+		# Loading: a bed comes back two cells long.
+		bm.from_save(saved)
+		var b2: BuildPiece = bm.pieces.get(BuildingManager.key(cell, "object", l))
+		check(b2 != null and bm.pieces.get(BuildingManager.key(foot, "object", l)) == b2, "a loaded bed takes both cells")
+	# Upstairs a bed needs floor under both cells.
+	var up := cell + Vector2i(8, 0)
+	bm._spawn(BuildingManager.get_piece_data(&"wood_floor"), up, "floor@1", 0, l)
+	check(bm.check_place(bed, up, "object@1", null, false) == "The bed needs a floor under both cells", "upstairs a bed needs floor under both cells")
+	bm._spawn(BuildingManager.get_piece_data(&"wood_floor"), up + Vector2i(0, 1), "floor@1", 0, l)
+	check(bm.check_place(bed, up, "object@1", null, false) == "", "with both floors down it fits")
+	# Turned beds, and what stops them.
+	var c2 := cell + Vector2i(4, 0)
+	bm._spawn(chest, c2 + Vector2i(1, 0), "object", 0, l)
+	check("No room" in bm.check_place(bed, c2, "object", null, false, 1), "a turned bed needs its foot cell free")
+	check(bm.check_place(bed, c2, "object", null, false, 0) == "", "turned the other way it fits")
+	bm._spawn(wall, c2 + Vector2i(0, 1), "edge_n", 0, l)
+	check("wall" in bm.check_place(bed, c2, "object", null, false, 0), "a bed can't lie through a wall")
+	var t := bm.place(bed, c2, "object", 3, null, false)
+	check(t != null and bm.pieces.get(BuildingManager.key(c2 + Vector2i(-1, 0), "object", l)) == t, "turned three times, its foot is to the west")
+	# Older saves: something already at the foot - the bed stays one cell long.
+	var c3 := cell + Vector2i(0, 5)
+	bm._spawn(chest, c3 + Vector2i(0, 1), "object", 0, l)
+	var old := bm._spawn(bed, c3, "object", 0, l)
+	check(old.extra_keys.is_empty() and absf(old.global_position.z - (c3.y + 0.5)) < 0.01, "an old bed with a chest at its foot stays one cell")
+	var c4 := cell + Vector2i(4, 5)
+	var first := bm._spawn(bed, c4, "object", 0, l)
+	var late := bm._spawn(chest, c4 + Vector2i(0, 1), "object", 0, l)
+	check(first.extra_keys.is_empty() and bm.pieces.get(BuildingManager.key(c4 + Vector2i(0, 1), "object", l)) == late
+		and absf(first.global_position.z - (c4.y + 0.5)) < 0.01, "loaded the other way round, the bed gives up its foot cell")
+	# The demo house's bed fits its room.
+	var house := cell + Vector2i(-12, -12)
+	bm.build_demo_house(house)
+	var hb: BuildPiece = bm.pieces.get(BuildingManager.key(house + Vector2i(1, 1), "object@1", l))
+	check(hb != null and hb.data.id == &"bed" and bm.pieces.get(BuildingManager.key(house + Vector2i(1, 2), "object@1", l)) == hb,
+		"the demo house's upstairs bed takes two cells")
+	world.queue_free()
+	await _frames(5)
+
+
+## Townsfolk don't walk through people: they steer around each other and the
+## player, never overlap, and step aside when the player keeps walking into them.
+func test_m37_crowd() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.day_night.hour = 10.0
+	var v := _nearest(world, false)
+	await _go_to_town(world, v)
+	var site := world.living.site_of(v)
+	if not check(site != null and site.npcs.size() >= 3, "a village with townsfolk"):
+		world.queue_free()
+		await _frames(5)
+		return
+	check(NPC.avoid_people and p.collision_mask & Layers.NPC != 0, "the player bumps into townsfolk instead of passing through")
+	# Everyone else out of the way.
+	var a: NPC = site.npcs[0]
+	var b: NPC = site.npcs[1]
+	var n3: NPC = site.npcs[2]
+	for n in site.npcs:
+		if n != a and n != b and n != n3:
+			n.visible = false
+	var centre: Vector3 = site.layout.points.plaza[0]
+	centre.y = 0.0
+	# Head-on: two townsfolk walking straight at each other pass by.
+	var min_ab := await _walk_pair(site, a, b, centre)
+	check(min_ab > NPC.BODY_RADIUS * 2.0 - 0.03, "two townsfolk walking at each other keep apart (closest %.2f m)" % min_ab)
+	check(a._path.is_empty() and b._path.is_empty(), "and both get where they were going")
+	# Past the player standing in the way.
+	p.global_position = site.to_global(centre + Vector3(0, 0.4, 0))
+	p.velocity = Vector3.ZERO
+	await _frames(10)
+	var pl := site.to_local(p.global_position)
+	_send(a, pl + Vector3(-4, 0, 0), pl + Vector3(4, 0, 0))
+	b.visible = false
+	var min_ap := 99.0
+	for i in 400:
+		await _frames(1)
+		var d := Vector2(a.position.x - site.to_local(p.global_position).x, a.position.z - site.to_local(p.global_position).z).length()
+		min_ap = minf(min_ap, d)
+		if a._path.is_empty():
+			break
+	check(min_ap > NPC.BODY_RADIUS * 2.0 - 0.05, "a townsperson walks around the player, not through (closest %.2f m)" % min_ap)
+	check(a._path.is_empty(), "and still gets there")
+	# Standing still and bumped into: steps aside, then goes back.
+	var spot := pl + Vector3(2.5, 0, 0)
+	a.position = spot
+	a._path = PackedVector3Array()
+	a._anchor = Vector3.INF
+	p.global_position = site.to_global(spot + Vector3(-0.85, 0.3, 0))
+	for i in 4:
+		p.velocity = Vector3(3, 0, 0)
+		a._crowd_t = 0.0
+		a._make_way(0.2)
+	check(a.made_way == 1 and not a._path.is_empty() and a._anchor.distance_to(spot) < 0.01, "pushed against, a townsperson steps aside")
+	p.global_position = site.to_global(spot + Vector3(-6, 0.3, 0))
+	p.velocity = Vector3.ZERO
+	var back := false
+	for i in 600:
+		await _frames(1)
+		if a._anchor == Vector3.INF and a._path.is_empty():
+			back = true
+			break
+	check(back and Vector2(a.position.x - spot.x, a.position.z - spot.z).length() < 0.05, "and walks back to its spot when the player has gone")
+	# Stuck behind the player: says "Excuse me"; behind another townsperson: they let each other through.
+	_send(a, a.position, a.position + Vector3(8, 0, 0))
+	a._path = PackedVector3Array([a.position + Vector3(4, 0, 0), a.position + Vector3(8, 0, 0)])
+	p.global_position = site.to_global(a.position + Vector3(0.8, 0.3, 0))
+	site._crowd_tick = -1
+	a._best_dist = 0.0
+	a._stall = NPC.STALL_TIME
+	a._stalled(4.0, 0.1)
+	check(a.excused == 1, "blocked by the player for a while, a townsperson says \"Excuse me\"")
+	p.global_position = site.to_global(a.position + Vector3(0, 0.3, 8))
+	n3.visible = true
+	n3.asleep = false
+	n3.position = a.position + Vector3(0.75, 0, 0)
+	n3._path = PackedVector3Array()
+	site._crowd_tick = -1
+	a._best_dist = 0.0
+	a._stall = NPC.STALL_TIME
+	a._stalled(4.0, 0.1)
+	check(a._ghost > 0.0, "blocked by another townsperson, it squeezes past")
+	# Two placed on the same spot spread out.
+	n3.position = a.position
+	a._path = PackedVector3Array()
+	a._ghost = 0.0
+	site._crowd_tick = -1
+	for i in 8:
+		a._crowd_t = 0.0
+		a._make_way(0.2)
+		n3._crowd_t = 0.0
+		n3._make_way(0.2)
+		site._crowd_tick = -1
+	var d3 := Vector2(a.position.x - n3.position.x, a.position.z - n3.position.z).length()
+	check(d3 > NPC.BODY_RADIUS * 2.0 - 0.03, "two townsfolk standing in the same spot spread out (%.2f m)" % d3)
+	# What it costs: one tick of every townsperson here, steering on.
+	for n in site.npcs:
+		n.visible = true
+	site._crowd_tick = -1
+	var t0 := Time.get_ticks_usec()
+	for n in site.npcs:
+		n._physics_process(1.0 / 60.0)
+	var us := Time.get_ticks_usec() - t0
+	check(us < 2000, "a tick of %d townsfolk keeping out of the way costs %.2f ms" % [site.npcs.size(), us / 1000.0])
+	for n in site.npcs:
+		if n != a and n != b and n != n3:
+			n.visible = false
+	# Creative toggle: off, they walk through each other as before.
+	NPC.set_avoidance(false)
+	check(p.collision_mask & Layers.NPC == 0, "toggled off, the player passes through townsfolk again")
+	b.visible = true
+	var min_off := await _walk_pair(site, a, b, centre)
+	check(min_off < 0.3, "and townsfolk walk through each other (closest %.2f m)" % min_off)
+	NPC.set_avoidance(true)
+	check(p.collision_mask & Layers.NPC != 0, "toggled back on")
+	world.queue_free()
+	await _frames(5)
+
+
+## Sends a townsperson walking from `from` to `to` (site-local).
+func _send(n: NPC, from: Vector3, to: Vector3) -> void:
+	n.position = from
+	n.visible = true
+	n.asleep = false
+	n.talking = false
+	n._guard_target = null
+	n._think = 999.0
+	n._ghost = 0.0
+	n._anchor = Vector3.INF
+	n._path = PackedVector3Array([to])
+	n._path_i = 0
+	n._reset_progress()
+
+
+## Two townsfolk walk at each other across `centre`; returns how close they got.
+func _walk_pair(site: SettlementSite, a: NPC, b: NPC, centre: Vector3) -> float:
+	var world := World.instance
+	world.player.global_position = site.to_global(centre + Vector3(0, 0.4, 12))
+	_send(a, centre + Vector3(-4, 0, 0), centre + Vector3(4, 0, 0))
+	_send(b, centre + Vector3(4, 0, 0.05), centre + Vector3(-4, 0, 0.05))
+	var closest := 99.0
+	for i in 600:
+		await _frames(1)
+		closest = minf(closest, Vector2(a.position.x - b.position.x, a.position.z - b.position.z).length())
+		if a._path.is_empty() and b._path.is_empty():
+			break
+	return closest
+
+
+## The short "First steps" tutorial: offered to a new player, six steps ticked
+## in any order, the matching hints stay quiet, saved, skippable, restartable.
+func test_m37_tutorial() -> void:
+	var saved_profile := Tutorial.profile_path
+	Tutorial.profile_path = "user://test_profile_m37.cfg"
+	DirAccess.remove_absolute(Tutorial.profile_path)
+	Tutorial.reset_progress()
+	Settings.values["tutorial_hints"] = true
+	InputSetup.reset_all()
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	await _frames(30)
+	var panel := world.hud.first_steps
+	check(Tutorial.first_steps_offered() and panel.visible and panel._offer.visible, "a new player is offered the short tutorial")
+	(panel._offer.find_child("Start", true, false) as Button).pressed.emit()
+	await _frames(5)
+	check(Tutorial.first_steps == "running" and panel._rows.visible and not panel._offer.visible, "Start begins it")
+	await _frames(30)
+	check(Tutorial.current.is_empty() or not Tutorial._covered_by_first_steps(Tutorial.current.id),
+		"the hints that say the same thing stay quiet (%s)" % Tutorial.current.get("id", "none"))
+	check(panel.next_text().contains("[WASD]"), "the first step names the real keys (%s)" % panel.next_text())
+	p.global_position += Vector3(10, 0, 0)
+	p.global_position.y = world.get_ground_height(p.global_position) + 0.3
+	await _frames(30)
+	check(Tutorial.fs_done.has(&"fs_move") and Tutorial.is_done(&"move"), "walking ticks the first step, and its hint is done too")
+	Events.item_picked_up.emit(&"stick", 1)
+	await _frames(20)
+	check(not Tutorial.fs_done.has(&"fs_gather"), "one item isn't enough")
+	Events.item_picked_up.emit(&"stone", 2)
+	await _frames(20)
+	check(Tutorial.fs_done.has(&"fs_gather"), "three things picked up ticks gathering")
+	Events.building_changed.emit()
+	Tutorial.notify(&"inventory_opened")
+	await _frames(20)
+	check(Tutorial.fs_done.has(&"fs_build") and Tutorial.fs_done.has(&"fs_bag") and not Tutorial.fs_done.has(&"fs_craft"),
+		"steps can be done in any order")
+	check(Tutorial.first_steps_next().get("id") == &"fs_craft" and panel.next_text().contains("[G]"),
+		"the next one is crafting (%s)" % panel.next_text())
+	check(panel._count.text == "4 / 6", "the checklist counts them (%s)" % panel._count.text)
+	Tutorial.load_progress()
+	check(Tutorial.first_steps == "running" and Tutorial.fs_done.size() == 4, "progress is saved to the player profile")
+	Events.item_crafted.emit(&"stone_hatchet", 1)
+	Events.resource_harvested.emit(&"tree_oak", 1)
+	await _frames(20)
+	check(Tutorial.first_steps == "finished" and Tutorial.is_done(&"craft") and Tutorial.is_done(&"chop"), "all six done: finished")
+	await _frames(3)
+	check(panel.visible and panel._rows.get_child_count() > 6, "the checklist stays up a moment to say well done")
+	Tutorial.restart_first_steps()
+	await _pframes(3)
+	check(Tutorial.first_steps == "running" and Tutorial.fs_done.is_empty() and panel.visible, "Creative mode can restart it")
+	panel._skip.pressed.emit()
+	await _pframes(3)
+	check(Tutorial.first_steps == "skipped" and not panel.visible, "Skip ends it and the checklist goes away")
+	Tutorial.reset_progress()
+	await _pframes(3)
+	check(Tutorial.first_steps_offered() and panel.visible, "Replay the tutorial (Settings) offers it again")
+	(panel._offer.find_child("NoThanks", true, false) as Button).pressed.emit()
+	check(Tutorial.first_steps == "skipped", "No thanks turns it down")
+	Tutorial.first_steps = ""
+	for id in [&"move", &"camera", &"gather"]:
+		Tutorial.done[id] = true
+	check(not Tutorial.first_steps_offered(), "a player who already knows the basics isn't offered it")
+	world.queue_free()
+	await _frames(5)
+	DirAccess.remove_absolute(Tutorial.profile_path)
+	Tutorial.profile_path = saved_profile
+	Tutorial.load_progress()
+
+
+## Biome music, the new sounds, graphics presets and the pixel logo.
+func test_m37_polish_units() -> void:
+	var missing := []
+	var tunes := {}
+	for b in Audio.BIOME_MUSIC:
+		var t := String(Audio.BIOME_MUSIC[b])
+		tunes[t] = true
+		if not ResourceLoader.exists("res://assets/audio/music/%s.ogg" % t):
+			missing.append(t)
+	check(missing.is_empty() and Audio.BIOME_MUSIC.size() >= 8, "every biome tune is a real file (%d biomes, missing %s)" % [Audio.BIOME_MUSIC.size(), missing])
+	check(tunes.size() >= 7, "%d different biome tunes" % tunes.size())
+	var ogg := load("res://assets/audio/music/biome_desert.ogg") as AudioStream
+	check(ogg != null and ogg.get_length() > 20.0, "a biome tune is a full piece (%.0f s)" % (ogg.get_length() if ogg else 0.0))
+	check(Audio.pick_music({"biome": &"sunscorch_desert"}) == &"biome_desert" and Audio.pick_music({"biome": &"crystal_glade"}) == &"biome_glade",
+		"exploring by day plays the biome's tune")
+	check(Audio.pick_music({"biome": &"verdant_meadow"}) == &"explore_day", "meadows keep the old exploring tune")
+	check(Audio.pick_music({"biome": &"sunscorch_desert", "night": true}) == &"explore_night"
+		and Audio.pick_music({"biome": &"snowy_tundra", "combat": true}) == &"combat", "night and fights keep their own music")
+	Audio.music_override = &"biome_swamp"
+	check(Audio.pick_music({"biome": &"verdant_meadow"}) == &"biome_swamp" and Audio.pick_music({"menu": true}) == &"menu",
+		"Creative mode can force a tune (not on the title screen)")
+	Audio.music_override = &""
+	var sfx_missing := []
+	for snd in CreativePanel.M37_SOUNDS.keys() + [&"hoof_1"]:
+		if not ResourceLoader.exists("res://assets/audio/sfx/%s.wav" % snd):
+			sfx_missing.append(snd)
+	check(sfx_missing.is_empty(), "the new sounds are real files (missing %s)" % [sfx_missing])
+	# Graphics presets.
+	var saved_path := Settings.path
+	var saved: Dictionary = Settings.values.duplicate()
+	Settings.path = "user://test_settings_m37.cfg"
+	Settings.set_value("graphics_quality", 0)
+	check(float(Settings.get_value("render_scale")) < 1.0 and int(Settings.get_value("shadows")) == 0
+		and not bool(Settings.get_value("far_terrain")) and int(Settings.get_value("msaa")) == 0,
+		"Low: no shadows, no horizon, no smoothing, 75% resolution")
+	Settings.set_value("graphics_quality", 2)
+	check(is_equal_approx(float(Settings.get_value("render_scale")), 1.0) and int(Settings.get_value("shadows")) == 2
+		and bool(Settings.get_value("far_terrain")) and int(Settings.get_value("msaa")) == 2, "High turns them all up")
+	Settings.set_value("shadows", 1)
+	check(int(Settings.get_value("graphics_quality")) == Settings.QUALITY_CUSTOM, "changing one of them makes it Custom")
+	Settings.set_value("msaa", 1)
+	check(int(Settings.get_value("graphics_quality")) == 1, "matching a preset again shows that preset (Medium)")
+	check(get_viewport().msaa_3d == Viewport.MSAA_2X, "anti-aliasing is applied (2x)")
+	Settings.set_value("fov", 60.0)
+	check(is_equal_approx(float(Settings.get_value("fov")), 60.0) and Settings.FOV_MIN < 45.0 and Settings.FOV_MAX > 60.0,
+		"field of view is a setting (%d-%d°)" % [Settings.FOV_MIN, Settings.FOV_MAX])
+	Settings.values = saved
+	Settings.apply()
+	DirAccess.remove_absolute(Settings.path)
+	Settings.path = saved_path
+	# The logo.
+	var img := PixelLogo.image()
+	var used := 0
+	for y in img.get_height():
+		for x in img.get_width():
+			if img.get_pixel(x, y).a > 0.5:
+				used += 1
+	check(img.get_width() > 60 and img.get_height() > 15 and used > img.get_width() * img.get_height() / 3,
+		"the logo is our own pixel art (%dx%d, %d pixels)" % [img.get_width(), img.get_height(), used])
+	var glyphs_ok := true
+	for ch in "SHARDLANDS":
+		glyphs_ok = glyphs_ok and PixelLogo.GLYPHS.has(ch)
+	check(glyphs_ok, "every letter has a glyph")
+
+
+## The title screen: moving pixel landscape, logo, version, big buttons, pages.
+func test_m37_title() -> void:
+	var saved_dir := SaveManager.worlds_dir
+	SaveManager.worlds_dir = "user://test_worlds_m37"
+	_remove_dir(SaveManager.worlds_dir)
+	var menu := (load("res://scenes/menu/main_menu.tscn") as PackedScene).instantiate() as MainMenu
+	add_child(menu)
+	await _pframes(10)
+	check(menu.current_page() == "" and menu._title_page.visible, "the title page shows first")
+	check(menu._logo.texture != null and menu._logo.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST
+		and menu._logo.custom_minimum_size.x >= menu._logo.texture.get_width() * 3, "the pixel logo is scaled up crisp")
+	var t0 := menu.backdrop.time()
+	await _pframes(10)
+	check(menu.backdrop.time() > t0 and menu.backdrop.texture != null, "the landscape behind it moves")
+	check(menu._version.text.contains(String(ProjectSettings.get_setting("application/config/version"))), "the version is shown (%s)" % menu._version.text)
+	var names := []
+	for b in menu._title_page.find_children("*", "Button", true, false):
+		names.append(String(b.name))
+	check(["NewWorld", "LoadWorld", "Multiplayer", "Settings", "Achievements", "Quit"].all(func(n: String) -> bool: return n in names),
+		"the main buttons are there (%s)" % ", ".join(names))
+	check(not menu._continue.visible, "no Continue without a saved world")
+	(menu._title_page.find_child("NewWorld", true, false) as Button).pressed.emit()
+	check(menu.current_page() == "new" and not menu._title_page.visible and menu.picker.is_visible_in_tree(), "New world opens the world and character page")
+	(menu._pages["new"].find_child("Back", true, false) as Button).pressed.emit()
+	check(menu.current_page() == "" and menu._title_page.visible, "Back returns to the title")
+	(menu._title_page.find_child("LoadWorld", true, false) as Button).pressed.emit()
+	check(menu._list.is_visible_in_tree(), "Load world lists your worlds")
+	var ev := InputEventAction.new()
+	ev.action = &"ui_cancel"
+	ev.pressed = true
+	menu._unhandled_input(ev)
+	check(menu.current_page() == "", "Esc goes back too")
+	(menu._title_page.find_child("Multiplayer", true, false) as Button).pressed.emit()
+	check(menu._mp_address.is_visible_in_tree(), "Multiplayer has its own page")
+	menu.show_page("")
+	(menu._title_page.find_child("Settings", true, false) as Button).pressed.emit()
+	check(menu._settings.visible, "Settings opens from the title")
+	menu._settings.visible = false
+	menu._select_class(&"wizard")
+	check(menu.current_page() == "new" and menu.picker.selected_class == &"wizard", "picking a class shows the new-world page")
+	menu.queue_free()
+	await _pframes(2)
+	# With a saved world, Continue plays the latest one.
+	var id := SaveManager.create_world("Title Test", 4242, &"knight")
+	var menu2 := (load("res://scenes/menu/main_menu.tscn") as PackedScene).instantiate() as MainMenu
+	add_child(menu2)
+	await _pframes(5)
+	check(menu2._continue.visible and menu2._continue.text.contains("Title Test") and menu2._continue_id == id,
+		"Continue offers the latest world (%s)" % menu2._continue.text)
+	menu2.queue_free()
+	await _pframes(2)
+	SaveManager.delete_world(id)
+	_remove_dir(SaveManager.worlds_dir)
+	SaveManager.worlds_dir = saved_dir
+	SaveManager.start_transient(GameState.DEFAULT_SEED)
+
+
+## Creative mode: music, sounds, graphics, townsfolk, tutorial and bed buttons.
+func test_m37_creative() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	var panel := world.hud.creative
+	panel.set_creative(true)
+	var texts := []
+	for b in panel.find_children("*", "Button", true, false):
+		texts.append((b as Button).text)
+	check(["Six walk at me", "Make way on / off", "Restart first steps", "A bed in front of me (2 cells)", "Desert", "Hooves", "FOV 60°", "Low"].all(
+		func(t: String) -> bool: return t in texts), "Creative has the M37 buttons")
+	var ctx := world.ambient.music_context()
+	check(world.current_biome != null and ctx.get("biome") == world.current_biome.id, "the music knows the biome you're in (%s)" % ctx.get("biome"))
+	panel._music(&"biome_desert")
+	check(Audio.music_override == &"biome_desert" and Audio.music_track == &"biome_desert", "Creative plays the desert tune")
+	panel._music(&"")
+	check(Audio.music_override == &"", "and goes back to automatic")
+	var fov0 := world.camera_rig.camera.fov
+	panel._fov(60.0)
+	check(is_equal_approx(world.camera_rig.camera.fov, 60.0), "the field of view changes the camera")
+	panel._fov(fov0)
+	var saved: Dictionary = Settings.values.duplicate()
+	var saved_path := Settings.path
+	Settings.path = "user://test_settings_m37c.cfg"
+	panel._gfx_quality(0)
+	check(int(Settings.get_value("shadows")) == 0 and not bool(Settings.get_value("far_terrain")), "the Low button sets the Low preset")
+	Settings.values = saved
+	Settings.apply()
+	DirAccess.remove_absolute(Settings.path)
+	Settings.path = saved_path
+	panel._toggle_npc_avoid()
+	check(not NPC.avoid_people, "townsfolk avoidance can be switched off")
+	panel._toggle_npc_avoid()
+	check(NPC.avoid_people and p.collision_mask & Layers.NPC != 0, "and on again")
+	var saved_profile := Tutorial.profile_path
+	Tutorial.profile_path = "user://test_profile_m37c.cfg"
+	Tutorial.restart_first_steps()
+	check(Tutorial.first_steps == "running", "the first steps can be restarted")
+	Tutorial.skip_first_steps()
+	DirAccess.remove_absolute(Tutorial.profile_path)
+	Tutorial.profile_path = saved_profile
+	Tutorial.load_progress()
+	var c := _flat_area(world, 6)
+	await _teleport_to(world, c)
+	var n0 := world.building.pieces.size()
+	panel._bed_here()
+	check(world.building.pieces.size() == n0 + 2, "a bed in front of you takes two cells (%d keys)" % (world.building.pieces.size() - n0))
+	var v := _nearest(world, false)
+	await _go_to_town(world, v)
+	panel._npcs_at_me()
+	var walkers := 0
+	for n in get_tree().get_nodes_in_group(&"npcs"):
+		if (n as NPC)._think > 20.0 and not (n as NPC)._path.is_empty():
+			walkers += 1
+	check(walkers >= 3, "six townsfolk walk at you (%d)" % walkers)
+	var closest := 99.0
+	var arrived := 0
+	for i in 900:
+		await _frames(1)
+		arrived = 0
+		for n in get_tree().get_nodes_in_group(&"npcs"):
+			var npc := n as NPC
+			if npc.visible and npc._think > 15.0:
+				var d := Vector2(npc.global_position.x - p.global_position.x, npc.global_position.z - p.global_position.z).length()
+				closest = minf(closest, d)
+				if npc._path.is_empty():
+					arrived += 1
+		if arrived >= walkers:
+			break
+	check(closest > NPC.BODY_RADIUS * 2.0 - 0.05, "none of them walks through you (closest %.2f m)" % closest)
+	check(arrived >= walkers, "and they all get past (%d of %d)" % [arrived, walkers])
 	world.queue_free()
 	await _frames(5)

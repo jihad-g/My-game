@@ -324,6 +324,11 @@ func _give_selected() -> void:
 
 
 ## Milestone 35: the new items and recipes (honey food, silk, gear from the M33 monster drops).
+## Milestone 37: biome music and the new sounds, for testing.
+const M37_MUSIC := {&"explore_day": "Meadow", &"biome_desert": "Desert", &"biome_snow": "Snow", &"biome_jungle": "Jungle",
+	&"biome_swamp": "Swamp", &"biome_mountain": "Mountain", &"biome_coast": "Coast", &"biome_glade": "Crystal glade"}
+const M37_SOUNDS := {&"hoof_0": "Hooves", &"horse_neigh": "Neigh", &"oar": "Oar", &"lever": "Lever",
+	&"plate_click": "Pressure plate", &"gate_open": "Gate", &"waystone": "Waystone"}
 const M35_ITEMS := [&"silk_cloth", &"honey_bread", &"honey_roast", &"honey_cake", &"silk_bandage", &"silkweave_robe",
 	&"silkweave_hood", &"dragonbone_greatsword", &"serpentscale_boots", &"mimic_tooth_amulet", &"pearl_ring", &"fletched_arrow"]
 const M35_RECIPES := [&"fire_arrow_from_feather", &"fletched_arrow", &"honey_bread", &"honey_roast", &"honey_cake", &"silk_cloth",
@@ -722,6 +727,93 @@ func _build_world() -> void:
 	bh.add_child(_button("Go to the nearest", _go_biome))
 	v.add_child(bh)
 	_row(v, "Save", [["Save now", func() -> void: _say("saved" if world.save_now(false) else "this world isn't saved (Quick play)")]])
+	# Milestone 37: release polish - music, sounds, graphics, townsfolk, tutorial, beds.
+	var mus: Array = [["Automatic", func() -> void: _music(&"")]]
+	for track in M37_MUSIC:
+		mus.append([String(M37_MUSIC[track]), func() -> void: _music(track)])
+	_row(v, "Music", mus)
+	var sfx: Array = []
+	for snd in M37_SOUNDS:
+		sfx.append([String(M37_SOUNDS[snd]), func() -> void: Audio.play_ui(snd)])
+	_row(v, "Sounds", sfx)
+	_row(v, "Graphics", [["Low", func() -> void: _gfx_quality(0)], ["Medium", func() -> void: _gfx_quality(1)],
+		["High", func() -> void: _gfx_quality(2)], ["FOV 35°", func() -> void: _fov(35.0)], ["FOV 45°", func() -> void: _fov(45.0)],
+		["FOV 60°", func() -> void: _fov(60.0)]])
+	_row(v, "Townsfolk", [["Make way on / off", _toggle_npc_avoid], ["Six walk at me", _npcs_at_me]])
+	_row(v, "Tutorial", [["Restart first steps", func() -> void:
+			Tutorial.restart_first_steps()
+			_say("first steps restarted - see the checklist on the left")],
+		["Skip first steps", func() -> void:
+			Tutorial.skip_first_steps()
+			_say("first steps skipped")],
+		["Replay all hints", func() -> void:
+			Tutorial.reset_progress()
+			_say("all tutorial hints will show again (and the first steps are offered)")]])
+	_row(v, "Bed", [["A bed in front of me (2 cells)", _bed_here]])
+
+
+func _music(track: StringName) -> void:
+	Audio.music_override = track
+	if track != &"":
+		Audio.set_music(track)
+	_say("music: %s" % ("automatic (by biome, time and danger)" if track == &"" else String(M37_MUSIC.get(track, track))))
+
+
+func _gfx_quality(k: int) -> void:
+	Settings.set_value("graphics_quality", k)
+	_say("graphics quality: %s" % String(Settings.QUALITY_NAMES[k]).get_slice(" - ", 0))
+
+
+func _fov(deg: float) -> void:
+	Settings.set_value("fov", deg)
+	_say("field of view %d°" % roundi(deg))
+
+
+func _toggle_npc_avoid() -> void:
+	NPC.set_avoidance(not NPC.avoid_people)
+	_say("townsfolk %s" % ("keep out of people's way" if NPC.avoid_people else "walk through people (old behaviour)"))
+
+
+## Six townsfolk nearby walk through where you stand, from all sides: they go
+## around you and each other (or straight through with "make way" off).
+func _npcs_at_me() -> void:
+	var near: Array = []
+	for n in get_tree().get_nodes_in_group(&"npcs"):
+		var npc := n as NPC
+		if npc and npc.visible and not npc.asleep and not npc.downed and npc.global_position.distance_to(player.global_position) < 60.0:
+			near.append(npc)
+	if near.is_empty():
+		_say("no townsfolk nearby - go to a town first (Go to > Nearest town)")
+		return
+	near.sort_custom(func(a: NPC, b: NPC) -> bool:
+		return a.global_position.distance_squared_to(player.global_position) < b.global_position.distance_squared_to(player.global_position))
+	var k := 0
+	for npc: NPC in near.slice(0, 6):
+		var me := npc.site.to_local(player.global_position)
+		var dir := Vector3(cos(TAU * k / 6.0), 0, sin(TAU * k / 6.0))
+		npc.talking = false
+		npc._think = 30.0  # back to their day after half a minute
+		npc._anchor = Vector3.INF
+		npc.position = me + dir * 5.0
+		npc._path = PackedVector3Array([me - dir * 5.0])
+		npc._path_i = 0
+		npc._reset_progress()
+		k += 1
+	_say("%d townsfolk walk through where you stand" % k)
+
+
+## A bed in the cell in front of you, its foot pointing away from you.
+func _bed_here() -> void:
+	var fwd := world.camera_rig.get_forward_flat()
+	var cell := Vector2i(floori(player.global_position.x + fwd.x * 1.6), floori(player.global_position.z + fwd.z * 1.6))
+	var rot := posmod(roundi(atan2(fwd.x, fwd.z) / (PI * 0.5)), 4)
+	var bed := BuildingManager.get_piece_data(&"bed")
+	var why := world.building.check_place(bed, cell, "object", player, false, rot)
+	if why != "":
+		_say("no bed here: %s" % why)
+		return
+	world.building.place(bed, cell, "object", rot, player, false)
+	_say("a bed, two cells long - nothing else fits on its foot")
 
 
 func _time(target: float) -> void:
