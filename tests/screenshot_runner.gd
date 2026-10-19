@@ -3328,7 +3328,9 @@ func _feel_showcase() -> void:
 	var aim := p.get_aim_direction()
 	var pos := p.global_position + aim * 1.7
 	pos.y = world.get_ground_height(pos) + 0.3
-	var m := world.spawner.spawn_enemy(load("res://scenes/enemies/monster.tscn"), pos, "", load("res://data/enemies/skeleton_warrior.tres")) as Monster
+	var md := (load("res://data/enemies/bandit_thug.tres") as MonsterData).duplicate() as MonsterData
+	md.dodge_chance = 0.0  # a clean hit for the picture
+	var m := world.spawner.spawn_enemy(load("res://scenes/enemies/monster.tscn"), pos, "", md) as Monster
 	m.configure(PoiLayout.RANK_POWER[0], PoiLayout.RANK_DAMAGE[0], PoiLayout.RANK_LEVELS[0], PoiLayout.RANK_XP[0])
 	m.health.max_health = 50000.0
 	m.health.current = 50000.0
@@ -3347,7 +3349,11 @@ func _feel_showcase() -> void:
 	await _shot("feel_2b_number_pops_out")
 	Engine.time_scale = 1.0
 	await _wait(30)
-	var fwd := p.global_position + aim * 6.0
+	# The middle of the room, so the blasts are not inside a wall.
+	var fwd := d.to_global(d.plan.room_center(d.plan.start_room))
+	fwd.y = p.global_position.y
+	if fwd.distance_to(p.global_position) < 3.0:
+		fwd = p.global_position + aim * 3.5
 	# Effects are drawn frozen at an exact frame (this software renderer is too slow to catch them live).
 	for f in [3.0, 7.0, 16.0]:
 		BlastFX.preview_time = CombatFeel.sec(f)
