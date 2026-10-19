@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BiomeData" load_steps=14 format=3]
+[gd_resource type="Resource" script_class="BiomeData" load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://src/world/biome_data.gd" id="1_biome"]
 [ext_resource type="Script" path="res://src/world/prop_rule.gd" id="2_rule"]
@@ -7,7 +7,7 @@
 script = ExtResource("2_rule")
 prop_id = &"tree_swamp"
 cell_size = 8
-density = 0.3
+density = 0.2
 clustering = 0.8
 min_height = 1
 max_height = 30
@@ -168,6 +168,36 @@ show_in_lod1 = false
 on_water = false
 salt = 7068
 
+[sub_resource type="Resource" id="Rule_T0"]
+script = ExtResource("2_rule")
+prop_id = &"tree_willow"
+cell_size = 8
+density = 0.12
+clustering = 0.7
+min_height = 1
+max_height = 30
+max_slope = 1
+min_scale = 0.9
+max_scale = 1.2
+show_in_lod1 = true
+on_water = false
+salt = 9122
+
+[sub_resource type="Resource" id="Rule_T1"]
+script = ExtResource("2_rule")
+prop_id = &"tree_mangrove"
+cell_size = 8
+density = 0.1
+clustering = 0.7
+min_height = 1
+max_height = 30
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.2
+show_in_lod1 = true
+on_water = false
+salt = 9123
+
 [resource]
 script = ExtResource("1_biome")
 id = &"murk_swamp"
@@ -183,5 +213,5 @@ top_color_alt = Color(0.424, 0.478, 0.235, 1)
 side_color = Color(0.31, 0.263, 0.188, 1)
 shore_color = Color(0.42, 0.392, 0.251, 1)
 underwater_color = Color(0.29, 0.298, 0.204, 1)
-prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_RW0"), SubResource("Rule_RW1"), SubResource("Rule_RW2"), SubResource("Rule_RW3")]
+prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_RW0"), SubResource("Rule_RW1"), SubResource("Rule_RW2"), SubResource("Rule_RW3"), SubResource("Rule_T0"), SubResource("Rule_T1")]
 enemy_spawns = []

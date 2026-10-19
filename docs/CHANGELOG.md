@@ -2,6 +2,20 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.48.0] — Milestone 40: Many Trees (tree variants per biome)
+
+### Added
+- 19 new tree props in 3 sizes (young / normal / big) and new shapes, in `src/world/prop_library.gd` +
+  `data/props/`: Young Oak, Great Oak, Birch, Autumn Oak, Tall/Young Pine, Tall/Young Snowy Pine, Frozen
+  Dead Tree, Giant Jungle Tree, Leaning Palm, Bush Palm, Swamp Willow, Mangrove, Tall Cactus, Acacia, and
+  Crystal Tree / Crystal Spire / Young Crystal Tree.
+- Crystal Glade now grows crystal trees instead of oaks (wood + 10-25% `crystal_shard`).
+
+### Changed
+- Each biome's old main tree is less dense so the total tree count stays about the same (mobile FPS).
+- New biome rules are appended at the END of `prop_rules` (rule index is saved), so old saves keep their
+  chopped trees.
+
 ## [0.47.0] — Milestone 39: Voxel Arsenal (items in the reference style)
 
 Every held item is now a voxel model in the style of the owner's reference sheets (chunky boxes, one voxel

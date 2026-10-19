@@ -22,6 +22,26 @@ const TREE_LOOK := {
 	&"tree_dead": [Color(0.4, 0.32, 0.22), 3.5, 1.2],
 	&"cactus": [Color(0.35, 0.55, 0.3), 2.5, 0.8],
 	&"mushroom_giant": [Color(0.75, 0.25, 0.25), 4.0, 3.0],
+	# Milestone 40 ("Many Trees")
+	&"tree_oak_young": [Color(0.24, 0.52, 0.2), 2.5, 1.3],
+	&"tree_oak_big": [Color(0.17, 0.42, 0.16), 6.0, 3.8],
+	&"tree_birch": [Color(0.42, 0.62, 0.2), 4.8, 1.6],
+	&"tree_autumn": [Color(0.86, 0.42, 0.13), 4.7, 2.6],
+	&"tree_pine_tall": [Color(0.13, 0.36, 0.22), 7.6, 2.6],
+	&"tree_pine_young": [Color(0.2, 0.5, 0.32), 2.5, 1.2],
+	&"tree_snowy_pine_tall": [Color(0.82, 0.88, 0.9), 7.6, 2.6],
+	&"tree_snowy_pine_young": [Color(0.82, 0.88, 0.9), 2.5, 1.2],
+	&"tree_frozen_dead": [Color(0.62, 0.66, 0.72), 3.4, 1.4],
+	&"tree_jungle_giant": [Color(0.1, 0.4, 0.17), 8.2, 4.4],
+	&"tree_palm_bent": [Color(0.3, 0.66, 0.26), 4.3, 2.6],
+	&"tree_palm_short": [Color(0.28, 0.6, 0.24), 2.3, 2.4],
+	&"tree_willow": [Color(0.36, 0.5, 0.22), 4.1, 3.6],
+	&"tree_mangrove": [Color(0.22, 0.4, 0.18), 4.3, 2.6],
+	&"cactus_tall": [Color(0.32, 0.56, 0.28), 3.6, 1.4],
+	&"tree_acacia": [Color(0.42, 0.52, 0.22), 3.4, 3.2],
+	&"tree_crystal": [Color(0.74, 0.48, 1.0), 4.9, 2.4],
+	&"tree_crystal_spire": [Color(0.42, 0.8, 1.0), 7.0, 1.8],
+	&"tree_crystal_young": [Color(0.78, 0.55, 1.0), 2.3, 1.2],
 }
 ## Cell size (m) of one tree clump.
 const CELL := 8

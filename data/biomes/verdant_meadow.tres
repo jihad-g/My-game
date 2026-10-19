@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BiomeData" load_steps=27 format=3]
+[gd_resource type="Resource" script_class="BiomeData" load_steps=31 format=3]
 
 [ext_resource type="Script" path="res://src/world/biome_data.gd" id="1_biome"]
 [ext_resource type="Script" path="res://src/world/prop_rule.gd" id="2_rule"]
@@ -10,7 +10,7 @@
 script = ExtResource("2_rule")
 prop_id = &"tree_oak"
 cell_size = 4
-density = 0.12
+density = 0.08
 clustering = 0.9
 min_height = 2
 max_height = 40
@@ -315,6 +315,66 @@ show_in_lod1 = false
 on_water = false
 salt = 7437
 
+[sub_resource type="Resource" id="Rule_T0"]
+script = ExtResource("2_rule")
+prop_id = &"tree_oak_young"
+cell_size = 4
+density = 0.04
+clustering = 0.6
+min_height = 2
+max_height = 40
+max_slope = 1
+min_scale = 0.8
+max_scale = 1.1
+show_in_lod1 = true
+on_water = false
+salt = 9101
+
+[sub_resource type="Resource" id="Rule_T1"]
+script = ExtResource("2_rule")
+prop_id = &"tree_oak_big"
+cell_size = 8
+density = 0.04
+clustering = 0.7
+min_height = 2
+max_height = 40
+max_slope = 1
+min_scale = 0.9
+max_scale = 1.15
+show_in_lod1 = true
+on_water = false
+salt = 9102
+
+[sub_resource type="Resource" id="Rule_T2"]
+script = ExtResource("2_rule")
+prop_id = &"tree_birch"
+cell_size = 8
+density = 0.06
+clustering = 0.7
+min_height = 2
+max_height = 40
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.2
+show_in_lod1 = true
+on_water = false
+salt = 9103
+
+[sub_resource type="Resource" id="Rule_T3"]
+script = ExtResource("2_rule")
+prop_id = &"tree_autumn"
+cell_size = 16
+density = 0.08
+clustering = 0.8
+min_height = 2
+max_height = 40
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.2
+show_in_lod1 = true
+on_water = false
+salt = 9104
+
 [resource]
 script = ExtResource("1_biome")
 id = &"verdant_meadow"
@@ -330,5 +390,5 @@ top_color_alt = Color(0.430, 0.620, 0.270, 1)
 side_color = Color(0.422, 0.275, 0.165, 1)
 shore_color = Color(0.949, 0.835, 0.541, 1)
 underwater_color = Color(0.737, 0.62, 0.4, 1)
-prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_7"), SubResource("Rule_8"), SubResource("Rule_9"), SubResource("Rule_10"), SubResource("Rule_11"), SubResource("Rule_12"), SubResource("Rule_RW1"), SubResource("Rule_RW2"), SubResource("Rule_RW3"), SubResource("Rule_RW4"), SubResource("Rule_RW5"), SubResource("Rule_RW6"), SubResource("Rule_RW7")]
+prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_7"), SubResource("Rule_8"), SubResource("Rule_9"), SubResource("Rule_10"), SubResource("Rule_11"), SubResource("Rule_12"), SubResource("Rule_RW1"), SubResource("Rule_RW2"), SubResource("Rule_RW3"), SubResource("Rule_RW4"), SubResource("Rule_RW5"), SubResource("Rule_RW6"), SubResource("Rule_RW7"), SubResource("Rule_T0"), SubResource("Rule_T1"), SubResource("Rule_T2"), SubResource("Rule_T3")]
 enemy_spawns = [SubResource("Spawn_0")]

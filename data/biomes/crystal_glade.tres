@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BiomeData" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="BiomeData" load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://src/world/biome_data.gd" id="1_biome"]
 [ext_resource type="Script" path="res://src/world/prop_rule.gd" id="2_rule"]
@@ -50,7 +50,7 @@ salt = 114
 
 [sub_resource type="Resource" id="Rule_3"]
 script = ExtResource("2_rule")
-prop_id = &"tree_oak"
+prop_id = &"tree_crystal"
 cell_size = 8
 density = 0.08
 clustering = 0.7
@@ -108,6 +108,36 @@ show_in_lod1 = false
 on_water = false
 salt = 7395
 
+[sub_resource type="Resource" id="Rule_T0"]
+script = ExtResource("2_rule")
+prop_id = &"tree_crystal_spire"
+cell_size = 16
+density = 0.12
+clustering = 0.7
+min_height = 2
+max_height = 60
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.15
+show_in_lod1 = true
+on_water = false
+salt = 9126
+
+[sub_resource type="Resource" id="Rule_T1"]
+script = ExtResource("2_rule")
+prop_id = &"tree_crystal_young"
+cell_size = 8
+density = 0.06
+clustering = 0.7
+min_height = 2
+max_height = 60
+max_slope = 1
+min_scale = 0.8
+max_scale = 1.1
+show_in_lod1 = true
+on_water = false
+salt = 9127
+
 [resource]
 script = ExtResource("1_biome")
 id = &"crystal_glade"
@@ -120,5 +150,5 @@ top_color_alt = Color(0.42, 0.494, 0.816, 1)
 side_color = Color(0.329, 0.275, 0.431, 1)
 shore_color = Color(0.812, 0.761, 0.918, 1)
 underwater_color = Color(0.494, 0.447, 0.651, 1)
-prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_RW0"), SubResource("Rule_RW1")]
+prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_RW0"), SubResource("Rule_RW1"), SubResource("Rule_T0"), SubResource("Rule_T1")]
 enemy_spawns = []

@@ -4,6 +4,12 @@ Legend: `[x]` completed (implemented + tested) · `[~]` in progress / partial (d
 
 Nothing below is marked `[x]` unless it runs in the game today.
 
+## Milestone 40 — Many Trees (v0.48.0)
+
+- [~] 19 new tree variants (sizes + shapes) in every forest biome; Crystal Glade has crystal trees (built, loads with no errors, preview rendered; NOT tested in a play session yet)
+- [ ] NOT IMPLEMENTED: crystal trees give real light at night (only bright colours, to keep FPS)
+- [ ] NOT IMPLEMENTED: own wood types (birch wood, crystal wood) - all trees drop normal `wood`
+
 ## Milestone 39 — Voxel Arsenal (v0.47.0)
 
 - [x] All held weapons, shields, wands and tomes are voxel models in the reference style (`VoxelItems`)

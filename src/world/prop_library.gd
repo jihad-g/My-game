@@ -30,6 +30,11 @@ const SWAY := {
 	&"starlight_orchid": 0.06, &"frost_lotus": 0.04, &"emberroot": 0.04,
 	# Milestone 26 ("Rich World")
 	&"flower_bush": 0.03, &"fern": 0.2, &"wildflowers_white": 0.25, &"wildflowers_orange": 0.25,
+	# Milestone 40 ("Many Trees") - young trees sway more, big ones less; crystal trees stay still
+	&"tree_oak_young": 0.006, &"tree_oak_big": 0.0025, &"tree_birch": 0.0045, &"tree_autumn": 0.0035,
+	&"tree_pine_tall": 0.0018, &"tree_pine_young": 0.005, &"tree_snowy_pine_tall": 0.0018, &"tree_snowy_pine_young": 0.005,
+	&"tree_jungle_giant": 0.002, &"tree_palm_bent": 0.004, &"tree_palm_short": 0.006, &"tree_willow": 0.004,
+	&"tree_mangrove": 0.003, &"tree_acacia": 0.003,
 }
 
 
@@ -502,3 +507,314 @@ func _build_old_gravestone(b: BlockMesh) -> void:
 	b.box(Vector3(-0.03, 0.55, 0.085), Vector3(0.06, 0.3, 0.02), stone * 0.7, lean)
 	b.box(Vector3(-0.03, 0.62, 0.085), Vector3(0.22, 0.06, 0.02), stone * 0.7, lean)
 	b.card(Vector3(0.0, 0.0, 0.2), &"grass_tuft", 0.6, 0.35, Color(0.33, 0.55, 0.24))
+
+
+# --- Milestone 40 ("Many Trees"): tree variants per biome ----------------------
+# Every biome gets 2-3 extra tree shapes and sizes (young / normal / big).
+# Shared helpers keep the shapes in the same blocky style as the old trees.
+
+## Stacked pine tiers from `base` upwards. `widths` are the tier widths (bottom first).
+func _pine_tiers(b: BlockMesh, base: float, widths: Array, tier_h: float, c1: Color, c2: Color, snow: bool) -> void:
+	for k in widths.size():
+		var w: float = widths[k]
+		var y := base + k * tier_h
+		b.texture = &"leaves_pine"
+		b.box(Vector3(0, y, 0), Vector3(w, tier_h, w), c1 if k % 2 == 0 else c2)
+		if snow:
+			b.texture = &"snow_top_0"
+			b.box(Vector3(0, y + tier_h * 0.5 + 0.05, 0), Vector3(w * 0.88, 0.12, w * 0.88), Color(0.95, 0.97, 1.0))
+	b.texture = &""
+
+
+func _build_tree_oak_young(b: BlockMesh) -> void:
+	b.texture = &"bark"
+	b.box(Vector3(0, 0.7, 0), Vector3(0.28, 1.4, 0.28), Color(0.47, 0.32, 0.19))
+	b.texture = &"leaves_oak"
+	b.box(Vector3(0, 1.75, 0), Vector3(1.3, 0.8, 1.3), Color(0.24, 0.52, 0.2))
+	b.box(Vector3(0.1, 2.3, -0.05), Vector3(0.8, 0.5, 0.8), Color(0.33, 0.62, 0.24))
+	b.texture = &""
+
+
+func _build_tree_oak_big(b: BlockMesh) -> void:
+	var trunk := Color(0.42, 0.28, 0.17)
+	var leaf := Color(0.17, 0.42, 0.16)
+	var leaf_light := Color(0.27, 0.53, 0.2)
+	b.texture = &"bark"
+	b.box(Vector3(0, 1.6, 0), Vector3(0.85, 3.2, 0.85), trunk)
+	b.box(Vector3(0, 0.25, 0), Vector3(1.3, 0.5, 1.3), trunk * 0.9)  # root flare
+	b.box(Vector3(0.8, 2.9, 0.2), Vector3(1.4, 0.3, 0.3), trunk * 0.95, Basis(Vector3.BACK, 0.55))
+	b.box(Vector3(-0.7, 3.1, -0.4), Vector3(1.2, 0.3, 0.3), trunk * 0.95, Basis(Vector3.BACK, -0.6) * Basis(Vector3.UP, 0.4))
+	b.texture = &"leaves_oak"
+	b.box(Vector3(0, 3.9, 0), Vector3(3.8, 1.5, 3.8), leaf)
+	b.box(Vector3(0, 5.0, 0), Vector3(2.8, 1.0, 2.8), leaf_light)
+	b.box(Vector3(1.6, 3.6, 1.0), Vector3(1.6, 1.1, 1.6), leaf_light)
+	b.box(Vector3(-1.5, 3.5, -1.2), Vector3(1.5, 1.0, 1.5), leaf)
+	b.box(Vector3(-1.2, 4.2, 1.4), Vector3(1.3, 0.9, 1.3), leaf_light)
+	b.box(Vector3(0.3, 5.7, -0.2), Vector3(1.4, 0.6, 1.4), leaf)
+	b.texture = &""
+
+
+func _build_tree_birch(b: BlockMesh) -> void:
+	var bark := Color(0.9, 0.88, 0.82)
+	var mark := Color(0.18, 0.17, 0.16)
+	var leaf := Color(0.42, 0.62, 0.2)
+	var leaf_light := Color(0.55, 0.72, 0.26)
+	b.texture = &"bark"
+	b.box(Vector3(0, 1.6, 0), Vector3(0.32, 3.2, 0.32), bark)
+	b.texture = &""
+	for p: Vector3 in [Vector3(0.165, 0.6, 0.05), Vector3(-0.165, 1.2, -0.06), Vector3(0.04, 1.8, 0.165), Vector3(0.165, 2.4, -0.04), Vector3(-0.05, 2.9, -0.165)]:
+		var s := Vector3(0.02, 0.1, 0.18) if absf(p.x) > 0.1 else Vector3(0.18, 0.1, 0.02)
+		b.box(p, s, mark)
+	b.texture = &"leaves_oak"
+	b.box(Vector3(0, 3.3, 0), Vector3(1.6, 1.4, 1.6), leaf)
+	b.box(Vector3(0, 4.3, 0), Vector3(1.1, 1.0, 1.1), leaf_light)
+	b.box(Vector3(0.5, 2.8, 0.3), Vector3(0.7, 0.6, 0.7), leaf_light)
+	b.box(Vector3(-0.45, 3.0, -0.4), Vector3(0.6, 0.6, 0.6), leaf)
+	b.texture = &""
+
+
+func _build_tree_autumn(b: BlockMesh) -> void:
+	var trunk := Color(0.4, 0.27, 0.17)
+	var leaf := Color(0.86, 0.42, 0.13)
+	var leaf_red := Color(0.72, 0.22, 0.12)
+	var leaf_gold := Color(0.92, 0.66, 0.2)
+	b.texture = &"bark"
+	b.box(Vector3(0, 1.2, 0), Vector3(0.5, 2.4, 0.5), trunk)
+	b.texture = &"leaves_oak"
+	b.box(Vector3(0, 2.9, 0), Vector3(2.6, 1.3, 2.6), leaf)
+	b.box(Vector3(0, 3.9, 0), Vector3(1.8, 0.9, 1.8), leaf_gold)
+	b.box(Vector3(1.0, 2.6, -0.6), Vector3(1.0, 0.8, 1.0), leaf_red)
+	b.box(Vector3(-0.9, 2.5, 0.7), Vector3(0.9, 0.8, 0.9), leaf_gold)
+	b.box(Vector3(-0.3, 4.5, 0.2), Vector3(0.8, 0.5, 0.8), leaf_red)
+	b.texture = &""
+	for p: Vector3 in [Vector3(0.9, 0.04, 0.6), Vector3(-0.7, 0.04, -0.5), Vector3(0.2, 0.04, -1.0)]:
+		b.box(p, Vector3(0.5, 0.06, 0.4), leaf_red)  # fallen leaves
+
+
+func _build_tree_pine_tall(b: BlockMesh) -> void:
+	b.texture = &"bark"
+	b.box(Vector3(0, 1.6, 0), Vector3(0.55, 3.2, 0.55), Color(0.38, 0.25, 0.15))
+	_pine_tiers(b, 2.4, [2.6, 2.2, 1.85, 1.5, 1.15, 0.8, 0.45], 0.75, Color(0.15, 0.45, 0.3), Color(0.21, 0.55, 0.35), false)
+	b.box(Vector3(0, 7.45, 0), Vector3(0.22, 0.4, 0.22), Color(0.15, 0.45, 0.3))
+
+
+func _build_tree_pine_young(b: BlockMesh) -> void:
+	b.texture = &"bark"
+	b.box(Vector3(0, 0.4, 0), Vector3(0.24, 0.8, 0.24), Color(0.42, 0.28, 0.17))
+	_pine_tiers(b, 0.9, [1.2, 0.85, 0.5], 0.55, Color(0.22, 0.56, 0.36), Color(0.28, 0.64, 0.4), false)
+
+
+func _build_tree_snowy_pine_tall(b: BlockMesh) -> void:
+	b.texture = &"bark"
+	b.box(Vector3(0, 1.6, 0), Vector3(0.55, 3.2, 0.55), Color(0.36, 0.24, 0.15))
+	_pine_tiers(b, 2.4, [2.6, 2.2, 1.85, 1.5, 1.15, 0.8, 0.45], 0.75, Color(0.13, 0.38, 0.27), Color(0.18, 0.46, 0.32), true)
+
+
+func _build_tree_snowy_pine_young(b: BlockMesh) -> void:
+	b.texture = &"bark"
+	b.box(Vector3(0, 0.4, 0), Vector3(0.24, 0.8, 0.24), Color(0.4, 0.27, 0.17))
+	_pine_tiers(b, 0.9, [1.2, 0.85, 0.5], 0.55, Color(0.18, 0.47, 0.32), Color(0.23, 0.54, 0.36), true)
+
+
+func _build_tree_frozen_dead(b: BlockMesh) -> void:
+	var wood := Color(0.62, 0.66, 0.72)
+	var ice := Color(0.72, 0.88, 1.0)
+	b.texture = &"bark"
+	b.box(Vector3(0, 1.5, 0), Vector3(0.4, 3.0, 0.4), wood)
+	b.box(Vector3(0.55, 2.2, 0), Vector3(1.1, 0.16, 0.16), wood * 0.92, Basis(Vector3.BACK, 0.6))
+	b.box(Vector3(-0.45, 2.7, 0.15), Vector3(0.9, 0.15, 0.15), wood * 0.9, Basis(Vector3.BACK, -0.7))
+	b.box(Vector3(0.1, 2.5, -0.45), Vector3(0.14, 0.14, 0.9), wood * 0.92, Basis(Vector3.RIGHT, 0.6))
+	b.box(Vector3(0.0, 3.2, 0.1), Vector3(0.12, 0.6, 0.12), wood, Basis(Vector3.BACK, 0.3))
+	b.texture = &"snow_top_0"
+	b.box(Vector3(0, 3.05, 0), Vector3(0.44, 0.1, 0.44), Color(0.95, 0.97, 1.0))
+	b.texture = &"ice_side"
+	for p: Vector3 in [Vector3(0.85, 2.15, 0), Vector3(-0.7, 2.6, 0.15), Vector3(0.1, 2.4, -0.75)]:
+		b.box(p, Vector3(0.08, 0.35, 0.08), ice)  # icicles
+	b.texture = &""
+
+
+func _build_tree_jungle_giant(b: BlockMesh) -> void:
+	var trunk := Color(0.38, 0.27, 0.16)
+	var leaf := Color(0.1, 0.4, 0.17)
+	var leaf_light := Color(0.17, 0.5, 0.21)
+	var vine := Color(0.2, 0.52, 0.2)
+	b.texture = &"bark"
+	b.box(Vector3(0, 3.2, 0), Vector3(0.9, 6.4, 0.9), trunk)
+	for a in 4:  # board roots
+		var ang := TAU * a / 4.0 + 0.4
+		var dir := Vector3(cos(ang), 0, sin(ang))
+		b.box(dir * 0.65 + Vector3(0, 0.45, 0), Vector3(0.9, 0.9, 0.22), trunk * 0.88, Basis(Vector3.UP, -ang))
+	b.box(Vector3(1.0, 4.4, 0), Vector3(1.6, 0.3, 0.3), trunk * 0.95, Basis(Vector3.BACK, 0.45))
+	b.texture = &"leaves_jungle"
+	b.box(Vector3(1.9, 4.9, 0), Vector3(2.0, 0.8, 2.0), leaf_light)  # lower side canopy
+	b.box(Vector3(0, 6.8, 0), Vector3(4.4, 1.2, 4.4), leaf)
+	b.box(Vector3(-0.3, 7.7, 0.3), Vector3(3.0, 0.9, 3.0), leaf_light)
+	b.box(Vector3(-1.8, 6.5, -1.4), Vector3(1.4, 0.8, 1.4), leaf_light)
+	b.texture = &""
+	for p: Vector3 in [Vector3(2.0, 5.5, 1.6), Vector3(-1.9, 5.6, 0.8), Vector3(0.6, 5.4, -2.0), Vector3(-1.0, 5.5, 1.9), Vector3(2.6, 4.0, -0.6)]:
+		b.box(p, Vector3(0.12, 2.0, 0.12), vine)
+
+
+func _palm_crown(b: BlockMesh, top: Vector3, fronds: int, length: float, droop: float, frond: Color) -> void:
+	b.texture = &"palm_frond"
+	for k in fronds:
+		var a := TAU * k / float(fronds)
+		var dir := Vector3(cos(a), 0, sin(a))
+		b.box(top + dir * length * 0.5 + Vector3(0, -0.15, 0), Vector3(length, 0.1, 0.45), frond if k % 2 == 0 else frond * 1.1,
+			Basis(Vector3.UP, -a) * Basis(Vector3.BACK, -droop))
+	b.texture = &""
+	b.box(top + Vector3(0.12, -0.32, 0.1), Vector3(0.22, 0.22, 0.22), Color(0.45, 0.3, 0.15))
+	b.box(top + Vector3(-0.12, -0.32, -0.1), Vector3(0.22, 0.22, 0.22), Color(0.4, 0.27, 0.13))
+
+
+func _build_tree_palm_bent(b: BlockMesh) -> void:
+	var trunk := Color(0.62, 0.48, 0.3)
+	b.texture = &"bark"
+	var x := 0.0
+	for k in 7:
+		x += 0.05 + k * 0.045  # the curve grows towards the top
+		b.box(Vector3(x, 0.3 + k * 0.56, 0), Vector3(0.34, 0.6, 0.34), trunk * (0.9 + 0.05 * (k % 2)), Basis(Vector3.BACK, -0.08 * k))
+	_palm_crown(b, Vector3(x + 0.25, 4.15, 0), 7, 1.9, 0.3, Color(0.3, 0.66, 0.26))
+
+
+func _build_tree_palm_short(b: BlockMesh) -> void:
+	var trunk := Color(0.58, 0.45, 0.28)
+	b.texture = &"bark"
+	for k in 3:
+		b.box(Vector3(0, 0.3 + k * 0.55, 0), Vector3(0.42, 0.58, 0.42), trunk * (0.9 + 0.05 * (k % 2)))
+	_palm_crown(b, Vector3(0, 1.95, 0), 8, 1.5, 0.45, Color(0.28, 0.6, 0.24))
+	_palm_crown(b, Vector3(0, 2.15, 0), 5, 1.0, -0.2, Color(0.36, 0.7, 0.3))  # upright inner fronds
+
+
+func _build_tree_willow(b: BlockMesh) -> void:
+	var trunk := Color(0.3, 0.24, 0.16)
+	var leaf := Color(0.36, 0.5, 0.22)
+	var leaf_light := Color(0.46, 0.6, 0.28)
+	b.texture = &"bark"
+	b.box(Vector3(0, 1.2, 0), Vector3(0.6, 2.4, 0.6), trunk)
+	b.box(Vector3(0.35, 2.6, 0), Vector3(0.3, 0.8, 0.3), trunk, Basis(Vector3.BACK, -0.4))
+	b.box(Vector3(-0.3, 2.6, 0.1), Vector3(0.3, 0.8, 0.3), trunk, Basis(Vector3.BACK, 0.4))
+	b.texture = &"bush_leaves"
+	b.box(Vector3(0, 3.2, 0), Vector3(3.6, 0.9, 3.6), leaf)
+	b.box(Vector3(0, 3.8, 0), Vector3(2.4, 0.6, 2.4), leaf_light)
+	b.texture = &"hanging_moss"
+	for k in 12:  # long hanging strands all around the edge
+		var a := TAU * k / 12.0
+		var r := 1.6 if k % 2 == 0 else 1.25
+		var length := 2.0 if k % 3 == 0 else 1.6
+		b.box(Vector3(cos(a) * r, 2.75 - length * 0.5, sin(a) * r), Vector3(0.32, length, 0.32), leaf_light if k % 2 == 0 else leaf)
+	b.texture = &""
+
+
+func _build_tree_mangrove(b: BlockMesh) -> void:
+	var trunk := Color(0.33, 0.26, 0.18)
+	var leaf := Color(0.22, 0.4, 0.18)
+	var leaf_light := Color(0.3, 0.5, 0.22)
+	b.texture = &"bark"
+	b.box(Vector3(0, 2.1, 0), Vector3(0.45, 2.2, 0.45), trunk)
+	for a in 5:  # arching stilt roots
+		var ang := TAU * a / 5.0
+		var dir := Vector3(cos(ang), 0, sin(ang))
+		b.box(dir * 0.55 + Vector3(0, 1.15, 0), Vector3(0.14, 1.0, 0.14), trunk * 0.9, Basis(Vector3.UP, -ang) * Basis(Vector3.BACK, 0.55))
+		b.box(dir * 0.95 + Vector3(0, 0.35, 0), Vector3(0.14, 0.75, 0.14), trunk * 0.85, Basis(Vector3.UP, -ang) * Basis(Vector3.BACK, 0.15))
+	b.texture = &"bush_leaves"
+	b.box(Vector3(0, 3.5, 0), Vector3(2.6, 0.9, 2.6), leaf)
+	b.box(Vector3(0.6, 4.1, -0.3), Vector3(1.4, 0.6, 1.4), leaf_light)
+	b.box(Vector3(-0.8, 3.3, 0.8), Vector3(1.1, 0.6, 1.1), leaf_light)
+	b.texture = &""
+
+
+func _build_cactus_tall(b: BlockMesh) -> void:
+	var c := Color(0.32, 0.56, 0.28)
+	var c2 := Color(0.38, 0.62, 0.32)
+	b.texture = &"cactus"
+	b.box(Vector3(0, 1.7, 0), Vector3(0.5, 3.4, 0.5), c)
+	b.box(Vector3(0, 3.5, 0), Vector3(0.4, 0.2, 0.4), c2)
+	# right arm (low) and left arm (high)
+	b.box(Vector3(0.55, 1.4, 0), Vector3(0.6, 0.34, 0.34), c2)
+	b.box(Vector3(0.75, 2.0, 0), Vector3(0.34, 1.2, 0.34), c2)
+	b.box(Vector3(-0.5, 2.2, 0), Vector3(0.5, 0.32, 0.32), c)
+	b.box(Vector3(-0.65, 2.75, 0), Vector3(0.32, 1.1, 0.32), c)
+	b.box(Vector3(0, 1.9, 0.45), Vector3(0.3, 0.3, 0.4), c2)  # small front bud
+	b.texture = &""
+	b.box(Vector3(0, 3.65, 0), Vector3(0.2, 0.12, 0.2), Color(0.95, 0.85, 0.35))  # flower
+
+
+func _build_tree_acacia(b: BlockMesh) -> void:
+	var trunk := Color(0.45, 0.34, 0.22)
+	var leaf := Color(0.42, 0.52, 0.22)
+	var leaf_light := Color(0.52, 0.6, 0.27)
+	b.texture = &"bark"
+	b.box(Vector3(0, 0.9, 0), Vector3(0.4, 1.8, 0.4), trunk)
+	b.box(Vector3(0.45, 2.3, 0), Vector3(0.28, 1.4, 0.28), trunk * 0.95, Basis(Vector3.BACK, -0.5))
+	b.box(Vector3(-0.4, 2.2, 0.1), Vector3(0.26, 1.2, 0.26), trunk * 0.95, Basis(Vector3.BACK, 0.55))
+	b.texture = &"bush_leaves"
+	b.box(Vector3(0.9, 3.05, 0), Vector3(2.4, 0.4, 2.0), leaf)  # flat umbrella tops
+	b.box(Vector3(-0.85, 2.85, 0.1), Vector3(1.9, 0.4, 1.7), leaf_light)
+	b.box(Vector3(0.1, 3.3, -0.2), Vector3(1.6, 0.3, 1.4), leaf_light)
+	b.texture = &""
+
+
+## Crystal "leaves": angled crystal blocks around a crystal core.
+func _crystal_crown(b: BlockMesh, center: Vector3, radius: float, count: int, size: float, c1: Color, c2: Color) -> void:
+	b.texture = &"crystal"
+	for k in count:
+		var a := TAU * k / float(count) + 0.3
+		var dir := Vector3(cos(a), 0, sin(a))
+		var y := center.y + (0.25 if k % 2 == 0 else -0.2) * radius
+		var tilt := Basis(Vector3.UP, -a) * Basis(Vector3.BACK, -0.5 if k % 2 == 0 else -0.25)
+		b.box(Vector3(center.x, y, center.z) + dir * radius, Vector3(size * 1.4, size * 0.55, size * 0.55), c1 if k % 2 == 0 else c2, tilt)
+	b.texture = &""
+
+
+func _build_tree_crystal(b: BlockMesh) -> void:
+	var core := Color(0.42, 0.3, 0.62)
+	var c1 := Color(0.74, 0.48, 1.0)
+	var c2 := Color(0.5, 0.88, 1.0)
+	b.texture = &"crystal_side"
+	b.box(Vector3(0, 1.3, 0), Vector3(0.45, 2.6, 0.45), core)
+	b.box(Vector3(0, 0.2, 0), Vector3(0.8, 0.4, 0.8), core * 0.85)
+	b.box(Vector3(0.45, 2.3, 0), Vector3(0.8, 0.22, 0.22), core, Basis(Vector3.BACK, 0.6))
+	b.box(Vector3(-0.4, 2.5, 0.1), Vector3(0.7, 0.22, 0.22), core, Basis(Vector3.BACK, -0.6))
+	b.texture = &"crystal"
+	b.box(Vector3(0, 3.1, 0), Vector3(1.4, 1.2, 1.4), c1, Basis(Vector3.UP, 0.785))
+	b.box(Vector3(0, 4.0, 0), Vector3(0.6, 1.0, 0.6), c2, Basis(Vector3.UP, 0.785))
+	b.box(Vector3(0, 4.7, 0), Vector3(0.25, 0.5, 0.25), c1 * 1.1, Basis(Vector3.UP, 0.785))
+	_crystal_crown(b, Vector3(0, 3.0, 0), 1.1, 6, 0.7, c2, c1)
+	for p: Vector3 in [Vector3(0.5, 0.25, 0.4), Vector3(-0.45, 0.2, -0.45)]:  # crystals sprouting at the base
+		b.texture = &"crystal"
+		b.box(p, Vector3(0.18, 0.5, 0.18), c2, Basis(Vector3.BACK, 0.3))
+	b.texture = &""
+
+
+func _build_tree_crystal_spire(b: BlockMesh) -> void:
+	var core := Color(0.36, 0.28, 0.58)
+	var c1 := Color(0.62, 0.42, 1.0)
+	var c2 := Color(0.42, 0.8, 1.0)
+	b.texture = &"crystal_side"
+	b.box(Vector3(0, 1.0, 0), Vector3(0.5, 2.0, 0.5), core)
+	b.texture = &"crystal"
+	var widths := [1.6, 1.3, 1.0, 0.75, 0.5]
+	for k in widths.size():
+		var w: float = widths[k]
+		b.box(Vector3(0, 2.3 + k * 0.85, 0), Vector3(w, 0.9, w), c1 if k % 2 == 0 else c2, Basis(Vector3.UP, 0.785 * (k % 2)))
+	b.box(Vector3(0, 6.55, 0), Vector3(0.22, 0.9, 0.22), c2 * 1.1)
+	_crystal_crown(b, Vector3(0, 2.4, 0), 0.95, 4, 0.55, c2, c1)
+	_crystal_crown(b, Vector3(0, 4.1, 0), 0.6, 4, 0.4, c1, c2)
+	# floating shards
+	b.box(Vector3(1.1, 5.3, 0.3), Vector3(0.18, 0.35, 0.18), c2, Basis(Vector3.BACK, 0.5))
+	b.box(Vector3(-0.9, 6.0, -0.5), Vector3(0.15, 0.3, 0.15), c1, Basis(Vector3.BACK, -0.4))
+	b.texture = &""
+
+
+func _build_tree_crystal_young(b: BlockMesh) -> void:
+	var core := Color(0.45, 0.33, 0.65)
+	var c1 := Color(0.78, 0.55, 1.0)
+	var c2 := Color(0.55, 0.92, 1.0)
+	b.texture = &"crystal_side"
+	b.box(Vector3(0, 0.6, 0), Vector3(0.25, 1.2, 0.25), core)
+	b.texture = &"crystal"
+	b.box(Vector3(0, 1.5, 0), Vector3(0.8, 0.7, 0.8), c1, Basis(Vector3.UP, 0.785))
+	b.box(Vector3(0, 2.0, 0), Vector3(0.35, 0.6, 0.35), c2, Basis(Vector3.UP, 0.785))
+	_crystal_crown(b, Vector3(0, 1.45, 0), 0.6, 4, 0.4, c2, c1)
+	b.texture = &""

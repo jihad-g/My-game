@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BiomeData" load_steps=15 format=3]
+[gd_resource type="Resource" script_class="BiomeData" load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://src/world/biome_data.gd" id="1_biome"]
 [ext_resource type="Script" path="res://src/world/prop_rule.gd" id="2_rule"]
@@ -7,7 +7,7 @@
 script = ExtResource("2_rule")
 prop_id = &"tree_snowy_pine"
 cell_size = 8
-density = 0.12
+density = 0.09
 clustering = 0.7
 min_height = 20
 max_height = 70
@@ -183,6 +183,51 @@ show_in_lod1 = false
 on_water = false
 salt = 7185
 
+[sub_resource type="Resource" id="Rule_T0"]
+script = ExtResource("2_rule")
+prop_id = &"tree_snowy_pine_young"
+cell_size = 8
+density = 0.05
+clustering = 0.6
+min_height = 20
+max_height = 70
+max_slope = 1
+min_scale = 0.8
+max_scale = 1.1
+show_in_lod1 = true
+on_water = false
+salt = 9114
+
+[sub_resource type="Resource" id="Rule_T1"]
+script = ExtResource("2_rule")
+prop_id = &"tree_snowy_pine_tall"
+cell_size = 16
+density = 0.12
+clustering = 0.7
+min_height = 20
+max_height = 70
+max_slope = 1
+min_scale = 0.85
+max_scale = 1.1
+show_in_lod1 = true
+on_water = false
+salt = 9115
+
+[sub_resource type="Resource" id="Rule_T2"]
+script = ExtResource("2_rule")
+prop_id = &"tree_frozen_dead"
+cell_size = 16
+density = 0.08
+clustering = 0.5
+min_height = 20
+max_height = 70
+max_slope = 1
+min_scale = 0.8
+max_scale = 1.2
+show_in_lod1 = true
+on_water = false
+salt = 9116
+
 [resource]
 script = ExtResource("1_biome")
 id = &"stonecrown_mountains"
@@ -198,5 +243,5 @@ top_color_alt = Color(0.51, 0.588, 0.349, 1)
 side_color = Color(0.388, 0.360, 0.338, 1)
 shore_color = Color(0.604, 0.58, 0.549, 1)
 underwater_color = Color(0.494, 0.478, 0.455, 1)
-prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_7"), SubResource("Rule_8"), SubResource("Rule_RW0"), SubResource("Rule_RW1"), SubResource("Rule_RW2")]
+prop_rules = [SubResource("Rule_0"), SubResource("Rule_1"), SubResource("Rule_2"), SubResource("Rule_3"), SubResource("Rule_4"), SubResource("Rule_5"), SubResource("Rule_6"), SubResource("Rule_7"), SubResource("Rule_8"), SubResource("Rule_RW0"), SubResource("Rule_RW1"), SubResource("Rule_RW2"), SubResource("Rule_T0"), SubResource("Rule_T1"), SubResource("Rule_T2")]
 enemy_spawns = []
