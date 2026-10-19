@@ -2,6 +2,50 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.46.0] — Milestone 38: Combat feel (the reference clip)
+
+Combat timing and effects measured frame by frame from a reference clip of an isometric dungeon crawler
+(30 fps) and built into the game. All numbers live in `CombatFeel` (`src/combat/combat_feel.gd`).
+
+### Changed
+- **Every swing has the clip's shape** - players, townsfolk, guards, humanoid monsters and beasts. The arm winds
+  up a little past its ready pose (anticipation), snaps through the strike in 2 frames (heavy: 3), carries on past
+  the strike pose (follow-through) and settles. Heavy swings (wind-up 0.3 s or more) reach the top early and hang
+  there before the slam (the measured "hold"). Each weapon keeps its own wind-up, active and recovery times, so
+  combo speed, damage per second and the hit frame are exactly as before.
+- **Hit-stop**: heavy hits and finishers freeze 3 frames (0.1 s, was 0.08 s). Light hits stay short. Attacks
+  with their own hit-stop keep it. Settings → Hit-stop still scales or turns it off.
+- **Camera shake → camera kick**: a heavy hit kicks the camera in the measured pattern (right, back left, right,
+  still - 4 frames) instead of a wobble. Light hits don't move the camera any more; a light pop carries them.
+  Only very big blasts add a short wobble on top. Same size on screen at any zoom.
+- **Hit flashes**: enemies flash white 2 frames, then fade over 2 (was: white, then off). The hero flashes
+  warm for 1 frame, white for 4 and fades, with a coloured halo around the body.
+- **Damage numbers**: pop out sideways (on the screen) in 4 frames, shrink from 115% to normal, hold, fade
+  (1.1 s in all). Dark outline. Crits are the clip's red (#D43426) instead of gold; damage you take is a softer red.
+- **Death**: a monster tips over and goes up in a pale poof of blocks after 0.7 s (was: lay on the ground 2.3 s).
+- **Explosions and spells**, in the clip's style:
+  - Fire: the screen brightens 40% for 10 frames, a fireball grows over 5 frames, a ground ring forms at frame
+    4 and spreads (2 m → 6.5 m for a 3.25 m blast) over 8 frames, then red-brown smoke blocks that cool to
+    charcoal-green and embers.
+  - Magic (arcane, frost, holy, shadow, lightning, poison): a white core for 2 frames, a dome in the element's
+    colours that grows to its peak at frame 5 and fades by frame 8, spark lines shooting out, and puffs that
+    settle and stay about 2 s. Screen +24%.
+  - Poison: chunky emerald blocks that grow in, churn and shrink away.
+  - Flame Pillar: ring at the base 2 frames, the column shoots up 2, burns 5, fades 3. Screen +27%.
+  - Straight bolts (siphon and similar) are a thin beam for 4 frames, then a gold impact and sparks.
+  - Every melee hit pops a short light (on 1 frame, fades over 2) and throws square sparks where it lands.
+  - Shockwave rings (novas, finishers, battle cries) are flat glowing ground rings with a bright edge.
+  - Small bright bursts (buffs, blinks) are a quick glowing dome.
+  - With "Reduce flashing" the screen and light flashes are much weaker. At most 8 big blasts play at once
+    (more get a cheap ring and light), so big fights stay fast.
+
+### Added
+- **Dungeon camera**: inside dungeons the camera glides to the clip's view - 50° down, turned 45°, a narrow 30°
+  lens from further away (the hero stays the same size, the room looks flatter, like a diorama) and it follows
+  the hero locked (no look-ahead). Rotating is off there. Your own angle and zoom come back when you leave.
+  Settings → Gameplay → "Dungeon camera" turns it off. The dungeon fog now starts behind the hero at any zoom.
+- Tests: `test_m38_feel_units`, `test_m38_fx`, `test_m38_ingame`.
+
 ## [0.45.0] — Milestone 37: Release polish
 
 ### Added

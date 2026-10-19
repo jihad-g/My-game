@@ -11,30 +11,33 @@ static func _unshaded(color: Color) -> StandardMaterial3D:
 	return m
 
 
-## Expanding flat ring (shockwaves, novas, battle cries).
+## Expanding flat ring (shockwaves, novas, battle cries). Milestone 38: drawn as the
+## reference clip's ground ring - a glowing band with a bright edge that spreads fast
+## (ease-out) and fades.
 static func ring(parent: Node, pos: Vector3, radius: float, color: Color, time: float = 0.35) -> void:
-	var mi := MeshInstance3D.new()
-	var mesh := TorusMesh.new()
-	mesh.inner_radius = 0.85
-	mesh.outer_radius = 1.0
-	mesh.rings = 24
-	mesh.ring_segments = 4
-	mi.mesh = mesh
-	mi.material_override = _unshaded(color)
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	parent.add_child(mi)
-	mi.global_position = pos + Vector3(0, 0.2, 0)
-	mi.scale = Vector3(0.2, 0.3, 0.2)
-	var tw := mi.create_tween()
-	tw.set_parallel(true)
-	tw.tween_property(mi, "scale", Vector3(radius, 0.3, radius), time).set_ease(Tween.EASE_OUT)
-	tw.tween_property(mi.material_override, "albedo_color:a", 0.0, time)
-	tw.chain().tween_callback(mi.queue_free)
+	if parent == null or not parent.is_inside_tree():
+		return
+	var frames := maxf(time * CombatFeel.FPS * 0.7, 4.0)
+	var edge := color.lerp(Color(1, 0.97, 0.85), 0.45)
+	BlastFX.ground_ring(parent, pos, radius * 0.25, radius, frames, radius * 0.45, radius * 0.12,
+		Color(edge, 1.0), Color(color, 1.0) * maxf(color.a, 0.5), frames * 0.6, maxf(time * CombatFeel.FPS * 0.3, 3.0))
 
 
 ## Glowing sphere burst (impacts, blinks). Milestone 18c: also soft particles and,
 ## for bigger bursts, a short flash of light in the same colour.
+## Milestone 38: big bright bursts (2.5 m and more) are the reference clip's blasts
+## in the element's look (BlastFX); smaller bright ones are a quick glowing dome.
 static func burst(parent: Node, pos: Vector3, radius: float, color: Color, time: float = 0.25) -> void:
+	if parent and parent.is_inside_tree() and color.v > 0.3:
+		var element := FX.element_from_color(color)
+		if radius >= 2.5:
+			BlastFX.element_blast(parent, pos, element, radius)
+			return
+		if radius >= 1.2:
+			BlastFX.magic_burst(parent, pos, radius, element, false)
+			FX.particles(parent, pos, {"color": Color(color.r, color.g, color.b, maxf(color.a, 0.6)), "amount": clampi(int(6 + radius * 5), 6, 30),
+				"life": 0.45 + time, "speed": 1.5 + radius * 1.5, "size": 0.45 + radius * 0.15, "damping": 2.5, "add": true})
+			return
 	if parent and parent.is_inside_tree():
 		FX.particles(parent, pos, {"color": Color(color.r, color.g, color.b, maxf(color.a, 0.6)), "amount": clampi(int(6 + radius * 5), 6, 30),
 			"life": 0.45 + time, "speed": 1.5 + radius * 1.5, "size": 0.45 + radius * 0.15, "damping": 2.5,
@@ -71,6 +74,10 @@ static func bolt(parent: Node, points: PackedVector3Array, color: Color, time: f
 		return
 	if element == &"holy" and points[0].y - points[points.size() - 1].y > 6.0:
 		FX.sky_beam(parent, points[points.size() - 1], color)
+		return
+	if points.size() == 2:
+		# Milestone 38: a straight beam like the reference clip's (4 frames, then the impact).
+		BlastFX.beam(parent, points[0], points[1], Color(color.r, color.g, color.b))
 		return
 	var im := ImmediateMesh.new()
 	im.surface_begin(Mesh.PRIMITIVE_LINES)

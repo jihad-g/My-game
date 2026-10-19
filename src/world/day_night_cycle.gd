@@ -34,6 +34,8 @@ var weather_dim := 0.0  # 0..1 of sunlight blocked
 var weather_fog := 0.0  # 0..1: fog closes in
 var weather_fog_color := Color(0.7, 0.72, 0.75)
 var weather_flash := 0.0  # lightning 0..1
+## Milestone 38: the whole-screen brightness jump of big blasts (BlastFX.screen_flash).
+var blast_flash := 0.0
 var weather_storm := 0.0  # dark clouds 0..1
 
 const DAY_ZENITH := Color(0.22, 0.48, 0.95)
@@ -237,7 +239,7 @@ func _apply() -> void:
 		# Overcast: duller, darker colours. Vibrant: a little richer, with more contrast
 		# (light and shade) rather than louder colours.
 		env.adjustment_saturation = 1.0 + 0.1 * vibrant - dim * 0.4
-		env.adjustment_brightness = 1.0 - 0.05 * vibrant - dim * 0.22 + weather_flash * 0.3
+		env.adjustment_brightness = 1.0 - 0.05 * vibrant - dim * 0.22 + weather_flash * 0.3 + blast_flash
 		var f := clampf(weather_fog, 0.0, 1.0)
 		env.fog_depth_begin = lerpf(FOG_BEGIN, 0.0, sqrt(f))
 		env.fog_depth_end = lerpf(FOG_END, 48.0, sqrt(f))
@@ -254,10 +256,14 @@ func _apply_underground() -> void:
 		env.fog_light_color = Color(0.02, 0.02, 0.04)
 		env.fog_depth_curve = 1.4
 		env.adjustment_saturation = 1.05 + 0.08 * vibrant
-		env.adjustment_brightness = 1.0
+		env.adjustment_brightness = 1.0 + blast_flash
 		# The camera hangs 12-25 m above the hero, so the darkness starts past that
-		# (Milestone 31: at 16 m dungeons were mostly fogged out).
-		env.fog_depth_begin = 26.0
-		env.fog_depth_end = 70.0
+		# (Milestone 31: at 16 m dungeons were mostly fogged out). Milestone 38: the
+		# dungeon camera sits further away (narrow lens), so the fog moves with it.
+		var cam_d := 18.0
+		if World.instance and World.instance.camera_rig:
+			cam_d = World.instance.camera_rig.distance
+		env.fog_depth_begin = maxf(26.0, cam_d + 8.0)
+		env.fog_depth_end = env.fog_depth_begin + 44.0
 		env.ambient_light_color = Color(0.5, 0.5, 0.7)
 		env.ambient_light_energy = 1.5 if in_dungeon else 0.55

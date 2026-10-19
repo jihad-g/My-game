@@ -5,7 +5,12 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.45.0 — Release polish**. A new title screen (moving pixel landscape, our own logo), a short "First
+> Status: **v0.46.0 — Combat feel**. Every swing, hit and explosion is retimed to a reference clip measured frame
+> by frame: snappy strikes with follow-through, a 3-frame hit-stop and a camera kick on heavy hits, white hit
+> flashes, sideways damage numbers, quick death poofs, new fire / magic / poison / pillar / beam blasts, and the
+> clip's camera (50° down, narrow lens) inside dungeons.
+>
+> Before that, **v0.45.0 — Release polish**. A new title screen (moving pixel landscape, our own logo), a short "First
 > steps" tutorial, music for each biome and new sounds, graphics presets and field of view in Settings, beds that
 > take two cells, and townsfolk who walk around you instead of through you.
 >
@@ -569,6 +574,11 @@ D-pad spells and hotbar, View bag, Menu pause. Menus still need the mouse.
     Settings → Display & graphics: *Graphics quality*, *Field of view*, *Anti-aliasing*. Walk into a village
     crowd: townsfolk go around you and each other. Build a bed: it takes two cells. Creative → World has
     Music, Sounds, Graphics, Townsfolk ("Six walk at me"), Tutorial and Bed rows to try all of it.
+75. **Combat feel (v0.46.0)** – hit a monster: the swing snaps through and carries on, a light pops where it
+    lands, the monster flashes white and the number pops out to the side. Hold a heavy attack: the arm hangs at
+    the top, the slam freezes for 3 frames and kicks the camera. Kill something: it tips over and poofs. Cast a
+    Fireball or Flame Pillar, or any area spell: the new blasts. Enter a dungeon: the camera turns to 50° with a
+    narrow lens (Settings → Gameplay → *Dungeon camera* turns it off).
 
 ## Run the automated tests
 

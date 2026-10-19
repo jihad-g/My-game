@@ -367,3 +367,17 @@ The 12 starting abilities have special upgrades:
 | Shadow Step | Shadow Strike: stab the target on arrival | Fading Step: hidden for 1.5 s |
 | Poison Blade | Deadly Venom: +50% poison damage | Long Coating: lasts 60% longer |
 | Vanish | Deep Shadows: stealth lasts 50% longer | Smoke Escape: a smoke cloud and heal 10% |
+
+## Milestone 38: how attacks look (v0.46.0)
+
+Attack data (wind-up, active, recovery, cancel ratio, damage, reach) is unchanged. Only the motion inside those
+times changed, to match a reference clip measured frame by frame (`CombatFeel`):
+
+- Light swing: wind-up past the ready pose, strike in 2 frames, follow-through, settle (the clip's 8-frame chain).
+- Heavy swing (wind-up 0.3 s or more): reaches the top in the first half of the wind-up and hangs there, slams in
+  3 frames, freezes 3 frames on a hit and kicks the camera.
+- Attacks with their own `hitstop` keep it (finishers 0.07-0.12 s, close to the clip's 0.1 s).
+- `camera_shake` on an attack now picks the kick size: below 0.15 no camera movement, 0.15-0.54 a kick
+  (×0.6-1.8), above 0.55 a kick plus a short wobble.
+- New attacks get the clip's feel automatically; nothing to set per attack.
+

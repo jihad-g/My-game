@@ -127,9 +127,18 @@ func set_telegraph(on: bool) -> void:
 	_update_overlay()
 
 
+## Milestone 38: the measured hit flash - white 2 frames, then it fades over 2.
 func flash() -> void:
-	_flash = 0.1
+	if _flash_mat == null:
+		_flash_mat = CombatFeel.make_flash_material()
+	_flash = CombatFeel.flash_length(CombatFeel.Flash.HIT)
+	_flash_t = 0.0
+	CombatFeel.update_flash_material(_flash_mat, CombatFeel.Flash.HIT, 0.0)
 	_update_overlay()
+
+
+var _flash_mat: StandardMaterial3D
+var _flash_t := 0.0
 
 
 ## Milestone 18b: elites are outlined in their affix colour (hit flash and the
@@ -143,7 +152,7 @@ func set_outline(color: Color) -> void:
 
 
 func _update_overlay() -> void:
-	var mat: Material = Materials.hit_flash() if _flash > 0.0 else (Materials.danger_glow() if _telegraph else null)
+	var mat: Material = _flash_mat if _flash > 0.0 and _flash_mat else (Materials.danger_glow() if _telegraph else null)
 	if mat == null and _outline.a > 0.0:
 		mat = Materials.outline(_outline)
 	for m in _meshes():
@@ -157,7 +166,9 @@ func _process(delta: float) -> void:
 		rig.position.z = randf_range(-0.02, 0.02) if _tremble > 0.0 else 0.0
 	if _flash > 0.0:
 		_flash -= delta
-		if _flash <= 0.0:
+		_flash_t += delta
+		if _flash <= 0.0 or not CombatFeel.update_flash_material(_flash_mat, CombatFeel.Flash.HIT, _flash_t):
+			_flash = 0.0
 			_update_overlay()
 
 

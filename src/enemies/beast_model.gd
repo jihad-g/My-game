@@ -705,10 +705,21 @@ func play_attack(_anim: StringName, windup: float, active: float, recovery: floa
 	else:
 		wind = {"_squash": 0.8}
 		hit = {"_squash": 1.3}
-	_tween_props(tw, wind, windup, Tween.TRANS_SINE, Tween.EASE_OUT)
-	_tween_props(tw, hit, maxf(0.06, minf(active, 0.12)), Tween.TRANS_QUAD, Tween.EASE_IN)
-	if active > 0.12:
-		tw.tween_interval(active - 0.12)
+	# Milestone 38: the measured swing shape. Big attacks rear back early and hang
+	# there (the "hold"); the strike snaps in 2-3 frames, carries on past the pose
+	# (follow-through) and settles back to it.
+	if big:
+		_tween_props(tw, wind, windup * 0.55, Tween.TRANS_SINE, Tween.EASE_OUT)
+		tw.tween_interval(windup * 0.45)
+	else:
+		_tween_props(tw, wind, windup, Tween.TRANS_SINE, Tween.EASE_OUT)
+	var snap := minf(maxf(active, 0.05), CombatFeel.sec(CombatFeel.HEAVY_STRIKE_FRAMES if big else CombatFeel.STRIKE_FRAMES))
+	var over := {}
+	for k: String in hit:
+		var rest := 1.0 if k == "_squash" else 0.0
+		over[k] = float(hit[k]) + (float(hit[k]) - rest) * (CombatFeel.HEAVY_OVERSHOOT if big else CombatFeel.OVERSHOOT)
+	_tween_props(tw, over, snap, Tween.TRANS_LINEAR, Tween.EASE_IN)
+	_tween_props(tw, hit, maxf(active - snap, 0.06), Tween.TRANS_QUAD, Tween.EASE_OUT)
 	var back := {}
 	for k in wind.keys() + hit.keys():
 		back[k] = 1.0 if k == "_squash" else 0.0

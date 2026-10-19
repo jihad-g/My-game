@@ -32,6 +32,8 @@ var _facing := Vector3(0, 0, 1)
 var _knockback := Vector3.ZERO
 var _stagger_left := 0.0
 var _death_time := 0.0
+## Milestone 38: seconds from death to the poof (the fall takes ~0.45-0.6 s).
+const DEATH_POOF := 0.7
 var _desired_velocity := Vector3.ZERO
 var _rng := RandomNumberGenerator.new()
 var _taunt_left := 0.0
@@ -235,13 +237,18 @@ func _physics_process(delta: float) -> void:
 		velocity.z = move_toward(velocity.z, 0.0, 20.0 * delta)
 		_apply_gravity(delta)
 		move_and_slide()
-		# Milestone 18b: the body goes up in a puff of dust.
-		if _death_time > 2.3 and not _puffed:
+		# Milestone 38: like the reference clip, the body tips over and goes up in a
+		# pale poof right after (the poof at about frame 20, once the fall has landed).
+		if _death_time > DEATH_POOF and not _puffed:
 			_puffed = true
 			if is_inside_tree():
-				VFX.dust(get_parent(), global_position + Vector3(0, 0.4, 0), Color(0.75, 0.72, 0.68, 0.85), 10)
-				VFX.burst(get_parent(), global_position + Vector3(0, 0.6, 0), 0.9, Color(0.85, 0.82, 0.78, 0.5))
-		if _death_time > 2.5:
+				BlastFX.poof(get_parent(), global_position, 12, clampf(_body_size(), 0.7, 3.0))
+				if model:
+					var tw := model.create_tween()
+					tw.tween_property(model, "scale", model.scale * 0.05, 0.12).set_ease(Tween.EASE_IN)
+		if _death_time > DEATH_POOF + 0.15:
+			if model:
+				model.scale = Vector3.ONE
 			NodePool.release_or_free(self)
 		return
 	# Creative mode (Milestone 24): "Freeze enemies" holds every enemy in place.
@@ -589,6 +596,14 @@ func _on_damaged(info: DamageInfo, dealt: float) -> void:
 	Events.damage_dealt.emit(pos, dealt, info.is_crit, false, info.tag)
 
 
+## Rough size of the body (metres) for the death poof.
+func _body_size() -> float:
+	var cs := get_node_or_null(^"CollisionShape3D") as CollisionShape3D
+	if cs and cs.shape is CapsuleShape3D:
+		return (cs.shape as CapsuleShape3D).height * 0.5 * maxf(scale.x, 0.1)
+	return 1.0 * maxf(scale.x, 0.1)
+
+
 func _on_died() -> void:
 	is_dead = true
 	_death_time = 0.0
@@ -763,11 +778,10 @@ func net_knock_down(seconds: float) -> void:
 func _puppet_process(delta: float) -> void:
 	if is_dead:
 		_death_time += delta
-		if _death_time > 2.3 and not _puffed:
+		if _death_time > DEATH_POOF and not _puffed:
 			_puffed = true
-			VFX.dust(get_parent(), global_position + Vector3(0, 0.4, 0), Color(0.75, 0.72, 0.68, 0.85), 10)
-			VFX.burst(get_parent(), global_position + Vector3(0, 0.6, 0), 0.9, Color(0.85, 0.82, 0.78, 0.5))
-		if _death_time > 2.5:
+			BlastFX.poof(get_parent(), global_position, 12, clampf(_body_size(), 0.7, 3.0))
+		if _death_time > DEATH_POOF + 0.15:
 			visible = false
 		return
 	var prev := global_position

@@ -175,6 +175,9 @@ func _ready() -> void:
 	_run(&"test_m37_polish_units")
 	await _run_async(&"test_m37_title")
 	await _run_async(&"test_m37_creative")
+	_run(&"test_m38_feel_units")
+	await _run_async(&"test_m38_fx")
+	await _run_async(&"test_m38_ingame")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5243,7 +5246,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.45"), "version 0.45 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.46"), "version 0.46 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -10518,5 +10521,167 @@ func test_m37_creative() -> void:
 			break
 	check(closest > NPC.BODY_RADIUS * 2.0 - 0.05, "none of them walks through you (closest %.2f m)" % closest)
 	check(arrived >= walkers, "and they all get past (%d of %d)" % [arrived, walkers])
+	world.queue_free()
+	await _frames(5)
+
+
+# --- Milestone 38: the combat feel of the reference clip ----------------------------------
+
+func test_m38_feel_units() -> void:
+	check(is_equal_approx(CombatFeel.sec(3.0), 0.1), "3 frames at 30 fps are 0.1 s")
+	# Light swing: the hit is still at the end of the wind-up, the strike snaps past
+	# the strike pose within 2 frames (follow-through) and the clip keeps its length.
+	var s: Dictionary = AnimLibrary.SWINGS[&"slash_r"]
+	var light := AnimLibrary.attack(&"slash_r", 0.12, 0.08, 0.26, false, false, false)
+	check(is_equal_approx(light.length, 0.46) and light.events_between(0.0, 0.121).has(&"hit"), "a light swing keeps its times and hit frame")
+	var ready: Vector3 = s.ready
+	var strike: Vector3 = s.strike
+	var at_hit := light.sample(&"arm_r", 0.12 + CombatFeel.sec(2.0)) as Vector3
+	var dir := Vector3(strike.x - ready.x, strike.y - ready.y, 0.0)
+	var past := Vector3(at_hit.x - strike.x, at_hit.y - strike.y, 0.0).dot(dir.normalized())
+	check(past > 0.15, "the strike carries past the pose in 2 frames (%.2f rad)" % past)
+	var before := light.sample(&"arm_r", 0.12 * 0.7) as Vector3
+	var ant := Vector3(before.x - ready.x, before.y - ready.y, 0.0).dot(-dir.normalized())
+	check(ant > 0.05, "and winds up past the ready pose first (anticipation %.2f)" % ant)
+	# Heavy swing: reaches the ready pose early and hangs there before the slam.
+	var o: Dictionary = AnimLibrary.SWINGS[&"overhead"]
+	var heavy := AnimLibrary.attack(&"overhead", 0.42, 0.12, 0.5, true, false, false)
+	var hang_a := heavy.sample(&"arm_r", 0.42 * 0.5) as Vector3
+	var hang_b := heavy.sample(&"arm_r", 0.42 * 0.95) as Vector3
+	check(hang_a.distance_to(hang_b) < 0.25 and absf(hang_a.x - (o.ready as Vector3).x) < 0.35, "a heavy swing hangs at the top (the measured hold)")
+	check((heavy.sample(&"arm_r", 0.42 + CombatFeel.sec(3.0)) as Vector3).x > (o.strike as Vector3).x, "then slams down in 3 frames")
+	# Flashes.
+	var warm: Array = CombatFeel.flash_at(CombatFeel.Flash.HURT, 0.0)
+	var white: Array = CombatFeel.flash_at(CombatFeel.Flash.HURT, CombatFeel.sec(3.0))
+	check((warm[0] as Color).r > (warm[0] as Color).b and (white[0] as Color).b > (warm[0] as Color).b, "the hurt flash is warm, then white")
+	check(CombatFeel.flash_at(CombatFeel.Flash.HURT, CombatFeel.sec(6.1)).is_empty() and is_equal_approx(CombatFeel.flash_length(CombatFeel.Flash.HIT), CombatFeel.sec(4.0)),
+		"hurt flash 6 frames, enemy flash 2 + 2 frames")
+	var fade: Array = CombatFeel.flash_at(CombatFeel.Flash.HIT, CombatFeel.sec(3.0))
+	check((fade[0] as Color).a < 0.8 and (fade[0] as Color).a > 0.0, "the enemy flash fades out")
+	# Camera kick pattern and damage numbers.
+	check(is_equal_approx(CameraRig.kick_offset(CombatFeel.sec(1.0)).x, 0.11) and CameraRig.kick_offset(CombatFeel.sec(2.0)).x < 0.0,
+		"the camera kicks right, then back left (measured)")
+	check(CameraRig.kick_offset(CombatFeel.sec(4.5)) == Vector2.ZERO, "and is still after 4 frames")
+	check(absf(DamageNumbers.LIFETIME - 1.1) < 0.01, "damage numbers live 33 frames (1.1 s)")
+	check(Settings.DEFAULTS.has("dungeon_camera") and bool(Settings.DEFAULTS["dungeon_camera"]), "the dungeon camera is on by default")
+
+
+func test_m38_fx() -> void:
+	var holder := Node3D.new()
+	add_child(holder)
+	await _frames(1)
+	var made0 := BlastFX.made
+	BlastFX.fire_blast(holder, Vector3.ZERO, 3.0)
+	BlastFX.magic_burst(holder, Vector3(6, 0, 0), 4.0, &"arcane")
+	BlastFX.poison_cloud(holder, Vector3(-6, 0, 0), 2.0, 1.0)
+	BlastFX.fire_pillar(holder, Vector3(0, 0, 6))
+	BlastFX.beam(holder, Vector3(0, 1, 0), Vector3(0, 1, 8))
+	BlastFX.hit_pop(holder, Vector3(0, 1, 0), true)
+	check(BlastFX.made >= made0 + 4 and BlastFX.active >= 4, "fire blast, magic burst, poison cloud and pillar play (%d active)" % BlastFX.active)
+	await _frames(8)
+	check(holder.get_children().size() > 6, "they are built from shapes, lights and blocks")
+	# Old effect calls now use the new look.
+	var made1 := BlastFX.made
+	VFX.burst(holder, Vector3(0, 1, 0), 3.0, Color(1, 0.5, 0.15, 0.85))
+	VFX.burst(holder, Vector3(0, 1, 0), 1.5, Color(0.75, 0.45, 1.0, 0.7))
+	FX.impact(holder, Vector3(3, 0, 3), &"arcane", 1.5)
+	check(BlastFX.made >= made1 + 3, "big bursts and impacts become the clip's blasts")
+	var n0 := holder.get_child_count()
+	VFX.ring(holder, Vector3.ZERO, 4.0, Color(1, 0.9, 0.6, 0.8))
+	check(holder.get_child_count() == n0 + 1, "a shockwave ring is a ground ring")
+	await get_tree().create_timer(3.4).timeout
+	check(BlastFX.active == 0, "every blast frees its slot when it ends")
+	check(get_tree().get_nodes_in_group(&"blast_fx").filter(func(n: Node) -> bool: return holder.is_ancestor_of(n)).is_empty(), "and is gone")
+	# Too many at once: the light version plays instead.
+	for i in BlastFX.MAX_ACTIVE + 3:
+		BlastFX.fire_blast(holder, Vector3(i, 0, 0), 2.0)
+	check(BlastFX.active <= BlastFX.MAX_ACTIVE, "no more than %d big blasts at once" % BlastFX.MAX_ACTIVE)
+	holder.queue_free()
+	await _frames(3)
+	check(BlastFX.active == 0, "freed blasts give their slots back")
+
+
+func test_m38_ingame() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	_clear_enemies(world)
+	world.spawner.max_active = 80
+	var rig := world.camera_rig
+	check(not rig.dungeon_view and is_equal_approx(rig.target_fov(), rig.base_fov), "outside dungeons the camera is the normal one")
+	# Hit feel: a heavy hit freezes 3 frames, flashes the enemy and pops a light.
+	var aim := p.get_aim_direction()
+	var m := _spawn_monster(world, &"skeleton_warrior", aim * 1.6)
+	m.health.max_health = 50000.0
+	m.health.current = 50000.0
+	await _frames(3)
+	m.global_position = p.global_position + aim * 1.6
+	await _frames(2)
+	Settings.set_value("hit_stop", 1.0)
+	p.combat.cancel()
+	p.state = Player.State.NORMAL
+	p.combat.request(&"light")
+	var froze := 0.0
+	var flashed := false
+	var popped := false
+	for i in 60:
+		await _frames(1)
+		froze = maxf(froze, p.combat._hitstop_left)
+		var mm := m.model as MonsterModel
+		if mm and mm._flash > 0.0:
+			flashed = true
+		if not get_tree().get_nodes_in_group(&"blast_fx").is_empty():
+			popped = true
+		if flashed and froze > 0.0 and popped:
+			break
+	check(froze > 0.0 and flashed and popped, "(froze %.3f flashed %s popped %s) a hit" % [froze, flashed, popped] + " freezes, the enemy flashes and a light pops where the blow lands")
+	await _frames(30)
+	p.combat.cancel()
+	p.combat.current = p.combat.heavy_attack
+	p.combat._hitstop_left = 0.0
+	p.combat.last_charge = 0.0
+	if p.combat.heavy_attack.hitstop <= 0.0:
+		p.combat._apply_hitstop(true, [m])
+		check(absf(p.combat._hitstop_left - CombatFeel.sec(3.0)) < 0.01, "a heavy hit freezes 3 frames (%.3f s)" % p.combat._hitstop_left)
+	p.combat.current = null
+	p.combat._hitstop_left = 0.0
+	await _frames(10)
+	# Death: the body tips over and poofs within a second (no corpse for 2.5 s).
+	_kill(m, world)
+	var t_dead := 0.0
+	for i in 240:
+		await _frames(1)
+		t_dead += get_physics_process_delta_time()
+		if not is_instance_valid(m) or not m.is_inside_tree() or not m.visible or not m.is_dead:
+			break
+	t_dead *= 1000.0
+	check(t_dead < 1300.0 and (not is_instance_valid(m) or not m.visible or not m.is_dead), "a dead monster poofs away within a second (%d ms)" % t_dead)
+	# Hurt flash on the hero.
+	p.model.hurt_flash()
+	await _frames(1)
+	var ov := (p.model._parts[0] as MeshInstance3D).material_overlay as StandardMaterial3D
+	check(ov != null and ov.next_pass != null, "getting hurt flashes the hero with a halo")
+	await _frames(20)
+	check((p.model._parts[0] as MeshInstance3D).material_overlay == null, "and the flash ends")
+	# The dungeon camera: on inside, back to your own view outside.
+	var dist0 := rig._target_distance
+	var poi := _test_dungeon_poi(world, 0, 0, 38)
+	check(world.enter_dungeon(poi), "entered a dungeon")
+	await _frames(90)
+	check(rig.dungeon_view and is_equal_approx(rig._target_pitch, CameraRig.DUNGEON_PITCH), "inside, the camera looks 50 degrees down")
+	check(absf(rig.camera.fov - CameraRig.DUNGEON_FOV) < 1.5 and fposmod(rig._target_yaw, 360.0) == CameraRig.DUNGEON_YAW, "with the narrow 30 degree lens, turned 45 degrees")
+	check(rig._target_distance > dist0 * 1.3, "from further away so the hero stays the same size (%.1f m)" % rig._target_distance)
+	var env := world.day_night.environment.environment
+	check(env.fog_depth_begin > rig.distance, "the dungeon fog starts behind the hero, not in front")
+	world.exit_dungeon()
+	await _frames(60)
+	check(not rig.dungeon_view and absf(rig._target_distance - dist0) < 0.01, "outside again, your own view comes back")
+	Settings.set_value("dungeon_camera", false)
+	world.enter_dungeon(_test_dungeon_poi(world, 0, 1, 39))
+	await _frames(10)
+	check(not rig.dungeon_view, "the dungeon camera can be turned off")
+	world.exit_dungeon()
+	Settings.set_value("dungeon_camera", true)
+	p.health.invulnerable = false
 	world.queue_free()
 	await _frames(5)

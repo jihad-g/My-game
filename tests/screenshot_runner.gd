@@ -54,6 +54,10 @@ func _ready() -> void:
 		await _anims_showcase()
 		get_tree().quit()
 		return
+	if "--only=feel" in OS.get_cmdline_user_args():
+		await _feel_showcase()
+		get_tree().quit()
+		return
 	if "--only=dungeon2" in OS.get_cmdline_user_args():
 		await _dungeon2_showcase()
 		get_tree().quit()
@@ -3218,3 +3222,79 @@ func _release_showcase() -> void:
 	DirAccess.remove_absolute(Tutorial.profile_path)
 	Tutorial.profile_path = saved_profile
 	Tutorial.load_progress()
+
+
+## Milestone 38: the reference clip's feel - dungeon camera, a hit, the blasts, a death poof.
+func _feel_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 40
+	world.hud._help.visible = false
+	var poi := PoiInfo.new()
+	poi.kind = PoiInfo.Kind.DUNGEON
+	poi.rank = 1
+	poi.theme = PoiInfo.DungeonTheme.CRYPT
+	poi.id = "shot_feel"
+	poi.seed = 7
+	poi.center = Vector2i(int(p.global_position.x), int(p.global_position.z))
+	world.enter_dungeon(poi)
+	await _wait(40)
+	var d := world.dungeon
+	for m in d.monsters:
+		if is_instance_valid(m):
+			m.queue_free()
+	world.hud.story.visible = false
+	await _wait(90)
+	await _shot("feel_1_dungeon_camera")
+	var aim := p.get_aim_direction()
+	var pos := p.global_position + aim * 1.7
+	pos.y = world.get_ground_height(pos) + 0.3
+	var m := world.spawner.spawn_enemy(load("res://scenes/enemies/monster.tscn"), pos, "", load("res://data/enemies/skeleton_warrior.tres")) as Monster
+	m.configure(PoiLayout.RANK_POWER[0], PoiLayout.RANK_DAMAGE[0], PoiLayout.RANK_LEVELS[0], PoiLayout.RANK_XP[0])
+	m.health.max_health = 50000.0
+	m.health.current = 50000.0
+	await _wait(20)
+	m.set_physics_process(false)
+	m.global_position = pos
+	p.combat.request(&"light")
+	for i in 60:
+		await get_tree().process_frame
+		if p.combat.phase == PlayerCombat.Phase.ACTIVE:
+			break
+	await _wait(3)
+	await _shot("feel_2_hit_pop_flash_number")
+	await _wait(50)
+	var fwd := p.global_position + aim * 6.0
+	BlastFX.fire_blast(d, fwd, 3.25)
+	await _wait(9)
+	await _shot("feel_3_fire_blast_f5")
+	await _wait(14)
+	await _shot("feel_4_fire_ring_smoke")
+	await _wait(70)
+	BlastFX.magic_burst(d, fwd, 4.2, &"arcane")
+	await _wait(9)
+	await _shot("feel_5_magic_dome_f5")
+	await _wait(40)
+	await _shot("feel_6_magic_puffs")
+	await _wait(60)
+	var side := aim.cross(Vector3.UP).normalized()
+	BlastFX.poison_cloud(d, fwd + side * 3.0, 2.3, 3.0)
+	BlastFX.fire_pillar(d, fwd - side * 3.0)
+	BlastFX.beam(d, p.global_position + Vector3(0, 1.2, 0), fwd + Vector3(0, 1.0, 0))
+	await _wait(12)
+	await _shot("feel_7_poison_pillar_beam")
+	m.set_physics_process(true)
+	m.health.current = 0.1
+	m.receive_hit(DamageInfo.create(99.0, p, &"true"))
+	await _wait(26)
+	await _shot("feel_8_death_tip")
+	await _wait(18)
+	await _shot("feel_9_death_poof")
+	world.queue_free()
+	await _wait(5)
+

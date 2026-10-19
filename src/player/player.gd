@@ -1091,7 +1091,7 @@ func _stagger(duration: float) -> void:
 
 
 func _on_damaged(info: DamageInfo, dealt: float) -> void:
-	model.flash()
+	model.hurt_flash()
 	Events.damage_dealt.emit(global_position + Vector3(0, 2.0, 0), dealt, info.is_crit, true, info.tag)
 	if dealt >= 5.0:
 		Events.camera_shake.emit(clampf(dealt / 40.0, 0.15, 0.6))

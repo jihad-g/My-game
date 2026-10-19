@@ -21,7 +21,8 @@ const SWINGS := {
 const REST_ARM := Vector3(-0.25, 0.0, 0.0)
 
 
-## A weapon swing: wind-up to `ready`, strike (with a ~8% overshoot) and recovery.
+## A weapon swing: wind-up to `ready`, strike and recovery. Milestone 38: shaped
+## like the reference clip (anticipation, 2-3 frame strike, follow-through).
 ## `hold`: the swing waits at the end of the wind-up (charged heavy, bow draw).
 static func attack(anim: StringName, windup: float, active: float, recovery: float, two_handed: bool,
 		bow: bool, hold: bool) -> AnimClip:
@@ -44,24 +45,39 @@ static func attack(anim: StringName, windup: float, active: float, recovery: flo
 	c.fade_out = recovery * 0.45
 	if hold:
 		c.hold_at = windup
-	var over := strike + (strike - ready) * 0.08
+	# Milestone 38: the measured swing shape (see CombatFeel). Inside the attack's own
+	# times: wind up past the ready pose (anticipation), hang there on heavy swings,
+	# snap through the strike in 2-3 frames, carry on past it (follow-through), settle.
+	var heavy := CombatFeel.is_heavy_windup(windup)
+	var ant := (ready - strike) * CombatFeel.ANTICIPATION
+	var over := strike + (strike - ready) * (CombatFeel.HEAVY_OVERSHOOT if heavy else CombatFeel.OVERSHOOT)
+	var t_ant := windup * (0.45 if heavy else 0.7)
+	var ready_end := ready + ant * (0.6 if heavy else 0.0)
+	var t_hit := windup + minf(active, CombatFeel.sec(CombatFeel.HEAVY_STRIKE_FRAMES if heavy else CombatFeel.STRIKE_FRAMES))
+	var follow := over.lerp(strike, 0.3)
 	var arm_r := func(v: Vector3) -> Vector3: return Vector3(v.x, v.y, 0.0)
-	c.key(&"arm_r", 0.0, arm_r.call(ready.lerp(REST_ARM, 0.5)))
-	c.key(&"arm_r", windup, arm_r.call(ready), AnimClip.EASE_OUT)
-	c.key(&"arm_r", t_strike, arm_r.call(over), AnimClip.EASE_OUT)
-	c.key(&"arm_r", t_strike + recovery * 0.3, arm_r.call(strike), AnimClip.IN_OUT)
-	c.key(&"arm_r", total, REST_ARM, AnimClip.IN_OUT)
+	var arm_keys := [[0.0, ready.lerp(REST_ARM, 0.5), AnimClip.LINEAR], [t_ant, ready + ant, AnimClip.EASE_OUT],
+		[windup, ready_end, AnimClip.IN_OUT], [t_hit, over, AnimClip.LINEAR]]
+	if t_strike > t_hit + 0.005:
+		arm_keys.append([t_strike, follow, AnimClip.EASE_OUT])
+	arm_keys.append([t_strike + recovery * 0.35, strike, AnimClip.IN_OUT])
+	arm_keys.append([total, REST_ARM, AnimClip.IN_OUT])
+	for k in arm_keys:
+		c.key(&"arm_r", float(k[0]), arm_r.call(k[1]) if float(k[0]) < total else REST_ARM, k[2])
 	c.key(&"fore_r", 0.0, -0.4).key(&"fore_r", windup, -0.5, AnimClip.EASE_OUT).key(&"fore_r", t_strike, -0.05, AnimClip.EASE_OUT) \
 		.key(&"fore_r", total, -0.3)
 	c.key(&"weapon", 0.0, Vector3.ZERO).key(&"weapon", total, Vector3.ZERO)
 	# The torso twists with the arm and leans into the strike.
 	var lean: float = s.lean
 	c.key(&"torso", 0.0, Vector3(0.0, ready.z * 0.5, 0.0))
-	c.key(&"torso", windup, Vector3(-lean * 0.4, ready.z, 0.0), AnimClip.EASE_OUT)
-	c.key(&"torso", t_strike, Vector3(lean, strike.z * 1.08, 0.0), AnimClip.EASE_OUT)
+	c.key(&"torso", t_ant, Vector3(-lean * 0.5, ready.z * 1.1, 0.0), AnimClip.EASE_OUT)
+	c.key(&"torso", windup, Vector3(-lean * 0.4, ready.z, 0.0), AnimClip.IN_OUT)
+	c.key(&"torso", t_hit, Vector3(lean * 1.15, strike.z * 1.2, 0.0), AnimClip.LINEAR)
+	if t_strike > t_hit + 0.005:
+		c.key(&"torso", t_strike, Vector3(lean, strike.z * 1.1, 0.0), AnimClip.EASE_OUT)
 	c.key(&"torso", total, Vector3.ZERO, AnimClip.IN_OUT)
 	# Body: a small forward step and dip on the strike (legs only while standing).
-	c.key(&"step", 0.0, 0.0).key(&"step", t_strike, float(s.step), AnimClip.EASE_OUT).key(&"step", total, 0.0)
+	c.key(&"step", 0.0, 0.0).key(&"step", t_hit, float(s.step), AnimClip.EASE_OUT).key(&"step", total, 0.0)
 	if s.has("jump"):
 		# A jump during the wind-up that lands on the strike.
 		c.key(&"lift", 0.0, -0.06).key(&"lift", windup * 0.55, float(s.jump), AnimClip.EASE_OUT) \
@@ -69,7 +85,8 @@ static func attack(anim: StringName, windup: float, active: float, recovery: flo
 			.key(&"lift", total, 0.0)
 		c.legs_when_moving = true
 	else:
-		c.key(&"lift", 0.0, 0.0).key(&"lift", windup, 0.02).key(&"lift", t_strike, float(s.dip), AnimClip.EASE_OUT).key(&"lift", total, 0.0)
+		c.key(&"lift", 0.0, 0.0).key(&"lift", windup, 0.02).key(&"lift", t_hit, float(s.dip) * 1.3, AnimClip.EASE_OUT) \
+			.key(&"lift", t_strike + recovery * 0.35, float(s.dip), AnimClip.EASE_OUT).key(&"lift", total, 0.0)
 	c.key(&"leg_l", 0.0, -0.1).key(&"leg_l", t_strike, -0.45, AnimClip.EASE_OUT).key(&"leg_l", total, 0.0)
 	c.key(&"leg_r", 0.0, 0.05).key(&"leg_r", t_strike, 0.3, AnimClip.EASE_OUT).key(&"leg_r", total, 0.0)
 	c.key(&"shin_l", 0.0, 0.1).key(&"shin_l", t_strike, 0.35, AnimClip.EASE_OUT).key(&"shin_l", total, 0.05)
@@ -78,16 +95,20 @@ static func attack(anim: StringName, windup: float, active: float, recovery: flo
 		# Both hands on the handle: the left arm follows the right one.
 		var off := Vector3(0.15, 0.7, 0.0)
 		c.key(&"arm_l", 0.0, arm_r.call(ready.lerp(REST_ARM, 0.5)) + off)
-		c.key(&"arm_l", windup, arm_r.call(ready) + off, AnimClip.EASE_OUT)
-		c.key(&"arm_l", t_strike, arm_r.call(over) + off, AnimClip.EASE_OUT)
-		c.key(&"arm_l", t_strike + recovery * 0.3, arm_r.call(strike) + off)
+		c.key(&"arm_l", t_ant, arm_r.call(ready + ant) + off, AnimClip.EASE_OUT)
+		c.key(&"arm_l", windup, arm_r.call(ready_end) + off, AnimClip.IN_OUT)
+		c.key(&"arm_l", t_hit, arm_r.call(over) + off, AnimClip.LINEAR)
+		if t_strike > t_hit + 0.005:
+			c.key(&"arm_l", t_strike, arm_r.call(follow) + off, AnimClip.EASE_OUT)
+		c.key(&"arm_l", t_strike + recovery * 0.35, arm_r.call(strike) + off)
 		c.key(&"arm_l", total, Vector3(-0.75, 0.55, 0.0))
 		c.key(&"fore_l", 0.0, -0.5).key(&"fore_l", total, -0.6)
 	else:
 		# The free arm swings back for balance.
 		c.key(&"arm_l", 0.0, Vector3(-0.2, 0.0, -0.1))
 		c.key(&"arm_l", windup, Vector3(-0.6, 0.0, -0.2), AnimClip.EASE_OUT)
-		c.key(&"arm_l", t_strike, Vector3(0.35, 0.0, -0.3), AnimClip.EASE_OUT)
+		c.key(&"arm_l", t_hit, Vector3(0.4, 0.0, -0.3), AnimClip.LINEAR)
+		c.key(&"arm_l", t_strike + 0.001, Vector3(0.35, 0.0, -0.3), AnimClip.EASE_OUT)
 		c.key(&"arm_l", total, Vector3(0.0, 0.0, -0.04))
 	c.event(windup, &"trail_on").event(windup, &"hit").event(t_strike, &"trail_off")
 	return c

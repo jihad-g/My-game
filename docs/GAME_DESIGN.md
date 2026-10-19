@@ -1195,6 +1195,16 @@ Old saves keep their land exactly. Milestone 18 is complete.
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
 
+**Done: Milestone 38 — Combat feel (v0.46.0).** Timing measured from a reference clip, all in `CombatFeel`.
+Swing shape in `AnimLibrary.attack` (anticipation, 2-3 frame strike, follow-through, heavy hang) and
+`BeastModel.play_attack`; hit-stop in `PlayerCombat._apply_hitstop`; hit pops `BlastFX.hit_pop`; camera kick
+`CameraRig.kick`/`kick_offset`; flashes `CombatFeel.flash_at` (`HumanoidModel.flash`/`hurt_flash`,
+`MonsterModel.flash`); damage numbers `DamageNumbers.spawn_text`; death poof `Enemy.DEATH_POOF`; blasts in
+`BlastFX` (fire_blast, magic_burst, poison_cloud, fire_pillar, beam, ground_ring, screen_flash through
+`DayNightCycle.blast_flash`), reached from `VFX.burst`/`ring`/`bolt` and `FX.impact`; the dungeon camera
+`CameraRig.set_dungeon_view` (Settings `dungeon_camera`). Design rule: the feel changes how attacks look, never
+their times, damage or reach.
+
 **Done: Milestone 37 — Release polish (v0.45.0).** Title screen (`TitleBackdrop`, `PixelLogo`, pages in
 `MainMenu.show_page`), the "First steps" tutorial (`Tutorial.FIRST_STEPS`, `FirstStepsPanel`), biome music
 (`Audio.BIOME_MUSIC`, picked by `Audio.pick_music` from `AmbientEffects.music_context().biome`), new sounds,

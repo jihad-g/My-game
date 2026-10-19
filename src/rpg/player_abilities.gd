@@ -2464,8 +2464,8 @@ func _ability_crusader_strike(a: AbilityData) -> bool:
 func _ability_flame_pillar(a: AbilityData) -> bool:
 	var pos := cast_point(a.range)
 	var amount := _spell_damage(a)
-	for i in 5:
-		VFX.burst(_parent(), pos + Vector3(0, 0.5 + i * 0.7, 0), 1.2 - i * 0.12, Color(1, 0.5 - i * 0.05, 0.15, 0.8))
+	# Milestone 38: the reference clip's fire pillar (ring, shoot up, burn, fade).
+	BlastFX.fire_pillar(_parent(), pos, 4.8 * clampf(a.radius / 2.0, 0.8, 1.6))
 	for t in _enemies_near(pos, a.radius):
 		_spell_hit(t, a, amount, "Flame Pillar")
 		_status(t, &"burn", 3.0, {"dps": amount * 0.1, "source": player})

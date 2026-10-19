@@ -3,7 +3,13 @@ extends Node3D
 ## Floating combat text using a small pool of Label3D nodes.
 
 const POOL_SIZE := 40
-const LIFETIME := 0.9
+## Milestone 38: the measured motion - pop out sideways 4 frames, shrink from 115%
+## over 8, hold 16, fade 5 (33 frames at 30 fps = 1.1 s). See CombatFeel.
+const LIFETIME := (CombatFeel.NUM_POP + CombatFeel.NUM_HOLD + CombatFeel.NUM_FADE + 8.0) / CombatFeel.FPS
+## Big hits (crits) are the clip's red; numbers have a dark outline.
+const CRIT_COLOR := CombatFeel.NUM_RED
+const HURT_COLOR := Color(1.0, 0.62, 0.55)
+const OUTLINE := Color(0.07, 0.05, 0.05, 1.0)
 
 var _labels: Array[Label3D] = []
 var _next := 0
@@ -15,7 +21,8 @@ func _ready() -> void:
 		l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		l.no_depth_test = true
 		l.font_size = 44
-		l.outline_size = 12
+		l.outline_size = 14
+		l.outline_modulate = OUTLINE
 		l.pixel_size = 0.005
 		l.render_priority = 20
 		l.outline_render_priority = 19
@@ -31,9 +38,9 @@ func _on_damage(pos: Vector3, amount: float, is_crit: bool, target_is_player: bo
 	var text := str(roundi(amount)) if amount >= 1.0 else ("%.1f" % amount)
 	if tag != "":
 		text = tag if amount <= 0.0 else "%s\n%s" % [tag, text]
-	var color := Color(1, 0.35, 0.3) if target_is_player else Color(1, 1, 1)
+	var color := HURT_COLOR if target_is_player else CombatFeel.NUM_WHITE
 	if is_crit:
-		color = Color(1, 0.8, 0.2)
+		color = CRIT_COLOR
 		text += "!"
 	spawn_text(pos, text, color, 1.35 if is_crit else 1.0)
 
@@ -47,12 +54,22 @@ func spawn_text(pos: Vector3, text: String, color: Color, text_scale: float = 1.
 			old.kill()
 	l.text = text
 	l.modulate = color
-	l.global_position = pos + Vector3(randf_range(-0.3, 0.3), 0.0, randf_range(-0.3, 0.3))
-	l.scale = Vector3.ONE * text_scale
+	l.global_position = pos
+	l.scale = Vector3.ONE * text_scale * 1.15
 	l.visible = true
+	# Sideways on the screen (the camera's right, either way) and a little up.
+	var right := Vector3.RIGHT
+	var cam := get_viewport().get_camera_3d() if is_inside_tree() else null
+	if cam:
+		right = cam.global_transform.basis.x
+		right.y = 0.0
+		right = right.normalized() if right.length() > 0.01 else Vector3.RIGHT
+	var side := (1.0 if randf() < 0.5 else -1.0) * randf_range(CombatFeel.NUM_SIDE.x, CombatFeel.NUM_SIDE.y)
+	var to := pos + right * side + Vector3(0, 0.3, 0)
 	var tw := l.create_tween()
 	l.set_meta(&"tween", tw)
 	tw.set_parallel(true)
-	tw.tween_property(l, "global_position:y", l.global_position.y + 1.2, LIFETIME).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
-	tw.tween_property(l, "modulate:a", 0.0, LIFETIME * 0.5).set_delay(LIFETIME * 0.5)
+	tw.tween_property(l, "global_position", to, CombatFeel.sec(CombatFeel.NUM_POP)).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tw.tween_property(l, "scale", Vector3.ONE * text_scale, CombatFeel.sec(CombatFeel.NUM_SHRINK)).set_delay(CombatFeel.sec(CombatFeel.NUM_POP)).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(l, "modulate:a", 0.0, CombatFeel.sec(CombatFeel.NUM_FADE)).set_delay(LIFETIME - CombatFeel.sec(CombatFeel.NUM_FADE))
 	tw.chain().tween_callback(l.hide)

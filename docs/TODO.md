@@ -105,6 +105,31 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [x] Fixed in Milestone 36: approaching a kingdom capital no longer stutters (the site is built in small steps over ~20 frames)
 - [x] Fixed in Milestone 37: townsfolk keep out of people's way (they still have no wall collision)
 
+## Milestone 38 — Combat feel from the reference clip  ✅ (v0.46.0)
+
+- [x] Measured the clip frame by frame (30 fps); every number in `CombatFeel` (`src/combat/combat_feel.gd`)
+- [x] Swing shape for all humanoids (`AnimLibrary.attack`): anticipation, 2-frame strike (heavy 3), follow-through,
+      settle; heavy wind-ups hang at the top - weapon times, combos and hit frames unchanged
+- [x] Beasts and crawlers (`BeastModel.play_attack`): the same shape (big attacks rear back early and hang)
+- [x] Hit-stop 3 frames on heavy hits and finishers; light pop + square sparks where every melee hit lands
+- [x] Camera kick in the measured pattern on heavy hits (`CameraRig.kick`), no shake on light hits
+- [x] Flashes: enemy white 2 + fade 2 frames; hero warm 1, white 4, fade 1 with a halo (`HumanoidModel.hurt_flash`)
+- [x] Damage numbers: sideways pop, 115% → 100%, hold, fade (1.1 s); dark outline; crits red
+- [x] Death: tip over, pale poof at 0.7 s
+- [x] Blasts (`BlastFX`): fire blast, magic burst (per element), poison cloud, fire pillar, beam, ground rings,
+      screen brightness pops (`DayNightCycle.blast_flash`); old `VFX.burst`/`VFX.ring`/`VFX.bolt`/`FX.impact`
+      calls use them, so every ability gets the new look
+- [x] Dungeon camera: 50° down, 45° turned, 30° lens, locked follow; Settings toggle; fog follows the zoom
+- [x] Tests `test_m38_*`
+- [ ] NOT IMPLEMENTED: the clip's red outline on the enemy you are about to hit (elites keep their affix outline)
+- [ ] NOT IMPLEMENTED: the dodge roll keeps its own timing (0.42 s, ~3.9 m); the clip's roll is 0.33 s, ~3 m.
+      Not changed, because it would change dodging balance and i-frames
+- [ ] NOT IMPLEMENTED: the dungeon look (dark teal walls, warm floor light) - only the camera changed; colours and
+      lights of the dungeons are as before
+- [ ] NOT IMPLEMENTED: new sounds for the blasts (the old sounds play)
+- [ ] NOT CHECKED: the new effects were tested playing alone, not in a co-op game (the effects are local, the
+      game rules did not change)
+
 ## Milestone 37 — Release polish  ✅ (v0.45.0)
 
 - [x] Settings: graphics quality presets (Low / Medium / High; "Custom" once you change one of their settings),

@@ -71,6 +71,9 @@ const ROLL_SPIN_END := 0.78
 const ROLL_HOP := 0.15
 signal roll_landed
 var _flash_time := 0.0
+var _flash_t := 0.0
+var _flash_kind := 0
+var _flash_mat: StandardMaterial3D
 
 # Milestone 18a: the compact animation system (AnimClip, AnimLibrary).
 ## set_locomotion's speed ratio 1.0 is about this many m/s.
@@ -1210,10 +1213,27 @@ func _end_roll() -> void:
 		_root.rotation.x = 0.0
 
 
+## Milestone 38: the measured flashes - `flash()` white 2 frames then fades (hits on
+## enemies and NPCs), `hurt_flash()` 1 warm frame, 4 white, 1 fade with a coloured
+## halo (the hero getting hurt).
 func flash() -> void:
-	_flash_time = 0.1
+	_start_flash(CombatFeel.Flash.HIT)
+
+
+func hurt_flash() -> void:
+	_start_flash(CombatFeel.Flash.HURT)
+
+
+func _start_flash(kind: int) -> void:
+	if _flash_mat == null:
+		_flash_mat = CombatFeel.make_flash_material()
+	_flash_kind = kind
+	_flash_t = 0.0
+	_flash_time = CombatFeel.flash_length(kind)
+	CombatFeel.update_flash_material(_flash_mat, kind, 0.0)
 	for p in _parts:
-		p.material_overlay = Materials.hit_flash()
+		if is_instance_valid(p):
+			p.material_overlay = _flash_mat
 
 
 func play_stagger() -> void:
@@ -1368,9 +1388,12 @@ func _on_clip_event(ev: StringName) -> void:
 func _process(delta: float) -> void:
 	if _flash_time > 0.0:
 		_flash_time -= delta
-		if _flash_time <= 0.0:
+		_flash_t += delta
+		if _flash_time <= 0.0 or not CombatFeel.update_flash_material(_flash_mat, _flash_kind, _flash_t):
+			_flash_time = 0.0
 			for p in _parts:
-				p.material_overlay = null
+				if is_instance_valid(p):
+					p.material_overlay = null
 	if _freeze > 0.0:
 		_freeze -= delta
 		return

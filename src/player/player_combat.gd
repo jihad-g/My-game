@@ -395,6 +395,9 @@ func _perform_hit() -> void:
 		var dealt = t.receive_hit(info)
 		if is_enemy:
 			hit_enemy = true
+			# Milestone 38: a light pop and sparks right where the blow lands.
+			var at := info.hit_position if info.hit_position != Vector3.ZERO else (t as Node3D).global_position + Vector3(0, 1.0, 0)
+			BlastFX.hit_pop(player.get_parent(), at, heavy or current.finisher, FX.color_of(FX.element_of(info.damage_type)))
 			player.abilities.on_hit_dealt(t, float(dealt) if dealt != null else 0.0)
 			_after_hit(t, info, float(dealt) if dealt != null else 0.0, heavy, current)
 	if current.finisher:
@@ -685,7 +688,8 @@ func _apply_hitstop(heavy: bool, enemies: Array) -> void:
 		return
 	var t := current.hitstop
 	if t <= 0.0:
-		t = 0.045 + (0.035 if heavy else 0.0) + 0.04 * last_charge
+		# Milestone 38: heavy hits and finishers freeze 3 frames (measured), light hits stay short.
+		t = (CombatFeel.sec(CombatFeel.HITSTOP_HEAVY_FRAMES) if heavy or current.finisher else 0.045) + 0.04 * last_charge
 	t *= scale
 	_hitstop_left = maxf(_hitstop_left, t)
 	player.model.freeze(t)

@@ -33,6 +33,8 @@ const DEFAULTS := {
 	"movement_feel": 0,
 	## Milestone 18a: a fixed isometric camera (no rotating), like classic action RPGs.
 	"fixed_camera": false,
+	## Milestone 38: the reference clip's camera inside dungeons (50 degrees down, narrow lens).
+	"dungeon_camera": true,
 	## Milestone 18b: hit-stop strength (0 = off), aim assist and hold-to-chain attacks.
 	"hit_stop": 1.0,
 	"aim_assist": true,
@@ -236,5 +238,8 @@ func apply_to_world(w: World) -> void:
 		w.camera_rig.shake_enabled = bool(get_value("screen_shake")) and not reduce_motion()
 		w.camera_rig.rotate_speed_scale = clampf(float(get_value("camera_rotate_speed")), 0.25, 2.5)
 		w.camera_rig.set_fixed(bool(get_value("fixed_camera")))
+		w.camera_rig.base_fov = clampf(float(get_value("fov")), FOV_MIN, FOV_MAX)
+		if w.dungeon:
+			w.camera_rig.set_dungeon_view(bool(get_value("dungeon_camera")))
 		if w.camera_rig.camera:
-			w.camera_rig.camera.fov = clampf(float(get_value("fov")), FOV_MIN, FOV_MAX)
+			w.camera_rig.camera.fov = w.camera_rig.target_fov()

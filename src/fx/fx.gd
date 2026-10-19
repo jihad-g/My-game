@@ -455,12 +455,14 @@ static func impact(parent: Node, pos: Vector3, element: StringName, size: float 
 	var n := clampi(int(10 + s * 8), 8, 48)
 	match element:
 		&"fire":
-			# Embers that rise and a scorch mark.
-			particles(parent, pos, {"color": col, "amount": n, "life": 0.9, "speed": 3.0 * s, "gravity": -3.0, "size": 0.9 * s, "radius": 0.3 * s, "damping": 2.0})
+			# Milestone 38: big fire impacts are the reference clip's fire blast.
 			particles(parent, pos, {"color": Color(1, 0.85, 0.4), "amount": n / 2, "life": 1.2, "speed": 1.2, "gravity": -2.5, "size": 0.35, "radius": 0.5 * s, "explosive": 0.4})
-			light_flash(parent, pos + Vector3(0, 0.5, 0), col, 3.0, 4.0 + 2.0 * s)
 			if s >= 1.0:
+				BlastFX.fire_blast(parent, pos, s)
 				ground_mark(parent, pos, s, &"fire", 3.0)
+			else:
+				particles(parent, pos, {"color": col, "amount": n, "life": 0.9, "speed": 3.0 * s, "gravity": -3.0, "size": 0.9 * s, "radius": 0.3 * s, "damping": 2.0})
+				BlastFX.hit_pop(parent, pos, false, col)
 		&"frost":
 			# Sharp shards that fall, cold mist on the ground, a frost mark.
 			particles(parent, pos, {"color": Color(0.85, 0.97, 1.0), "amount": n, "life": 0.6, "speed": 5.0 * s, "spread": 80.0, "gravity": 14.0, "size": 0.45})
@@ -494,6 +496,14 @@ static func impact(parent: Node, pos: Vector3, element: StringName, size: float 
 			particles(parent, pos, {"color": Color(0.5, 0.3, 0.7), "amount": n / 3, "life": 0.6, "speed": 1.0, "size": 0.35})
 		_:
 			particles(parent, pos, {"color": col, "amount": n / 2, "life": 0.45, "speed": 3.0 * s, "gravity": 8.0, "size": 0.5})
+	# Milestone 38: the clip's blast shapes for the other elements too.
+	if element != &"fire":
+		if element == &"poison" and s >= 1.0:
+			BlastFX.poison_cloud(parent, pos, s)
+		elif s >= 1.0:
+			BlastFX.magic_burst(parent, pos, s, element, s >= 2.0)
+		else:
+			BlastFX.hit_pop(parent, pos, false, col)
 
 
 ## The hands glow and gather the element while a spell or ability is cast
