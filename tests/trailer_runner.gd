@@ -21,6 +21,7 @@ var _cap: Label
 var _sub: Label
 var _cap_tw: Tween
 var _meadow := Vector3.INF
+var _clear_spot := false
 
 
 func _process(_delta: float) -> void:
@@ -36,6 +37,23 @@ func _ready() -> void:
 		AudioServer.set_bus_mute(bus, true)  # the editing script adds the music
 	_make_overlay()
 	await _wait(2)
+	if "--part=3" in OS.get_cmdline_user_args():
+		# Re-takes of the class fights in open ground (no trees in the way).
+		_clear_spot = true
+		await _class_fight(&"barbarian", "The Barbarian", "Rage, whirlwinds and earthquakes",
+			[&"whirlwind", &"earthquake", &"leap_slam", &"whirlwind"])
+		await _class_fight(&"wizard", "The Wizard", "Fire, frost, lightning and the stars",
+			[&"firebolt", &"flame_pillar", &"chain_lightning", &"comet_shower", &"frost_nova"])
+		await _class_fight(&"assassin", "The Assassin", "Poison, shadows and a hundred knives",
+			[&"fan_of_knives", &"shadow_step", &"fan_of_knives", &"poison_blade"])
+		print("TRAILER_DONE ", _frame)
+		get_tree().quit()
+		return
+	if "--part=2" in OS.get_cmdline_user_args():
+		await _part2()
+		print("TRAILER_DONE ", _frame)
+		get_tree().quit()
+		return
 	await _title(&"title", "", 7.0)
 	await _knight_world()
 	await _class_fight(&"barbarian", "The Barbarian", "Rage, whirlwinds and earthquakes",
@@ -269,7 +287,17 @@ func _fight_here(title: String, line: String, spells: Array) -> void:
 	# An open meadow (the knight comes back to where the walk started, away from towns).
 	var spot := _meadow if _meadow != Vector3.INF else _dry_center(world, p.global_position, 26.0)
 	_meadow = Vector3.INF
-	await _teleport(spot)
+	if _clear_spot:
+		# Trees are only known once their ground has loaded: go there, look, move on if needed.
+		var o := p.global_position
+		for tries in 8:
+			spot = _open_ground(o)
+			await _teleport(spot)
+			if TreeFire.trees_near(world, p.global_position, 10.0).is_empty():
+				break
+			o = spot + Vector3(60, 0, 25)
+	else:
+		await _teleport(spot)
 	_clear_monsters()
 	world.camera_rig._target_distance = 15.0
 	world.camera_rig._target_pitch = 50.0
@@ -333,6 +361,130 @@ func _ride() -> void:
 	Input.action_release(&"sprint")
 	_out()
 	p.stop_riding(false, true)
+
+
+## Extra shots: a capital, sailing, a cave, a dungeon boss.
+func _part2() -> void:
+	world = await _boot(&"knight")
+	var p := world.player
+	var sets := world.generator.settlements.near(p.global_position, 4000.0)
+	for s in sets:
+		if s.is_kingdom():
+			await _teleport(s.world_center() + Vector3(0.5, 0, 6.0))
+			world.living.update_now(true)
+			world.living.finish_sites()
+			_clear_monsters()
+			await _wait(40)
+			var kc := s.world_center()
+			kc.y = world.get_ground_height(kc) + 2.0
+			_use_cam(true)
+			_orbit_step(kc, 46.0, 30.0, 0.8)
+			await _wait(5)
+			_in("kingdom")
+			_caption("Kingdoms and capitals", "Nobles, guards, markets", 4.0)
+			await _orbit(kc, 46.0, 30.0, 0.8, 1.35, 5.0)
+			_out()
+			_use_cam(false)
+			break
+	# Sailing.
+	var water := Vector3.INF
+	for r in range(20, 2000, 20):
+		for k in 24:
+			var q := p.global_position + Vector3(cos(TAU * k / 24.0), 0, sin(TAU * k / 24.0)) * r
+			if world.generator.get_height_at(q) < TerrainGenerator.WATER_Y - 4.0:
+				water = q
+				break
+		if water != Vector3.INF:
+			break
+	if water != Vector3.INF:
+		await _teleport(water)
+		_clear_monsters()
+		var boat := Boat.launch(world, water)
+		if boat:
+			boat.board(p)
+			world.camera_rig._target_distance = 20.0
+			await _wait(40)
+			_in("sail")
+			Input.action_press(&"move_forward")
+			await _hold(2.0)
+			Input.action_press(&"move_right")
+			await _hold(2.0)
+			Input.action_release(&"move_right")
+			Input.action_release(&"move_forward")
+			_out()
+	# A cave.
+	var g := world.generator
+	var o := p.global_position
+	var e := g.get_cave_entrances_near(floori(o.x) - 600, floori(o.z) - 600, floori(o.x) + 600, floori(o.z) + 600)
+	if not e.is_empty():
+		var epos := Vector3(e[0].x + 0.5, g.get_height_blocks(e[0].x, e[0].y) * 0.5, e[0].y + 0.5)
+		await _teleport(epos + Vector3(3, 0.5, 2))
+		world.travel_to_layer(TerrainGenerator.Layer.UNDERGROUND, epos)
+		while not world.is_ready:
+			await get_tree().process_frame
+		world.hud.visible = false
+		_clear_monsters()
+		await _wait(90)
+		world.camera_rig._target_distance = 20.0
+		await _wait(30)
+		_in("cave")
+		_caption("Caves deep below", "", 3.0)
+		Input.action_press(&"move_forward")
+		await _hold(3.5)
+		Input.action_release(&"move_forward")
+		_out()
+	await _end_world()
+	# A dungeon boss, fought by the Wizard.
+	world = await _boot(&"wizard")
+	p = world.player
+	var poi := PoiInfo.new()
+	poi.kind = PoiInfo.Kind.DUNGEON
+	poi.rank = 2
+	poi.theme = PoiInfo.DungeonTheme.CRYPT
+	poi.id = "trailer_boss"
+	poi.seed = 11
+	poi.center = Vector2i(int(p.global_position.x), int(p.global_position.z))
+	if world.enter_dungeon(poi):
+		await _wait(60)
+		var d := world.dungeon
+		world.hud.visible = false
+		if not is_instance_valid(d.boss):
+			d._spawn_boss(d.plan.end_room)
+		await _wait(5)
+		if is_instance_valid(d.boss):
+			for m in d.monsters:
+				if is_instance_valid(m) and m != d.boss:
+					m.queue_free()
+			var bp := d.boss.global_position
+			var room := d.to_global(d.plan.room_center(d.plan.end_room))
+			var side := room - bp
+			side.y = 0.0
+			if side.length() < 0.5:
+				side = Vector3(0, 0, 1)
+			p.global_position = bp + side.normalized() * 6.5 + Vector3(0, 0.3, 0)
+			p.velocity = Vector3.ZERO
+			world.camera_rig.snap_to_target()
+			p.face_direction((bp - p.global_position).normalized(), true)
+			p.health.invulnerable = false
+			p.health.max_health = 1.0e6
+			p.health.current = 1.0e6
+			await _wait(90)
+			_in("boss")
+			_caption("And bosses", "", 3.0)
+			var bf: Array[Monster] = [d.boss]
+			for k in 3:
+				await _cast_at(&"firebolt", bf)
+				await _hold(0.55)
+			await _cast_at(&"flame_pillar", bf)
+			await _hold(0.8)
+			await _cast_at(&"chain_lightning", bf)
+			await _hold(0.8)
+			await _cast_at(&"frost_nova", bf)
+			await _hold(1.3)
+			_out()
+		world.exit_dungeon()
+		await _wait(10)
+	await _end_world()
 
 
 # --- Fighting helpers -----------------------------------------------------------------------
@@ -513,6 +665,23 @@ func _find_biome(g: TerrainGenerator, origin: Vector3, id: StringName) -> Vector
 			if ok and g.get_height_at(q) > 0.0:
 				return q
 	return Vector3.INF
+
+
+## Flat, dry ground with no trees within 11 m (for fights the camera must see).
+func _open_ground(origin: Vector3) -> Vector3:
+	for r in range(30, 900, 15):
+		for k in 16:
+			var q := origin + Vector3(cos(TAU * k / 16.0), 0, sin(TAU * k / 16.0)) * r
+			q.y = world.get_ground_height(q)
+			if q.y < TerrainGenerator.WATER_Y + 0.6:
+				continue
+			var flat := true
+			for d: Vector3 in [Vector3(8, 0, 0), Vector3(-8, 0, 0), Vector3(0, 0, 8), Vector3(0, 0, -8)]:
+				if absf(world.get_ground_height(q + d) - q.y) > 1.1:
+					flat = false
+			if flat and TreeFire.trees_near(world, q, 11.0).is_empty():
+				return q
+	return _dry_center(world, origin, 26.0)
 
 
 func _dry_center(w: World, origin: Vector3, size: float) -> Vector3:
