@@ -548,7 +548,8 @@ func _move_normal(input: Vector3, delta: float) -> void:
 	var accel := acceleration * feel_mult() * delta
 	velocity.x = move_toward(velocity.x, target_vel.x, accel)
 	velocity.z = move_toward(velocity.z, target_vel.z, accel)
-	if sprinting and not combat.is_attacking() and not (bool(Settings.get_value("face_mouse")) and not InputSetup.using_gamepad):
+	if sprinting and not combat.is_attacking() and not (bool(Settings.get_value("face_mouse")) and not InputSetup.using_gamepad) \
+			and not (camera_rig and camera_rig.first_person):
 		face_direction(input, false)
 
 
@@ -799,6 +800,9 @@ func get_aim_direction() -> Vector3:
 	var aim_point: Vector3
 	if is_instance_valid(lock_target):
 		aim_point = lock_target.global_position
+	elif camera_rig and camera_rig.first_person:
+		# v0.49.0: first person acts where you look (mouse or gamepad).
+		return camera_rig.get_look_flat()
 	elif InputSetup.using_gamepad:
 		# Gamepad: act where the left stick points (or keep facing).
 		var mv := _get_move_input()
@@ -826,7 +830,8 @@ func get_facing() -> Vector3:
 
 
 func _update_facing(delta: float) -> void:
-	var follow_mouse := bool(Settings.get_value("face_mouse")) and not InputSetup.using_gamepad
+	var first_person := camera_rig != null and camera_rig.first_person
+	var follow_mouse := (bool(Settings.get_value("face_mouse")) and not InputSetup.using_gamepad) or first_person
 	if state == State.NORMAL and not combat.is_attacking():
 		var sprinting := _sprint_held() and Vector2(velocity.x, velocity.z).length() > walk_speed
 		if not sprinting or follow_mouse:
@@ -836,7 +841,10 @@ func _update_facing(delta: float) -> void:
 		_facing = get_aim_direction()
 		combat.attack_direction = _facing
 	var target_yaw := atan2(_facing.x, _facing.z)
-	model.rotation.y = lerp_angle(model.rotation.y, target_yaw, 1.0 - exp(-turn_speed * (1.25 if feel_mult() > 1.0 else 1.0) * delta))
+	if first_person and state == State.NORMAL:
+		model.rotation.y = target_yaw  # the arms in view turn with the camera at once
+	else:
+		model.rotation.y = lerp_angle(model.rotation.y, target_yaw, 1.0 - exp(-turn_speed * (1.25 if feel_mult() > 1.0 else 1.0) * delta))
 
 
 # --- Dodge ------------------------------------------------------------------------

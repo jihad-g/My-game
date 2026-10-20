@@ -84,6 +84,8 @@ const KEY_BINDINGS := {
 	## Milestone 30: build mode, one storey up / down.
 	&"build_storey_up": [KEY_EQUAL],
 	&"build_storey_down": [KEY_MINUS],
+	## v0.49.0: switch between the top-down camera and first-person view.
+	&"cam_first_person": [KEY_END],
 }
 
 const MOUSE_BINDINGS := {
@@ -128,7 +130,7 @@ const HOTBAR_ACTIONS: Array[StringName] = [
 ]
 
 ## Actions shown in Settings → Controls, by group, with their display names.
-## (Debug keys are deliberately not rebindable.)
+## v0.49.0: every key is listed and can be changed, testing keys included.
 const REBINDABLE := [
 	["Movement", [[&"move_forward", "Move forward"], [&"move_back", "Move back"], [&"move_left", "Move left"],
 		[&"move_right", "Move right"], [&"sprint", "Sprint"], [&"jump", "Jump"], [&"dodge", "Dodge roll"]]],
@@ -147,7 +149,93 @@ const REBINDABLE := [
 		[&"build_storey_up", "Build a storey higher"], [&"build_storey_down", "Build a storey lower"]]],
 	["Camera", [[&"cam_rotate_left", "Rotate left"], [&"cam_rotate_right", "Rotate right"], [&"cam_pitch_up", "Tilt up"],
 		[&"cam_pitch_down", "Tilt down"], [&"cam_pan_forward", "Pan forward"], [&"cam_pan_back", "Pan back"],
-		[&"cam_pan_left", "Pan left"], [&"cam_pan_right", "Pan right"], [&"cam_recenter", "Recenter"]]],
+		[&"cam_pan_left", "Pan left"], [&"cam_pan_right", "Pan right"], [&"cam_recenter", "Recenter"],
+		[&"cam_first_person", "First-person view on / off"]]],
+	["Testing (Creative)", [[&"creative_menu", "Creative menu"], [&"toggle_debug", "Debug info"],
+		[&"debug_weather", "Change weather"], [&"debug_raid", "Start a raid"], [&"debug_temp_down", "Colder"],
+		[&"debug_temp_up", "Warmer"], [&"debug_spawn_enemy", "Spawn an enemy"], [&"debug_time_skip", "Skip time"],
+		[&"debug_give_gear", "Give gear"], [&"debug_give_xp", "Give XP"], [&"debug_event", "Start an event"]]],
+]
+
+## v0.49.0: what every action does, in one short line (Settings → Controls and the key finder).
+const DESCRIPTIONS := {
+	&"move_forward": "Walk forward (in first person: where you look).",
+	&"move_back": "Walk backwards.",
+	&"move_left": "Walk left.",
+	&"move_right": "Walk right.",
+	&"sprint": "Run faster. Uses stamina and makes you hungry faster.",
+	&"jump": "Jump up one block. Swim up in water.",
+	&"dodge": "Quick roll. You can't be hit while rolling.",
+	&"attack_light": "Fast attack. Press again for a combo. In build mode: place.",
+	&"attack_heavy": "Strong, slow attack. In build mode: remove.",
+	&"block": "Hold to block. Block just before a hit to parry.",
+	&"target_lock": "Lock on to the nearest enemy (press again to let go).",
+	&"ability_1": "Use the class ability in slot 1.",
+	&"ability_2": "Use the class ability in slot 2.",
+	&"ability_3": "Use the class ability in slot 3.",
+	&"ability_shield": "Use the class ability in slot 4.",
+	&"ability_5": "Use the class ability in slot 5.",
+	&"ability_6": "Use the class ability in slot 6.",
+	&"spell_1": "Cast the spell in slot 1.",
+	&"spell_2": "Cast the spell in slot 2.",
+	&"spell_3": "Cast the spell in slot 3 (needs a tome).",
+	&"interact": "Talk, open, pick up, gather, sit, ride.",
+	&"hotbar_1": "Use or hold the item in hotbar slot 1.",
+	&"hotbar_2": "Use or hold the item in hotbar slot 2.",
+	&"hotbar_3": "Use or hold the item in hotbar slot 3.",
+	&"hotbar_4": "Use or hold the item in hotbar slot 4.",
+	&"hotbar_5": "Use or hold the item in hotbar slot 5.",
+	&"hotbar_6": "Use or hold the item in hotbar slot 6.",
+	&"hotbar_7": "Use or hold the item in hotbar slot 7.",
+	&"hotbar_8": "Use or hold the item in hotbar slot 8.",
+	&"respawn": "Come back to life after you die.",
+	&"chat": "Type a message to other players.",
+	&"whistle": "Call your horse to you.",
+	&"inventory": "Open your bag.",
+	&"character_screen": "Open your character: stats, skill points, gear.",
+	&"crafting": "Open crafting.",
+	&"spellbook": "Open the spellbook.",
+	&"journal": "Open the quest journal.",
+	&"world_map": "Open the world map.",
+	&"reputation": "See how towns and factions feel about you.",
+	&"blueprints": "Open saved building blueprints.",
+	&"toggle_help": "Open the guide (all keys and how the game works).",
+	&"quick_save": "Save the game now.",
+	&"pause": "Pause menu. Also closes open windows.",
+	&"build_mode": "Turn build mode on or off.",
+	&"build_rotate": "Turn the piece you are placing.",
+	&"build_repair": "Repair the piece you look at.",
+	&"build_storey_up": "Build one storey higher.",
+	&"build_storey_down": "Build one storey lower.",
+	&"cam_rotate_left": "Turn the camera left.",
+	&"cam_rotate_right": "Turn the camera right.",
+	&"cam_pitch_up": "Tilt the camera up.",
+	&"cam_pitch_down": "Tilt the camera down.",
+	&"cam_pan_forward": "Move the camera forward without moving the hero.",
+	&"cam_pan_back": "Move the camera back.",
+	&"cam_pan_left": "Move the camera left.",
+	&"cam_pan_right": "Move the camera right.",
+	&"cam_recenter": "Put the camera back on your hero.",
+	&"cam_first_person": "Switch between the top-down camera and first-person view.",
+	&"creative_menu": "Creative menu for testing (spawn items, fly, change time).",
+	&"toggle_debug": "Show debug info (position, FPS, chunk).",
+	&"debug_weather": "Testing: change the weather.",
+	&"debug_raid": "Testing: start a raid now.",
+	&"debug_temp_down": "Testing: make it colder.",
+	&"debug_temp_up": "Testing: make it warmer.",
+	&"debug_spawn_enemy": "Testing: spawn an enemy near you.",
+	&"debug_time_skip": "Testing: skip time forward.",
+	&"debug_give_gear": "Testing: give yourself gear.",
+	&"debug_give_xp": "Testing: give yourself XP.",
+	&"debug_event": "Testing: start a world event now.",
+}
+
+## Inputs that are not actions (you can't change them), shown in the key list.
+const FIXED_INPUTS := [
+	["Mouse wheel", "Zoom the camera in and out (top-down view)."],
+	["Middle mouse drag", "Turn and tilt the camera (top-down view)."],
+	["Mouse move", "Aim. In first-person view: look around."],
+	["Esc (while changing a key)", "Cancel changing the key."],
 ]
 
 ## True while the player is using a gamepad (aiming then follows the stick).
@@ -364,6 +452,54 @@ func apply_custom_bindings(data: Dictionary) -> void:
 	bindings_changed.emit()
 
 
+## The display name of an action ("Jump"), or its id if it isn't listed.
+static func action_name(action: StringName) -> String:
+	for group in REBINDABLE:
+		for entry in group[1]:
+			if entry[0] == action:
+				return entry[1]
+	return String(action)
+
+
+## One line saying what the action does ("" if none).
+static func action_description(action: StringName) -> String:
+	return DESCRIPTIONS.get(action, "")
+
+
+## Every listed action bound to this input (on its own device kind).
+func actions_for_input(ev: InputEvent) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for group in REBINDABLE:
+		for entry in group[1]:
+			for e in InputMap.action_get_events(entry[0]):
+				if same_input(e, ev) and not out.has(entry[0]):
+					out.append(entry[0])
+	return out
+
+
+## Every keyboard/mouse (or gamepad) input in use, with the actions on it:
+## Array of [label, Array[StringName]], sorted by label.
+func bound_inputs(gamepad: bool = false) -> Array:
+	var by_label := {}
+	for group in REBINDABLE:
+		for entry in group[1]:
+			for e in InputMap.action_get_events(entry[0]):
+				if is_gamepad_event(e) != gamepad:
+					continue
+				var l := event_label(e)
+				if not by_label.has(l):
+					by_label[l] = []
+				if not (by_label[l] as Array).has(entry[0]):
+					(by_label[l] as Array).append(entry[0])
+	var labels := by_label.keys()
+	labels.sort_custom(func(a: String, b: String) -> bool:
+		return a.naturalnocasecmp_to(b) < 0 if a.length() == b.length() or (a.length() > 1 and b.length() > 1) else a.length() < b.length())
+	var out := []
+	for l in labels:
+		out.append([l, by_label[l]])
+	return out
+
+
 # --- Display names -------------------------------------------------------------------------
 
 ## Short name of an input for hints: "W", "Shift", "LMB", "A", "RT"...
@@ -380,6 +516,9 @@ static func event_label(ev: InputEvent) -> String:
 			KEY_TAB: return "Tab"
 			KEY_PAGEUP: return "PgUp"
 			KEY_PAGEDOWN: return "PgDn"
+			KEY_END: return "End"
+			KEY_HOME: return "Home"
+			KEY_QUOTELEFT: return "`"
 		# Layout-aware name (AZERTY shows "Z" for the physical W key) where the
 		# platform supports it; browsers and headless runs use the US name.
 		var name := OS.get_keycode_string(DisplayServer.keyboard_get_keycode_from_physical(k)) \

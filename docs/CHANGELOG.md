@@ -2,11 +2,28 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
-## [Unreleased]
+## [0.49.0] — First-person view (option) and full key control
 
-### Docs
-- Planned a first-person camera as an option (top-down stays default): `GAME_DESIGN.md` idea 16, §3.2,
-  §3.25 and a new planned section in `TODO.md`. No code changed.
+### Added
+- **First-person view** as an option (the top-down camera stays the default). End key or Settings > Gameplay.
+  Camera at the hero's eyes, mouse look, crosshair, own field of view (default 70°), mouse speed and invert
+  up/down settings. The mouse is captured while you play and freed when a window or menu opens
+  (`CameraRig.set_first_person`, `HUD.wants_cursor`).
+- The hero's head, torso and legs are hidden from the first-person camera (render layer 20, still casts
+  shadows; other players see you normally). Arms, weapon and shield show (`HumanoidModel.set_first_person_hidden`).
+- **Controls tab**: every key can now be changed (the testing keys too), every action has a short "what it
+  does" line, a search box, a **key finder** (press any key to see what it does) and an **All keys** list sorted
+  by key, which marks keys shared by two actions. The Guide's controls page shows the lines too.
+- Tests `test_v49_keys`, `test_v49_first_person`.
+
+### Changed
+- In first person: attacks, spells, bow and building aim at the crosshair; lock-on turns the view; trees and
+  walls don't fade; roofs stay on when you walk inside; camera shake is smaller.
+- Version 0.49.0.
+
+### Not done
+- Own hands-only animations for first person, head bob setting, checks on a horse/boat, screenshots.
+
 ## [0.48.0] — Milestone 40: Village Architecture (houses in the reference style)
 
 Every building in villages and capitals is now made of 0.5 m voxel blocks in the style of the owner's

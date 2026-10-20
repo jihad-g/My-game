@@ -435,7 +435,8 @@ func _process(delta: float) -> void:
 		return
 	_roof_check = 0.2
 	var p := to_local(World.instance.player.global_position)
-	var inside := building_at(p)
+	# v0.49.0: in first person you are inside, so the roof stays (you see the ceiling).
+	var inside := -1 if CameraRig.first_person_active() else building_at(p)
 	if inside != _hidden_roof:
 		if _roof_nodes.has(_hidden_roof):
 			_roof_nodes[_hidden_roof].visible = true

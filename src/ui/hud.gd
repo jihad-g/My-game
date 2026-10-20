@@ -208,6 +208,17 @@ func _ready() -> void:
 		UIFx.attach(panel)
 
 
+## v0.49.0: true while a window, menu or overlay is open that needs the mouse
+## cursor (first person frees the mouse then, and captures it again after).
+func wants_cursor() -> bool:
+	for c in [_inv_panel, _map, _character, _crafting, _chest, _dialogue, _trade, _requests, travel_panel,
+			_reputation, _spellbook, _blueprints, _settings, guide, journal, story, creative, achievements,
+			first_steps, _death, _pause, _loading]:
+		if is_instance_valid(c) and (c as CanvasItem).is_visible_in_tree():
+			return true
+	return false
+
+
 func bind(p_player: Player, p_world: World) -> void:
 	player = p_player
 	world = p_world

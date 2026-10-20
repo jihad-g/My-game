@@ -114,10 +114,13 @@ func refresh_controls() -> void:
 	for group in InputSetup.REBINDABLE:
 		lines.append("[color=#ffcc59][b]%s[/b][/color]" % group[0])
 		for entry in group[1]:
-			lines.append("    %s:  [b]%s[/b]   [color=#aaa](pad: %s)[/color]" % [entry[1], InputSetup.action_label(entry[0], false),
-				InputSetup.action_label(entry[0], true)])
+			lines.append("    %s:  [b]%s[/b]   [color=#aaa](pad: %s)  %s[/color]" % [entry[1], InputSetup.action_label(entry[0], false),
+				InputSetup.action_label(entry[0], true), InputSetup.action_description(entry[0])])
 		lines.append("")
-	lines.append("[color=#ffcc59][b]Mouse[/b][/color]\n    Wheel: zoom    Middle-drag: rotate camera    Right-click in build mode: remove")
+	lines.append("[color=#ffcc59][b]Always the same[/b][/color]")
+	for f in InputSetup.FIXED_INPUTS:
+		lines.append("    %s:  %s" % [f[0], f[1]])
+	lines.append("    Right-click in build mode:  remove")
 	_controls.text = "\n".join(lines)
 
 

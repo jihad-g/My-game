@@ -180,6 +180,8 @@ func _ready() -> void:
 	await _run_async(&"test_m38_ingame")
 	_run(&"test_m39_voxel_items")
 	_run(&"test_m40_villages")
+	_run(&"test_v49_keys")
+	await _run_async(&"test_v49_first_person")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -10781,3 +10783,74 @@ func test_m40_villages() -> void:
 			if not old.has(e[0]) or ItemDB.get_item(e[0]) == null:
 				fresh.append(e[0])
 	check(fresh.is_empty(), "job shops sell only known, already-sold items (%s)" % [fresh])
+func test_v49_keys() -> void:
+	InputSetup.reset_all()
+	var missing := []
+	for group in InputSetup.REBINDABLE:
+		for entry in group[1]:
+			if InputSetup.action_description(entry[0]) == "":
+				missing.append(entry[0])
+	check(missing.is_empty(), "every key has a 'what it does' line (missing: %s)" % [missing])
+	var listed := []
+	for group in InputSetup.REBINDABLE:
+		for entry in group[1]:
+			listed.append(entry[0])
+	var hidden := []
+	for a: StringName in InputSetup.KEY_BINDINGS:
+		if not listed.has(a):
+			hidden.append(a)
+	check(hidden.is_empty(), "every key can be changed in Settings (not listed: %s)" % [hidden])
+	check(InputSetup.action_label(&"cam_first_person", false) == "End", "End switches first-person view")
+	var panel := SettingsPanel.new()
+	add_child(panel)
+	var k := InputEventKey.new()
+	k.physical_keycode = KEY_SPACE
+	k.pressed = true
+	check(panel.find_key(k).contains("Jump"), "the key finder says what Space does")
+	var free := InputEventKey.new()
+	free.physical_keycode = KEY_SCROLLLOCK
+	check(panel.find_key(free).contains("does nothing"), "and says when a key does nothing")
+	check(panel.key_list_text().contains("End") and panel.key_list_text().contains("Mouse wheel"), "the key list shows every key, the fixed mouse ones too")
+	check(panel.filter_actions("first-person") >= 1 and panel.filter_actions("") == panel.bind_buttons.size(), "search filters the actions")
+	panel.listen(&"debug_spawn_enemy", false)
+	var f := InputEventKey.new()
+	f.physical_keycode = KEY_KP_1
+	f.pressed = true
+	panel.capture(f)
+	check(InputSetup.action_label(&"debug_spawn_enemy", false) != "F8", "testing keys can be changed too")
+	panel.queue_free()
+	InputSetup.reset_all()
+
+
+func test_v49_first_person() -> void:
+	var world: World = await _boot_class(&"knight")
+	var p := world.player
+	p.health.invulnerable = true
+	var rig := world.camera_rig
+	check(not rig.first_person, "the top-down camera is the default")
+	var ev := InputEventAction.new()
+	ev.action = &"cam_first_person"
+	ev.pressed = true
+	rig._unhandled_input(ev)
+	await _frames(5)
+	check(rig.first_person and bool(Settings.get_value("first_person")), "End turns first person on (and saves it)")
+	check(is_equal_approx(rig.camera.fov, rig.fp_fov) or rig.target_fov() == rig.fp_fov, "first person uses its own field of view")
+	var eye: Vector3 = p.model.eye_position()
+	check(rig.global_position.distance_to(eye) < 0.3, "the camera sits at the hero's eyes (%.2f m off)" % rig.global_position.distance_to(eye))
+	check(p.model.first_person_hidden and (rig.camera.cull_mask & HumanoidModel.FP_HIDDEN_LAYER) == 0, "the hero's body is hidden from the camera")
+	var shown_arms := false
+	for n in p.model._arm_r.find_children("*", "VisualInstance3D", true, false):
+		shown_arms = shown_arms or (n as VisualInstance3D).layers == 1
+	check(shown_arms, "the arms and weapon still show")
+	var yaw0 := rig.yaw_deg
+	rig.fp_look(Vector2(200, -100))
+	await _frames(3)
+	check(absf(rig.yaw_deg - yaw0) > 10.0 and rig.fp_pitch > 5.0, "moving the mouse looks around (yaw %.0f, pitch %.0f)" % [rig.yaw_deg - yaw0, rig.fp_pitch])
+	var look := rig.get_look_flat()
+	check(p.get_aim_direction().dot(look) > 0.99, "attacks go where you look")
+	ev.pressed = true
+	rig._unhandled_input(ev)
+	await _frames(5)
+	check(not rig.first_person and not p.model.first_person_hidden and (rig.camera.cull_mask & HumanoidModel.FP_HIDDEN_LAYER) != 0, "End again goes back to the top-down camera")
+	Settings.set_value("first_person", false)
+

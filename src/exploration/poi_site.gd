@@ -226,6 +226,7 @@ func _process(delta: float) -> void:
 	var inside := false
 	for b in layout.buildings:
 		inside = inside or (b.rect as Rect2).has_point(Vector2(p.x, p.z))
+	inside = inside and not CameraRig.first_person_active()  # v0.49.0: roofs stay in first person
 	if inside != _hidden_roof:
 		_hidden_roof = inside
 		for k in _roofs:

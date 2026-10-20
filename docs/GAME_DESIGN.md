@@ -125,7 +125,8 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 - Trees between the camera and you fade out (dither). Roofs above you hide so you can see inside.
 - Camera shake on hits (can be turned off). Far plane 640 m; horizon terrain out to 512 m, with simple far
   trees and town/tower landmarks (v0.27.0).
-- **Planned — first-person view (an option, not the default).** Switch with F5 or in Settings. See idea 16.
+- **First-person view (v0.49.0, an option, not the default).** Switch with End or Settings > Gameplay. Mouse
+  looks around, the crosshair aims, only your arms and weapon show. See idea 16.
 
 ### 3.3 Combat
 - **Light attacks**: a combo per weapon type — sword 3 hits, dagger 4 hits, axe 2 hits, staff 2 hits,
@@ -413,8 +414,10 @@ Each system has a short "how it works" note. Key numbers come from the code and 
   counter, fullscreen, V-Sync, render scale, shadows, horizon terrain, particles, screen shake.
 - Milestone 37: graphics quality preset (Low / Medium / High / Custom), field of view (30-75°, default 45°),
   anti-aliasing (off / 2x / 4x).
-- **Planned:** camera mode (Top-down / First person), first-person mouse sensitivity, invert Y, head bob on/off.
+- v0.49.0: first-person view on/off, first-person mouse speed, invert up/down, first-person field of view (55-100°, default 70°).
 - Rebinding for keyboard/mouse and gamepad separately, with conflict warnings; toggle sprint.
+- v0.49.0 Controls tab: **every** key can be changed (testing keys too), each action has a line saying what it
+  does, a search box, a key finder (press any key to see what it does) and an "All keys" list sorted by key.
 - Accessibility: interface scale 75–150%, colour-vision filters (protanopia, deuteranopia,
   tritanopia), high-contrast UI, directional sound captions, reduced flashing, reduced motion.
 
@@ -1167,26 +1170,23 @@ New abilities at levels 25, 40 and 60, plus an upgrade choice for each old abili
 
 ---
 
-### 16 — First-person camera (option)
+### 16 — First-person camera (option) — done in v0.49.0
 A second way to see the world: through the hero's eyes. **It is an option. The top-down camera stays the
 default and the main way to fight** (hack and slash is built for it).
 
-- **Switch:** F5 (V stays "recenter") or Settings > Gameplay > Camera mode. Gamepad: click the right stick.
-  The choice is saved.
-- **Camera:** a second `Camera3D` at the hero's eye height. Mouse turns the body left/right and tilts the
-  view up/down (clamped about ±85°). Uses the same field of view setting.
-- **Body:** head and body boxes are hidden in first person (only for the local player - other players
-  still see your full body). Hands and the held voxel weapon are shown, with their own short
-  "hands-only" swing, cast, block and use animations (made by code like all other animations).
-- **Aiming:** attacks, spells, bow shots and building place where the screen centre points (a raycast:
-  an invisible line from the camera). A small crosshair appears.
-- **Things that change:** tree fade and roof hiding are off in first person (you are inside). Camera shake
-  is smaller. Interacting uses "look at it and press E".
-- **Where it is good:** exploring, farming, building, walking in towns and dungeons.
+- **Switch:** End key (F5 is quick save, Home is recenter) or Settings > Gameplay > First-person view. Saved.
+- **Camera:** sits at the hero's eyes (`HumanoidModel.eye_position`). Mouse turns left/right and looks
+  up/down (±85°). Gamepad right stick and the camera keys look too. Own field of view (default 70°).
+- **Mouse:** captured while you play; freed when any window, menu or the pause screen is open
+  (`HUD.wants_cursor`).
+- **Body:** head, torso and legs go on render layer 20, which the first-person camera doesn't draw. They still
+  cast shadows, and other players still see your whole body. Arms, hands, weapon and shield show.
+- **Aiming:** attacks, spells, bow and building go where the crosshair points (the screen centre ray). Lock-on
+  turns the view to the target.
+- **Changes in first person:** no tree/wall fade, roofs stay on when you walk inside, camera shake is small.
 - **Rules that do not change:** stats, damage, ranges and abilities are the same in both views.
-  First person never gives a combat bonus.
-- **Effort:** about 1 session for a basic toggle, 2-3 sessions to make it feel good.
-- **When:** after combat, the main boss and the game goal (the first release needs those first).
+- **NOT IMPLEMENTED yet:** own "hands-only" animations (the normal arm animations are used), head bob setting,
+  first person on a horse is untested, Forward+ look not checked on a real GPU.
 
 ## 9. Suggested next milestones
 

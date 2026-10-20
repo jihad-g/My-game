@@ -35,6 +35,9 @@ const DEFAULTS := {
 	"fixed_camera": false,
 	## Milestone 38: the reference clip's camera inside dungeons (50 degrees down, narrow lens).
 	"dungeon_camera": true,
+	## v0.49.0: first-person view (an option; the top-down camera is the default),
+	## its mouse speed, inverted up/down and its own field of view (degrees).
+	"first_person": false, "fp_sensitivity": 1.0, "fp_invert_y": false, "fp_fov": 70.0,
 	## Milestone 18b: hit-stop strength (0 = off), aim assist and hold-to-chain attacks.
 	"hit_stop": 1.0,
 	"aim_assist": true,
@@ -64,6 +67,8 @@ const QUALITY_PRESETS := [
 const QUALITY_CUSTOM := 3
 const FOV_MIN := 30.0
 const FOV_MAX := 75.0
+const FP_FOV_MIN := 55.0
+const FP_FOV_MAX := 100.0
 
 var values: Dictionary = DEFAULTS.duplicate()
 ## Settings file path (tests point this elsewhere).
@@ -241,5 +246,9 @@ func apply_to_world(w: World) -> void:
 		w.camera_rig.base_fov = clampf(float(get_value("fov")), FOV_MIN, FOV_MAX)
 		if w.dungeon:
 			w.camera_rig.set_dungeon_view(bool(get_value("dungeon_camera")))
+		w.camera_rig.fp_sensitivity = clampf(float(get_value("fp_sensitivity")), 0.2, 3.0)
+		w.camera_rig.fp_invert_y = bool(get_value("fp_invert_y"))
+		w.camera_rig.fp_fov = clampf(float(get_value("fp_fov")), FP_FOV_MIN, FP_FOV_MAX)
+		w.camera_rig.set_first_person(bool(get_value("first_person")))
 		if w.camera_rig.camera:
 			w.camera_rig.camera.fov = w.camera_rig.target_fov()

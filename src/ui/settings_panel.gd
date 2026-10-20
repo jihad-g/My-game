@@ -14,6 +14,14 @@ var bind_buttons: Dictionary = {}
 var _listening: StringName = &""
 var _listening_pad := false
 var _bind_note := Label.new()
+## v0.49.0: the key finder ("press a key to see what it does") and the key list.
+var _finding := false
+var _find_button := Button.new()
+var finder_result := Label.new()
+var _key_list := RichTextLabel.new()
+var _search := LineEdit.new()
+## Controls tab: action -> its row (for the search filter).
+var _bind_rows: Dictionary = {}
 
 
 func _ready() -> void:
@@ -47,6 +55,10 @@ func _ready() -> void:
 	_choice("Movement feel", "movement_feel", ["Snappy - quick start, stop and turn", "Weighty - slower, heavier"])
 	_toggle("Fixed isometric camera (no rotating)", "fixed_camera")
 	_toggle("Dungeon camera (50° down, narrow lens, like classic dungeon crawlers)", "dungeon_camera")
+	_toggle("First-person view (see through your hero's eyes; key: End)", "first_person")
+	_slider("First-person mouse speed", "fp_sensitivity", 0.2, 3.0, 0.05)
+	_toggle("First person: invert up / down", "fp_invert_y")
+	_slider("First-person field of view", "fp_fov", Settings.FP_FOV_MIN, Settings.FP_FOV_MAX, 1.0, "°")
 	_toggle("Aim assist (swings turn to the nearest enemy in front)", "aim_assist")
 	_toggle("Hold attack to keep attacking", "hold_to_chain")
 	_slider("Hit-stop (freeze on hit, 0 = off)", "hit_stop", 0.0, 1.5, 0.1)
@@ -106,15 +118,31 @@ func _ready() -> void:
 	close.pressed.connect(_close)
 	buttons.add_child(close)
 	InputSetup.bindings_changed.connect(_refresh_bindings)
+	# The End key (or a setting elsewhere) can change first person while this is open.
+	Settings.changed.connect(func() -> void:
+		if visible:
+			_refresh())
 
 
 func _close() -> void:
 	_listening = &""
+	_finding = false
 	visible = false
 	closed.emit()
 
 
 func _input(event: InputEvent) -> void:
+	if visible and _finding:
+		if event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).physical_keycode == KEY_ESCAPE:
+			_finding = false
+			finder_result.text = "Cancelled."
+			_find_button.text = "Find a key: press it to see what it does"
+			get_viewport().set_input_as_handled()
+			return
+		if InputSetup.is_bindable(event):
+			find_key(event)
+			get_viewport().set_input_as_handled()
+		return
 	if not visible or _listening == &"":
 		return
 	if event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).physical_keycode == KEY_ESCAPE:
@@ -148,7 +176,37 @@ func capture(event: InputEvent) -> void:
 		("   (also used by %s)" % ", ".join(names)) if not names.is_empty() else ""])
 
 
+## Shows what a key or button does (the key finder; also used by tests).
+func find_key(event: InputEvent) -> String:
+	_finding = false
+	_find_button.text = "Find a key: press it to see what it does"
+	var ev := event
+	if ev is InputEventKey:
+		var k := InputEventKey.new()
+		k.physical_keycode = (ev as InputEventKey).physical_keycode if (ev as InputEventKey).physical_keycode != KEY_NONE else (ev as InputEventKey).keycode
+		ev = k
+	var actions := InputSetup.actions_for_input(ev)
+	var label := InputSetup.event_label(ev)
+	if actions.is_empty():
+		finder_result.text = "%s does nothing. You can give it a job below." % label
+	else:
+		var lines := PackedStringArray()
+		for a in actions:
+			lines.append("%s - %s" % [InputSetup.action_name(a), InputSetup.action_description(a)])
+		finder_result.text = "%s:\n%s" % [label, "\n".join(lines)]
+	return finder_result.text
+
+
+func start_finding() -> void:
+	_listening = &""
+	_finding = true
+	_find_button.text = "Press any key or button...  (Esc to cancel)"
+	finder_result.text = ""
+	_refresh_bindings()
+
+
 func listen(action: StringName, gamepad: bool) -> void:
+	_finding = false
 	_listening = action
 	_listening_pad = gamepad
 	_bind_note.text = "Press a %s for \"%s\"  (Esc to cancel)" % ["gamepad button" if gamepad else "key or mouse button", _action_name(action)]
@@ -162,7 +220,7 @@ func _stop_listening(note: String) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if visible and _listening == &"" and event.is_action_pressed(&"ui_cancel"):
+	if visible and _listening == &"" and not _finding and event.is_action_pressed(&"ui_cancel"):
 		_close()
 		get_viewport().set_input_as_handled()
 
@@ -183,29 +241,109 @@ func _page(title: String) -> VBoxContainer:
 
 func _build_controls_page() -> void:
 	_page("Controls")
-	_bind_note.text = "Click a binding, then press the new key or button."
+	# Key finder: press any key to see what it does.
+	_find_button.text = "Find a key: press it to see what it does"
+	_find_button.pressed.connect(start_finding)
+	_rows.add_child(_find_button)
+	finder_result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	finder_result.add_theme_color_override(&"font_color", Color(0.75, 0.95, 0.8))
+	_rows.add_child(finder_result)
+	_bind_note.text = "To change a key: click its button, then press the new key or button."
+	_bind_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_bind_note.add_theme_color_override(&"font_color", UITheme.GOLD)
 	_rows.add_child(_bind_note)
+	_search.placeholder_text = "Search (e.g. jump, camera, spell)"
+	_search.clear_button_enabled = true
+	_search.text_changed.connect(func(_t: String) -> void: filter_actions(_search.text))
+	_rows.add_child(_search)
+	var head := _row("Action  -  what it does")
+	for t in ["Keyboard / mouse", "Gamepad"]:
+		var l := Label.new()
+		l.text = t
+		l.custom_minimum_size.x = 150
+		l.add_theme_color_override(&"font_color", Color(0.7, 0.7, 0.75))
+		head.add_child(l)
 	for group in InputSetup.REBINDABLE:
 		_section(group[0])
 		for entry in group[1]:
 			var action: StringName = entry[0]
-			var h := _row(entry[1])
+			var h := HBoxContainer.new()
+			var names := VBoxContainer.new()
+			names.custom_minimum_size.x = 320
+			names.add_theme_constant_override(&"separation", 0)
+			var n := Label.new()
+			n.text = entry[1]
+			names.add_child(n)
+			var d := Label.new()
+			d.text = InputSetup.action_description(action)
+			d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			d.custom_minimum_size.x = 320
+			d.add_theme_font_size_override(&"font_size", 12)
+			d.add_theme_color_override(&"font_color", Color(0.68, 0.68, 0.72))
+			names.add_child(d)
+			h.add_child(names)
 			var kb := Button.new()
 			kb.custom_minimum_size.x = 150
+			kb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			kb.tooltip_text = d.text
 			kb.pressed.connect(listen.bind(action, false))
 			h.add_child(kb)
 			var pad := Button.new()
 			pad.custom_minimum_size.x = 150
+			pad.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			pad.tooltip_text = d.text
 			pad.pressed.connect(listen.bind(action, true))
 			h.add_child(pad)
 			var reset := Button.new()
 			reset.text = "↺"
-			reset.tooltip_text = "Default"
+			reset.tooltip_text = "Back to the default key"
+			reset.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			reset.pressed.connect(func() -> void: InputSetup.reset_action(action))
 			h.add_child(reset)
+			_rows.add_child(h)
 			bind_buttons[action] = [kb, pad]
+			_bind_rows[action] = h
+	# Every key in use, sorted by key, with what it does.
+	_section("All keys (what every key does)")
+	_key_list.bbcode_enabled = true
+	_key_list.fit_content = true
+	_key_list.scroll_active = false
+	_key_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_key_list.add_theme_font_size_override(&"normal_font_size", 14)
+	_rows.add_child(_key_list)
 	_refresh_bindings()
+
+
+## Shows only the actions whose name or description contains `text`.
+func filter_actions(text: String) -> int:
+	var q := text.strip_edges().to_lower()
+	var shown := 0
+	for action: StringName in _bind_rows:
+		var hay := (InputSetup.action_name(action) + " " + InputSetup.action_description(action)).to_lower()
+		var on := q == "" or hay.contains(q)
+		(_bind_rows[action] as Control).visible = on
+		shown += int(on)
+	return shown
+
+
+## The "All keys" list: each key or button in use, and every action on it.
+## Keys with more than one action are marked (they work in different places,
+## or one of them needs a new key).
+func key_list_text() -> String:
+	var lines := PackedStringArray()
+	for pad in [false, true]:
+		lines.append("[color=#ffcc59][b]%s[/b][/color]" % ("Gamepad" if pad else "Keyboard and mouse"))
+		for row in InputSetup.bound_inputs(pad):
+			var parts := PackedStringArray()
+			for a: StringName in row[1]:
+				parts.append(InputSetup.action_name(a))
+			var shared := (row[1] as Array).size() > 1
+			lines.append("    [b]%s[/b]   %s%s" % [row[0], ", ".join(parts), "   [color=#e8a25a](shared)[/color]" if shared else ""])
+		lines.append("")
+	lines.append("[color=#ffcc59][b]Always the same (can't be changed)[/b][/color]")
+	for f in InputSetup.FIXED_INPUTS:
+		lines.append("    [b]%s[/b]   %s" % [f[0], f[1]])
+	return "\n".join(lines)
 
 
 func _refresh_bindings() -> void:
@@ -213,6 +351,7 @@ func _refresh_bindings() -> void:
 		var b: Array = bind_buttons[action]
 		(b[0] as Button).text = "..." if (_listening == action and not _listening_pad) else _device_label(action, false)
 		(b[1] as Button).text = "..." if (_listening == action and _listening_pad) else _device_label(action, true)
+	_key_list.text = key_list_text()
 
 
 func _device_label(action: StringName, pad: bool) -> String:
@@ -224,11 +363,7 @@ func _device_label(action: StringName, pad: bool) -> String:
 
 
 func _action_name(action: StringName) -> String:
-	for group in InputSetup.REBINDABLE:
-		for entry in group[1]:
-			if entry[0] == action:
-				return entry[1]
-	return String(action)
+	return InputSetup.action_name(action)
 
 
 func _section(text: String) -> void:

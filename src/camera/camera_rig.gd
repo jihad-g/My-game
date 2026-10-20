@@ -6,6 +6,7 @@ extends Node3D
 ## - Q/E or middle-mouse drag rotates (yaw); PageUp/PageDown or MMB drag pitches
 ## - Mouse wheel zooms
 ## - Provides the mouse aim point on the ground for the player
+## - v0.49.0: an optional first-person view (End key or Settings → Gameplay)
 ##
 ## Hierarchy (created in _ready):  CameraRig (yaw, position) -> Pitch -> Camera3D
 
@@ -70,6 +71,27 @@ var _saved_view := {}
 var _kick_t := -1.0
 var _kick_scale := 0.0
 
+# v0.49.0: first-person view. An option: the top-down camera stays the default and
+# the main way to fight. Stats, damage and ranges are the same in both views.
+## True while the camera is in first-person view.
+var first_person := false
+## Mouse look speed multiplier and inverted up/down (Settings → Gameplay).
+var fp_sensitivity := 1.0
+var fp_invert_y := false
+## Field of view in first person (degrees, its own setting).
+var fp_fov := 70.0
+## Degrees turned per pixel of mouse movement at sensitivity 1.
+const FP_MOUSE_DEG := 0.15
+## Gamepad / key look speed (degrees per second at full stick).
+const FP_STICK_DEG := 150.0
+const FP_PITCH_LIMIT := 85.0
+## How far in front of the eyes the camera sits (metres), so the hands are in view.
+const FP_FORWARD := 0.12
+## Look up/down in first person (degrees, + = up).
+var fp_pitch := 0.0
+var _fp_model: Node = null
+var _crosshair: CanvasLayer
+
 
 ## Turns the fixed isometric camera on or off (it glides to the angle).
 func set_fixed(on: bool) -> void:
@@ -98,7 +120,158 @@ func _ready() -> void:
 	Events.dungeon_entered.connect(func(_id: String, _floor: int) -> void:
 		set_dungeon_view(bool(Settings.get_value("dungeon_camera"))))
 	Events.dungeon_left.connect(func(_id: String, _cleared: bool) -> void: set_dungeon_view(false))
+	_build_crosshair()
 	snap_to_target()
+
+
+func _exit_tree() -> void:
+	_set_fp_model(null)
+	if first_person and _can_capture_mouse():
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+# --- First-person view (v0.49.0) ---------------------------------------------------------
+
+## Turns first-person view on or off. The camera keeps looking the same way.
+func set_first_person(on: bool) -> void:
+	if on == first_person:
+		return
+	first_person = on
+	_dragging = false
+	_pan_offset = Vector3.ZERO
+	if on:
+		fp_pitch = 0.0
+	else:
+		_set_fp_model(null)
+		if _can_capture_mouse():
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		if fixed:
+			set_fixed(true)
+	if camera:
+		camera.near = 0.05 if on else 0.3
+		camera.fov = target_fov()
+		var mask := camera.cull_mask
+		camera.cull_mask = (mask & ~HumanoidModel.FP_HIDDEN_LAYER) if on else (mask | HumanoidModel.FP_HIDDEN_LAYER)
+	if _crosshair:
+		_crosshair.visible = false
+	snap_to_target()
+
+
+## True when the local hero's camera is in first-person view (roofs stay on, etc.).
+static func first_person_active() -> bool:
+	return World.instance != null and is_instance_valid(World.instance.camera_rig) and World.instance.camera_rig.first_person
+
+
+func _can_capture_mouse() -> bool:
+	return DisplayServer.get_name() != "headless"
+
+
+## Hides the hero's body from this camera (only the arms and weapon show).
+func _set_fp_model(m: Node) -> void:
+	if m == _fp_model:
+		return
+	if is_instance_valid(_fp_model) and _fp_model.has_method(&"set_first_person_hidden"):
+		_fp_model.set_first_person_hidden(false)
+	_fp_model = m
+	if is_instance_valid(m) and m.has_method(&"set_first_person_hidden"):
+		m.set_first_person_hidden(true)
+
+
+func _target_model() -> Node:
+	if target == null:
+		return null
+	var m = target.get("model")
+	return m if m is Node else null
+
+
+## Where the first-person camera sits: the hero's eyes.
+func _eye_position() -> Vector3:
+	var m := _target_model()
+	if m and m.has_method(&"eye_position"):
+		return m.eye_position()
+	return target.global_position + Vector3(0, 1.6, 0) if target else global_position
+
+
+## True while a window, menu or the pause screen needs the mouse cursor.
+func _cursor_needed() -> bool:
+	if get_tree().paused:
+		return true
+	var w := World.instance
+	return w != null and is_instance_valid(w.hud) and w.hud.has_method(&"wants_cursor") and w.hud.wants_cursor()
+
+
+func _build_crosshair() -> void:
+	_crosshair = CanvasLayer.new()
+	_crosshair.name = "Crosshair"
+	_crosshair.layer = 0
+	_crosshair.visible = false
+	add_child(_crosshair)
+	var center := Control.new()
+	center.set_anchors_preset(Control.PRESET_CENTER)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_crosshair.add_child(center)
+	for r in [Rect2(-9, -1, 6, 2), Rect2(3, -1, 6, 2), Rect2(-1, -9, 2, 6), Rect2(-1, 3, 2, 6), Rect2(-1, -1, 2, 2)]:
+		var shadow := ColorRect.new()
+		shadow.color = Color(0, 0, 0, 0.45)
+		shadow.position = (r as Rect2).position - Vector2(1, 1)
+		shadow.size = (r as Rect2).size + Vector2(2, 2)
+		shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		center.add_child(shadow)
+		var c := ColorRect.new()
+		c.color = Color(1, 1, 1, 0.9)
+		c.position = (r as Rect2).position
+		c.size = (r as Rect2).size
+		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		center.add_child(c)
+
+
+## Mouse movement turns the view (degrees of yaw and pitch for `relative` pixels).
+func fp_look(relative: Vector2) -> void:
+	var k := FP_MOUSE_DEG * fp_sensitivity
+	_target_yaw -= relative.x * k
+	yaw_deg = _target_yaw
+	fp_pitch = clampf(fp_pitch + relative.y * k * (1.0 if fp_invert_y else -1.0), -FP_PITCH_LIMIT, FP_PITCH_LIMIT)
+
+
+func _process_first_person(delta: float) -> void:
+	_set_fp_model(_target_model())
+	if camera:
+		camera.near = 0.05
+		camera.cull_mask &= ~HumanoidModel.FP_HIDDEN_LAYER
+	var free_cursor := _cursor_needed()
+	if _can_capture_mouse():
+		var mode := Input.MOUSE_MODE_VISIBLE if free_cursor else Input.MOUSE_MODE_CAPTURED
+		if Input.mouse_mode != mode:
+			Input.mouse_mode = mode
+	if _crosshair:
+		_crosshair.visible = not free_cursor
+	if not free_cursor:
+		# Gamepad right stick and the camera keys look around too.
+		var turn := Input.get_axis(&"cam_rotate_right", &"cam_rotate_left")
+		var tilt := Input.get_axis(&"cam_pitch_down", &"cam_pitch_up")
+		_target_yaw += turn * FP_STICK_DEG * fp_sensitivity * rotate_speed_scale * delta
+		fp_pitch = clampf(fp_pitch + tilt * FP_STICK_DEG * 0.6 * fp_sensitivity * (-1.0 if fp_invert_y else 1.0) * delta, -FP_PITCH_LIMIT, FP_PITCH_LIMIT)
+	# Locked on: the view turns to the target.
+	var lock = target.get("lock_target") if target else null
+	if lock is Node3D and is_instance_valid(lock):
+		var d := (lock as Node3D).global_position - _eye_position()
+		if Vector2(d.x, d.z).length() > 0.5:
+			var want := rad_to_deg(atan2(-d.x, -d.z))
+			_target_yaw = rad_to_deg(lerp_angle(deg_to_rad(_target_yaw), deg_to_rad(want), 1.0 - exp(-8.0 * delta)))
+	yaw_deg = _target_yaw
+	_shake = maxf(_shake - delta * 2.5, 0.0)
+	_shake_t += delta
+	if _kick_t >= 0.0:
+		_kick_t += delta
+		if _kick_t * KICK_FPS >= KICK_X.size() - 1:
+			_kick_t = -1.0
+	if camera and absf(camera.fov - target_fov()) > 0.01:
+		camera.fov = lerpf(camera.fov, target_fov(), 1.0 - exp(-8.0 * delta))
+	var eye := _eye_position()
+	global_position = global_position.lerp(eye, 1.0 - exp(-30.0 * delta)) if global_position.distance_to(eye) < 2.0 else eye
+	_apply_transform()
+	# Nothing fades in first person (you see the world from inside it).
+	Materials.set_camera_fade(0.0)
 
 
 ## How much further the camera sits with the narrow lens so the hero looks the
@@ -137,6 +310,8 @@ func set_dungeon_view(on: bool) -> void:
 
 ## The field of view the camera glides to.
 func target_fov() -> float:
+	if first_person:
+		return fp_fov
 	return DUNGEON_FOV if dungeon_view else base_fov
 
 
@@ -162,7 +337,7 @@ static func kick_offset(t: float) -> Vector2:
 
 func snap_to_target() -> void:
 	if target:
-		global_position = target.global_position + _pan_offset
+		global_position = _eye_position() if first_person else target.global_position + _pan_offset
 	_apply_transform()
 
 
@@ -178,6 +353,17 @@ func add_shake(strength: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"cam_first_person"):
+		# Saved like any setting, so the Settings screen shows it too.
+		Settings.set_value("first_person", not first_person)
+		if Settings.get_value("first_person") != first_person:
+			set_first_person(bool(Settings.get_value("first_person")))
+		get_viewport().set_input_as_handled()
+		return
+	if first_person:
+		if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			fp_look((event as InputEventMouseMotion).relative)
+		return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -195,6 +381,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+	if first_person:
+		_process_first_person(delta)
+		return
 	if not fixed and not dungeon_view:
 		var rot_input := Input.get_axis(&"cam_rotate_right", &"cam_rotate_left")
 		_target_yaw += rot_input * rotate_speed_deg * rotate_speed_scale * delta
@@ -237,6 +426,17 @@ func _process(delta: float) -> void:
 
 func _apply_transform() -> void:
 	rotation = Vector3(0, deg_to_rad(yaw_deg), 0)
+	if first_person:
+		_pitch_node.rotation = Vector3(deg_to_rad(fp_pitch), 0, 0)
+		camera.position = Vector3(0, 0, -FP_FORWARD)
+		# Hits shake the view a little (a third of the top-down shake).
+		if _kick_t >= 0.0:
+			var kf := kick_offset(_kick_t) * _kick_scale * 0.15
+			camera.position += Vector3(kf.x, kf.y, 0.0)
+		if _shake > 0.0:
+			var sf := _shake * _shake * 0.03
+			camera.position += Vector3(sin(_shake_t * 47.0), cos(_shake_t * 41.0), 0.0) * sf
+		return
 	_pitch_node.rotation = Vector3(-deg_to_rad(pitch_deg), 0, 0)
 	camera.position = Vector3(0, 0, distance)
 	if _kick_t >= 0.0:
@@ -262,11 +462,17 @@ func get_right_flat() -> Vector3:
 	return r.normalized()
 
 
-## World point under the mouse cursor: terrain hit, or the horizontal plane at
+## Horizontal look direction in first person (the hero faces this way).
+func get_look_flat() -> Vector3:
+	return get_forward_flat()
+
+
+## World point under the mouse cursor (first person: under the crosshair): terrain hit, or the horizontal plane at
 ## `fallback_height` if the ray hits nothing.
 func get_mouse_world_point(fallback_height: float) -> Vector3:
 	var viewport := get_viewport()
-	var mouse := viewport.get_mouse_position()
+	# First person aims where the screen centre (the crosshair) points.
+	var mouse := viewport.get_visible_rect().size * 0.5 if first_person else viewport.get_mouse_position()
 	var origin := camera.project_ray_origin(mouse)
 	var dir := camera.project_ray_normal(mouse)
 	var space := get_world_3d().direct_space_state

@@ -4,17 +4,22 @@ Legend: `[x]` completed (implemented + tested) · `[~]` in progress / partial (d
 
 Nothing below is marked `[x]` unless it runs in the game today.
 
-## Planned — First-person camera option (after combat, main boss and game goal)
+## v0.49.0 — First-person view (option) and full key control
 
-See `GAME_DESIGN.md` idea 16. The top-down camera stays the default.
+- [x] First-person view: End key or Settings > Gameplay, saved; top-down stays the default
+- [x] Camera at the hero's eyes; mouse look (±85°), gamepad/keys look, own field of view, mouse speed, invert up/down
+- [x] Mouse captured while playing, freed when a window or menu is open; crosshair in the centre
+- [x] Hero's head/body hidden from the camera (still casts shadows; others see you); arms + weapon show
+- [x] Attacks, spells, bow and building aim at the crosshair; lock-on turns the view
+- [x] No tree/wall fade and roofs stay on in first person; smaller camera shake
+- [x] Controls: every key can be changed (testing keys too), "what it does" line per action, search,
+      key finder (press a key to see what it does), "All keys" list sorted by key
+- [x] Tests `test_v49_keys`, `test_v49_first_person` (written, NOT run yet - waiting for permission)
+- [ ] NOT IMPLEMENTED: hands-only animations made for first person (normal arm animations are used)
+- [ ] NOT IMPLEMENTED: head bob setting
+- [ ] NOT IMPLEMENTED: first person on a horse or boat checked
+- [ ] NOT IMPLEMENTED: screenshots of first person (`screenshot_runner`)
 
-- [ ] NOT IMPLEMENTED: second camera at eye height, switch with F5 / Settings > Gameplay > Camera mode (saved)
-- [ ] NOT IMPLEMENTED: mouse look (body turns, view tilts ±85°), gamepad support, sensitivity + invert Y settings
-- [ ] NOT IMPLEMENTED: hide local hero's head/body, show hands + held voxel weapon
-- [ ] NOT IMPLEMENTED: hands-only animations (swing, cast, block, use) made by code
-- [ ] NOT IMPLEMENTED: screen-centre aiming (raycast) for attacks, spells, bow and building; crosshair
-- [ ] NOT IMPLEMENTED: turn off tree fade / roof hiding in first person; smaller camera shake
-- [ ] NOT IMPLEMENTED: test that stats and damage are the same in both views
 ## Milestone 40 — Village Architecture (v0.48.0)
 
 - [x] Settlement buildings are voxel shells in the reference style (`VillageArchitecture`); every building in a settlement looks different

@@ -367,6 +367,8 @@ func _build() -> void:
 	_build_weapon()
 	if _ghost:
 		set_ghost(true)
+	if first_person_hidden:
+		_apply_first_person_layers()
 
 
 func _build_class_gear() -> void:
@@ -1113,6 +1115,38 @@ func _add_voxel(holder: Node3D, id: StringName, metal: Color, accent: Color, pos
 	holder.add_child(mi)
 	_parts.append(mi)
 	return mi
+
+
+# --- First-person view (v0.49.0) ---------------------------------------------------------
+
+## Render layer for body parts the first-person camera doesn't draw (layer 20).
+## They still cast shadows, and other players still see the whole body.
+const FP_HIDDEN_LAYER := 1 << 19
+## True while this is the local hero seen in first person: the head, torso and
+## legs are hidden from the camera; the arms, hands, weapon and shield stay.
+var first_person_hidden := false
+
+
+func set_first_person_hidden(on: bool) -> void:
+	if on == first_person_hidden:
+		return
+	first_person_hidden = on
+	_apply_first_person_layers()
+
+
+func _apply_first_person_layers() -> void:
+	if _root == null:
+		return
+	for n in _root.find_children("*", "VisualInstance3D", true, false):
+		var keep := (_arm_l != null and _arm_l.is_ancestor_of(n)) or (_arm_r != null and _arm_r.is_ancestor_of(n))
+		(n as VisualInstance3D).layers = FP_HIDDEN_LAYER if (first_person_hidden and not keep) else 1
+
+
+## Where the eyes are (the first-person camera sits here).
+func eye_position() -> Vector3:
+	if _head != null and _head.is_inside_tree():
+		return _head.global_position + Vector3(0, 0.26, 0)
+	return global_position + Vector3(0, 1.6, 0)
 
 
 ## Stealth look: parts become translucent.
