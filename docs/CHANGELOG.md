@@ -2,6 +2,11 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [Unreleased]
+
+### Docs
+- Planned a first-person camera as an option (top-down stays default): `GAME_DESIGN.md` idea 16, §3.2,
+  §3.25 and a new planned section in `TODO.md`. No code changed.
 ## [0.48.0] — Milestone 40: Village Architecture (houses in the reference style)
 
 Every building in villages and capitals is now made of 0.5 m voxel blocks in the style of the owner's

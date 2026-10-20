@@ -4,6 +4,17 @@ Legend: `[x]` completed (implemented + tested) · `[~]` in progress / partial (d
 
 Nothing below is marked `[x]` unless it runs in the game today.
 
+## Planned — First-person camera option (after combat, main boss and game goal)
+
+See `GAME_DESIGN.md` idea 16. The top-down camera stays the default.
+
+- [ ] NOT IMPLEMENTED: second camera at eye height, switch with F5 / Settings > Gameplay > Camera mode (saved)
+- [ ] NOT IMPLEMENTED: mouse look (body turns, view tilts ±85°), gamepad support, sensitivity + invert Y settings
+- [ ] NOT IMPLEMENTED: hide local hero's head/body, show hands + held voxel weapon
+- [ ] NOT IMPLEMENTED: hands-only animations (swing, cast, block, use) made by code
+- [ ] NOT IMPLEMENTED: screen-centre aiming (raycast) for attacks, spells, bow and building; crosshair
+- [ ] NOT IMPLEMENTED: turn off tree fade / roof hiding in first person; smaller camera shake
+- [ ] NOT IMPLEMENTED: test that stats and damage are the same in both views
 ## Milestone 40 — Village Architecture (v0.48.0)
 
 - [x] Settlement buildings are voxel shells in the reference style (`VillageArchitecture`); every building in a settlement looks different
