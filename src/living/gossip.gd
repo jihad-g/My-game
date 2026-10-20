@@ -38,6 +38,26 @@ static func greeting(npc: NPC, tier: int) -> String:
 			return "Need steel? Or have ore to sell?" if tier < 3 else "For you, the best iron I have."
 		&"farmer":
 			return "Fine weather for the crops." if tier < 2 else "Oh, hello again! The harvest looks good this year."
+		# Milestone 40: village jobs
+		&"baker":
+			if not npc.is_open():
+				return "The oven is cold. Fresh bread at dawn!"
+			return "Smell that? Bread straight from the oven." if tier < 2 else "I saved a warm loaf for you."
+		&"lumberjack":
+			return "Mind the logs. They roll." if tier < 2 else "Need planks? I cut the best timber around."
+		&"alchemist":
+			return "Careful, some of these bottles bite." if tier < 2 else "Ah, a fellow seeker. I have rare things today."
+		&"fisher":
+			return "The fish are drying nicely today." if tier < 2 else "Good to see you! Sit, the nets can wait."
+		&"miner":
+			return "Shards glow in the deep tunnels. I've seen them." if tier < 2 else "For you, the good ore from the deep seam."
+		&"miller":
+			return "The wind turns the sails, the sails grind the wheat." if tier < 2 else "Flour for the whole village, friend. And for you."
+		&"innkeeper":
+			return "Come in, warm up! Food and a seat for every traveller." if tier < 2 else "Your usual table is free!"
+		&"elder":
+			return "Welcome to %s, traveller. We are simple folk." % s.name if tier < 2 \
+				else "%s owes you much. You are always welcome here." % s.name
 	var lines := ["Hello there.", "Welcome to %s." % s.name, "Lovely day, isn't it?", "Mind the boars outside town."]
 	if tier >= 2:
 		lines = ["Hello, friend!", "Good to see you in %s again." % s.name]

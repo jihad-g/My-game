@@ -163,6 +163,10 @@ func _ready() -> void:
 		await _explore_showcase()
 		get_tree().quit()
 		return
+	if "--only=village40" in OS.get_cmdline_user_args():
+		await _village40_showcase()
+		get_tree().quit()
+		return
 	if "--only=town" in OS.get_cmdline_user_args():
 		await _town_showcase()
 		get_tree().quit()
@@ -1020,6 +1024,64 @@ func _town_showcase() -> void:
 	await _wait(15)
 	await _shot("59_kingdom_court")
 	world.hud._dialogue.close()
+	world.queue_free()
+	await _wait(5)
+
+
+## Milestone 40 showcase: the voxel village style, job buildings and their workers.
+func _village40_showcase() -> void:
+	SaveManager.start_transient(GameState.DEFAULT_SEED, &"knight")
+	var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+	add_child(world)
+	while not world.is_ready:
+		await get_tree().process_frame
+	var p := world.player
+	p.health.invulnerable = true
+	world.spawner.max_active = 0
+	world.hud.visible = false
+	world.day_night.hour = 10.5
+	var sets := world.generator.settlements.near(p.global_position, 4000.0)
+	var villages := sets.filter(func(x: SettlementInfo) -> bool: return not x.is_kingdom())
+	var kingdom: SettlementInfo = sets.filter(func(x: SettlementInfo) -> bool: return x.is_kingdom())[0]
+	for vi in mini(2, villages.size()):
+		var village: SettlementInfo = villages[vi]
+		await _teleport(world, village.world_center() + Vector3(0.5, 0, -1.5))
+		world.living.update_now(true)
+		world.living.finish_sites()
+		var site := world.living.site_of(village)
+		await _wait(40)
+		var roles := []
+		for n in site.npcs:
+			roles.append(String(n.role))
+		print("village %s: %d buildings, roles %s" % [village.name, site.layout.buildings.size(), roles])
+		for yaw in [35.0, 215.0]:
+			world.camera_rig._target_yaw = yaw
+			world.camera_rig._target_distance = 46.0
+			world.camera_rig._target_pitch = 52.0
+			await _wait(70)
+			await _shot("v40_%d_overview_%d" % [vi, int(yaw)])
+		# Close-ups of every job building and the big ones.
+		for b in site.layout.buildings:
+			if not b.kind in [&"bakery", &"lumber_camp", &"alchemy", &"fishery", &"mine", &"mill", &"watchtower", &"manor", &"inn", &"smithy"]:
+				continue
+			var f: Dictionary = b.frame
+			var front: Vector3 = site.to_global(b.door_out + (f.inward as Vector3) * -2.0)
+			await _teleport(world, front)
+			world.camera_rig._target_yaw = 180.0 - float(f.rot) * 90.0 + 30.0
+			world.camera_rig._target_distance = 24.0 if b.kind != &"watchtower" and b.kind != &"mill" else 30.0
+			world.camera_rig._target_pitch = 34.0
+			await _wait(50)
+			await _shot("v40_%d_%s" % [vi, b.kind])
+	# Kingdom
+	await _teleport(world, kingdom.world_center() + Vector3(0.5, 0, 6.0))
+	world.living.update_now(true)
+	world.living.finish_sites()
+	await _wait(40)
+	world.camera_rig._target_yaw = 35.0
+	world.camera_rig._target_distance = 55.0
+	world.camera_rig._target_pitch = 50.0
+	await _wait(70)
+	await _shot("v40_kingdom")
 	world.queue_free()
 	await _wait(5)
 

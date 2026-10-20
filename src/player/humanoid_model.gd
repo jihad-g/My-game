@@ -206,6 +206,32 @@ func set_npc_look(role: StringName, seed: int, accent: Color) -> void:
 			_weapon_type = &"hammer"
 		&"farmer":
 			_weapon_type = &"hoe"
+		# Milestone 40: village jobs
+		&"baker":
+			shirt_color = Color(0.92, 0.9, 0.84)
+			_weapon_type = &"unarmed"
+		&"lumberjack":
+			shirt_color = Color(0.62, 0.2, 0.18)
+			_weapon_type = &"axe"
+		&"miner":
+			shirt_color = Color(0.32, 0.3, 0.3)
+			_weapon_type = &"hammer"
+		&"alchemist":
+			shirt_color = Color(0.42, 0.26, 0.55)
+			_weapon_type = &"staff"
+		&"fisher":
+			shirt_color = Color(0.28, 0.45, 0.6)
+			_weapon_type = &"spear"
+		&"miller":
+			shirt_color = Color(0.85, 0.8, 0.66)
+			_weapon_type = &"unarmed"
+		&"innkeeper":
+			shirt_color = Color(0.55, 0.38, 0.22)
+			_weapon_type = &"unarmed"
+		&"elder":
+			shirt_color = accent.darkened(0.35)
+			pants_color = Color(0.22, 0.2, 0.2)
+			_weapon_type = &"staff"
 		&"noble":
 			shirt_color = accent.darkened(0.2)
 			pants_color = Color(0.2, 0.18, 0.22)

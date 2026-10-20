@@ -47,6 +47,26 @@ const STOCK := {
 		[&"apprentice_wand", 1, 0], [&"copper_staff", 1, 0], [&"iron_staff", 1, 2], [&"embers_tome", 1, 3],
 		[&"master_weaponsmith_folio", 1, 3], [&"mithril_arrow", 20, 4], [&"tome_feather_fall", 1, 1], [&"tome_silence", 1, 3],
 	],
+	# Milestone 40: the village job shops. Only items other shops already sell
+	# (so no new way to make money appears).
+	&"baker": [[&"bread", 12, 0], [&"berries", 6, 0], [&"wheat", 6, 0], [&"hearty_stew", 3, 1]],
+	&"innkeeper": [[&"cooked_meat", 8, 0], [&"bread", 8, 0], [&"hearty_stew", 5, 0], [&"bandage", 4, 0]],
+	&"alchemist": [[&"bandage", 8, 0], [&"glowcap", 3, 0], [&"arcane_dust", 4, 1], [&"moonpetal", 1, 2], [&"crystal_shard", 2, 2]],
+	&"miner": [[&"coal", 12, 0], [&"copper_ingot", 4, 0], [&"stone_pickaxe", 2, 0], [&"copper_pickaxe", 1, 1],
+		[&"iron_ingot", 2, 2], [&"crystal_shard", 1, 3]],
+	&"lumberjack": [[&"plank", 30, 0], [&"rope", 8, 0], [&"stone_hatchet", 2, 0], [&"copper_hatchet", 1, 1]],
+	&"miller": [[&"wheat", 12, 0], [&"wheat_seeds", 10, 0], [&"bread", 4, 0]],
+}
+## Milestone 40: roles with a job shop.
+const JOB_SHOPS := [&"baker", &"innkeeper", &"alchemist", &"miner", &"lumberjack", &"miller"]
+## Materials each job shop buys from you (other categories follow BUYS).
+const JOB_MATERIALS := {
+	&"baker": [&"wheat", &"pumpkin", &"mushroom"],
+	&"innkeeper": [&"mushroom"],
+	&"alchemist": [&"glowcap", &"moonpetal", &"mushroom", &"crystal_shard", &"arcane_dust", &"plant_fiber"],
+	&"miner": [&"copper_ore", &"iron_ore", &"coal", &"copper_ingot", &"iron_ingot", &"stone", &"flint", &"crystal_shard"],
+	&"lumberjack": [&"wood", &"plank", &"plant_fiber"],
+	&"miller": [&"wheat", &"wheat_seeds"],
 }
 
 ## The travelling trader carries a rotating selection from this pool.
@@ -67,6 +87,12 @@ const BUYS := {
 		ItemData.Category.ARMOR, ItemData.Category.MISC, ItemData.Category.PLACEABLE],
 	&"trader": [ItemData.Category.MATERIAL, ItemData.Category.FOOD, ItemData.Category.WEAPON, ItemData.Category.ARMOR,
 		ItemData.Category.MISC, ItemData.Category.TOOL],
+	&"baker": [ItemData.Category.FOOD, ItemData.Category.MATERIAL],
+	&"innkeeper": [ItemData.Category.FOOD, ItemData.Category.MATERIAL],
+	&"alchemist": [ItemData.Category.MATERIAL, ItemData.Category.MISC],
+	&"miner": [ItemData.Category.MATERIAL, ItemData.Category.TOOL],
+	&"lumberjack": [ItemData.Category.MATERIAL, ItemData.Category.TOOL],
+	&"miller": [ItemData.Category.MATERIAL, ItemData.Category.FOOD],
 }
 ## Farmers only buy produce-type materials.
 const FARMER_MATERIALS := [&"plant_fiber", &"wheat_seeds", &"carrot_seeds", &"pumpkin_seeds", &"pumpkin", &"wheat", &"mushroom"]
@@ -74,7 +100,9 @@ const SMITH_MATERIALS := [&"copper_ore", &"iron_ore", &"coal", &"copper_ingot", 
 
 ## Daily shop money in copper (villages / kingdoms).
 const SHOP_MONEY := {&"merchant": [300, 1000], &"blacksmith": [400, 1500], &"farmer": [150, 400],
-	&"royal_merchant": [0, 3000], &"trader": [800, 800]}
+	&"royal_merchant": [0, 3000], &"trader": [800, 800],
+	&"baker": [150, 400], &"innkeeper": [250, 600], &"alchemist": [300, 900], &"miner": [300, 900],
+	&"lumberjack": [200, 500], &"miller": [150, 400]}
 
 ## Regional supply (< 1, cheap) and demand (> 1, dear) by biome.
 const REGION := {
@@ -146,6 +174,8 @@ static func will_buy(role: StringName, item_id: StringName) -> bool:
 		return item_id in FARMER_MATERIALS
 	if role == &"blacksmith" and item.category == ItemData.Category.MATERIAL:
 		return item_id in SMITH_MATERIALS
+	if JOB_MATERIALS.has(role) and item.category == ItemData.Category.MATERIAL:
+		return item_id in JOB_MATERIALS[role]
 	return true
 
 

@@ -262,10 +262,15 @@ Each system has a short "how it works" note. Key numbers come from the code and 
 ### 3.12 Settlements and NPCs
 - **Villages** (one decision per 384 m region) and **kingdom capitals** (one per realm of 4×4 regions),
   flattened, with no wild props, caves or monster spawns. You cannot build inside towns.
-- Villages: furnished houses, shop, smithy, farms, plaza with a well, stalls, notice board. Capitals add
-  walls, gates, towers, a keep with a throne, barracks and a royal market.
+- Villages: furnished houses, shop, smithy, farms, plaza with a well, stalls, notice board, an elder's manor,
+  often an inn, and 3-5 job buildings (bakery, lumber camp, alchemy house, fishery, mine, windmill,
+  watchtower). Capitals add walls, gates, towers, a keep with a throne, barracks and a royal market.
+- **Look (Milestone 40)**: every building is made of 0.5 m blocks in one village style - stone foundation,
+  dark wood timber frame, stone / plaster / plank walls, steep roofs with an overhang. Each building picks its
+  own size, floors, walls, roof colour and details, so no two look the same in one settlement. Villages are
+  wood and plaster with straw, brown, teal and red roofs; capitals are stone with slate and red roofs.
 - **NPC roles**: merchant, royal merchant, blacksmith/armorer, farmer, villager, guard, ruler (noble),
-  travelling trader. Each has a daily routine (work, lunch, evening at the plaza, sleep at home) and walks
+  travelling trader, and (Milestone 40) baker, lumberjack, alchemist, fisher, miner, miller, innkeeper, elder. Each has a daily routine (work, lunch, evening at the plaza, sleep at home) and walks
   along streets and through doors.
 - **Dialogue**: greeting by role and reputation, "What's new?" gossip built from the real world (adds
   villages, caves, dungeons and other places to your map).
@@ -1194,6 +1199,10 @@ Old saves keep their land exactly. Milestone 18 is complete.
 **Done: Milestone 19 — "Together in Danger" (v0.28.0).** Real co-op combat: the host runs every monster, guests
 see and fight the same ones, monsters attack whoever is nearest, kills share XP, and support abilities reach
 friends within 12 m.
+
+**Done: Milestone 40 — Village Architecture (v0.48.0).** Village and capital buildings are voxel houses in the
+reference style, every one different; job buildings with their workers (baker, lumberjack, alchemist, fisher,
+miner, miller, village guard), an elder's manor and an inn.
 
 **Done: Milestone 39 — Voxel Arsenal (v0.47.0).** Held items (weapons, shields, wands, tomes) and dropped
 weapons are voxel models in the reference style: `VoxelItems` (`src/art/voxel_items.gd`) builds them from

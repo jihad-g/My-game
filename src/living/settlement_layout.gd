@@ -41,6 +41,10 @@ var farms: Array = []
 var points := {"plaza": [], "wander": [], "patrol": [], "gate_guard": [], "stall": [], "trader": []}
 ## {name, role, home, work: Vector3, work_rot: float, farm, seed}
 var npcs: Array = []
+## Milestone 40: extra no-walk rectangles (towers, ovens, log piles...) for the street graph.
+var obstacles: Array = []
+## Milestone 40: look signatures already used here, so every building looks different.
+var _styles := {}
 
 
 static func build(p_info: SettlementInfo, day: int = 1) -> SettlementLayout:
@@ -109,46 +113,48 @@ static func _side_toward_center(i: int, j: int) -> int:
 # --- Buildings -------------------------------------------------------------------------
 
 ## Walled building. `open_front` leaves the door wall out (smithy). Returns its index.
+## Milestone 40: the walls and roof are a VillageArchitecture voxel shell in
+## the village style (the floor, door, furniture and collision work as before).
 func _building(kind: StringName, x0: int, z0: int, w: int, d: int, side: int, stone: bool, open_front: bool = false) -> int:
 	var idx := buildings.size()
 	var f := _frame(x0, z0, w, d, side)
-	var wall := &"stone_wall" if stone else &"wood_wall"
 	var door_u := int(f.width) / 2
 	# Floor
 	for x in range(x0, x0 + w):
 		for z in range(z0, z0 + d):
 			_deco(&"stone_floor" if stone or open_front else &"wood_floor", Transform3D(Basis.IDENTITY, Vector3(x + 0.5, 0, z + 0.5)))
 	boxes.append({"size": Vector3(w, FLOOR_TOP, d), "xform": Transform3D(Basis.IDENTITY, Vector3(x0 + w * 0.5, FLOOR_TOP * 0.5, z0 + d * 0.5))})
-	# Walls: walk the perimeter edge by edge in the building frame.
-	for side_i in 4:
-		var sf := _frame(x0, z0, w, d, (side + side_i) % 4)
-		for u in int(sf.width):
-			var p: Vector3 = _at(sf, u + 0.5, 0.0)
-			var xf := Transform3D(_rot(sf.rot), p)
-			if side_i == 0:
-				if open_front:
-					continue
-				if u == door_u:
-					doors.append(xf)
-					continue
-			var piece := wall
-			if int(sf.width) >= 4 and side_i != 0 and u == int(sf.width) / 2 and side_i != 2:
-				piece = &"wood_window"
-			_piece(piece, xf)
-	# Roof
-	var roof_piece := &"wood_roof" if stone else &"thatch_roof"
-	var rd := BuildingManager.get_piece_data(roof_piece)
-	var list: Array = []
-	for x in range(x0, x0 + w):
-		for z in range(z0, z0 + d):
-			list.append({"mesh": rd.mesh, "xform": Transform3D(Basis.IDENTITY, Vector3(x + 0.5, ROOF_Y, z + 0.5))})
-	roofs[idx] = list
+	if not open_front:
+		doors.append(Transform3D(_rot(f.rot), _at(f, door_u + 0.5, 0.0)))
+	# Walls + roof: a voxel shell with its own look.
+	var bseed := HashUtils.hash3(info.seed, 4400, idx)
+	var st := {}
+	for salt in 8:
+		st = VillageArchitecture.pick_style(bseed, info.is_kingdom() or stone, kind, salt)
+		var sig := VillageArchitecture.signature(st, w, d)
+		if not _styles.has(sig):
+			_styles[sig] = true
+			break
+	var shell := VillageArchitecture.build(f, kind, st, bseed, door_u, open_front)
+	var center := Transform3D(Basis.IDENTITY, Vector3(x0 + w * 0.5, 0, z0 + d * 0.5))
+	statics.append({"mesh": &"", "vox": shell.shell, "xform": center, "box_size": Vector3.ZERO, "box_center": Vector3.ZERO, "fade": true, "glow": false})
+	if not shell.props.is_empty():
+		statics.append({"mesh": &"", "vox": shell.props, "xform": center, "box_size": Vector3.ZERO, "box_center": Vector3.ZERO, "fade": false, "glow": false})
+	if not shell.glow.is_empty():
+		statics.append({"mesh": &"", "vox": shell.glow, "xform": center, "box_size": Vector3.ZERO, "box_center": Vector3.ZERO, "fade": false, "glow": true})
+	roofs[idx] = [{"vox": shell.upper, "xform": center}]
+	boxes.append_array(shell.boxes)
+	obstacles.append_array(shell.obstacles)
 	var inside: Vector3 = _at(f, f.width * 0.5, f.depth * 0.5, FLOOR_TOP)
 	buildings.append({
 		"id": idx, "kind": kind, "rect": Rect2(x0, z0, w, d), "side": side, "frame": f,
 		"door_out": _at(f, door_u + 0.5, -1.4), "door_in": _at(f, door_u + 0.5, 1.0, FLOOR_TOP),
-		"inside": inside, "sleep": [],
+		"inside": inside, "sleep": [], "style": st,
 	})
+	if shell.work != null:
+		var wv: Vector2 = shell.work
+		buildings[idx]["work"] = _at(f, wv.x, wv.y)
+		buildings[idx]["work_rot"] = (f.rot if shell.get("work_out", false) else f.rot + 2) * PI * 0.5
 	return idx
 
 
@@ -166,20 +172,72 @@ func _furnish_home(idx: int, beds: int) -> void:
 	_deco(&"barrel", Transform3D(Basis.IDENTITY, _at(f, 0.5, 1.5, FLOOR_TOP)), Vector3(0.55, 0.8, 0.55), Vector3(0, 0.4, 0))
 
 
-func _house(i: int, j: int, stone: bool, beds: int = 2) -> int:
+## `size`: 0 small 5x5, 1 normal 6x5, 2 big 7x6 (Milestone 40), -1 = pick by chance.
+func _house(i: int, j: int, stone: bool, beds: int = 2, size: int = 1, kind: StringName = &"house") -> int:
 	var side := _side_toward_center(i, j)
-	var w := 6 if side == Side.NORTH or side == Side.SOUTH else 5
-	var d := 5 if side == Side.NORTH or side == Side.SOUTH else 6
+	if size < 0:
+		var roll := _r(500 + (i + 4) * 11 + (j + 4))
+		size = 0 if roll < 0.25 else (2 if roll > 0.72 else 1)
+	var across: int = [5, 6, 7, 8][size]
+	var deep: int = [5, 5, 6, 6][size]
+	if size == 2:
+		beds = maxi(beds, 3)
+	var ns := side == Side.NORTH or side == Side.SOUTH
+	var w := across if ns else deep
+	var d := deep if ns else across
 	var x0 := i * LOT - w / 2
 	var z0 := j * LOT - d / 2
-	var idx := _building(&"house", x0, z0, w, d, side, stone)
+	var idx := _building(kind, x0, z0, w, d, side, stone)
 	_furnish_home(idx, beds)
 	return idx
 
 
+## Milestone 40: the elder's manor (8x6, three floors, tower, banners).
+func _manor(i: int, j: int) -> int:
+	return _house(i, j, false, 3, 3, &"manor")
+
+
+## Milestone 40: the inn (8x6, three floors, sign, tables inside).
+func _inn(i: int, j: int) -> int:
+	var idx := _house(i, j, false, 2, 3, &"inn")
+	var b: Dictionary = buildings[idx]
+	var f: Dictionary = b.frame
+	for u in [1.5, f.width - 3.0]:
+		_piece(&"table", Transform3D(_rot(f.rot), _at(f, u, 2.4, FLOOR_TOP)))
+		_piece(&"chair", Transform3D(_rot(f.rot), _at(f, u, 1.6, FLOOR_TOP)))
+	b["work"] = _at(f, f.width * 0.5, f.depth * 0.5, FLOOR_TOP)
+	b["work_rot"] = (f.rot + 2) * PI * 0.5
+	return idx
+
+
+## Milestone 40: a job building on an outer lot: a 5x5 home on one side of the
+## lot and the work props (oven, logs, mine...) on the other. The windmill and
+## the watchtower stand in the middle of their lot.
+func _job(i: int, j: int, job: StringName) -> int:
+	var side := _side_toward_center(i, j)
+	var w := 4 if job == &"watchtower" else 5
+	var c := Vector3(i * LOT, 0, j * LOT)
+	if job != &"watchtower" and job != &"mill":
+		c += _frame(0, 0, 1, 1, side).across * -1.5
+	var x0 := int(round(c.x - w * 0.5))
+	var z0 := int(round(c.z - w * 0.5))
+	var idx := _building(job, x0, z0, w, w, side, false)
+	var b: Dictionary = buildings[idx]
+	var f: Dictionary = b.frame
+	if job == &"watchtower":
+		_piece(&"bed", Transform3D(_rot(f.rot), _at(f, 0.5, f.depth - 1.0, FLOOR_TOP)))
+		b.sleep.append(_at(f, 0.5, f.depth - 1.0, FLOOR_TOP + 0.3))
+		_piece(&"storage_chest", Transform3D(_rot(f.rot + 2), _at(f, f.width - 0.5, f.depth - 0.5, FLOOR_TOP)))
+	else:
+		_furnish_home(idx, 1)
+	if not b.has("work"):
+		b["work"] = _at(f, f.width * 0.5 + 1.2, -1.2)
+		b["work_rot"] = f.rot * PI * 0.5
+	return idx
+
+
 func _shop(i: int, j: int, stone: bool) -> int:
-	var idx := _house(i, j, stone, 1)
-	buildings[idx].kind = &"shop"
+	var idx := _house(i, j, stone, 1, 1, &"shop")
 	var f: Dictionary = buildings[idx].frame
 	var u: float = int(f.width) / 2 + 2.3
 	_deco(&"market_stall", Transform3D(_rot(f.rot), _at(f, u, -1.7)), Vector3(1.8, 1.0, 0.7), Vector3(0, 0.5, 0))
@@ -274,6 +332,8 @@ func _build_village(day: int) -> void:
 	var homes: Array[int] = []
 	var shop := -1
 	var smithy := -1
+	var manor := -1
+	var inn := -1
 	for n in 8:
 		var lot: Vector2i = ring1[(start + n) % 8]
 		if n == 0:
@@ -281,8 +341,22 @@ func _build_village(day: int) -> void:
 			homes.append(shop)
 		elif n == 4:
 			smithy = _smithy(lot.x, lot.y)
+		elif n == 2:
+			manor = _manor(lot.x, lot.y)
+			homes.append(manor)
+		elif n == 6 and _r(31) < 0.6:
+			inn = _inn(lot.x, lot.y)
 		else:
-			homes.append(_house(lot.x, lot.y, false, 2 if _r(20 + n) < 0.6 else 1))
+			homes.append(_house(lot.x, lot.y, false, 2 if _r(20 + n) < 0.6 else 1, -1))
+	# Milestone 40: 3-5 job buildings (each with its worker) on the outer lots.
+	var job_list: Array = VillageArchitecture.JOBS.keys()
+	for k in range(job_list.size() - 1, 0, -1):
+		var swap := int(_r(600 + k) * (k + 1)) % (k + 1)
+		var tmp = job_list[k]
+		job_list[k] = job_list[swap]
+		job_list[swap] = tmp
+	job_list.resize(3 + int(_r(41) * 3.0) % 3)
+	var jobs: Array = []
 	var farm_ids: Array[int] = []
 	var n_farms := 0
 	for j in range(-2, 3):
@@ -294,14 +368,18 @@ func _build_village(day: int) -> void:
 				_farm(i, j, 200 + i * 7 + j, day)
 				farm_ids.append(farms.size() - 1)
 				n_farms += 1
+			elif jobs.size() < job_list.size():
+				var job: StringName = job_list[jobs.size()]
+				jobs.append([VillageArchitecture.JOBS[job], _job(i, j, job)])
 			elif roll < 0.5:
-				homes.append(_house(i, j, false, 1))
+				homes.append(_house(i, j, false, 1, -1))
 			elif roll < 0.62:
 				_deco(&"hay_bale", Transform3D(_rot(int(roll * 10)), Vector3(i * LOT, 0, j * LOT)), Vector3(1.0, 0.6, 0.6), Vector3(0, 0.3, 0))
 	for j in range(-2, 3):
 		for i in range(-2, 3):
 			points.wander.append(Vector3(i * LOT + (LOT * 0.5 if i >= 0 else -LOT * 0.5), 0, j * LOT * 0.5))
 	_roster(homes, shop, smithy, farm_ids, [], -1)
+	_roster_jobs(jobs, manor, inn)
 
 
 # --- Kingdom ------------------------------------------------------------------------------
@@ -353,7 +431,7 @@ func _build_kingdom(day: int) -> void:
 				_farm(i, j, 400 + i * 7 + j, day)
 				farm_ids.append(farms.size() - 1)
 			elif not outer or roll < 0.75:
-				homes.append(_house(i, j, true, 2 if roll < 0.7 else 1))
+				homes.append(_house(i, j, true, 2 if roll < 0.7 else 1, -1))
 	_walls()
 	for j in range(-3, 4):
 		for i in range(-3, 4):
@@ -429,6 +507,21 @@ func _roster(homes: Array[int], shop: int, smithy: int, farm_ids: Array[int], no
 	var villagers := 3 + int(_r(900) * 3.0) + (4 if info.is_kingdom() else 0)
 	for v in villagers:
 		_npc(&"villager", next_home.call(), points.plaza[v % points.plaza.size()], 0.0)
+
+
+## Milestone 40: the job workers live in their own building; the elder in the
+## manor, the innkeeper in the inn.
+func _roster_jobs(jobs: Array, manor: int, inn: int) -> void:
+	for e in jobs:
+		var b: Dictionary = buildings[int(e[1])]
+		_npc(e[0], int(e[1]), b.work, b.work_rot)
+	if manor >= 0:
+		var mb: Dictionary = buildings[manor]
+		_npc(&"elder", manor, mb.inside, (mb.frame.rot + 2) * PI * 0.5)
+	if inn >= 0:
+		var ib: Dictionary = buildings[inn]
+		ib.sleep.append(ib.inside + Vector3(0, 0.3, 0))
+		_npc(&"innkeeper", inn, ib.work, ib.work_rot)
 
 
 ## World transform of a local point.

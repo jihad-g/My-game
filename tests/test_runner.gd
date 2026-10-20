@@ -179,6 +179,7 @@ func _ready() -> void:
 	await _run_async(&"test_m38_fx")
 	await _run_async(&"test_m38_ingame")
 	_run(&"test_m39_voxel_items")
+	_run(&"test_m40_villages")
 	print("\n=== %d passed, %d failed (%.1fs) ===" % [_passed, _failed, (Time.get_ticks_msec() - t0) / 1000.0])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -5247,7 +5248,7 @@ func test_m13_platform() -> void:
 
 
 func test_m13_release() -> void:
-	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.47"), "version 0.47 (beta)")
+	check(String(ProjectSettings.get_setting("application/config/version")).begins_with("0.48"), "version 0.48 (beta)")
 	var cf := ConfigFile.new()
 	check(cf.load("res://export_presets.cfg") == OK, "export presets are in the repository")
 	var names := []
@@ -10719,3 +10720,64 @@ func test_m39_voxel_items() -> void:
 			held += 1
 	check(held == 1 and is_equal_approx(m._tip.position.z, VoxelItems.reach(&"sword")), "the hero holds the voxel sword")
 	m.free()
+
+
+## Milestone 40: voxel village style, job buildings and their workers.
+func test_m40_villages() -> void:
+	var gen := TerrainGenerator.new(GameState.DEFAULT_SEED, _settings())
+	var list: Array = gen.settlements.near(Vector3.ZERO, 3000.0)
+	var villages := list.filter(func(x: SettlementInfo) -> bool: return not x.is_kingdom())
+	var all_jobs := {}
+	var ok_unique := true
+	var ok_shell := true
+	var ok_npc := true
+	var ok_work := true
+	for v: SettlementInfo in villages.slice(0, 6):
+		var l := SettlementLayout.build(v)
+		var sigs := {}
+		for b in l.buildings:
+			var sig := VillageArchitecture.signature(b.style, int((b.rect as Rect2).size.x), int((b.rect as Rect2).size.y))
+			if sigs.has(sig):
+				ok_unique = false
+			sigs[sig] = true
+			var r: Rect2 = b.rect
+			if b.has("work"):
+				var wp: Vector3 = b.work
+				ok_work = ok_work and not r.grow(0.7).has_point(Vector2(wp.x, wp.z))
+		for s in l.statics:
+			if s.has("vox") and (s.vox as Dictionary).is_empty() and s.get("fade", false):
+				ok_shell = false
+		for idx in l.roofs:
+			ok_shell = ok_shell and not (l.roofs[idx][0].vox as Dictionary).is_empty()
+		var roles := {}
+		for n in l.npcs:
+			roles[n.role] = true
+		for b in l.buildings:
+			if VillageArchitecture.JOBS.has(b.kind):
+				all_jobs[b.kind] = true
+				ok_npc = ok_npc and roles.has(VillageArchitecture.JOBS[b.kind])
+		ok_npc = ok_npc and roles.has(&"elder")
+	check(ok_unique, "no two buildings in a village look the same")
+	check(ok_shell, "every building has a wall shell and a roof")
+	check(ok_npc, "every job building has its worker, every village an elder")
+	check(ok_work, "job workers stand outside the building walls")
+	check(all_jobs.size() >= 5, "6 villages show at least 5 different job buildings (%s)" % [all_jobs.keys()])
+	# Meshing: a small house makes faces, hidden faces between blocks are skipped.
+	var bm := BlockMesh.new()
+	VillageArchitecture.emit(bm, {Vector3i(0, 0, 0): Color.WHITE, Vector3i(1, 0, 0): Color.WHITE})
+	var arr := bm.to_arrays()
+	check((arr[Mesh.ARRAY_VERTEX] as PackedVector3Array).size() == 10 * 4, "two touching blocks make 10 faces, not 12")
+	# Job shops only sell things other shops already sell (no new money machine).
+	var old := {}
+	for role in Economy.STOCK:
+		if not role in Economy.JOB_SHOPS:
+			for e in Economy.STOCK[role]:
+				old[e[0]] = true
+	for e in Economy.TRADER_POOL:
+		old[e[0]] = true
+	var fresh := []
+	for role in Economy.JOB_SHOPS:
+		for e in Economy.STOCK[role]:
+			if not old.has(e[0]) or ItemDB.get_item(e[0]) == null:
+				fresh.append(e[0])
+	check(fresh.is_empty(), "job shops sell only known, already-sold items (%s)" % [fresh])

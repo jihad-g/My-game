@@ -2,6 +2,45 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [0.48.0] — Milestone 40: Village Architecture (houses in the reference style)
+
+Every building in villages and capitals is now made of 0.5 m voxel blocks in the style of the owner's
+reference sheets (stone base, dark wood timber frame, plaster or plank walls, steep roofs with an overhang
+and dark trim). Every house picks its own look, so no two buildings in a settlement look the same.
+Villages also get job buildings with a worker each. Our own designs in that style - nothing copied.
+
+### Changed
+- **House look** (`src/living/village_architecture.gd`, `VillageArchitecture`): walls, upper floors and roofs
+  are a voxel shell. Each house chooses: size (5x5, 6x5, 7x6), 1-3 floors, ground and upper walls (stone,
+  plaster with timber frame, planks), roof colour (straw, brown, teal, red, slate), gable or hip roof, a front
+  gable over the door, an upper floor that sticks out (jetty), chimney (stone or brick), flowers, ivy,
+  lanterns. `SettlementLayout` re-rolls a look that is already used in the same settlement.
+- **Capitals** use the stone style: stone ground floors, slate and red roofs, more 2-3 floor houses. The keep
+  has four corner towers, the barracks banners.
+- The smithy is stone with a slate roof and a big forge chimney; the shop has a striped awning.
+- Rooms keep their size: the walls sit just outside the floor. Upper floors and the roof hide when you walk
+  inside (like the old roof). The ground floor walls fade near the camera like before.
+- Collision: one box per 1 m of wall (as before). Street paths keep 0.75 m from the walls.
+
+### Added
+- **Job buildings** on the outer village lots (3-5 per village, chosen by the village seed), each with its worker:
+  bakery (brick oven, bread) - **Baker**; lumber camp (log pile, chopping stump) - **Lumberjack**; alchemy
+  house (spire tower, potions, cauldron) - **Alchemist**; fishery (fish rack, upturned boat) - **Fisher**;
+  mine (rock hill, mine mouth, cart of shards) - **Miner**; windmill (sails, flour sacks) - **Miller**;
+  watchtower (lookout platform, roof, banner) - a village **Guard**.
+- **Elder's manor** (8x6, three floors, stone tower, banners) in every village, home of the **Elder**.
+- **Inn** (8x6, three floors, jetty, hanging sign, tables inside) in most villages, run by the **Innkeeper**.
+- New roles have titles, daily hours, work animations (chopping, digging, stirring), clothes and tools
+  (lumberjack axe, miner hammer, alchemist and elder staff, fisher spear) and greetings.
+- **Job shops**: baker, innkeeper, alchemist, miner, lumberjack and miller sell and buy (only items other shops
+  already sell, so prices and the economy balance stay the same).
+- Screenshot: `--only=village40` (`v40_*` overviews, every job building, the capital).
+- Test `test_m40_villages`.
+
+### Not changed
+- Player-built walls and roofs (Build mode pieces) look the same as before.
+- Kingdom capitals have no job buildings yet (NOT IMPLEMENTED).
+
 ## [0.47.0] — Milestone 39: Voxel Arsenal (items in the reference style)
 
 Every held item is now a voxel model in the style of the owner's reference sheets (chunky boxes, one voxel

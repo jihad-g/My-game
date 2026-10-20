@@ -108,6 +108,23 @@ func role_title() -> String:
 			return "Lady" if int(data.seed) % 2 == 0 else "Lord"
 		&"trader":
 			return "Travelling Trader"
+		# Milestone 40: village jobs
+		&"baker":
+			return "Baker"
+		&"lumberjack":
+			return "Lumberjack"
+		&"alchemist":
+			return "Alchemist"
+		&"fisher":
+			return "Fisher"
+		&"miner":
+			return "Miner"
+		&"miller":
+			return "Miller"
+		&"innkeeper":
+			return "Innkeeper"
+		&"elder":
+			return "Elder"
 	return "Villager"
 
 
@@ -118,7 +135,7 @@ func full_name() -> String:
 
 
 func is_shopkeeper() -> bool:
-	return role in [&"merchant", &"royal_merchant", &"blacksmith", &"trader", &"farmer"]
+	return role in [&"merchant", &"royal_merchant", &"blacksmith", &"trader", &"farmer"] or Economy.JOB_SHOPS.has(role)
 
 
 ## Daily schedule: activity for an hour (each person is offset by up to an hour).
@@ -143,6 +160,25 @@ func schedule(hour: float) -> StringName:
 			return &"work" if h >= 8.0 and h < 20.0 else &"sleep"
 		&"guard", &"trader":
 			return &"work"
+		# Milestone 40: village jobs
+		&"baker", &"miller":
+			if h >= 5.5 and h < 15.0:
+				return &"work"
+			return &"plaza" if h >= 15.0 and h < 20.0 else &"sleep"
+		&"lumberjack", &"miner", &"fisher":
+			if (h >= 7.0 and h < 12.0) or (h >= 13.0 and h < 18.0):
+				return &"work"
+			return &"plaza" if (h >= 12.0 and h < 13.0) or (h >= 18.0 and h < 21.0) else &"sleep"
+		&"alchemist":
+			if h >= 9.0 and h < 19.0:
+				return &"work"
+			return &"plaza" if h >= 19.0 and h < 21.0 else &"sleep"
+		&"innkeeper":
+			return &"work" if h >= 9.0 or h < 1.0 else &"sleep"
+		&"elder":
+			if h >= 9.0 and h < 17.0:
+				return &"work"
+			return &"plaza" if h >= 17.0 and h < 20.0 else &"sleep"
 	if (h >= 7.0 and h < 12.0) or (h >= 13.0 and h < 20.0):
 		return &"wander"
 	return &"plaza" if (h >= 12.0 and h < 13.0) or (h >= 20.0 and h < 22.0) else &"sleep"
@@ -566,6 +602,14 @@ func _idle(delta: float) -> void:
 					if _anim_t <= 0.0:
 						_anim_t = 1.3
 						model.play_attack(&"light", 0.35, 0.1, 0.4)
+				&"lumberjack", &"miner":
+					if _anim_t <= 0.0:
+						_anim_t = 1.6
+						model.play_attack(&"overhead", 0.4, 0.12, 0.5)
+				&"baker", &"alchemist":
+					if _anim_t <= 0.0:
+						_anim_t = 2.6
+						model.play_attack(&"light", 0.45, 0.15, 0.6)
 				&"farmer":
 					if _anim_t <= 0.0:
 						_anim_t = 2.2

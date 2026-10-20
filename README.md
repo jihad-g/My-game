@@ -5,8 +5,9 @@ Top-down/isometric tactical camera, real-time manual combat, deterministic proce
 world streamed in chunks, survival systems (health, hunger, temperature), and a long-term
 roadmap toward classes, skills, crafting, dungeons, settlements, building and a massive world.
 
-> Status: **v0.47.0 — Voxel Arsenal**. Every weapon, shield, wand and tome is a voxel model in the style of
-> the owner's reference sheets, coloured by its metal (copper, mithril, sun...). Dropped weapons show their model.
+> Status: **v0.48.0 — Village Architecture**. Village and capital houses are voxel buildings in the reference
+> style (stone base, timber frame, steep roofs), every one different, plus job buildings with their workers
+> (bakery, lumber camp, alchemy house, fishery, mine, windmill, watchtower), an elder's manor and an inn.
 
 ![Ability poses](docs/screenshots/ability_poses.png)
 
@@ -439,6 +440,7 @@ D-pad spells and hotbar, View bag, Menu pause. Menus still need the mouse.
     Fireball or Flame Pillar, or any area spell: the new blasts. Enter a dungeon: the camera turns to 50° with a
     narrow lens (Settings → Gameplay → *Dungeon camera* turns it off).
 76. **Voxel Arsenal (v0.47.0)** – open Creative → Items and equip any weapon or shield: it is a voxel model now.
+77. **Village Architecture (v0.48.0)** – walk into any village: every house looks different, and the job buildings (oven, log pile, mine, windmill, watchtower...) each have their worker. Talk to the baker, alchemist, miner, lumberjack, miller or innkeeper to trade.
     Try a copper, an iron and a mithril sword - same shape, different metal. Drop one (or kill a monster that
     drops one): it spins on the ground as its model.
 

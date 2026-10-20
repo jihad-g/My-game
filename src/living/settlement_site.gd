@@ -186,7 +186,9 @@ func _build_interactive() -> void:
 func _build_graph() -> void:
 	for b in layout.buildings:
 		var r: Rect2 = b.rect
-		_blockers.append(r.grow(0.25))
+		_blockers.append(r.grow(0.75))  # Milestone 40: the wall shell sits 0.5 m outside the floor
+	for o: Rect2 in layout.obstacles:
+		_blockers.append(o.grow(0.25))
 	for f in layout.farms:
 		var fr: Rect2 = f.rect
 		_blockers.append(fr.grow(0.25))

@@ -19,7 +19,10 @@ static func merge(statics: Array, boxes: Array, roofs: Dictionary = {}, color: C
 			groups[key] = BlockMesh.new()
 		var g: BlockMesh = groups[key]
 		g.xform = s.xform
-		BuildMeshes.build_into(g, s.mesh, color)
+		if s.has("vox"):
+			VillageArchitecture.emit(g, s.vox)  # Milestone 40: voxel building shells
+		else:
+			BuildMeshes.build_into(g, s.mesh, color)
 		var size: Vector3 = s.get("box_size", Vector3.ZERO)
 		if size != Vector3.ZERO:
 			out_boxes.append([size, (s.xform as Transform3D) * Transform3D(Basis.IDENTITY, s.get("box_center", Vector3.ZERO))])
@@ -36,7 +39,12 @@ static func merge(statics: Array, boxes: Array, roofs: Dictionary = {}, color: C
 		var rb := BlockMesh.new()
 		for r in roofs[idx]:
 			rb.xform = r.xform
-			BuildMeshes.build_into(rb, r.mesh)
+			if r.has("vox"):
+				VillageArchitecture.emit(rb, r.vox)
+			else:
+				BuildMeshes.build_into(rb, r.mesh)
+		if not rb.has_boxes():
+			continue
 		arrays["roof_%d" % idx] = rb.to_arrays()
 	return {"arrays": arrays, "boxes": out_boxes}
 

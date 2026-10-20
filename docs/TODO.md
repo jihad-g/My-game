@@ -4,6 +4,21 @@ Legend: `[x]` completed (implemented + tested) · `[~]` in progress / partial (d
 
 Nothing below is marked `[x]` unless it runs in the game today.
 
+## Milestone 40 — Village Architecture (v0.48.0)
+
+- [x] Settlement buildings are voxel shells in the reference style (`VillageArchitecture`); every building in a settlement looks different
+- [x] Bigger houses (7x6), elder's manor and inn (8x6, three floors)
+- [x] Job buildings + workers: bakery/baker, lumber camp/lumberjack, alchemy/alchemist, fishery/fisher, mine/miner, windmill/miller, watchtower/guard
+- [x] Job shops (baker, innkeeper, alchemist, miner, lumberjack, miller) with items other shops already sell
+- [~] Checked with screenshots (`--only=village40`); the test `test_m40_villages` is written but NOT RUN yet (waiting for the owner's OK)
+- [ ] NOT IMPLEMENTED: Windows build for v0.48.0 (the zip in `releases/` is still v0.47.0)
+- [ ] NOT IMPLEMENTED: job buildings in kingdom capitals, and a distinct style per kingdom (all capitals use the same stone style)
+- [ ] NOT IMPLEMENTED: fish items for the fisher (the fisher has no shop), flour for the miller
+- [ ] NOT IMPLEMENTED: walking up to the upper floors (they are only outside walls; rooms are one storey inside)
+- [ ] NOT IMPLEMENTED: windmill sails that turn, smoke from chimneys
+- [ ] NOT IMPLEMENTED: the elder gives quests (talks only)
+- [ ] NOT IMPLEMENTED: far-away town impostors (`FarImpostors`) still show the old simple houses
+
 ## Milestone 39 — Voxel Arsenal (v0.47.0)
 
 - [x] All held weapons, shields, wands and tomes are voxel models in the reference style (`VoxelItems`)
