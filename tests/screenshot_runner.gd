@@ -179,6 +179,10 @@ func _ready() -> void:
 		await _outfits_showcase()
 		get_tree().quit()
 		return
+	if "--only=firstperson" in OS.get_cmdline_user_args():
+		await _first_person_showcase()
+		get_tree().quit()
+		return
 	if "--only=rpg" in OS.get_cmdline_user_args():
 		await _rpg_showcase()
 		get_tree().quit()
@@ -730,6 +734,72 @@ func _shot(name: String) -> void:
 	var path := "%s/%s.png" % [_out_dir, name]
 	img.save_png(path)
 	print("saved ", path)
+
+
+## v0.49.1: the first-person view. Each class looks at two boars and fights:
+## a calm view, then a swing / cast / shot. Saves fp_<class>_look and fp_<class>_fight.
+func _first_person_showcase() -> void:
+	# [class, weapon to hold ("" = starting weapon), ability slot or -1 for a light attack]
+	var specs := [[&"knight", &"", -1], [&"barbarian", &"iron_greatsword", 0],
+		[&"wizard", &"", 0], [&"assassin", &"recurve_bow", -1]]
+	# No intro page, first-steps box or tips over the view (own profile file).
+	var saved_profile := Tutorial.profile_path
+	var saved_hints = Settings.values.get("tutorial_hints", true)
+	Tutorial.profile_path = "user://shot_profile_fp.cfg"
+	Tutorial.reset_progress()
+	Tutorial.skip_first_steps()
+	Settings.values["tutorial_hints"] = false
+	for s in specs:
+		var cid: StringName = s[0]
+		SaveManager.start_transient(GameState.DEFAULT_SEED, cid)
+		var world := (load("res://scenes/main.tscn") as PackedScene).instantiate() as World
+		add_child(world)
+		while not world.is_ready:
+			await get_tree().process_frame
+		var frames := 0
+		while world.chunk_manager.pending_count() > 0 and frames < 1500:
+			await get_tree().process_frame
+			frames += 1
+		var p := world.player
+		p.health.invulnerable = true
+		world.spawner.max_active = 0
+		world.hud._help.visible = false
+		world.day_night.hour = 10.0
+		p.character.grant_xp(Progression.total_xp_for(16), Progression.Source.OTHER)
+		if s[1] != &"":
+			p.equipment.equip(ItemDB.get_item(s[1]))
+		world.camera_rig.set_first_person(true)
+		world.camera_rig.fp_pitch = -5.0
+		await _wait(30)
+		world.hud.story.visible = false
+		var dir := p.get_facing()
+		var boars: Array[Enemy] = []
+		for k in 2:
+			var off := dir.rotated(Vector3.UP, (k - 0.5) * 0.5) * (4.5 if cid != &"assassin" else 8.0)
+			var pos := p.global_position + off
+			pos.y = world.get_ground_height(pos) + 0.3
+			var b := world.spawner.spawn_enemy(world.debug_enemy_scene, pos, "")
+			b.stagger(8.0)
+			boars.append(b)
+		p.set_lock_target(boars[0])
+		await _wait(45)
+		await _shot("fp_%s_look" % cid)
+		var slot: int = s[2]
+		if slot >= 0:
+			if cid == &"barbarian":
+				p.abilities.set_rage(70.0)
+			p.abilities.try_use(slot)
+			await _wait(8 if cid == &"wizard" else 12)
+		else:
+			p.combat.request(&"light")
+			await _wait(7 if cid == &"knight" else 14)
+		await _shot("fp_%s_fight" % cid)
+		world.queue_free()
+		await _wait(5)
+	DirAccess.remove_absolute(Tutorial.profile_path)
+	Tutorial.profile_path = saved_profile
+	Tutorial.load_progress()
+	Settings.values["tutorial_hints"] = saved_hints
 
 
 ## Milestone 3 showcase: every class, its abilities, and the character screen.

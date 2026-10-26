@@ -18,7 +18,10 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: hands-only animations made for first person (normal arm animations are used)
 - [ ] NOT IMPLEMENTED: head bob setting
 - [ ] NOT IMPLEMENTED: first person on a horse or boat checked
-- [ ] NOT IMPLEMENTED: screenshots of first person (`screenshot_runner`)
+- [x] Screenshots of first person: `--only=firstperson` (4 classes, look + fight)
+- [x] Browser build for an online combat test (v0.49.0 web)
+- [ ] Found in the screenshots: weapons/arms are too big and too close in first person (staff and greatsword cover a third of the screen)
+- [ ] Found in the screenshots: the bow is not visible in first person; starting Assassin has no arrows
 
 ## Milestone 40 — Village Architecture (v0.48.0)
 

@@ -2,6 +2,10 @@
 
 All notable changes to this project. Format loosely follows *Keep a Changelog*.
 
+## [Unreleased]
+- Screenshots of first person: `--only=firstperson` (Knight, Barbarian, Wizard, Assassin; look + fight).
+- Browser build of v0.49.0 for an online combat test. New `docs/CODE_MAP.md`.
+
 ## [0.49.0] — First-person view (option) and full key control
 
 ### Added
