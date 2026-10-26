@@ -20,8 +20,10 @@ Nothing below is marked `[x]` unless it runs in the game today.
 - [ ] NOT IMPLEMENTED: first person on a horse or boat checked
 - [x] Screenshots of first person: `--only=firstperson` (4 classes, look + fight)
 - [x] Browser build for an online combat test (v0.49.0 web)
-- [ ] Found in the screenshots: weapons/arms are too big and too close in first person (staff and greatsword cover a third of the screen)
-- [ ] Found in the screenshots: the bow is not visible in first person; starting Assassin has no arrows
+- [x] First-person arms/weapons drawn smaller and further forward (`HumanoidModel.FP_ARM_*`); bow raised into view
+- [~] Greatsword/hammer/spear in first person: no longer block the view, but now hard to see (idle and Whirlwind)
+- [ ] NOT IMPLEMENTED: in first person the weapon is on the screen's LEFT (the model's right arm is on that side)
+- [ ] NOT IMPLEMENTED: a new Assassin starts with a bow but no arrows
 
 ## Milestone 40 — Village Architecture (v0.48.0)
 

@@ -5,6 +5,8 @@ All notable changes to this project. Format loosely follows *Keep a Changelog*.
 ## [Unreleased]
 - Screenshots of first person: `--only=firstperson` (Knight, Barbarian, Wizard, Assassin; look + fight).
 - Browser build of v0.49.0 for an online combat test. New `docs/CODE_MAP.md`.
+- First person: arms and weapon drawn smaller (x0.62) and further forward so they don't cover the view; two-handers
+  sit lower; with a bow the left arm is raised so the bow shows (`HumanoidModel._apply_first_person_arms`).
 
 ## [0.49.0] — First-person view (option) and full key control
 

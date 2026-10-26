@@ -6,6 +6,7 @@ Where things live, so a session can open only the files it needs. Short lines; a
 - `src/camera/camera_rig.gd` (`CameraRig`): top-down camera, zoom/yaw/pitch, shake, `kick`, dungeon view.
   First person: `set_first_person(on)`, `first_person_active()`, `_process_first_person`, `fp_pitch`, `fp_fov`.
 - `src/player/humanoid_model.gd` (`HumanoidModel`): body, outfit, weapons; `set_first_person_hidden` hides head/body.
+  First-person arm size/place: `FP_ARM_SCALE`, `FP_ARM_R`, `FP_ARM_L`, `FP_ARM_R_TWO_HAND`, `FP_BOW_RAISE`, `_apply_first_person_arms`.
 
 ## Player and combat
 - `src/player/player.gd` (`Player`): `equipment` (`.equip(item)`), `combat.request(&"light")`, `abilities.try_use(slot)`,

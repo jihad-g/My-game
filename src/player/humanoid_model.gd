@@ -311,6 +311,8 @@ func set_weapon(weapon_type: StringName, has_shield: bool) -> void:
 	_has_shield = has_shield
 	if _root:
 		_build_weapon()
+	if first_person_hidden:
+		_apply_first_person_arms()
 
 
 func _build() -> void:
@@ -369,6 +371,7 @@ func _build() -> void:
 		set_ghost(true)
 	if first_person_hidden:
 		_apply_first_person_layers()
+		_apply_first_person_arms()
 
 
 func _build_class_gear() -> void:
@@ -1127,11 +1130,41 @@ const FP_HIDDEN_LAYER := 1 << 19
 var first_person_hidden := false
 
 
+## v0.49.1: in first person the arms sit right under the eyes and look huge, so they are
+## drawn smaller and further forward (only on this model, other players see you normally).
+const FP_ARM_SCALE := 0.62
+## Shoulder positions in first person (normal: ±0.36, 0.54, 0). The left one comes in
+## further so a bow in the left hand is in view.
+const FP_ARM_R := Vector3(0.3, 0.5, 0.26)
+const FP_ARM_L := Vector3(-0.26, 0.5, 0.26)
+const ARM_R_REST := Vector3(0.36, 0.54, 0)
+const ARM_L_REST := Vector3(-0.36, 0.54, 0)
+## Big two-handers rest on the shoulder: that shoulder stays back and lower, or the
+## blade crosses the eyes.
+const FP_ARM_R_TWO_HAND := Vector3(0.32, 0.44, 0.12)
+const FP_TWO_HANDERS := [&"greatsword", &"hammer", &"spear"]
+## With a bow the left arm is raised (radians, forward) so the bow is in view.
+const FP_BOW_RAISE := -1.45
+
+
 func set_first_person_hidden(on: bool) -> void:
 	if on == first_person_hidden:
 		return
 	first_person_hidden = on
 	_apply_first_person_layers()
+	_apply_first_person_arms()
+
+
+func _apply_first_person_arms() -> void:
+	if _arm_l == null or _arm_r == null:
+		return
+	var s := FP_ARM_SCALE if first_person_hidden else 1.0
+	var fp_r := FP_ARM_R_TWO_HAND if _weapon_type in FP_TWO_HANDERS else FP_ARM_R
+	_arm_r.position = fp_r if first_person_hidden else ARM_R_REST
+	var fp_l := FP_ARM_L + Vector3(0, 0.1, 0) if _weapon_type == &"bow" else FP_ARM_L
+	_arm_l.position = fp_l if first_person_hidden else ARM_L_REST
+	_arm_r.scale = Vector3.ONE * s
+	_arm_l.scale = Vector3.ONE * s
 
 
 func _apply_first_person_layers() -> void:
@@ -1711,6 +1744,8 @@ func _write_pose(pose: Dictionary, delta: float) -> void:
 	_head.rotation = pose[&"head"]
 	_arm_l.rotation = pose[&"arm_l"]
 	_arm_r.rotation = pose[&"arm_r"]
+	if first_person_hidden and _weapon_type == &"bow":
+		_arm_l.rotation.x += FP_BOW_RAISE
 	_fore_l.rotation.x = pose[&"fore_l"]
 	_fore_r.rotation.x = pose[&"fore_r"]
 	_weapon.rotation = pose[&"weapon"]

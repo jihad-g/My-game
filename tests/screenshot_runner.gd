@@ -768,6 +768,8 @@ func _first_person_showcase() -> void:
 		p.character.grant_xp(Progression.total_xp_for(16), Progression.Source.OTHER)
 		if s[1] != &"":
 			p.equipment.equip(ItemDB.get_item(s[1]))
+		if cid == &"assassin":
+			p.inventory.add_item(&"wooden_arrow", 20)
 		world.camera_rig.set_first_person(true)
 		world.camera_rig.fp_pitch = -5.0
 		await _wait(30)
